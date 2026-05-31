@@ -46,3 +46,28 @@ jobs:
             git --no-pager diff -- examples/
             exit 1
           fi
+
+  producer-interop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python deps
+        run: pip install jsonschema cryptography
+      - name: Build + run the TypeScript producer
+        working-directory: producers/typescript
+        run: |
+          npm install
+          npm run build
+          node dist/airep_producer.js > "$RUNNER_TEMP/ts_chain.jsonl"
+          wc -l "$RUNNER_TEMP/ts_chain.jsonl"
+      - name: Cross-stack interop — the TS-produced chain must pass BOTH reference verifiers
+        run: |
+          PUB=spec/airep/v0.1/examples/test_public_key.txt
+          python3 spec/airep/v0.1/conformance/verify.py  "$RUNNER_TEMP/ts_chain.jsonl" --pubkey "$PUB"
+          node     spec/airep/v0.1/conformance/verify.mjs "$RUNNER_TEMP/ts_chain.jsonl" --pubkey "$PUB"

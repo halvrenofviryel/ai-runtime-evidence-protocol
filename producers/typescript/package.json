@@ -1,0 +1,15 @@
+{
+  "name": "airep-producer-ts",
+  "version": "0.1.0",
+  "description": "Independent TypeScript producer of AIREP v0.1 records (zero runtime dependencies; node:crypto only).",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "produce": "node dist/airep_producer.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}
