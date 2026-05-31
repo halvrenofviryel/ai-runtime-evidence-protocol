@@ -7,7 +7,7 @@ abstract: >-
   offline by an independent verifier. AIREP v0.1 is a proposed open format with one reference
   implementation; it is not a ratified standard.
 type: software
-version: "0.1"
+version: "0.1.1"
 date-released: 2026-05-31
 doi: 10.5281/zenodo.20475136
 identifiers:
