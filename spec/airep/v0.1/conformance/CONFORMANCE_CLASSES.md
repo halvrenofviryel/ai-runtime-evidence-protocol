@@ -62,10 +62,16 @@ reports Trusted only when, in addition to Verified:
 Trusted establishes *"this is the current, untruncated head of a chain whose signing key is
 externally vouched-for."*
 
-> **Status of Trusted:** the `chain_witness` / `freshness_witness` profile schema is **not yet
-> published** (it is the headline of the v0.2 release, per [`../STATUS.md`](../STATUS.md)). Until it
-> ships, **no record reaches AIREP-Trusted**, and `--class` will report Core or Verified. This is the
-> honest ladder, not a marketing one: a tier is only claimable when its checks are runnable.
+> **Status of Trusted:** the `chain_witness` profile schema is **now published**
+> ([`../profiles/chain_witness.schema.json`](../profiles/chain_witness.schema.json)) with a worked,
+> independently-witnessed example ([`../examples/chain_witness.jsonl`](../examples/chain_witness.jsonl)),
+> so AIREP-Trusted is now **reachable**: in that vector the tail checkpoint reports `class=Trusted`
+> under both verifiers, and `validate.py` proves the witness signature verifies under a key distinct
+> from the producer's **and** that dropping the tail is detected. What is still partial within the tier
+> is requirement 3 — the verifiers check witness presence and (in `validate.py`) the witness signature,
+> but do **not** yet enforce `key_trust` rotation/revocation at classification time; that enforcement is
+> the remaining v0.2-proper item. This is the honest ladder, not a marketing one: a tier is claimable
+> once its checks are runnable, and its still-partial checks are named.
 
 ## What the classes do NOT establish
 

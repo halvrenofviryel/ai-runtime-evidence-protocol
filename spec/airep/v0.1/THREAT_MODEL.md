@@ -45,8 +45,8 @@ not guarantees the core provides:
 |---|---|---|---|
 | **Splice** (move a signed record to another position/chain) | **partial (strongest)** | `previous` is *inside* the signed hash preimage and MUST equal the prior record's `current`; so a record is cryptographically welded to one predecessor. Repositioning either breaks the chain-link check or invalidates the signature. | Binding is *relative*, not absolute — no chain-id/head in the hash. A valid **prefix** can be presented as a whole chain; a lone record out of chain context defeats the `previous` check (nothing to compare against). |
 | **Record tampering** (alter content after the fact) | **partial** | Any byte change to the canonical body changes `current`; if the verifier re-checks the signature over `current`, alteration is detected. | Tamper-*evidence*, never prevention/rollback. **Key possession → silent full rewrite.** A hash-only verifier (today's reference) misses signature substitution. |
-| **Replay** (present an old valid record as current) | **partial** | Anti-splice (above) defeats *replay-into-a-different-position*. | **Not anti-staleness.** No freshness anchor (clock/nonce/trusted "latest"): a stale-but-valid record, or a truncated old head, passes every check. `timestamp_utc` is producer-asserted. |
-| **Chain truncation** | **partial (tail OPEN)** | Head/reposition tampering breaks the links. | **Tail truncation is undefended** — drop the last *N* records and the remaining prefix is fully self-consistent and reports VALID. No signed length/head witness in the core. |
+| **Replay** (present an old valid record as current) | **partial in core; closeable by profile** | Anti-splice (above) defeats *replay-into-a-different-position*. | **Core has no freshness anchor** (clock/nonce/trusted "latest"): a stale-but-valid record passes every core check; `timestamp_utc` is producer-asserted. The now-shipped **`chain_witness` profile** adds a `freshness` anchor (witness timestamp / nonce / challenge response), mapping "valid" → "current" for records that adopt it (AIREP-Trusted). |
+| **Chain truncation** | **partial in core (tail); closed by profile** | Head/reposition tampering breaks the links. | **In the core, tail truncation is undefended** — drop the last *N* records and the remaining prefix is self-consistent and reports VALID. The now-shipped **`chain_witness` profile** pins a signed `{chain_id, head, length}` by a key **independent of the producer**; `validate.py` demonstrates that dropping the tail then disagrees with the witnessed length/head and is detected. The core gap is real; the profile is the closure path. |
 | **Signature stripping / downgrade** | **partial (weak)** | The schema requires the `integrity.signature` object (`alg`,`value`) to be present. | `value` can be replaced with garbage, or `alg` downgraded, and it is undetected **unless** the verifier opts into the SHOULD signature check. The field-level defense is structural, not cryptographic. |
 | **Forged producer** (outsider mints records as a trusted producer) | **partial** | `integrity.signature` binds the record to whoever holds the key; a verifier with the genuine public key rejects a forgery. | `subject.producer` is **unauthenticated text** (always forgeable); the binding only bites if the verifier holds the right key **and** performs the optional signature check. |
 | **Withholding** (hide real input/output/evidence, still emit a "valid" record) | **partial** | Content is referenced, never inlined; `output.redacted` / `evidence.resolvable=false` flag withheld content; `content_hash` can anchor it; `scope.does_not_cover` states what is not attested. | **Hash-anchoring is OPTIONAL** → withholding can be *unbound*. Availability is out of scope; a verifier cannot fetch what the producer withholds, and `resolvable`/`scope` honesty is producer-asserted. |
@@ -75,9 +75,12 @@ here so the boundary is explicit:
   "partial" rows from optional to enforced, and gives `forged_producer` / `signature_stripping` real
   cryptographic weight.
 - **A signed chain head / length witness** (or a transparency-log anchor) closes **tail truncation**
-  and **replay-as-latest**: the verifier can detect a missing tail and identify the true head.
+  and **replay-as-latest**: the verifier can detect a missing tail and identify the true head. This is
+  **now shipped** as the [`chain_witness`](./profiles/chain_witness.schema.json) profile, with a worked
+  independently-witnessed vector ([`examples/chain_witness.jsonl`](./examples/chain_witness.jsonl)) and a
+  truncation-detection check in `validate.py`. It is what lifts a record to AIREP-Trusted.
 - **A freshness mechanism** (trusted clock, nonce, or challenge-response, via a profile) maps "valid"
-  to "current."
+  to "current" — carried by the same `chain_witness` profile's `freshness` block.
 - **Immutable, append-only storage** (deployment) is what makes withholding/truncation *attributable*
   rather than silent.
 - **Full RFC 8785** canonicalization (a breaking, version-bumped reference change) closes

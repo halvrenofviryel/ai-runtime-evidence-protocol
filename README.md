@@ -43,7 +43,7 @@ the AI's answer was correct — `scope.does_not_cover` keeps that boundary expli
 | [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here.** |
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
 | [`spec/airep/v0.1/core.schema.json`](./spec/airep/v0.1/core.schema.json) | JSON Schema (draft 2020-12) for the core record. |
-| [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles (key trust, EU AI Act, NIST AI RMF, OWASP/threat, observability). |
+| [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles (key trust, chain-witness/freshness, EU AI Act, NIST AI RMF, OWASP/threat, observability). |
 | [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two independent verifiers (Python + Node) and a runnable validator. |
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |

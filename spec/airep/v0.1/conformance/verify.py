@@ -115,7 +115,7 @@ def _witness_present(rec) -> bool:
     prof = rec.get("profiles") or {}
     cw = prof.get("chain_witness") or prof.get("freshness_witness")
     if not isinstance(cw, dict):
-        return False  # the witness profile is not shipped yet → Trusted is not reachable today
+        return False  # no head witness on this record → at most Verified (see chain_witness.schema.json)
     head = cw.get("head") or {}
     return bool(cw.get("chain_id") and head.get("current") and cw.get("witness"))
 

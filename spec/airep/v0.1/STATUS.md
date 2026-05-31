@@ -63,6 +63,14 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
    regulatory/standards anchors remain **INDICATIVE** — flagged in each schema's description as a design
    aid to be checked against the primary source before any compliance claim — not yet verified
    against the primary texts.
+7. **Freshness / head witness** — the **`chain_witness` profile now ships** (schema + worked
+   independently-witnessed vector), so **AIREP-Trusted is reachable**: the tail checkpoint of
+   [`examples/chain_witness.jsonl`](./examples/chain_witness.jsonl) reports `class=Trusted` under both
+   verifiers, `validate.py` verifies the witness signature under a key **distinct from the producer's**,
+   and a dropped tail is detected. What remains for **v0.2-proper** is enforcement at *classification*
+   time: the `--class` predicates check witness *presence*, but do not yet (a) re-verify the witness
+   signature inside `verify.py`/`verify.mjs` (only `validate.py` does), nor (b) honor `key_trust`
+   rotation/revocation when assigning Trusted. Those two checks are the remaining Trusted-tier work.
 
 ## Change control
 
@@ -84,3 +92,10 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
   canonicalization, cross-checked against the Node serializer); the five profile schemas landed under
   `profiles/`; schema `$id`s point at the canonical repository raw URL; Apache-2.0 (code) + CC-BY-4.0
   (spec text) licenses added. `core.schema.json` and the normative rules are unchanged.
+- **v0.1 freshness / head witness (2026-05-31, no wire-format change):** the **`chain_witness`
+  profile** shipped — `profiles/chain_witness.schema.json` plus a worked 3-record vector
+  (`examples/chain_witness.jsonl`) whose tail checkpoint reaches **AIREP-Trusted** under both verifiers.
+  The witness is signed by a key **independent of the producer**; `validate.py` re-verifies that
+  signature and demonstrates tail-truncation detection. This closes (at the profile level) the
+  tail-truncation and replay-as-latest gaps `THREAT_MODEL.md` named as open. The core wire format is
+  unchanged; the profile is additive.

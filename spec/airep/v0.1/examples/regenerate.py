@@ -32,6 +32,14 @@ _sk = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(TEST_SEED_HEX))
 _pub_hex = _sk.public_key().public_bytes(
     serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()
 
+# A SECOND, DISTINCT published test seed for the chain_witness profile. The whole point of a
+# head witness is that it is signed by a key INDEPENDENT of the producer (a producer-signed
+# witness gives no truncation defense). This key models that independent witness.
+WITNESS_SEED_HEX = "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100"
+_wsk = Ed25519PrivateKey.from_private_bytes(bytes.fromhex(WITNESS_SEED_HEX))
+_wpub_hex = _wsk.public_key().public_bytes(
+    serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()
+
 
 def canonical(obj) -> bytes:
     import sys
@@ -161,6 +169,87 @@ def build_key_trust_example() -> None:
     print(f"key_trust_record.json -> {rec['integrity']['current']}")
 
 
+def _witness_head(chain_id: str, head: dict) -> dict:
+    """Sign the head claim {chain_id, decision_index, current, length} with the INDEPENDENT
+    witness key, returning the profiles.chain_witness.witness object. The claim is canonicalized
+    (RFC 8785) so the witness signs the exact bytes a verifier re-derives."""
+    claim = {"chain_id": chain_id, "decision_index": head["decision_index"],
+             "current": head["current"], "length": head["length"]}
+    value = _wsk.sign(canonical(claim)).hex()
+    return {"witness_id": "airep-test-witness-1", "alg": "Ed25519", "value": value}
+
+
+def build_chain_witness_example() -> None:
+    """A 3-record chain whose TAIL is a checkpoint carrying profiles.chain_witness — an absolute,
+    independently-signed witness of the committed chain head (decision_index 1, length 2). This is
+    the additional check AIREP-Trusted requires: the core only binds each record to its predecessor
+    (relative), so dropping the tail is invisible; the witness pins length + head hash with a key
+    DISTINCT from the producer, making truncation detectable. The checkpoint also carries key_trust,
+    so it classifies AIREP-Trusted. rec0/rec1 are ordinary Verified-or-below records."""
+    runtime, producer, trace = "phionyx-core", "phionyx/0.7.1", "trace-witness-example"
+    chain_id = "airep:chain:witness-demo"
+
+    def base(i, verb, assertion, covers, dnc):
+        return {
+            "airep_version": "0.1",
+            "subject": {"runtime": runtime, "producer": producer, "decision_index": i,
+                        "trace_id": trace, "timestamp_utc": f"2026-05-30T00:00:0{i}Z"},
+            "input": {"input_ref": _ptr(f"witness-input-{i}"),
+                      "governance_state": {"policy_version": "p1", "prior_context_bound": True}},
+            "claim": {"assertion": assertion, "basis": ["safety_gate"]},
+            "output": {"result_ref": _ptr(f"witness-output-{i}"), "redacted": False},
+            "evidence": [{"type": "policy", "ref": "policy://safety/v1", "resolvable": True}],
+            "directive": {"verb": verb, "policy_basis": ["safety_gate"]},
+            "scope": {"covers": covers, "does_not_cover": dnc},
+            "integrity": {"previous": GENESIS, "canonical_json": True},
+        }
+
+    rec0 = base(0, "release", "first governed decision; genesis of the witnessed chain",
+                ["input safety gate passed"], ["downstream effects not tracked here"])
+    rec1 = base(1, "release", "second governed decision; becomes the witnessed head",
+                ["policy p1 satisfied"], ["model answer correctness not asserted"])
+
+    # Compute rec0, rec1 integrity in sequence (the committed chain the witness attests).
+    prev = GENESIS
+    committed = []
+    for r in (rec0, rec1):
+        r["integrity"]["previous"] = prev
+        r = compute_integrity(r)
+        prev = r["integrity"]["current"]
+        committed.append(r)
+    head = {"decision_index": 1, "current": committed[1]["integrity"]["current"], "length": 2}
+
+    # rec2 = the checkpoint. It does NOT witness itself (that would be circular); it witnesses the
+    # committed chain rec0..rec1. Its own integrity is computed normally over the whole body.
+    rec2 = base(2, "release", "checkpoint: independently witnesses the committed chain head",
+                ["chain head pinned by an independent witness"],
+                ["witness key trust is asserted, not externally corroborated here"])
+    rec2["integrity"]["previous"] = head["current"]
+    rec2["profiles"] = {
+        "key_trust": {
+            "key_id": "airep-test-key-1", "issuer": "self", "algorithm": "Ed25519",
+            "public_key": {"format": "raw_hex", "value": _pub_hex},
+            "validity": {"not_before": "2026-05-30T00:00:00Z"},
+            "revocation": {"revoked": False},
+        },
+        "chain_witness": {
+            "chain_id": chain_id,
+            "head": head,
+            "witness": _witness_head(chain_id, head),
+            "freshness": {"witness_timestamp_utc": "2026-05-30T00:00:05Z"},
+            "revocation_checked": True,
+        },
+    }
+    rec2 = compute_integrity(rec2)
+
+    out = committed + [rec2]
+    lines = [json.dumps(r, separators=(",", ":"), ensure_ascii=True) for r in out]
+    (HERE / "chain_witness.jsonl").write_text("\n".join(lines) + "\n")
+    (HERE / "witness_public_key.txt").write_text(_wpub_hex + "\n")
+    print(f"chain_witness.jsonl -> 3 records; witnessed head={head['current'][:23]}… length={head['length']}")
+    print(f"witness_public_key.txt -> {_wpub_hex}")
+
+
 def build_eu_ai_act_example() -> None:
     """A high-risk system decision carrying EU AI Act record-keeping fields under
     profiles.eu_ai_act_log. No raw personal data — the verifier is a pseudonymous role."""
@@ -267,6 +356,7 @@ def main() -> int:
         print(f"{name} -> {rec['integrity']['current']}")
     build_chain()
     build_key_trust_example()
+    build_chain_witness_example()
     build_eu_ai_act_example()
     build_governance_example()
     build_observability_example()

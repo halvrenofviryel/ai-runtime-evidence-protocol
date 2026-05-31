@@ -190,7 +190,7 @@ function keyTrustBound(rec) {
 function witnessPresent(rec) {
   const prof = rec.profiles || {};
   const cw = prof.chain_witness || prof.freshness_witness;
-  if (!isObj(cw)) return false; // witness profile not shipped yet → Trusted unreachable today
+  if (!isObj(cw)) return false; // no head witness on this record → at most Verified
   const head = cw.head || {};
   return Boolean(cw.chain_id && head.current && cw.witness);
 }

@@ -132,6 +132,65 @@ def verify_chain(label, path, pub_hex):
           f"({len(records)} records linked: hash + previous-link + index + signature)")
 
 
+def verify_chain_witness(path, witness_pub_hex):
+    """Exercise the chain_witness (freshness/head-witness) profile end to end: the committed chain
+    replays; the tail checkpoint's chain_witness block validates against its schema; the witness
+    signature over the canonical head claim verifies under an INDEPENDENT key; and — the point of
+    the profile — a dropped tail is detected because the witnessed length/head no longer match."""
+    global failures
+    records = [json.loads(ln) for ln in path.read_text().splitlines() if ln.strip()]
+    checkpoint = records[-1]
+    cw = checkpoint.get("profiles", {}).get("chain_witness", {})
+    head = cw.get("head", {})
+
+    # (a) every record is a valid core record (the checkpoint included) + strip-profiles neutral.
+    for i, rec in enumerate(records):
+        check(f"chain_witness.jsonl[{i}] FULL core", rec, True)
+    check("chain_witness.jsonl[checkpoint] strip-profiles",
+          {k: v for k, v in checkpoint.items() if k != "profiles"}, True)
+
+    # (b) the chain_witness block validates against its published schema.
+    cw_schema = SPEC / "profiles" / "chain_witness.schema.json"
+    if cw_schema.exists():
+        errs = list(jsonschema.Draft202012Validator(json.loads(cw_schema.read_text())).iter_errors(cw))
+        if errs:
+            failures += 1
+        print(f"  {'PASS' if not errs else 'FAIL'}  chain_witness block valid against chain_witness.schema.json")
+        for e in errs[:3]:
+            print(f"      - {e.message}")
+
+    # (c) the witness signature verifies under the INDEPENDENT witness key (not the producer key).
+    claim = {"chain_id": cw.get("chain_id"), "decision_index": head.get("decision_index"),
+             "current": head.get("current"), "length": head.get("length")}
+    if witness_pub_hex:
+        try:
+            from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+            try:
+                Ed25519PublicKey.from_public_bytes(bytes.fromhex(witness_pub_hex)).verify(
+                    bytes.fromhex(cw["witness"]["value"]), _canonical(claim))
+                wit_ok = True
+            except Exception:
+                wit_ok = False
+            expect("witness signature verifies under the independent witness key", wit_ok)
+            # the witness key MUST differ from the producer key, or the profile is theater.
+            prod = (checkpoint.get("profiles", {}).get("key_trust", {})
+                    .get("public_key", {}).get("value"))
+            expect("witness key is distinct from the producer key", witness_pub_hex != prod)
+        except ImportError:
+            print("  SKIP  witness signature test (cryptography not installed)")
+
+    # (d) THE VALUE: an honest, untruncated presentation matches the witness; dropping the tail
+    #     of the committed chain makes length/head disagree -> truncation detected.
+    committed = records[:-1]  # the checkpoint witnesses the chain BEFORE itself
+    intact = len(committed) == head.get("length") and \
+        committed[-1]["integrity"]["current"] == head.get("current")
+    expect("untruncated chain matches the witnessed length + head", intact)
+    truncated = committed[:-1]
+    caught = not (len(truncated) == head.get("length") and
+                  (truncated[-1]["integrity"]["current"] if truncated else None) == head.get("current"))
+    expect("dropped tail record -> truncation detected by the witness", caught)
+
+
 def main():
     global failures
     examples = sorted((SPEC / "examples").glob("*.json"))
@@ -173,6 +232,18 @@ def main():
     if chain_path.exists():
         print("\n== CHAIN replay (each `previous` links to the prior `current`) ==")
         verify_chain("chain.jsonl", chain_path, pub_hex)
+
+    cw_path = SPEC / "examples" / "chain_witness.jsonl"
+    if cw_path.exists():
+        print("\n== CHAIN-WITNESS profile (freshness / head witness + truncation detection) ==")
+        verify_chain("chain_witness.jsonl", cw_path, pub_hex)
+        wpub_path = SPEC / "examples" / "witness_public_key.txt"
+        wpub_hex = ""
+        if wpub_path.exists():
+            wlines = [ln.strip() for ln in wpub_path.read_text().splitlines()
+                      if ln.strip() and not ln.startswith("#")]
+            wpub_hex = wlines[-1] if wlines else ""
+        verify_chain_witness(cw_path, wpub_hex)
 
     # Prove the integrity block actually detects the attacks THREAT_MODEL.md names: silent
     # field edit (hash), splice/reorder (chain link), and forgery (signature).

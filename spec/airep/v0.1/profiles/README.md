@@ -16,9 +16,9 @@ test.
 So profiles let AIREP fit many industries without making the shared format bigger or
 vendor-specific.
 
-> **Status.** Five profiles ship **published schemas** with worked examples the conformance
-> checker validates — `key_trust`, `eu_ai_act_log`, `nist_ai_rmf`, `owasp_threat`, and
-> `observability_transport` (see below). The rest of the catalogue is **proposed** — design
+> **Status.** Six profiles ship **published schemas** with worked examples the conformance
+> checker validates — `key_trust`, `chain_witness`, `eu_ai_act_log`, `nist_ai_rmf`, `owasp_threat`,
+> and `observability_transport` (see below). The rest of the catalogue is **proposed** — design
 > sketches without a schema yet. Maturity and open items are tracked in
 > [`../STATUS.md`](../STATUS.md), not repeated here. Where a profile names a specific regulation
 > or standard, treat the citation as **indicative** until checked against the primary source.
@@ -35,6 +35,17 @@ self-consistent worked example that the conformance checker validates against th
   very key it declares). It is the dependency [`../THREAT_MODEL.md`](../THREAT_MODEL.md) names for
   turning the format's *partial* signature defenses into enforced ones and for closing the
   replay-as-latest / tail-truncation gaps (via `transparency_log`).
+- **`chain_witness`** — the absolute, freshness-bearing head witness the core lacks: a stable
+  `chain_id`, the head `{decision_index, current, length}`, a witness signature **by a key distinct
+  from the producer** (or a transparency-log inclusion proof), and a `freshness` anchor (witness
+  timestamp / nonce / challenge response). It closes the two gaps the core leaves open — **tail
+  truncation** (the witnessed length/head no longer matches a dropped tail) and **replay-as-latest**
+  (the freshness anchor maps *valid* → *current*) — and is the additional check **AIREP-Trusted**
+  requires. Schema: [`chain_witness.schema.json`](./chain_witness.schema.json); worked example:
+  [`../examples/chain_witness.jsonl`](../examples/chain_witness.jsonl) — a 3-record chain whose tail
+  checkpoint reports `class=Trusted` and whose witness is signed by an independent key; `validate.py`
+  verifies that witness signature and demonstrates truncation detection. **A producer-signed witness
+  provides no truncation defense** — the witness key MUST be independent, or the profile is theater.
 - **`eu_ai_act_log`** — EU AI Act record-keeping fields: the system's risk tier and Annex III point,
   the Article 12 use period / reference database / match, Article 14 human oversight (by pseudonymous
   role, no personal data), Article 19 log retention, and Article 72/73 post-market / serious-incident

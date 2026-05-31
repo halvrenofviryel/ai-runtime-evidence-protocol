@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/chain_witness.schema.json",
+  "title": "AIREP profile: chain_witness (freshness / head witness) v0.1",
+  "description": "Closes the structural gaps the neutral core leaves OPEN (THREAT_MODEL.md): tail-truncation, replay-as-latest, and 'is this the current head?'. The core binds each record only to its immediate predecessor (relative binding); this profile adds an ABSOLUTE binding — a stable chain_id and a signed head witness (length + head hash) produced by a key DISTINCT from the producer — plus a freshness anchor. With it, dropping the last N records is detectable (the witnessed length exceeds the presented chain) and a stale-but-valid head fails the freshness check. CRITICAL HONESTY: a witness signed by the PRODUCER's own key provides NO truncation defense (the producer could self-truncate and re-witness); the witness key MUST be independent of the producer, or this profile provides no guarantee. It is the additional check AIREP-Trusted requires (CONFORMANCE_CLASSES.md). Attaches under profiles.chain_witness; never changes the core; carries no personal data.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["chain_id", "head", "witness"],
+  "properties": {
+    "chain_id": {
+      "type": "string",
+      "description": "A stable, absolute identifier for this chain — the binding the core lacks. The same chain_id MUST NOT be reused across logically distinct chains, so a record cannot be spliced into a different chain even if its relative previous-link happens to match."
+    },
+    "head": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["decision_index", "current", "length"],
+      "description": "The witnessed claim of the chain's true tail at witness time.",
+      "properties": {
+        "decision_index": { "type": "integer", "minimum": 0, "description": "decision_index of the head (tail) record." },
+        "current": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "integrity.current of the head record." },
+        "length": { "type": "integer", "minimum": 1, "description": "Total number of records in the chain at witness time. A presented chain shorter than this length has been truncated." }
+      }
+    },
+    "witness": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["witness_id", "alg", "value"],
+      "description": "A signature over the head claim by a witness key INDEPENDENT of the producer key. A producer-signed witness is theater and does NOT satisfy AIREP-Trusted.",
+      "properties": {
+        "witness_id": { "type": "string", "description": "Identifier of the witness key/authority. MUST be distinct from the record's producer/signing key." },
+        "alg": { "type": "string", "description": "Signature algorithm (for example 'Ed25519')." },
+        "value": { "type": "string", "description": "Signature over the canonical form of {chain_id, head.decision_index, head.current, head.length}." }
+      }
+    },
+    "inclusion_proof": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "ALTERNATIVE to (or alongside) a direct witness signature: an append-only transparency-log inclusion proof anchoring head.current. Reuses the key_trust.transparency_log shape so AIREP can mount onto an existing Sigstore/Rekor-style log rather than reinventing one.",
+      "properties": {
+        "log_url": { "type": "string" },
+        "log_id": { "type": "string" },
+        "leaf_index": { "type": "integer", "minimum": 0 },
+        "proof": { "type": "string", "description": "Proof that head.current is included in the log at leaf_index." }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Maps a VALID record to a CURRENT one. At least one of these SHOULD be present, or 'valid' cannot be read as 'current'.",
+      "properties": {
+        "witness_timestamp_utc": { "type": "string", "format": "date-time", "description": "When the witness signed the head." },
+        "nonce": { "type": "string", "description": "A challenge nonce the verifier supplied, proving the witness is not a replay." },
+        "challenge_response": { "type": "string", "description": "Response to a verifier-issued freshness challenge." }
+      }
+    },
+    "revocation_checked": {
+      "type": "boolean",
+      "description": "True if the verifier confirmed neither the producer key nor the witness key is revoked as of the freshness time (see the key_trust profile's revocation block)."
+    }
+  }
+}
