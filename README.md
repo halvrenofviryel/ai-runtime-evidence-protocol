@@ -1,5 +1,6 @@
 # AI Runtime Evidence Protocol (AIREP)
 
+[![AIREP conformance](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475136-blue)](https://doi.org/10.5281/zenodo.20475136)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)

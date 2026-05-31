@@ -1,0 +1,48 @@
+name: AIREP conformance
+
+# A verifiability protocol whose own repo cannot prove its conformance kit is green is a
+# contradiction. This runs the full kit on every push/PR, on two Python versions, with Node
+# REQUIRED (the cross-runtime tests must not silently fall back to the Python-only path), and
+# guards against example/producer drift.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    defaults:
+      run:
+        working-directory: spec/airep/v0.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Python deps
+        run: pip install jsonschema cryptography
+      - name: Node must be present (cross-runtime tests must not skip)
+        run: node --version
+      - name: validate.py — full conformance battery (schema, neutrality, integrity, chain, tamper, profiles)
+        run: python3 conformance/validate.py
+      - name: test_jcs.py — Python<->Node RFC 8785 canonicalization agree byte-for-byte
+        run: python3 conformance/test_jcs.py
+      - name: test_verifier_parity.py — verify.py and verify.mjs reach the same verdict
+        run: python3 conformance/test_verifier_parity.py
+      - name: verify.mjs — independent Node verifier on the chain + signatures
+        run: node conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_public_key.txt
+      - name: regenerate-drift guard — committed examples must round-trip the producer
+        run: |
+          python3 examples/regenerate.py
+          if ! git diff --quiet -- examples/; then
+            echo "::error::examples drifted after regenerate.py — committed examples do not match the producer"
+            git --no-pager diff -- examples/
+            exit 1
+          fi
