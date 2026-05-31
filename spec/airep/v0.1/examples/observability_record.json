@@ -1,0 +1,71 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-governor/1.0",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:165d350ddd3ea5bd1b6f70994c8694052d68c2d187bb00c2f74498e43851c8c3",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "a PII span was redacted; the decision was emitted as a guardrail span",
+    "basis": [
+      "pii_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:8fc2f27d45895a5c221a4319524a402cf36ff1e2b080a3d394707edc5b5e9fbc",
+    "redacted": true
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://pii/v2",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "redact",
+    "policy_basis": [
+      "pii_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "pii span redacted"
+    ],
+    "does_not_cover": [
+      "downstream propagation not attested"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "canonical_json": true,
+    "current": "sha256:19be0eb88e40a0bdc2e367622c731c8d94c901a4384942eabcd52f2409b03dbb",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "c0fcdcefa4dda9109a6c810afebd50e3414cafbcfb478d09a55b7dbd5b3cac80564ae465a73f4c5830a5171ade8b0347ee5ec735dd87381b6586dc02789bcc03"
+    }
+  },
+  "profiles": {
+    "observability_transport": {
+      "transport": "openinference",
+      "trace_id": "73f40e560335a155a6943c7584e09fd3",
+      "span_id": "1889c8738f670f22",
+      "span_name": "governance.decision",
+      "record_carrier": {
+        "attribute_key": "airep.current",
+        "carries": "current_hash"
+      },
+      "openinference": {
+        "span_kind": "GUARDRAIL"
+      }
+    }
+  }
+}

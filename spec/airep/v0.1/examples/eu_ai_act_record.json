@@ -1,0 +1,91 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-hiring-ai/2.1",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T09:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:d9c0761492f381782fab7adad3d35ed5a61f1f9b776cce419c592c735d30e288",
+    "governance_state": {
+      "policy_version": "hr-screening-v3",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "CV-screening output released after human oversight confirmed it",
+    "basis": [
+      "bias_gate",
+      "human_oversight"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:4f80179e2b8a51ea68efa932c91bcacd1edb5078d965d761dc44f7a264b6b918",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://bias_test/v3",
+      "resolvable": true
+    },
+    {
+      "type": "human_approval",
+      "ref": "approval://hr-reviewer-2",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "bias_gate",
+      "human_oversight"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "bias test run",
+      "human oversight applied"
+    ],
+    "does_not_cover": [
+      "fairness across every protected class not exhaustively tested"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "canonical_json": true,
+    "current": "sha256:1bb45327f4b639286bc146aafe70be550aac0b8345d700ecf4ab8c0ca0c2ae7c",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "373ef232554e482ccd8b758802cc683933d1b8c97eec92990c8c822da8f4407044778202aad5315dc89b61b059fafe8a7137aca8f222726429d2ee7c8eba0807"
+    }
+  },
+  "profiles": {
+    "eu_ai_act_log": {
+      "articles": [
+        "12",
+        "14",
+        "19"
+      ],
+      "system": {
+        "risk_tier": "high_risk",
+        "annex_iii_point": "4(a)",
+        "provider": "acme-hiring-ai",
+        "deployer": "example-employer"
+      },
+      "use_period": {
+        "start": "2026-05-30T09:00:00Z",
+        "end": "2026-05-30T09:00:05Z"
+      },
+      "human_oversight": {
+        "verifier_role": "hr-reviewer-2",
+        "oversight_outcome": "confirmed"
+      },
+      "logging": {
+        "automatically_generated": true,
+        "retention_months": 12
+      }
+    }
+  }
+}

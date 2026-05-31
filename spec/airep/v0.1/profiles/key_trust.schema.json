@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/key_trust.schema.json",
+  "title": "AIREP profile: key_trust v0.1",
+  "description": "Validates a 'profiles.key_trust' block: the trust metadata for the key that produced integrity.signature. The AIREP core requires that a signature EXISTS, not how its key is trusted (SPEC §9 puts key trust out of the core's scope). This profile carries the signer's identity, key id, validity window, rotation and revocation state, and an optional transparency-log anchor — the exact dependencies THREAT_MODEL.md names for turning the format's 'partial' signature defenses into enforced ones, and for closing the replay-as-latest / tail-truncation gaps. It attaches only under profiles.key_trust and never changes the core: deleting the profiles block leaves a valid core record (the neutrality test).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["key_id", "algorithm", "public_key"],
+  "properties": {
+    "key_id": {
+      "type": "string",
+      "description": "Stable identifier (kid) of the signing key, so a verifier can select the right key and follow rotation."
+    },
+    "issuer": {
+      "type": "string",
+      "description": "The authority that vouches for this key (a CA, an organization, or 'self' for a self-asserted key). Unauthenticated text unless corroborated by the transparency_log or an out-of-band trust store."
+    },
+    "algorithm": {
+      "type": "string",
+      "description": "The signature algorithm this key is for (for example 'Ed25519'); SHOULD match integrity.signature.alg of the records it signs."
+    },
+    "public_key": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["format", "value"],
+      "description": "The public key a verifier uses to re-check integrity.signature.",
+      "properties": {
+        "format": { "enum": ["raw_hex", "pem", "jwk", "did", "ref"] },
+        "value": { "type": "string", "description": "The key material in the named format, or a pointer when format is 'ref'." }
+      }
+    },
+    "validity": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The window in which this key is considered valid.",
+      "properties": {
+        "not_before": { "type": "string", "format": "date-time" },
+        "not_after": { "type": "string", "format": "date-time" }
+      }
+    },
+    "transparency_log": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "An append-only public witness that anchors this record's hash (and/or this key). It is what closes the 'replay-as-latest' and 'tail-truncation' gaps the core leaves open (THREAT_MODEL.md): with an inclusion proof a verifier can detect a missing tail and identify the true chain head.",
+      "properties": {
+        "log_url": { "type": "string" },
+        "log_id": { "type": "string" },
+        "leaf_index": { "type": "integer", "minimum": 0 },
+        "inclusion_proof": { "type": "string", "description": "Proof that this record's integrity.current is included in the log at leaf_index." }
+      }
+    },
+    "rotation": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Links this key to the one it replaced, so a chain signed across a rotation stays verifiable.",
+      "properties": {
+        "rotated_from": { "type": "string", "description": "The prior key_id this key superseded." },
+        "rotated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["revoked"],
+      "description": "Revocation state. A verifier MUST treat records signed after revoked_at by a revoked key as untrusted.",
+      "properties": {
+        "revoked": { "type": "boolean" },
+        "revoked_at": { "type": "string", "format": "date-time" },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

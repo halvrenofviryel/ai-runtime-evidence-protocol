@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Not part of the public v0.1 release: a private work-in-progress profile draft.
+# Kept out of the public AIREP repository assembly on purpose (see PUBLISH_MANIFEST.md).
+/v0.3-draft/

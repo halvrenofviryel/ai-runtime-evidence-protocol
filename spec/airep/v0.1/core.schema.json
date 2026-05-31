@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/core.schema.json",
+  "title": "AI Runtime Evidence Protocol (AIREP) — Core Record v0.1",
+  "description": "One signed, hash-chained, canonical-JSON record per AI runtime governance decision: what a system decided at run time, why, on what evidence, and what that evidence does not cover. The format is independent of any vendor, model, or application. Extra content attaches only under the reserved 'profiles' object. Because the core's top-level additionalProperties is false, the neutrality test is mechanical: delete 'profiles' and the record must still validate. That proves block-level neutrality only; content hidden inside a core sub-object (such as input.governance_state) is a conformance violation caught by review, not by the strip-profiles test. See EXPLAINER.md for an introduction and SPEC.md for the binding rules.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["airep_version", "subject", "input", "claim", "output", "evidence", "directive", "scope", "integrity"],
+  "properties": {
+    "airep_version": {
+      "const": "0.1",
+      "description": "The AIREP core version this record conforms to."
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["runtime", "producer", "decision_index", "timestamp_utc"],
+      "properties": {
+        "runtime": { "type": "string", "description": "Identifier of the runtime making the decision. Implementation-defined." },
+        "producer": { "type": "string", "description": "The software that produced this record (name and version)." },
+        "decision_index": { "type": "integer", "minimum": 0, "description": "Per-chain decision index, starting at 0 and increasing by one for each recorded decision." },
+        "trace_id": { "type": "string", "description": "Optional id grouping the records of one session or trajectory. Full multi-agent handoff lineage, if needed, lives in an optional profile." },
+        "timestamp_utc": { "type": "string", "format": "date-time", "description": "UTC time captured at the moment of decision." }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["input_ref", "governance_state"],
+      "properties": {
+        "input_ref": { "type": "string", "description": "A pointer (or hash) to the input under decision. The content stays out of band." },
+        "input_hash": { "type": "string", "description": "Optional SHA-256 of the input, written as sha256:<hex>." },
+        "governance_state": { "type": "object", "additionalProperties": true, "description": "Mechanism-neutral governance state at decision time (for example a policy version). It must not carry implementation-specific mechanism such as a state vector; that belongs under profiles.<name>." }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["assertion", "basis"],
+      "properties": {
+        "assertion": { "type": "string", "description": "The assertion this record makes about the decision (for example 'output released after the safety and ethics gates passed')." },
+        "basis": { "type": "array", "items": { "type": "string" }, "minItems": 1, "description": "The policy or gate the assertion rests on." }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["result_ref"],
+      "properties": {
+        "result_ref": { "type": "string", "description": "A pointer (or hash) to the decision result." },
+        "redacted": { "type": "boolean", "default": false, "description": "True if the result content is withheld (the hash still anchors it)." }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "description": "Typed pointers that bind the claim to its support. Evidence is referenced, never inlined, so the record stays small and content can be redacted without breaking the hash.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["type", "ref", "resolvable"],
+        "properties": {
+          "type": { "enum": ["retrieval", "tool_call", "memory", "policy", "human_approval", "external_url", "eval", "other"] },
+          "ref": { "type": "string", "description": "A pointer to the evidence." },
+          "content_hash": { "type": "string", "description": "Optional SHA-256 of the referenced content, written as sha256:<hex>." },
+          "resolvable": { "type": "boolean", "description": "True if a verifier can fetch and check the content; false if it is withheld but hash-anchored. A verifier must not treat an unresolvable pointer as verified." }
+        }
+      }
+    },
+    "directive": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["verb", "policy_basis"],
+      "description": "The decision as a single verb, plus the policy basis that produced it.",
+      "properties": {
+        "verb": { "enum": ["release", "block", "defer", "redact", "escalate_to_human", "kill"] },
+        "policy_basis": { "type": "array", "items": { "type": "string" }, "description": "The ordered gate identifiers that produced the decision." }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["covers", "does_not_cover"],
+      "description": "Scope honesty. Every record states what its evidence does and does not cover, so a reader knows what the record cannot attest.",
+      "properties": {
+        "covers": { "type": "array", "items": { "type": "string" }, "description": "What this record's evidence does attest (for example 'safety gate fired')." },
+        "does_not_cover": { "type": "array", "items": { "type": "string" }, "description": "What it does not attest (for example 'reasoning faithfulness not checked')." }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["previous", "current", "canonical_json", "signature"],
+      "description": "Tamper-evidence and ordering. 'current' is the SHA-256 of the record's canonical form, computed with integrity.current and integrity.signature removed and integrity.previous retained, so a record's content is bound to its position in the chain. The chain links each record to the one before it through 'previous'.",
+      "properties": {
+        "previous": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "The 'current' hash of the prior record in the chain. The first record uses the genesis value: 'sha256:' followed by 64 zero characters." },
+        "current": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "SHA-256 of this record's canonical form, as 'sha256:' followed by 64 lowercase hex characters." },
+        "canonical_json": { "const": true, "description": "Set to true to declare the hash was computed over the RFC 8785 (JSON Canonicalization Scheme) canonical form." },
+        "signature": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["alg", "value"],
+          "description": "The record's signature. The core requires that a signature exists, not which key system produced it.",
+          "properties": {
+            "alg": { "type": "string", "description": "Names the signature algorithm used (for example 'Ed25519' or 'HMAC-SHA256'), so any conformant signer is interchangeable." },
+            "value": { "type": "string", "description": "The signature over 'current' (the record hash)." }
+          }
+        }
+      }
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The single reserved extension point. Vendor-, model-, framework-, or domain-specific content attaches here as named blocks (for example profiles.phionyx or profiles.finance). None of it is part of the neutral core. Neutrality test: deleting this key must leave a record that still validates against the core. Optional; a single, vendor-free record omits it."
+    }
+  }
+}

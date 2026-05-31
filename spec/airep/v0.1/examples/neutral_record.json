@@ -1,0 +1,59 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-governor/1.0",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:deadbeef",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "output released after safety+ethics gates passed",
+    "basis": [
+      "safety_gate",
+      "ethics_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:cafef00d",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://safety/v1",
+      "content_hash": "sha256:1111",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "safety_gate",
+      "ethics_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "safety gate fired"
+    ],
+    "does_not_cover": [
+      "reasoning faithfulness not attested"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "current": "sha256:23f9019316cf850290e14b75a4a9bd6180ff7aee495c94793ae02608402ba4c1",
+    "canonical_json": true,
+    "signature": {
+      "alg": "Ed25519",
+      "value": "48286874a79e698855784874751a9152e07909354e8107d2b26850bec624c6d93a1f3ec278a5d5c2b31a58e2d8492781b84f33a1fcdb5d1241252cb4c93ba105"
+    }
+  }
+}

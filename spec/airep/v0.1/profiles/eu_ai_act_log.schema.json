@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/eu_ai_act_log.schema.json",
+  "title": "AIREP profile: eu_ai_act_log v0.1",
+  "description": "Maps an AIREP record onto EU AI Act record-keeping. INDICATIVE: the article references (Regulation (EU) 2024/1689) are a design aid and MUST be checked against the primary source before any compliance claim — AIREP produces evidence for these obligations, it does not by itself establish conformity. Carries the Article 12 automatic-logging fields, Article 19 log-retention, and Article 72/73 post-market-monitoring / serious-incident linkage. Attaches under profiles.eu_ai_act_log and never changes the core (the neutrality test). Carries NO raw personal data — natural persons are referenced by pseudonymous role only.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["articles", "system"],
+  "properties": {
+    "articles": {
+      "type": "array",
+      "items": { "enum": ["12", "14", "19", "72", "73"] },
+      "minItems": 1,
+      "description": "The EU AI Act articles this record helps evidence (12 record-keeping, 14 human oversight, 19 automatically-generated logs, 72 post-market monitoring, 73 serious-incident reporting)."
+    },
+    "system": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["risk_tier"],
+      "properties": {
+        "risk_tier": { "enum": ["high_risk", "limited_risk", "minimal_risk", "prohibited"] },
+        "annex_iii_point": { "type": "string", "description": "The Annex III high-risk use-case point if applicable (for example '1(a)' for remote biometric identification)." },
+        "provider": { "type": "string", "description": "The provider placing the system on the market." },
+        "deployer": { "type": "string", "description": "The deployer operating the system." }
+      }
+    },
+    "use_period": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Article 12(2)(a): the period of each use.",
+      "properties": {
+        "start": { "type": "string", "format": "date-time" },
+        "end": { "type": "string", "format": "date-time" }
+      }
+    },
+    "reference_database": {
+      "type": "string",
+      "description": "Article 12(2)(b): the reference database against which input data was checked."
+    },
+    "input_match": {
+      "type": "boolean",
+      "description": "Article 12(2)(c): whether the input data search led to a match."
+    },
+    "human_oversight": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Article 14 / 12(2)(d): the natural person(s) verifying results, by pseudonymous role only — never raw identity.",
+      "properties": {
+        "verifier_role": { "type": "string", "description": "Role or pseudonymous id of the verifying person (NOT a name or other personal data)." },
+        "oversight_outcome": { "enum": ["confirmed", "overridden", "not_required"] }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Article 19: automatically generated logs and their retention.",
+      "properties": {
+        "automatically_generated": { "type": "boolean" },
+        "retention_months": { "type": "integer", "minimum": 6, "description": "Article 19: kept at least 6 months unless other Union or national law applies." }
+      }
+    },
+    "post_market_monitoring": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Article 72: data collected for the post-market monitoring system.",
+      "properties": {
+        "plan_ref": { "type": "string" },
+        "metric": { "type": "string" },
+        "value": { "type": "string", "description": "Carried as a string so two implementations agree on the bytes (SPEC §6)." }
+      }
+    },
+    "serious_incident": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["occurred"],
+      "description": "Article 73: serious-incident reporting linkage.",
+      "properties": {
+        "occurred": { "type": "boolean" },
+        "reported_at": { "type": "string", "format": "date-time" },
+        "authority": { "type": "string" },
+        "reference": { "type": "string", "description": "A pointer to the incident report filed with the authority." }
+      }
+    }
+  }
+}

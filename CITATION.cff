@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use the AI Runtime Evidence Protocol (AIREP), please cite it as below."
+title: "AI Runtime Evidence Protocol (AIREP)"
+abstract: >-
+  A neutral, vendor- and model-independent record format for per-decision AI runtime
+  governance evidence: one signed, tamper-evident, chained record per AI decision, checkable
+  offline by an independent verifier. AIREP v0.1 is a proposed open format with one reference
+  implementation; it is not a ratified standard.
+type: software
+version: "0.1"
+date-released: 2026-05-30
+license:
+  - Apache-2.0
+  - CC-BY-4.0
+repository-code: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol"
+url: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol"
+authors:
+  - family-names: Abak
+    given-names: Ali Toygar
+    orcid: "https://orcid.org/0009-0002-3718-4010"
+keywords:
+  - AI governance
+  - runtime evidence
+  - audit
+  - tamper-evident records
+  - interchange format
+  - AI accountability
+# A Zenodo DOI will be added here once the first release of this repository is archived.

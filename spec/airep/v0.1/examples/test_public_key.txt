@@ -1,0 +1,4 @@
+# AIREP v0.1 example signing key — TEST ONLY (published, never production).
+# Ed25519 raw public key (hex). Verifies integrity.signature over integrity.current.
+# seed (test only): 00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b

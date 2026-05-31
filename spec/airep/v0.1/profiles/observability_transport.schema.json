@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/observability_transport.schema.json",
+  "title": "AIREP profile: observability_transport v0.1",
+  "description": "Binds an AIREP record to an observability span so a signed governance record and the telemetry of the same decision can be correlated. INDICATIVE: the OpenTelemetry / OpenInference attribute conventions are a design aid to be checked against those specs. This profile records WHICH transport carried the record and the span it rode on; the actual SDK glue (emitting the record as a span attribute) is adoption work, not part of the core. Attaches under profiles.observability_transport; never changes the core; carries no personal data.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["transport", "record_carrier"],
+  "properties": {
+    "transport": {
+      "enum": ["opentelemetry", "openinference", "otlp"],
+      "description": "The telemetry transport the record was carried over."
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "The transport trace id (for OpenTelemetry, 32 lowercase hex characters) linking this record to a distributed trace."
+    },
+    "span_id": {
+      "type": "string",
+      "description": "The transport span id (for OpenTelemetry, 16 lowercase hex characters) of the decision's span."
+    },
+    "span_name": {
+      "type": "string"
+    },
+    "record_carrier": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["attribute_key", "carries"],
+      "description": "How the AIREP record travels on the span.",
+      "properties": {
+        "attribute_key": {
+          "type": "string",
+          "description": "The span attribute key under which the record (or its hash) is set, for example 'airep.record' or 'airep.current'."
+        },
+        "carries": {
+          "enum": ["full_record", "current_hash"],
+          "description": "Whether the span attribute holds the full canonical record or only its integrity.current hash (a pointer to the out-of-band record)."
+        }
+      }
+    },
+    "openinference": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "OpenInference-specific fields, when transport is openinference.",
+      "properties": {
+        "span_kind": { "enum": ["LLM", "CHAIN", "TOOL", "AGENT", "RETRIEVER", "RERANKER", "EMBEDDING", "GUARDRAIL", "EVALUATOR"] }
+      }
+    }
+  }
+}

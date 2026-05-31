@@ -1,0 +1,79 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-governor/1.0",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:31e6d21f23244f5a0e1fdb8e7c7d240a826fb2419017d8133ef116c583f6032f",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "input blocked: a prompt-injection attempt was detected",
+    "basis": [
+      "injection_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:c2b756ee8f2a6cf09209e15bf1e2d15e48b3b0711b622feced93e228726dd5ed",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "eval",
+      "ref": "eval://injection_detector/0.93",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "block",
+    "policy_basis": [
+      "injection_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "prompt-injection pattern matched"
+    ],
+    "does_not_cover": [
+      "novel injection variants not guaranteed caught"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "canonical_json": true,
+    "current": "sha256:960d47d88d37616977932acf6c22815bd660d3cecb8a20c5526cfab3b32c8e42",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "e3dae51e6696968e9e7055e2621784033ab40363ecfe7bd064a7cf6dc0f9067b5ff2099944cda90f2f0b3f514b674f2f759ba9d53e8bfd0f2b0e91c063406b0a"
+    }
+  },
+  "profiles": {
+    "nist_ai_rmf": {
+      "function": "MEASURE",
+      "category": "MEASURE-2.7",
+      "trustworthiness": [
+        "secure_resilient",
+        "safe"
+      ],
+      "measurement": {
+        "metric": "injection_detector_score",
+        "method": "classifier",
+        "result": "0.93"
+      }
+    },
+    "owasp_threat": {
+      "catalogue": "owasp_llm",
+      "threat_id": "LLM01",
+      "threat_name": "Prompt Injection",
+      "control": "injection_gate",
+      "status": "blocked",
+      "severity": "high"
+    }
+  }
+}

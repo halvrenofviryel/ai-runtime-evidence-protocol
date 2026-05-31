@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/nist_ai_rmf.schema.json",
+  "title": "AIREP profile: nist_ai_rmf v0.1",
+  "description": "Maps an AIREP record onto the NIST AI Risk Management Framework (AI 100-1). INDICATIVE: function/category references are a design aid to be checked against the primary source — AIREP produces evidence for the MEASURE and MANAGE functions (which decision, on what evidence, under which gate, with what scope; and the response taken), it does not by itself establish a risk-management programme. Attaches under profiles.nist_ai_rmf, never changes the core, carries no personal data.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["function"],
+  "properties": {
+    "function": {
+      "enum": ["GOVERN", "MAP", "MEASURE", "MANAGE"],
+      "description": "The NIST AI RMF function this record bears on."
+    },
+    "category": {
+      "type": "string",
+      "description": "The subcategory identifier, for example 'MEASURE-2.7' or 'MANAGE-4.1'."
+    },
+    "trustworthiness": {
+      "type": "array",
+      "items": {
+        "enum": ["valid_reliable", "safe", "secure_resilient", "accountable_transparent",
+                 "explainable_interpretable", "privacy_enhanced", "fair_bias_managed"]
+      },
+      "description": "The NIST trustworthiness characteristics this record bears on."
+    },
+    "risk": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "tier": { "enum": ["low", "medium", "high"] }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "For the MEASURE function: the metric assessed and its result.",
+      "properties": {
+        "metric": { "type": "string" },
+        "method": { "type": "string" },
+        "result": { "type": "string", "description": "Carried as a string so two implementations agree on the bytes (SPEC §6)." }
+      }
+    },
+    "management_action": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "For the MANAGE function: the response taken.",
+      "properties": {
+        "action": { "type": "string" },
+        "status": { "enum": ["planned", "in_progress", "completed", "accepted"] }
+      }
+    }
+  }
+}

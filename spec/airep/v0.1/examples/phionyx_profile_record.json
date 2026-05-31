@@ -1,0 +1,69 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "phionyx-core",
+    "producer": "phionyx/0.7.1",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:deadbeef",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "output released after safety+ethics gates passed",
+    "basis": [
+      "safety_gate",
+      "ethics_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:cafef00d",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://safety/v1",
+      "content_hash": "sha256:1111",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "safety_gate",
+      "ethics_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "safety gate fired"
+    ],
+    "does_not_cover": [
+      "reasoning faithfulness not attested"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "current": "sha256:1c948e2c3ac0e68ec7fb513ca29b16bc4d4a97d575a277646c05b69465857307",
+    "canonical_json": true,
+    "signature": {
+      "alg": "Ed25519",
+      "value": "e619e9b0ee4d04399e62ba991ab32b61ae693b5676dbef9046671436c4501e90168139f6a9a673312354c6ea73410ab0b8f12b5b34b587fffb8c9d7addf4e202"
+    }
+  },
+  "profiles": {
+    "phionyx": {
+      "state_vector": {
+        "phi": 0.2214,
+        "coherence": 0.75,
+        "amplitude": 5.4,
+        "entropy": 0.18
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/owasp_threat.schema.json",
+  "title": "AIREP profile: owasp_threat v0.1",
+  "description": "Tags an AIREP record with a threat identifier from an external catalogue (OWASP Top 10 for LLM Applications, OWASP Agentic AI threats, MITRE ATLAS, or Google SAIF) and the control that detected or mitigated it. INDICATIVE: identifiers are a design aid to be checked against the source catalogue. AIREP records that a control fired and links it to the named threat; it does not by itself prove the threat was fully neutralised. Attaches under profiles.owasp_threat; never changes the core.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["catalogue", "threat_id", "status"],
+  "properties": {
+    "catalogue": {
+      "enum": ["owasp_llm", "owasp_agentic", "mitre_atlas", "google_saif"],
+      "description": "The catalogue the threat_id belongs to."
+    },
+    "threat_id": {
+      "type": "string",
+      "description": "The identifier within the catalogue, for example 'LLM01' (prompt injection) for owasp_llm or an 'AML.Txxxx' technique id for mitre_atlas."
+    },
+    "threat_name": {
+      "type": "string",
+      "description": "Human-readable name of the threat."
+    },
+    "control": {
+      "type": "string",
+      "description": "The gate or policy that detected or mitigated the threat (maps to a core directive.verb + policy_basis)."
+    },
+    "status": {
+      "enum": ["detected", "mitigated", "blocked", "accepted", "monitoring"],
+      "description": "What happened to the threat in this decision."
+    },
+    "severity": {
+      "enum": ["low", "medium", "high", "critical"]
+    }
+  }
+}

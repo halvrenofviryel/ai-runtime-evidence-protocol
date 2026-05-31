@@ -1,0 +1,79 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-governor/1.0",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:6aa2f724a57c47de31d1137f48c7d37527a9e552066cf8e90e58ec2f3196fdee",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "output released; the signer's key trust is declared inline",
+    "basis": [
+      "safety_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:ed76ba79122ef1dd2e4295a07e5f0feeed095659d4ca2508ca8c20bc97dd97f6",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://safety/v1",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "safety_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "safety gate fired"
+    ],
+    "does_not_cover": [
+      "key issuer not independently corroborated"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "canonical_json": true,
+    "current": "sha256:d07b59657918503dbf352b64c4b869dab884110349741c651753e27dc590395d",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "f5b2c200df6412852f9d4824a1720fc4b57755aefd551632c29fa470f18b929c169e126446bf2074a03e2244b23deb924c04cf46c7aed03640b9485cb5850b0f"
+    }
+  },
+  "profiles": {
+    "key_trust": {
+      "key_id": "airep-test-key-1",
+      "issuer": "self",
+      "algorithm": "Ed25519",
+      "public_key": {
+        "format": "raw_hex",
+        "value": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b"
+      },
+      "validity": {
+        "not_before": "2026-05-30T00:00:00Z"
+      },
+      "transparency_log": {
+        "log_url": "https://example.org/airep-log",
+        "log_id": "demo-log",
+        "leaf_index": 0,
+        "inclusion_proof": "sha256:a5fd4a5140bce3d2322b4ae0194331591c60238bb61ee63f6e29edb2f0525b37"
+      },
+      "revocation": {
+        "revoked": false
+      }
+    }
+  }
+}
