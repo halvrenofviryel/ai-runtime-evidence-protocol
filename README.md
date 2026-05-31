@@ -1,6 +1,6 @@
 # AI Runtime Evidence Protocol (AIREP)
 
-[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475137-blue)](https://doi.org/10.5281/zenodo.20475137)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475136-blue)](https://doi.org/10.5281/zenodo.20475136)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
 
@@ -80,5 +80,5 @@ change in lockstep; breaking changes bump the version and are logged as **BREAKI
 
 ## Citation
 
-Archived on Zenodo: DOI [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
+Archived on Zenodo: concept DOI [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) (always resolves to the latest version); v0.1 specifically is [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
 Machine-readable metadata is in [`CITATION.cff`](./CITATION.cff).

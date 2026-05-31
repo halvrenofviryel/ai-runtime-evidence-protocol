@@ -9,7 +9,11 @@ abstract: >-
 type: software
 version: "0.1"
 date-released: 2026-05-31
-doi: 10.5281/zenodo.20475137
+doi: 10.5281/zenodo.20475136
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.20475137
+    description: "Version 0.1 archived release"
 license:
   - Apache-2.0
   - CC-BY-4.0
