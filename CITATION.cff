@@ -8,7 +8,8 @@ abstract: >-
   implementation; it is not a ratified standard.
 type: software
 version: "0.1"
-date-released: 2026-05-30
+date-released: 2026-05-31
+doi: 10.5281/zenodo.20475137
 license:
   - Apache-2.0
   - CC-BY-4.0
@@ -25,4 +26,3 @@ keywords:
   - tamper-evident records
   - interchange format
   - AI accountability
-# A Zenodo DOI will be added here once the first release of this repository is archived.
