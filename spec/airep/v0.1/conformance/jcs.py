@@ -12,6 +12,12 @@ Verified byte-for-byte against the Node implementation across a value battery (s
 NaN / Infinity are not valid JSON numbers and are rejected. Numbers whose exact representation is
 significant SHOULD be carried as strings (SPEC §6), but with this serializer plain JSON numbers also
 canonicalize deterministically across implementations.
+
+PUBLIC API (stable; this is the canonicalizer to copy into any producer — it is stdlib-only):
+    canonicalize(obj: Any) -> bytes   the RFC 8785 canonical UTF-8 bytes AIREP hashes over.
+    es6_number(n) -> str              the ES6 Number::toString(10) used for JSON numbers.
+A producer in another language MUST reproduce these exact bytes. Reference copies: this file (Python)
+and the inline canonical() in producers/typescript/airep_producer.ts (Node).
 """
 from __future__ import annotations
 

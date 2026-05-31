@@ -36,6 +36,30 @@ a **neutrality test** proves nothing leaked into the shared core.
 A record proves the decision *path* was recorded faithfully and not altered. It does **not** prove
 the AI's answer was correct — `scope.does_not_cover` keeps that boundary explicit.
 
+## Who is this for — start here
+
+It is an **Experimental** proposed open format with a reference implementation — see
+[`STATUS.md`](./spec/airep/v0.1/STATUS.md). Pick your path:
+
+- **Reviewing / evaluating it?** Read [`EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) (plain-language
+  tutorial, **start here**) and [`THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) (every threat
+  graded honestly — `partial`/`none`, never "defended"). Then prove it yourself: `cd spec/airep/v0.1
+  && pip install jsonschema cryptography` (Node 20+ also required), then `python3
+  conformance/validate.py` and `python3 conformance/verify.py examples/chain.jsonl --pubkey
+  examples/test_public_key.txt --class` — two independent verifiers re-derive every hash byte-for-byte
+  and you'll see `sig=ok`.
+- **Adopting it (writing your own records)?** Follow **"Write your own record in 5 minutes"** in
+  [`EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md): copy
+  [`examples/neutral_record.json`](./spec/airep/v0.1/examples/neutral_record.json), edit the fields,
+  sign with your **own** key via [`producers/python/`](./producers/python/), and verify it. A custom
+  `profiles.<name>` block works with **no upstream registration** — see
+  [`profiles/README.md`](./spec/airep/v0.1/profiles/README.md) "Authoring your own profile".
+- **Contributing?** Read [`CONTRIBUTING.md`](./CONTRIBUTING.md), browse the
+  [`good first issue`](../../labels/good%20first%20issue) and [`help wanted`](../../labels/help%20wanted)
+  labels (the open items from [`STATUS.md`](./spec/airep/v0.1/STATUS.md) are filed there), and report
+  verifier / crypto flaws privately via [`SECURITY.md`](./SECURITY.md). The most-wanted contribution is
+  a **genuinely third-party producer**.
+
 ## Repository map
 
 | Path | What it is |
@@ -47,14 +71,16 @@ the AI's answer was correct — `scope.does_not_cover` keeps that boundary expli
 | [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two independent verifiers (Python + Node) and a runnable validator. |
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
+| [`producers/python/`](./producers/python/) | Copy-paste producer — sign your own record with your own key. |
 
 ## Check it yourself
 
 ```bash
 cd spec/airep/v0.1
-python3 conformance/validate.py                                   # validate every example + negatives
-python3 conformance/verify.py  examples/chain.jsonl               # Python verifier
-node      conformance/verify.mjs examples/chain.jsonl             # independent Node verifier — same bytes
+pip install jsonschema cryptography      # Python deps (Node 20+ also required for verify.mjs)
+python3 conformance/validate.py          # full battery: schema, neutrality, integrity, chain, tamper
+python3 conformance/verify.py  examples/chain.jsonl --pubkey examples/test_public_key.txt --class   # Python -> sig=ok
+node      conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_public_key.txt --class   # Node -> same bytes
 ```
 
 Two implementations on different language and crypto stacks each validate structure, run the

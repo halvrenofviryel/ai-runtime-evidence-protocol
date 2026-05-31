@@ -125,7 +125,9 @@ So AIREP records are written in one **canonical** form: keys in a fixed order, n
 insignificant spacing. (The agreed method is RFC 8785, the JSON Canonicalization Scheme.)
 Write the record the canonical way, and the same record always produces the same
 fingerprint — anywhere, in any language. This single rule is what turns an ordinary log
-line into checkable evidence.
+line into checkable evidence. The reference canonicalizer is
+[`conformance/jcs.py`](./conformance/jcs.py) (Python, stdlib-only); a producer in any other
+language must reproduce its exact bytes, so the simplest path is to copy that one file.
 
 ## 5. Replaying a decision later
 
@@ -177,9 +179,9 @@ is, no vendor-specific content leaked into the shared part. (This test checks th
 level. Hiding vendor data *inside* a core part — say, sneaking engine numbers into
 `governance_state` — is against the rules but is caught by review, not by this test.)
 
-Five profiles ship on disk today, described in the [`profiles/`](./profiles/) directory: key
-trust, EU AI Act logging, NIST AI RMF, OWASP/threat-catalogue tagging, and observability
-transport. The finance and game examples above are illustrations of the *shape* a profile
+Six profiles ship on disk today, described in the [`profiles/`](./profiles/) directory: key
+trust, chain-witness (freshness), EU AI Act logging, NIST AI RMF, OWASP/threat-catalogue
+tagging, and observability transport. The finance and game examples above are illustrations of the *shape* a profile
 takes, not profiles that ship yet — more profiles (other regulations and domains) are
 proposed, and anyone can define one by following the neutrality test. Profiles are optional:
 a plain, single-system record uses no profile at all.
@@ -206,6 +208,38 @@ A runnable checker and a set of example receipts to test against are in the
   correct — that is exactly why `does_not_cover` exists.
 - **Key trust is arranged separately.** AIREP fixes the receipt format. How you distribute
   and trust signing keys is a deployment choice (a profile may pin one).
+
+## 10. Write your own record in 5 minutes
+
+The quickest way to understand the format is to emit one record from your own runtime. You need
+Python with `cryptography` (`pip install cryptography`); run these from `spec/airep/v0.1/`.
+
+1. **Draft a record** — copy a worked example and edit the fields for your decision:
+   ```bash
+   cp examples/neutral_record.json my_record.json
+   # edit subject / input / claim / output / evidence / directive / scope
+   ```
+2. **Sign it with your own key.** The producer fills the `integrity` block (hash + signature); since
+   you passed no key, it generates a fresh one:
+   ```bash
+   python3 ../../../producers/python/airep_producer.py my_record.json
+   ```
+   It writes `my_record.pub.hex` (your public key) and `my_record.key.hex` (your private key — keep
+   it out of git; it never goes inside a record).
+3. **Verify it** — you should see `sig=ok`:
+   ```bash
+   python3 conformance/verify.py my_record.json --pubkey my_record.pub.hex --class
+   ```
+4. **Climb the ladder (optional).** The record above is **AIREP-Core**. Add a `profiles.key_trust`
+   block declaring your signing key to reach **AIREP-Verified**, and a `profiles.chain_witness` block
+   to reach **AIREP-Trusted** — see [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md).
+5. **Use it in your own project.** Copy two stdlib-only files —
+   [`producers/python/airep_producer.py`](../../../producers/python/airep_producer.py) and
+   [`conformance/jcs.py`](./conformance/jcs.py) — and call `build_record(record, signing_key, previous)`.
+   See [`producers/python/README.md`](../../../producers/python/README.md).
+
+The format is yours to write the moment you can compute the canonical hash and sign it — no vendor,
+model, or upstream registration is in the loop.
 
 ---
 

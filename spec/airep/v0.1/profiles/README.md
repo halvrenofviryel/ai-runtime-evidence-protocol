@@ -76,6 +76,28 @@ self-consistent worked example that the conformance checker validates against th
 
 ---
 
+## Authoring your own profile
+
+You do **not** need to register a profile here, or open a pull request, to use one. A profile is just
+a namespaced block, and both verifiers accept any `profiles.<name>` at **AIREP-Core** today.
+
+1. **Pick a collision-resistant name** — a vendor, product, or reverse-DNS prefix (e.g.
+   `acme_lending`, `com.acme.lending`). That is the only "registration" AIREP requires.
+2. **Put your fields under `profiles.<name>`.** Everything specific to your runtime, model, or domain
+   goes there; nothing specific goes in the core. The record stays valid and neutral — deleting
+   `profiles` must still leave a valid core record (the neutrality test).
+3. **Optional — write a JSON Schema for it.** Copy [`key_trust.schema.json`](./key_trust.schema.json)
+   as a template: `additionalProperties: true`, an honest `description`, and an **INDICATIVE** tag on
+   any external regulatory anchor you cite (a pointer to confirm against the primary source, not a
+   verified mapping).
+
+> Tooling note: `validate.py` auto-checks a `profiles.<name>` block against its schema only when that
+> schema sits in this `profiles/` directory. A local/custom profile is carried and stays
+> neutrality-clean, but is not schema-validated by the shipped kit until its schema is added here (see
+> [`../STATUS.md`](../STATUS.md)). Open a **New profile** issue only if you want it in the shared catalogue.
+
+---
+
 ## Framework profiles (reserved names)
 
 Each binds the core record to one external framework. Reserved names:
