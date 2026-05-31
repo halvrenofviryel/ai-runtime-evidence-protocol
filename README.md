@@ -5,13 +5,15 @@
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
 
-**One signed, checkable record per AI runtime decision — readable by anyone, tied to no vendor.**
+**An AI decision receipt — one signed, checkable record per AI runtime decision, readable by anyone, tied to no vendor.**
 
 When an AI system decides something — answer this, refuse that, hand it to a person — someone
 may later need to ask: *what did it decide, why, and on what basis?* Today every system answers
 that differently, or not at all. AIREP is a small, fixed record format that answers it the same
-way everywhere, so an auditor, a regulator, a customer, or a teammate on another product can read
-one decision and check it offline — without access to the model that made it.
+way everywhere — **an AI decision receipt** — so an auditor, a regulator, a customer, or a teammate
+on another product can read one decision and check it offline, without access to the model that made
+it. (AIREP is the format; *AI decision receipt* is the thing it produces — the way SPDX and CycloneDX
+are formats and an *SBOM* is the thing.)
 
 > **Status: Experimental.** AIREP is a *proposed* open format with one reference implementation.
 > It is **not** a ratified standard. See [`spec/airep/v0.1/STATUS.md`](./spec/airep/v0.1/STATUS.md)
@@ -78,6 +80,19 @@ change in lockstep; breaking changes bump the version and are logged as **BREAKI
   [`LICENSE-CC-BY-4.0.txt`](./LICENSE-CC-BY-4.0.txt).
 - **Conformance and example code** (`spec/**/conformance/`, `spec/**/examples/`): **Apache-2.0** —
   see [`LICENSE`](./LICENSE).
+
+## Patent Non-Assertion
+
+AIREP is intended to be freely implementable as a neutral interoperability format. The maintainer
+provides a royalty-free patent non-assertion covenant for implementations limited to producing,
+transmitting, canonicalizing, hash-chaining, signing, or verifying conformant AIREP records as
+defined by the neutral core specification.
+
+This covenant does not license Phionyx runtime mechanisms, governance engines, scoring systems,
+model-routing logic, or any implementation-specific technology beyond the acts necessary to implement
+the neutral AIREP interchange record itself.
+
+See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 ## Citation
 
