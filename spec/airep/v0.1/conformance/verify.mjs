@@ -173,15 +173,45 @@ function loadRecords(file) {
   return Array.isArray(obj) ? obj : [obj];
 }
 
+// --- conformance classes (CONFORMANCE_CLASSES.md) — kept in lockstep with verify.py ----------
+const REAL_ALGS = new Set(["ed25519", "ecdsa", "rsa", "rsa-pss", "hmac-sha256"]);
+const CLASS_RANK = { INVALID: 0, Core: 1, Verified: 2, Trusted: 3 };
+
+function evidenceAnchored(rec) {
+  for (const e of rec.evidence || []) {
+    if (e && e.resolvable === false && !e.content_hash) return false;
+  }
+  return true;
+}
+function keyTrustBound(rec) {
+  const kt = (rec.profiles || {}).key_trust;
+  return isObj(kt) && ["key_id", "algorithm", "public_key"].every((k) => k in kt);
+}
+function witnessPresent(rec) {
+  const prof = rec.profiles || {};
+  const cw = prof.chain_witness || prof.freshness_witness;
+  if (!isObj(cw)) return false; // witness profile not shipped yet → Trusted unreachable today
+  const head = cw.head || {};
+  return Boolean(cw.chain_id && head.current && cw.witness);
+}
+function classify(rec, sigOk) {
+  const alg = String((((rec.integrity || {}).signature) || {}).alg || "").toLowerCase();
+  const verified = sigOk === true && REAL_ALGS.has(alg) && evidenceAnchored(rec) && keyTrustBound(rec);
+  if (!verified) return "Core";
+  return witnessPresent(rec) ? "Trusted" : "Verified";
+}
+
 function main() {
   const args = process.argv.slice(2);
   const file = args[0];
   const pi = args.indexOf("--pubkey");
   const pub = loadPub(pi >= 0 ? args[pi + 1] : "");
+  const showClass = args.includes("--class");
   const records = loadRecords(file);
   const isChain = records.length > 1;
   let fails = 0;
   let prev = GENESIS;
+  let chainClass = "Trusted"; // a chain is only as strong as its weakest record
   console.log(`AIREP verify (node): ${file}  (${records.length} record(s)${isChain ? " — chain" : ""})`);
   records.forEach((rec, i) => {
     const bad = [];
@@ -200,10 +230,16 @@ function main() {
     if (sig === false) bad.push("signature");
     prev = integ.current;
     const sigstr = sig === true ? "sig=ok" : sig === false ? "sig=FAIL" : "sig=skip";
-    console.log(`  [${i}] ${bad.length ? "FAIL(" + bad.join(",") + ")" : "PASS"}  ${sigstr}  ${String(integ.current).slice(0, 23)}...`);
+    const cls = showClass ? (bad.length ? "INVALID" : classify(rec, sig)) : null;
+    if (cls !== null && CLASS_RANK[cls] < CLASS_RANK[chainClass]) chainClass = cls;
+    const clspart = showClass ? `  class=${cls}` : "";
+    console.log(`  [${i}] ${bad.length ? "FAIL(" + bad.join(",") + ")" : "PASS"}  ${sigstr}${clspart}  ${String(integ.current).slice(0, 23)}...`);
     if (bad.length) fails++;
   });
   console.log(`RESULT: ${fails ? fails + " record(s) FAILED" : "all records OK"}`);
+  if (showClass) {
+    console.log(`CLASS: ${fails ? "INVALID" : chainClass}${!pub && !fails ? "  (pass --pubkey to assess Verified)" : ""}`);
+  }
   process.exit(fails ? 1 : 0);
 }
 

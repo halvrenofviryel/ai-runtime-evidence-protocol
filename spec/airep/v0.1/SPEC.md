@@ -34,6 +34,15 @@ A producer is conformant if every record it emits satisfies the producer require
 verifier is conformant if it enforces the verifier requirements. A verifier MUST NOT report
 a record as valid unless all checks in Section 8 pass.
 
+**Assurance tiers (Core / Verified / Trusted).** Independently of the producer/verifier roles
+above, a record or chain has an *assurance tier* stating how much a consumer may rely on it.
+**AIREP-Core** is a well-formed, untampered record (the Section 8 checks). **AIREP-Verified** adds
+re-verified authorship under a key bound by a `key_trust` profile. **AIREP-Trusted** adds an
+independent freshness / head witness. The tiers are a strict ladder, defined normatively in
+[`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md); the reference verifiers
+report the highest tier a record satisfies with `--class`. (The witness profile that AIREP-Trusted
+requires is a v0.2 item, so no record reaches Trusted yet — see [`STATUS.md`](./STATUS.md).)
+
 ## 3. The core record
 
 A record MUST be a JSON object that validates against

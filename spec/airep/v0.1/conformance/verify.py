@@ -94,12 +94,53 @@ def _load_records(path: str):
     return obj if isinstance(obj, list) else [obj]
 
 
-def verify(path: str, pubkey: str = "") -> int:
+# --- conformance classes (CONFORMANCE_CLASSES.md) ---------------------------------------------
+_REAL_ALGS = {"ed25519", "ecdsa", "rsa", "rsa-pss", "hmac-sha256"}
+_CLASS_RANK = {"INVALID": 0, "Core": 1, "Verified": 2, "Trusted": 3}
+
+
+def _evidence_anchored(rec) -> bool:
+    for e in rec.get("evidence", []) or []:
+        if isinstance(e, dict) and e.get("resolvable") is False and not e.get("content_hash"):
+            return False
+    return True
+
+
+def _key_trust_bound(rec) -> bool:
+    kt = (rec.get("profiles") or {}).get("key_trust")
+    return isinstance(kt, dict) and all(k in kt for k in ("key_id", "algorithm", "public_key"))
+
+
+def _witness_present(rec) -> bool:
+    prof = rec.get("profiles") or {}
+    cw = prof.get("chain_witness") or prof.get("freshness_witness")
+    if not isinstance(cw, dict):
+        return False  # the witness profile is not shipped yet → Trusted is not reachable today
+    head = cw.get("head") or {}
+    return bool(cw.get("chain_id") and head.get("current") and cw.get("witness"))
+
+
+def _classify(rec, sig_ok) -> str:
+    """Highest class of a record that already satisfies Core (see CONFORMANCE_CLASSES.md)."""
+    alg = ((rec.get("integrity") or {}).get("signature") or {}).get("alg", "").lower()
+    verified = (
+        sig_ok is True                # signature actually re-verified against a supplied key
+        and alg in _REAL_ALGS         # a real signer, not 'unsigned'/placeholder
+        and _evidence_anchored(rec)   # withheld evidence is hash-anchored
+        and _key_trust_bound(rec)     # the signing key is bound via profiles.key_trust
+    )
+    if not verified:
+        return "Core"
+    return "Trusted" if _witness_present(rec) else "Verified"
+
+
+def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
     pub = _load_pubkey(pubkey)
     records = _load_records(path)
     is_chain = len(records) > 1
     fails = 0
     prev = GENESIS
+    chain_class = "Trusted"  # a chain is only as strong as its weakest record
     print(f"AIREP verify: {path}  ({len(records)} record(s){' — chain' if is_chain else ''})")
     for i, rec in enumerate(records):
         bad = []
@@ -129,10 +170,17 @@ def verify(path: str, pubkey: str = "") -> int:
         prev = integ.get("current")
         sigstr = {True: "sig=ok", False: "sig=FAIL", None: "sig=skip"}[sig]
         status = "PASS" if not bad else "FAIL(" + ",".join(bad) + ")"
-        print(f"  [{i}] {status}  {sigstr}  {str(integ.get('current', '?'))[:23]}...")
+        cls = ("INVALID" if bad else _classify(rec, sig)) if show_class else None
+        if cls is not None and _CLASS_RANK[cls] < _CLASS_RANK[chain_class]:
+            chain_class = cls
+        clspart = f"  class={cls}" if show_class else ""
+        print(f"  [{i}] {status}  {sigstr}{clspart}  {str(integ.get('current', '?'))[:23]}...")
         if bad:
             fails += 1
     print(f"RESULT: {'all records OK' if not fails else f'{fails} record(s) FAILED'}")
+    if show_class:
+        print(f"CLASS: {'INVALID' if fails else chain_class}"
+              f"{'  (pass --pubkey to assess Verified)' if not pub and not fails else ''}")
     return 0 if not fails else 1
 
 
@@ -140,8 +188,10 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Verify an AIREP record or chain")
     ap.add_argument("path", help="a record .json or a chain .jsonl / JSON array")
     ap.add_argument("--pubkey", default="", help="Ed25519 public key (hex) or a path to a key file")
+    ap.add_argument("--class", dest="show_class", action="store_true",
+                    help="report the highest AIREP conformance class (Core/Verified/Trusted) satisfied")
     args = ap.parse_args(argv)
-    return verify(args.path, args.pubkey)
+    return verify(args.path, args.pubkey, show_class=args.show_class)
 
 
 if __name__ == "__main__":
