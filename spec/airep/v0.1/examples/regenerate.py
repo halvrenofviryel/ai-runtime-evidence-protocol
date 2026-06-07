@@ -348,7 +348,7 @@ def build_observability_example() -> None:
 
 
 def main() -> int:
-    for name in ("neutral_record.json", "phionyx_profile_record.json"):
+    for name in ("neutral_record.json", "phionyx_profile_record.json", "phionyx_profile_record_v0_8_1.json"):
         path = HERE / name
         rec = json.loads(path.read_text())
         rec = compute_integrity(rec)
