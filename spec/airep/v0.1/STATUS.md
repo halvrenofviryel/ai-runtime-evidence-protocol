@@ -14,9 +14,11 @@ neutrality test, re-derive every `integrity.current` and agree on it byte-for-by
 vectors, and re-verify the Ed25519 signatures. What remains open is a second independent **producer**
 and broader external review.
 
-Maturity is a labelled attribute, not prose hedging in the normative text. The honest maturity picture
-— the L1→L5 ladder, the reference implementation's current rung, and the open gaps — lives in the
-companion arXiv papers (per the scope rule), not in `SPEC.md`.
+Maturity is a labelled attribute, not prose hedging in the normative text. The honest maturity
+picture — the assurance ladder (AIREP-Core → AIREP-Verified → AIREP-Trusted), what the reference
+implementation satisfies today, and the open gaps — is recorded here and in
+[`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md), kept out of the
+normative `SPEC.md` on purpose.
 
 ## What "Experimental" commits us to
 

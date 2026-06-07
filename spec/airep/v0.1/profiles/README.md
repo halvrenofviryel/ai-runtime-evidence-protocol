@@ -118,7 +118,6 @@ Each binds the core record to one external framework. Reserved names:
   vendor-neutral telemetry standard) or OpenInference spans. **✓ schema published** — see
   "Published profiles" above.
 - **`incident_reporting`** — the OECD Common Reporting Framework for AI incidents.
-- **`maturity_ladder`** — the L1→L5 conformance tiers.
 
 ---
 
