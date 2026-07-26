@@ -74,6 +74,52 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
    signature inside `verify.py`/`verify.mjs` (only `validate.py` does), nor (b) honor `key_trust`
    rotation/revocation when assigning Trusted. Those two checks are the remaining Trusted-tier work.
 
+## Prior art, and what AIREP does not claim to have invented
+
+Recorded here because a format that overstates its novelty is not one you should trust with an
+honesty field.
+
+**Signed, canonical, offline-verifiable per-decision records are established practice, not a
+contribution of ours.** Regulatory and industry expectations already point the same way — EU AI Act
+Article 12 record-keeping, the NIST AI RMF measure/manage functions, and the OWASP Agentic Top 10 all
+assume per-decision accountability. AIREP's use of RFC 8785 JCS canonicalization and Ed25519
+signatures follows widely used practice on purpose: interchange formats should not invent crypto.
+
+So AIREP's signature semantics, canonicalization and offline verifiability are **not** presented as
+points of distinction.
+
+### What AIREP adds
+
+1. **Mandatory record-level chaining.** `integrity.previous` is required on every record, so content
+   is bound to chain position and a spliced or replayed record is detectable without reference to an
+   external service.
+
+2. **Control-instruction delivery as evidence.** The `control_delivery` profile records the lifecycle
+   of a governance instruction — issued, delivered, acknowledged, enforced, observed, or positively
+   recorded as `delivery_failed` — from **both sides of a boundary**, correlated by `instruction_id`
+   and `instruction_hash`.
+
+   Scope the claim precisely. Acknowledgement of a *business* action — an order confirmed by a venue,
+   a webhook accepted — is long solved and well served by existing formats. The open problem is
+   different: proving that a **governance or control instruction reached and bound at the component
+   that enforces it**. A record format can say a stop was *decided*; whether it *arrived* is a
+   separate fact, and an instruction correctly issued, correctly signed and never delivered is
+   indistinguishable from one nobody sent. In the systems we have reviewed we have not found this
+   modelled as a first-class, two-sided evidence lifecycle. That is a bounded observation, not a
+   proven novelty result.
+
+3. **Honest scope as a required field.** `scope.does_not_cover` is mandatory, and
+   `failure.root_cause_isolated: false` is a first-class thing a producer can say. This exists
+   because presence of an evidence container is routinely mistaken for sufficiency of evidence; a
+   schema that forces a producer to state the limits of a record is addressing that directly.
+
+4. **Authority provenance.** `authority.writable_by_controlled_system` marks whether the control path
+   could have been written by the party it constrains — a control path the constrained party can
+   author does not establish external authority, however well it is signed.
+
+The open items above remain the accurate picture of maturity; nothing in this section is a claim of
+completeness.
+
 ## Change control
 
 - **Versioning:** breaking changes (e.g. any future `escalate_to_human` → `escalate` verb rename, or a

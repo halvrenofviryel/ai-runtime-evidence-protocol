@@ -54,6 +54,19 @@ It is an **Experimental** proposed open format with a reference implementation �
   sign with your **own** key via [`producers/python/`](./producers/python/), and verify it. A custom
   `profiles.<name>` block works with **no upstream registration** — see
   [`profiles/README.md`](./spec/airep/v0.1/profiles/README.md) "Authoring your own profile".
+- **Here for the delivery problem?** Read
+  [`profiles/control_delivery.schema.json`](./spec/airep/v0.1/profiles/control_delivery.schema.json)
+  and the worked example
+  [`examples/control_delivery_failure.json`](./spec/airep/v0.1/examples/control_delivery_failure.json).
+  A record format can say a stop was *decided*. Whether it *arrived* at the component that enforces
+  it is a different fact, and an instruction that was correctly issued, correctly signed, and never
+  delivered is indistinguishable from one nobody sent. This profile records both sides of the
+  boundary so the gap between them is visible rather than silent — and it is honest that no single
+  side can prove non-delivery alone, because a receiver cannot know what it never received. The
+  example is a failure, not a success, and it came from a measured incident. How this relates to
+  prior art, and where other formats are ahead of AIREP, is set out in
+  [`STATUS.md`](./spec/airep/v0.1/STATUS.md).
+
 - **Contributing?** Read [`CONTRIBUTING.md`](./CONTRIBUTING.md), browse the
   [`good first issue`](../../labels/good%20first%20issue) and [`help wanted`](../../labels/help%20wanted)
   labels (the open items from [`STATUS.md`](./spec/airep/v0.1/STATUS.md) are filed there), and report
@@ -67,7 +80,7 @@ It is an **Experimental** proposed open format with a reference implementation �
 | [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here.** |
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
 | [`spec/airep/v0.1/core.schema.json`](./spec/airep/v0.1/core.schema.json) | JSON Schema (draft 2020-12) for the core record. |
-| [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles (key trust, chain-witness/freshness, EU AI Act, NIST AI RMF, OWASP/threat, observability). |
+| [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles — **`control_delivery`** (did a control instruction *arrive*?), key trust, chain-witness/freshness, EU AI Act, NIST AI RMF, OWASP/threat, observability. |
 | [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two independent verifiers (Python + Node) and a runnable validator. |
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
