@@ -17,8 +17,8 @@ So profiles let AIREP fit many industries without making the shared format bigge
 vendor-specific.
 
 > **Status.** Six profiles ship **published schemas** with worked examples the conformance
-> checker validates — `key_trust`, `chain_witness`, `eu_ai_act_log`, `nist_ai_rmf`, `owasp_threat`,
-> and `observability_transport` (see below). The rest of the catalogue is **proposed** — design
+> checker validates — `key_trust`, `chain_witness`, `control_delivery`, `eu_ai_act_log`,
+> `nist_ai_rmf`, `owasp_threat`, and `observability_transport` (see below). The rest of the catalogue is **proposed** — design
 > sketches without a schema yet. Maturity and open items are tracked in
 > [`../STATUS.md`](../STATUS.md), not repeated here. Where a profile names a specific regulation
 > or standard, treat the citation as **indicative** until checked against the primary source.
@@ -35,6 +35,25 @@ self-consistent worked example that the conformance checker validates against th
   very key it declares). It is the dependency [`../THREAT_MODEL.md`](../THREAT_MODEL.md) names for
   turning the format's *partial* signature defenses into enforced ones and for closing the
   replay-as-latest / tail-truncation gaps (via `transparency_log`).
+- **`control_delivery`** — the lifecycle of one control instruction (stop, suspend, resume,
+  override) as observed from **one side of a boundary**. The core records that a decision was
+  *made* (`directive.verb`) and says nothing about whether an instruction sent to an enforcement
+  point *arrived*; those are different facts, and conflating them hides a real failure — an
+  instruction can be correctly issued, correctly signed and out-of-band, and still not reach the
+  component that enforces it, at which point it is indistinguishable from an instruction nobody
+  sent. Phases: `issued` · `delivered` · `acknowledged` · `enforced` · `observed` ·
+  `delivery_failed`. Records are correlated by `instruction_id` **and** `instruction_hash`, and
+  `observed_by` separates the `issuer` from the `enforcement_point` — a lifecycle attested
+  entirely by one side proves only that that side is self-consistent. **Honest limit:** no single
+  side can prove non-delivery on its own, because a receiver cannot know what it never received;
+  what the profile provides is a comparable pair of observations, so a gap between them is visible
+  rather than silent. `failure` keeps the observation (`reason`) separate from the guess
+  (`hypothesis`) and makes `root_cause_isolated: false` a first-class thing to say. Schema:
+  [`control_delivery.schema.json`](./control_delivery.schema.json); worked example:
+  [`../examples/control_delivery_failure.json`](../examples/control_delivery_failure.json) — an
+  enforcement point reporting that an expected instruction was absent at its resolved path, with
+  the cause explicitly not determined.
+
 - **`chain_witness`** — the absolute, freshness-bearing head witness the core lacks: a stable
   `chain_id`, the head `{decision_index, current, length}`, a witness signature **by a key distinct
   from the producer** (or a transparency-log inclusion proof), and a `freshness` anchor (witness

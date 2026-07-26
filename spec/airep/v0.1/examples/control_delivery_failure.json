@@ -1,0 +1,79 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "any-runtime",
+    "producer": "acme-governor/1.0",
+    "decision_index": 0,
+    "timestamp_utc": "2026-05-30T00:00:00Z"
+  },
+  "input": {
+    "input_ref": "sha256:4c0402bc1dd1c17860c9badad003e95d3f4921c617b00bb25b0f82cf1ea5d79b",
+    "governance_state": {
+      "policy_version": "p1",
+      "gate": "closed"
+    }
+  },
+  "claim": {
+    "assertion": "an authorised stop instruction was issued and did not reach this enforcement point",
+    "basis": [
+      "stop_authority",
+      "signed_off_agent_token"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:000a573a1313ac201bc6f95703101bd76ee88c010f85aff9d5667268067b8cdc",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://stop-authority/v1",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "kill",
+    "policy_basis": [
+      "stop_authority"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "that an instruction was expected at the resolved path and was absent"
+    ],
+    "does_not_cover": [
+      "why it did not arrive - root cause not isolated",
+      "whether the issuer's side observed the same outcome"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "canonical_json": true,
+    "current": "sha256:598e65286d56b7b7b80d445035ce02c916e277f4b71c3b6e8408caf53b976853",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "308f5b72e7c0b4ba2ad36faf8c645fa256f11987ff5d58f0d57315a8736ae3ee735b0b48bdf8cddbc4e8e2992d8cb8210efb551e02fc55a34a8ac6a1129ce801"
+    }
+  },
+  "profiles": {
+    "control_delivery": {
+      "instruction_id": "ovr-4b1c9d2e7a30f581",
+      "instruction_hash": "sha256:4b1c9d2e7a30f5814b1c9d2e7a30f5814b1c9d2e7a30f5814b1c9d2e7a30f581",
+      "phase": "delivery_failed",
+      "observed_by": "enforcement_point",
+      "observed_at": "2026-05-30T00:00:01Z",
+      "channel": "signed-file-override",
+      "boundary": "mount",
+      "resolved_path": "/var/lib/example-governor/state/control_override.signed.json",
+      "failure": {
+        "reason": "absent at resolved_path",
+        "hypothesis": "mount propagation or path mismatch",
+        "root_cause_isolated": false
+      },
+      "authority": {
+        "issuer_id": "ed25519:pinned",
+        "writable_by_controlled_system": false
+      }
+    }
+  }
+}

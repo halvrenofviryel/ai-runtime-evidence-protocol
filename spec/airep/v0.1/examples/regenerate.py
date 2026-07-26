@@ -250,6 +250,53 @@ def build_chain_witness_example() -> None:
     print(f"witness_public_key.txt -> {_wpub_hex}")
 
 
+def build_control_delivery_example() -> None:
+    """A control instruction that was issued and did NOT arrive.
+
+    The core can say a stop was DECIDED; it cannot say the stop ARRIVED. This record is the
+    enforcement point's half of the pair: it reports that an instruction with a known
+    instruction_id was expected at a resolved path and was not there. The issuer's half —
+    phase "issued", observed_by "issuer", same instruction_id and hash — lives on the other
+    side of the boundary. Neither half alone proves non-delivery; the comparison does.
+
+    scope.does_not_cover carries the honest part: the cause was never isolated.
+    """
+    rec = {
+        "airep_version": "0.1",
+        "subject": {"runtime": "any-runtime", "producer": "acme-governor/1.0",
+                    "decision_index": 0, "timestamp_utc": "2026-05-30T00:00:00Z"},
+        "input": {"input_ref": _ptr("cd-input"),
+                  "governance_state": {"policy_version": "p1", "gate": "closed"}},
+        "claim": {"assertion": "an authorised stop instruction was issued and did not reach this enforcement point",
+                  "basis": ["stop_authority", "signed_off_agent_token"]},
+        "output": {"result_ref": _ptr("cd-output"), "redacted": False},
+        "evidence": [{"type": "policy", "ref": "policy://stop-authority/v1", "resolvable": True}],
+        "directive": {"verb": "kill", "policy_basis": ["stop_authority"]},
+        "scope": {"covers": ["that an instruction was expected at the resolved path and was absent"],
+                  "does_not_cover": ["why it did not arrive - root cause not isolated",
+                                     "whether the issuer's side observed the same outcome"]},
+        "integrity": {"previous": GENESIS, "canonical_json": True},
+        "profiles": {"control_delivery": {
+            "instruction_id": "ovr-4b1c9d2e7a30f581",
+            "instruction_hash": "sha256:" + "4b1c9d2e7a30f581" * 4,
+            "phase": "delivery_failed",
+            "observed_by": "enforcement_point",
+            "observed_at": "2026-05-30T00:00:01Z",
+            "channel": "signed-file-override",
+            "boundary": "mount",
+            "resolved_path": "/var/lib/example-governor/state/control_override.signed.json",
+            "failure": {"reason": "absent at resolved_path",
+                        "hypothesis": "mount propagation or path mismatch",
+                        "root_cause_isolated": False},
+            "authority": {"issuer_id": "ed25519:pinned",
+                          "writable_by_controlled_system": False},
+        }},
+    }
+    rec = compute_integrity(rec)
+    (HERE / "control_delivery_failure.json").write_text(json.dumps(rec, indent=2) + "\n")
+    print(f"control_delivery_failure.json -> {rec['integrity']['current']}")
+
+
 def build_eu_ai_act_example() -> None:
     """A high-risk system decision carrying EU AI Act record-keeping fields under
     profiles.eu_ai_act_log. No raw personal data — the verifier is a pseudonymous role."""
@@ -360,6 +407,7 @@ def main() -> int:
     build_eu_ai_act_example()
     build_governance_example()
     build_observability_example()
+    build_control_delivery_example()
     (HERE / "test_public_key.txt").write_text(
         "# AIREP v0.1 example signing key — TEST ONLY (published, never production).\n"
         "# Ed25519 raw public key (hex). Verifies integrity.signature over integrity.current.\n"

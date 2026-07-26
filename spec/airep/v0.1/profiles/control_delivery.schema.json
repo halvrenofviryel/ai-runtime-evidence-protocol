@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/control_delivery.schema.json",
+  "title": "AIREP profile: control_delivery (instruction lifecycle) v0.1",
+  "description": "Validates a 'profiles.control_delivery' block: the lifecycle of ONE control instruction — stop, suspend, resume, or override — as observed from a single side of a boundary. The AIREP core records that a decision was MADE (directive.verb) and says nothing about whether a control instruction sent to an enforcement point ARRIVED. Those are different facts, and conflating them hides a real failure: an instruction can be correctly issued, correctly signed, and out-of-band, and still not reach the component that enforces it — at which point it is indistinguishable from an instruction nobody sent. This profile makes the phases separately recordable so that the absence of an enforcement-side record for an instruction_id the issuer recorded is itself detectable evidence. It attaches only under profiles.control_delivery and never changes the core: deleting the profiles block leaves a valid core record (the neutrality test). Correlation rule: records describing the same instruction MUST share instruction_id and instruction_hash; a verifier compares records observed_by 'issuer' against records observed_by 'enforcement_point'. Honest limit: no single side can prove non-delivery on its own — a receiver cannot know what it never received. What this profile provides is a comparable pair of observations, so that a gap between them is visible rather than silent.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["instruction_id", "instruction_hash", "phase", "observed_by", "observed_at"],
+  "properties": {
+    "instruction_id": {
+      "type": "string",
+      "description": "Stable identifier for the control instruction, assigned by the issuer and carried unchanged through every phase record. This is the join key: an issuer record with no matching enforcement_point record is the detectable failure this profile exists to surface.",
+      "minLength": 1
+    },
+    "instruction_hash": {
+      "type": "string",
+      "description": "Content hash of the instruction artifact as each side sees it, e.g. 'sha256:<hex>'. Two sides claiming the same instruction_id but reporting different hashes have not seen the same instruction — a substitution, not a delivery.",
+      "pattern": "^[a-z0-9-]+:[A-Fa-f0-9]+$"
+    },
+    "phase": {
+      "type": "string",
+      "description": "Which point in the instruction's life this record attests. 'issued' — the authorised party produced it. 'delivered' — it was observed present at the destination this side resolves. 'acknowledged' — the enforcement point read and accepted it. 'enforced' — enforcement was applied. 'observed' — the resulting system state was confirmed. 'delivery_failed' — an explicit, positively-recorded non-arrival, which is what turns silence into evidence.",
+      "enum": ["issued", "delivered", "acknowledged", "enforced", "observed", "delivery_failed"]
+    },
+    "observed_by": {
+      "type": "string",
+      "description": "Which side of the boundary made this observation. The point of the profile is that 'issuer' and 'enforcement_point' are DIFFERENT observers whose records must be compared; a lifecycle attested entirely by one side proves only that that side is self-consistent.",
+      "enum": ["issuer", "enforcement_point", "witness"]
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this side made the observation (RFC 3339, UTC). Ordering across sides is only as trustworthy as their clocks; do not derive latency from two different observers' timestamps without saying so."
+    },
+    "channel": {
+      "type": "string",
+      "description": "Declared identifier of the control path used, so that a deployment with more than one path can be told apart — for example a signed file channel versus an independent network channel."
+    },
+    "boundary": {
+      "type": "string",
+      "description": "The boundary this instruction had to cross to reach the enforcement point. 'none' means issuer and enforcement point share an execution context, in which case delivery is not the interesting property. Anything else is where delivery can fail while every declared property still checks out.",
+      "enum": ["none", "mount", "namespace", "container", "network", "ipc", "privilege_separation", "other"]
+    },
+    "resolved_path": {
+      "type": "string",
+      "description": "The absolute path or endpoint THIS side actually resolved — not the configured value, the resolved one. A mismatch between the issuer's resolved_path and the enforcement point's is the single most diagnostic field here, and the one most often missing when a delivery failure is investigated after the fact."
+    },
+    "mount_identity": {
+      "type": "string",
+      "description": "Optional filesystem or namespace identity of the destination as seen by this side (for example a device/inode pair, or a namespace id). Distinguishes 'same path, different object' from 'not there at all'."
+    },
+    "latency_ms": {
+      "type": "number",
+      "description": "Elapsed milliseconds from this side's own reference point, used for a reaction-time bound. Only meaningful within one observer.",
+      "minimum": 0
+    },
+    "result": {
+      "type": "string",
+      "description": "For phase 'enforced': what enforcement actually did. 'no_effect' is a real and distinct outcome — the instruction arrived, was accepted, and changed nothing — and must not be recorded as 'applied'.",
+      "enum": ["applied", "refused", "no_effect"]
+    },
+    "failure": {
+      "type": "object",
+      "description": "Required in substance when phase is 'delivery_failed'. An unexplained non-arrival recorded with no reason is barely better than silence.",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "What was observed, not what is suspected. 'absent at resolved_path' is an observation; a propagation-gap explanation is a hypothesis and belongs in 'hypothesis'."
+        },
+        "hypothesis": {
+          "type": "string",
+          "description": "The suspected cause, explicitly separated from the observation so that a later reader can tell which was measured."
+        },
+        "root_cause_isolated": {
+          "type": "boolean",
+          "description": "Whether the cause was actually determined. Recording false here is honest and useful; omitting the field to avoid saying so is not."
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "description": "Who was entitled to issue this instruction, and whether the path used could have been written by the party the instruction constrains.",
+      "properties": {
+        "issuer_id": {
+          "type": "string",
+          "description": "Identifier of the authorised party, or of the key that signed the instruction."
+        },
+        "writable_by_controlled_system": {
+          "type": "boolean",
+          "description": "True if the channel used is one the controlled system itself can write. A control path the constrained party can author does not establish external authority, however well it is signed — recording this makes that visible rather than assumed."
+        }
+      }
+    }
+  }
+}
