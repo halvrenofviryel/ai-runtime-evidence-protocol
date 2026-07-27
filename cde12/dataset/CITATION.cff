@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: "CDE-12 dataset — control-delivery evidence across ten systems"
+abstract: >-
+  Every cell of a CDE-12 application to ten systems at pinned revisions: two AI
+  agent governance runtimes, six attestation and supply-chain specifications, and
+  two author-controlled rows rated last (a format and a deployment using it, scored
+  separately). One row per system and criterion, each carrying its verdict, evidence
+  tier, evidence reference, supporting quote, rater and date. Released as data
+  rather than summarised in prose so that individual cells can be contested.
+  Single-rater, v0.1: no second-rater agreement has been computed, and the tier
+  column shows unequal reading depth rather than hiding it.
+type: dataset
+message: >-
+  If you use, correct or extend these measurements, cite this dataset. If you apply
+  the criteria to a system of your own, cite the instrument instead — see
+  ../CITATION.cff.
+authors:
+  - family-names: Abak
+    given-names: Ali Toygar
+    orcid: "https://orcid.org/0009-0002-3718-4010"
+version: "0.1"
+date-released: "2026-07-27"
+license: CC-BY-4.0
+repository-code: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol"
+url: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/tree/main/cde12/dataset"
+keywords:
+  - AI governance
+  - measurement dataset
+  - agent governance
+  - attestation
+  - supply chain
+  - audit evidence

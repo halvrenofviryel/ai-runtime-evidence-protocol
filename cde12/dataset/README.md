@@ -48,8 +48,8 @@ useful thing in it:
 
 | | `supported` | `partial` | `not demonstrated` | `not tested` |
 |---|---:|---:|---:|---:|
-| `airep` — the **format** | 4 | 4 | 4 | 0 |
-| `phionyx-control-plane` — a **deployment** using it | 2 | 4 | 5 | 1 |
+| `airep` — the **format** | 3 | 5 | 4 | 0 |
+| `phionyx-control-plane` — a **deployment** using it | 1 | 5 | 5 | 1 |
 
 Same authors, same week, same instrument. The format can express things the deployment does not
 record. C9 is the clearest case: `applied` / `refused` / `no_effect` are distinct values in the
@@ -92,13 +92,19 @@ Two honest mitigations, and the second is the real one:
 
 ### 2. We score well on exactly what we built the format for
 
-AIREP's four `supported` cells are C7, C8, C9 and C12 — offline verification, delivery
-acknowledgement, enforcement outcome, and the negative record. Those are the properties
-`control_delivery` was designed around.
+AIREP's three `supported` cells are C7, C8 and C9 — offline verification, delivery acknowledgement
+and enforcement outcome. Those are the properties `control_delivery` was designed around.
 
 **A format scoring well on what it was designed for is close to a tautology and should not be read as
-a result.** The informative cells are the other eight: AIREP fails C3 where Microsoft's twelve named
+a result.** The informative cells are the other nine: AIREP fails C3 where Microsoft's twelve named
 runtime-error reasons succeed, and fails C1, C4 and C10 outright.
+
+**C12 was the fourth, and we lost it.** Until CDE-12 v0.2 both of our rows read `supported` on the
+negative record — the criterion the instrument exists for. The v0.1 wording asked whether a system
+could record *that an instruction did not arrive*, which no single party can observe. Corrected to
+measure the non-arrival **observation**, and to require it be classified rather than free-text, both
+cells fall to `partial`: `failure.reason` is an unconstrained string. The change moved two cells and
+both were ours. See the CDE-12 changelog.
 
 If a future version of this dataset shows us leading on criteria we did *not* design for, that would
 mean something. This one does not, and says so.

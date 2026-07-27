@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+title: "CDE-12 — Control-Delivery Evidence"
+abstract: >-
+  An instrument for reporting what a system can and cannot record about a control
+  decision and its fate. Twelve criteria, a five-value scale, an evidence tier on
+  every cell, ordered verdict rules, and a rater-agreement protocol. It measures
+  records, not behaviour: the question throughout is what a later reader can
+  establish from what the system wrote down. Criteria are timestamped in version
+  control, with a changelog distinguishing changes made before scoring from
+  changes made after.
+type: software
+message: >-
+  If you apply these criteria to a system, cite this instrument. If you use or
+  extend the accompanying measurements, cite the dataset separately — see
+  dataset/CITATION.cff.
+authors:
+  - family-names: Abak
+    given-names: Ali Toygar
+    orcid: "https://orcid.org/0009-0002-3718-4010"
+version: "0.2"
+date-released: "2026-07-27"
+license: CC-BY-4.0
+repository-code: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol"
+url: "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/tree/main/cde12"
+keywords:
+  - AI governance
+  - runtime evidence
+  - control plane
+  - measurement instrument
+  - agent governance
+  - attestation
+  - audit

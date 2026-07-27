@@ -1,4 +1,4 @@
-# CDE-12 — Control-Delivery Evidence, v0.1
+# CDE-12 — Control-Delivery Evidence, v0.2
 
 An instrument for reporting what a system can and cannot **record** about a control decision and its
 fate. Twelve criteria, a five-value scale, and an evidence tier on every cell.
@@ -150,10 +150,37 @@ established — a probe result, a mount identity, an attestation reference. A bo
 about itself is a claim.
 
 ### C12 · `negative_record`
-*Can the system positively record that an expected control instruction did **not** arrive?*
-**T1.** This is the criterion the instrument exists for. Detecting staleness or timeout is `partial`.
-`supported` requires a record whose documented purpose is to state a specific expected instruction's
-non-arrival. Absence of any record is **not** a negative record.
+*Can the system positively record an **observation** that a specific expected control instruction was
+not seen — and name which observation was made?*
+
+**T1.** This is the criterion the instrument exists for, and it is phrased as an observation rather
+than as a fact deliberately. **Non-arrival cannot be established by one party.** A receiver cannot
+know what it never received, and an issuer's silence is indistinguishable from a lost
+acknowledgement. Any criterion asking a system to record *that an instruction did not arrive* asks
+for something no participant can supply, and would be defective.
+
+What a system can record is which of these it observed:
+
+| Observation | What was actually seen |
+|---|---|
+| deadline passed, no acknowledgement | the issuer waited past a stated deadline |
+| counterpart missing at reconciliation | a comparison of both sides found no matching record |
+| transport rejected | the channel itself reported a failure |
+| verification failed | the artifact was present and failed the authority check |
+| undetermined after deadline | the deadline passed and nothing distinguishes the causes |
+
+`supported` requires a record whose documented purpose is to carry, for a **specific** expected
+instruction, which of these was observed — as a classified value, so that two implementations
+recording the same observation produce comparable records.
+
+`partial` in three cases, each with the gap named:
+- generic staleness, expiry or timeout detection not bound to a specific expected instruction;
+- the observation is recorded but **unclassified** — a free-text field, however well documented, lets
+  two implementations record the same observation incomparably;
+- the record asserts non-arrival without naming the observation behind it, reporting a conclusion
+  where the evidence supports only an observation.
+
+**Absence of any record is not a negative record.**
 
 ---
 
@@ -207,7 +234,14 @@ tuned to a system after seeing how it scores.
 | v0.1 | 2026-07-27 | Formalised from the twelve pre-registered criteria: added evidence tiers, ordered verdict rules, the observer-distinctness definition, the tie-break rule, and the rater-agreement protocol |
 | v0.1 | 2026-07-27 | **Substitution, recorded because pre-registration is worthless without it.** `deterministic_replay` was dropped and `negative_record` (C12) added in its place. Reason: `deterministic_replay` — *can a third party re-derive the verdict from the record alone* — was substantially answered by C2 (`deterministic_verdict`) and C6 (`policy_version_binding`) together, and a criterion whose verdict is determined by two others adds length rather than discrimination. `negative_record` had been implicit throughout and was the property the instrument exists to measure, yet was not a criterion. **This change was made while writing the instrument and before any system was scored under it.** No system had been rated on `deterministic_replay` except in the earlier informal reading, where its cells are superseded rather than carried forward. |
 
+| v0.2 | 2026-07-27 | **C12 rewritten after scoring — an author error, recorded as one.** The v0.1 wording asked whether a system can record *that an expected instruction did not arrive*. That is not observable by any single party: a receiver cannot know what it never received, and an issuer's silence is indistinguishable from a lost acknowledgement. The criterion asked for something no participant can supply. C12 now measures the **non-arrival observation** — deadline passed, counterpart missing at reconciliation, transport rejected, verification failed, or undetermined — and requires it to be classified rather than free-text. **This change was made after scoring and it moved two cells, both the authors' own, both downward:** `airep` and `phionyx-control-plane` fall from `supported` to `partial`, because `failure.reason` is an unconstrained string. No other cell moved; a stricter criterion cannot promote anything, so every `not demonstrated` stands. Raised by an external reviewer of the accompanying paper, whose text had already made the distinction the instrument had not |
+
 **How this changelog is meant to be used.** A change made before scoring is a design decision. A
 change made after seeing results is a finding about the author, not the systems. Both are recorded
 here in the same table, with dates, so a reader can tell which they are looking at. An instrument
 whose criteria move silently measures nothing.
+
+The v0.2 entry is the second kind, and the honest reading of it is: **the instrument's central
+criterion was epistemically wrong for a day, and the authors' own rows were the only ones flattered
+by the error.** Left uncorrected it would have let us claim `supported` on the property the whole
+instrument exists to measure.
