@@ -74,6 +74,30 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
    signature inside `verify.py`/`verify.mjs` (only `validate.py` does), nor (b) honor `key_trust`
    rotation/revocation when assigning Trusted. Those two checks are the remaining Trusted-tier work.
 
+### 5. `subject.principal` — added, and deliberately optional
+
+A record could say `producer: acme-governor/1.0` decided to `block`, and could not say **on whose
+authority**. `subject.principal` closes that: `human`, `service`, `session`, `scope` — the four
+layers an authorisation question actually needs.
+
+It is **optional in v0.1** so that every record already written stays valid; the conformance runner
+confirms this. A producer that can determine any layer SHOULD record it.
+
+The field that matters most is `established_by`, and it is the reason this is not just a copy of the
+obvious design. It records **how** the identity was established:
+`asserted_by_caller` · `verified_credential` · `mutual_tls` · `platform_attested` ·
+`out_of_band_signature` · `not_established`.
+
+`asserted_by_caller` means the party being governed told us who it was — a claim, not evidence. This
+is the same principle as `authority.writable_by_controlled_system` in the `control_delivery` profile,
+applied to identity: **an identity the controlled system asserts about itself is worth exactly as
+much as a control path the controlled system can write.** Recording the identity without recording
+how it was established would have reproduced, in the identity field, the confusion this format
+exists to remove.
+
+`not_established` is an honest and useful answer, and omitting the block entirely is better than
+implying a verification that did not happen.
+
 ## Prior art, and what AIREP does not claim to have invented
 
 Recorded here because a format that overstates its novelty is not one you should trust with an

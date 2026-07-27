@@ -67,6 +67,14 @@ It is an **Experimental** proposed open format with a reference implementation �
   prior art, and where other formats are ahead of AIREP, is set out in
   [`STATUS.md`](./spec/airep/v0.1/STATUS.md).
 
+- **Want to measure what your own system records?** [`cde12/`](./cde12/) holds **CDE-12**, an
+  instrument for reporting what a system can and cannot record about a control decision — twelve
+  criteria with pass conditions and evidence tiers fixed before any system was examined — and a
+  dataset applying it to ten systems. It is deliberately **not part of this specification**: a format
+  evaluated by criteria defined in its own spec would not be evaluated at all. AIREP appears in the
+  dataset as one row among others, scored by its own authors and last, and the Phionyx control plane
+  appears as a second row because a format's capability is not a deployment's practice.
+
 - **Contributing?** Read [`CONTRIBUTING.md`](./CONTRIBUTING.md), browse the
   [`good first issue`](../../labels/good%20first%20issue) and [`help wanted`](../../labels/help%20wanted)
   labels (the open items from [`STATUS.md`](./spec/airep/v0.1/STATUS.md) are filed there), and report
