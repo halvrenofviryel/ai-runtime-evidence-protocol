@@ -17,6 +17,17 @@ authors:
   - family-names: Abak
     given-names: Ali Toygar
     orcid: "https://orcid.org/0009-0002-3718-4010"
+# The CONCEPT doi resolves to whichever version is current, so a citation made
+# today still resolves after v0.3. The version doi is recorded beside it for
+# anyone who needs to cite exactly what they read.
+doi: "10.5281/zenodo.21631868"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21631868"
+    description: "Concept DOI — always resolves to the latest version"
+  - type: doi
+    value: "10.5281/zenodo.21631869"
+    description: "Version DOI — v0.2, 2026-07-28"
 version: "0.2"
 date-released: "2026-07-27"
 license: CC-BY-4.0

@@ -56,6 +56,7 @@ data, because criteria and measurements are corrected on different schedules and
 reasons.
 
 > Abak, A. T. (2026). *CDE-12 — Control-Delivery Evidence* (Version 0.2).
+> https://doi.org/10.5281/zenodo.21631868
 
 Machine-readable metadata: [`CITATION.cff`](./CITATION.cff).
 

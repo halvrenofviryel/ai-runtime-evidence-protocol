@@ -18,6 +18,8 @@ authors:
   - family-names: Abak
     given-names: Ali Toygar
     orcid: "https://orcid.org/0009-0002-3718-4010"
+# No DOI yet. The dataset is a separate citation object from the instrument and
+# has not been deposited. Until it is, cite it by repository URL and revision.
 version: "0.1"
 date-released: "2026-07-27"
 license: CC-BY-4.0

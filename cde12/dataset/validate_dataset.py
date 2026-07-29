@@ -8,7 +8,8 @@ reason it exists.
     python3 reality_check/dataset/validate_dataset.py [csv]
 """
 from __future__ import annotations
-import csv, sys
+import csv
+import sys
 from pathlib import Path
 
 VERDICTS = {"supported", "partial", "not demonstrated", "out of scope", "not tested"}
