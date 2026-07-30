@@ -66,6 +66,7 @@ If you **use, correct or extend the measurements**, cite the dataset instead. A 
 number from a cell is relying on the reading, not on the criteria.
 
 > Abak, A. T. (2026). *CDE-12 dataset — control-delivery evidence across ten systems* (Version 0.1).
+> https://doi.org/10.5281/zenodo.21688366
 
 Machine-readable metadata: [`dataset/CITATION.cff`](./dataset/CITATION.cff).
 

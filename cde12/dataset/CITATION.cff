@@ -18,8 +18,17 @@ authors:
   - family-names: Abak
     given-names: Ali Toygar
     orcid: "https://orcid.org/0009-0002-3718-4010"
-# No DOI yet. The dataset is a separate citation object from the instrument and
-# has not been deposited. Until it is, cite it by repository URL and revision.
+# The CONCEPT doi resolves to whichever version is current. The dataset is a
+# separate citation object from the instrument: cite this one if you use, correct
+# or extend the measurements; cite the instrument if you apply the criteria.
+doi: "10.5281/zenodo.21688366"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21688366"
+    description: "Concept DOI — always resolves to the latest version"
+  - type: doi
+    value: "10.5281/zenodo.21688367"
+    description: "Version DOI — v0.1, 2026-07-29"
 version: "0.1"
 date-released: "2026-07-27"
 license: CC-BY-4.0
