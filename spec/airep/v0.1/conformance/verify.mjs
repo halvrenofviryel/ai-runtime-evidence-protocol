@@ -175,7 +175,21 @@ function loadRecords(file) {
 
 // --- conformance classes (CONFORMANCE_CLASSES.md) — kept in lockstep with verify.py ----------
 const REAL_ALGS = new Set(["ed25519", "ecdsa", "rsa", "rsa-pss", "hmac-sha256"]);
-const CLASS_RANK = { INVALID: 0, Core: 1, Verified: 2, Trusted: 3 };
+// TRUSTED_NOT_IMPLEMENTED sits at Verified's rank on purpose: it is NOT a class above Verified.
+// It is Verified plus a NAMED statement that the Trusted prerequisites were never evaluated.
+const CLASS_RANK = { INVALID: 0, Core: 1, Verified: 2, TRUSTED_NOT_IMPLEMENTED: 2, Trusted: 3 };
+
+// The AIREP-Trusted prerequisites (CONFORMANCE_CLASSES.md §AIREP-Trusted) this verifier does NOT
+// evaluate. A prerequisite that is not enforced can never be reported as satisfied, so while this
+// list is non-empty the top class is UNREACHABLE — presence of witness material downgrades to
+// TRUSTED_NOT_IMPLEMENTED rather than granting Trusted. Implementing a check means removing its
+// entry AND adding the real check; removing an entry alone re-opens the hole.
+const TRUSTED_GATES_NOT_IMPLEMENTED = [
+  "witness-signature-not-verified",     // req 1: chain_witness.witness.value is never re-verified
+  "witness-key-distinctness-unproven",  // req 1: a witness_id string is not a key
+  "freshness-recency-not-evaluated",    // req 2: presence is checked, recency/nonce-challenge is not
+  "revocation-not-honored",             // req 3: no revocation source is consulted
+];
 
 function evidenceAnchored(rec) {
   for (const e of rec.evidence || []) {
@@ -187,6 +201,9 @@ function keyTrustBound(rec) {
   const kt = (rec.profiles || {}).key_trust;
   return isObj(kt) && ["key_id", "algorithm", "public_key"].every((k) => k in kt);
 }
+// Witness material is PRESENT. Presence is not verification: this says a chain_witness block
+// exists and is populated, NOT that the witness signature is valid, that the witness key is
+// independent of the producer, or that the anchor is fresh. Necessary for Trusted, never sufficient.
 function witnessPresent(rec) {
   const prof = rec.profiles || {};
   const cw = prof.chain_witness || prof.freshness_witness;
@@ -194,11 +211,46 @@ function witnessPresent(rec) {
   const head = cw.head || {};
   return Boolean(cw.chain_id && head.current && cw.witness);
 }
+// Trusted prerequisites that ARE structurally checkable and DEFINITIVELY fail on this record.
+// Cheap structural reads, not cryptography: passing them earns nothing (the gates in
+// TRUSTED_GATES_NOT_IMPLEMENTED still never ran); failing one is decisive.
+function trustedStructuralFailures(rec) {
+  const prof = rec.profiles || {};
+  const cw = prof.chain_witness || prof.freshness_witness || {};
+  const kt = prof.key_trust || {};
+  const bad = [];
+  // req 1 (necessary, not sufficient): a "witness" naming the producer's own key is theater —
+  // chain_witness.schema.json: witness_id "MUST be distinct from the producer". Distinct ids do
+  // NOT prove distinct keys, so passing this leaves witness-key-distinctness-unproven standing.
+  const wid = (cw.witness || {}).witness_id;
+  if (wid !== undefined && wid !== null && wid === kt.key_id) bad.push("witness-not-independent");
+  // req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response).
+  const fr = cw.freshness || {};
+  if (!["witness_timestamp_utc", "nonce", "challenge_response"].some((k) => fr[k])) {
+    bad.push("no-freshness-anchor");
+  }
+  // req 3: key_trust must CARRY revocation state, and a revoked key is untrusted.
+  const rev = kt.revocation;
+  if (!isObj(rev) || !("revoked" in rev)) bad.push("no-revocation-state");
+  else if (rev.revoked === true) bad.push("producer-key-revoked");
+  return bad;
+}
+// Returns [class, withheldReasons]. AIREP-Trusted is FAIL-CLOSED: granted only when every
+// normative prerequisite is actually enforced and passes. This verifier enforces none of the
+// Trusted-tier cryptographic checks, so the top class is withheld and the reason is named.
 function classify(rec, sigOk) {
   const alg = String((((rec.integrity || {}).signature) || {}).alg || "").toLowerCase();
   const verified = sigOk === true && REAL_ALGS.has(alg) && evidenceAnchored(rec) && keyTrustBound(rec);
-  if (!verified) return "Core";
-  return witnessPresent(rec) ? "Trusted" : "Verified";
+  if (!verified) return ["Core", []];
+  if (!witnessPresent(rec)) return ["Verified", []]; // no Trusted claim is being made at all
+  const structural = trustedStructuralFailures(rec);
+  if (structural.length) return ["Verified", structural]; // a prerequisite demonstrably fails
+  if (TRUSTED_GATES_NOT_IMPLEMENTED.length) {
+    // Witness material is present and structurally coherent, but the checks that would make it
+    // mean anything do not run here. Never grant on presence.
+    return ["TRUSTED_NOT_IMPLEMENTED", [...TRUSTED_GATES_NOT_IMPLEMENTED]];
+  }
+  return ["Trusted", []]; // unreachable until every gate above is actually implemented
 }
 
 function main() {
@@ -230,9 +282,12 @@ function main() {
     if (sig === false) bad.push("signature");
     prev = integ.current;
     const sigstr = sig === true ? "sig=ok" : sig === false ? "sig=FAIL" : "sig=skip";
-    const cls = showClass ? (bad.length ? "INVALID" : classify(rec, sig)) : null;
+    let cls = null, withheld = [];
+    if (showClass) [cls, withheld] = bad.length ? ["INVALID", []] : classify(rec, sig);
     if (cls !== null && CLASS_RANK[cls] < CLASS_RANK[chainClass]) chainClass = cls;
-    const clspart = showClass ? `  class=${cls}` : "";
+    let clspart = showClass ? `  class=${cls}` : "";
+    // Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
+    if (withheld.length) clspart += `  trusted_withheld=${withheld.join(",")}`;
     console.log(`  [${i}] ${bad.length ? "FAIL(" + bad.join(",") + ")" : "PASS"}  ${sigstr}${clspart}  ${String(integ.current).slice(0, 23)}...`);
     if (bad.length) fails++;
   });

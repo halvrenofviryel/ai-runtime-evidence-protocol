@@ -96,7 +96,21 @@ def _load_records(path: str):
 
 # --- conformance classes (CONFORMANCE_CLASSES.md) ---------------------------------------------
 _REAL_ALGS = {"ed25519", "ecdsa", "rsa", "rsa-pss", "hmac-sha256"}
-_CLASS_RANK = {"INVALID": 0, "Core": 1, "Verified": 2, "Trusted": 3}
+# TRUSTED_NOT_IMPLEMENTED sits at Verified's rank on purpose: it is NOT a class above Verified.
+# It is Verified plus a NAMED statement that the Trusted prerequisites were never evaluated.
+_CLASS_RANK = {"INVALID": 0, "Core": 1, "Verified": 2, "TRUSTED_NOT_IMPLEMENTED": 2, "Trusted": 3}
+
+# The AIREP-Trusted prerequisites (CONFORMANCE_CLASSES.md §AIREP-Trusted) that this verifier does
+# NOT evaluate. A prerequisite that is not enforced can never be reported as satisfied, so while
+# this tuple is non-empty the top class is UNREACHABLE — presence of witness material downgrades
+# to TRUSTED_NOT_IMPLEMENTED rather than granting Trusted. Implementing a check here means
+# removing its entry AND adding the real check; removing an entry alone re-opens the hole.
+_TRUSTED_GATES_NOT_IMPLEMENTED = (
+    "witness-signature-not-verified",   # req 1: chain_witness.witness.value is never re-verified
+    "witness-key-distinctness-unproven",  # req 1: a witness_id string is not a key
+    "freshness-recency-not-evaluated",  # req 2: presence is checked, recency/nonce-challenge is not
+    "revocation-not-honored",           # req 3: no revocation source is consulted
+)
 
 
 def _evidence_anchored(rec) -> bool:
@@ -112,6 +126,10 @@ def _key_trust_bound(rec) -> bool:
 
 
 def _witness_present(rec) -> bool:
+    """Witness material is PRESENT. Presence is not verification: this says a chain_witness block
+    exists and is populated, NOT that the witness signature is valid, that the witness key is
+    independent of the producer, or that the anchor is fresh. It is a necessary condition for
+    Trusted, never a sufficient one."""
     prof = rec.get("profiles") or {}
     cw = prof.get("chain_witness") or prof.get("freshness_witness")
     if not isinstance(cw, dict):
@@ -120,8 +138,41 @@ def _witness_present(rec) -> bool:
     return bool(cw.get("chain_id") and head.get("current") and cw.get("witness"))
 
 
-def _classify(rec, sig_ok) -> str:
-    """Highest class of a record that already satisfies Core (see CONFORMANCE_CLASSES.md)."""
+def _trusted_structural_failures(rec) -> list:
+    """Trusted prerequisites that ARE structurally checkable and DEFINITIVELY fail on this record.
+
+    These are cheap structural reads, not cryptography. Passing them earns nothing — the gates in
+    _TRUSTED_GATES_NOT_IMPLEMENTED still never ran. Failing one is decisive: the record cannot be
+    Trusted no matter what the unimplemented gates would have said."""
+    prof = rec.get("profiles") or {}
+    cw = prof.get("chain_witness") or prof.get("freshness_witness") or {}
+    kt = prof.get("key_trust") or {}
+    bad = []
+    # req 1 (necessary, not sufficient): a "witness" naming the producer's own key is theater —
+    # chain_witness.schema.json: witness_id "MUST be distinct from the producer". Distinct ids do
+    # NOT prove distinct keys, so passing this leaves witness-key-distinctness-unproven standing.
+    wid = (cw.get("witness") or {}).get("witness_id")
+    if wid is not None and wid == kt.get("key_id"):
+        bad.append("witness-not-independent")
+    # req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response).
+    fr = cw.get("freshness") or {}
+    if not any(fr.get(k) for k in ("witness_timestamp_utc", "nonce", "challenge_response")):
+        bad.append("no-freshness-anchor")
+    # req 3: key_trust must CARRY revocation state, and a revoked key is untrusted.
+    rev = kt.get("revocation")
+    if not isinstance(rev, dict) or "revoked" not in rev:
+        bad.append("no-revocation-state")
+    elif rev.get("revoked") is True:
+        bad.append("producer-key-revoked")
+    return bad
+
+
+def _classify(rec, sig_ok):
+    """Highest class of a record that already satisfies Core (see CONFORMANCE_CLASSES.md).
+
+    Returns (class, withheld_reasons). AIREP-Trusted is FAIL-CLOSED: it is granted only when every
+    normative prerequisite is actually enforced and passes. Because this verifier enforces none of
+    the Trusted-tier cryptographic checks, the top class is withheld and the reason is named."""
     alg = ((rec.get("integrity") or {}).get("signature") or {}).get("alg", "").lower()
     verified = (
         sig_ok is True                # signature actually re-verified against a supplied key
@@ -130,8 +181,18 @@ def _classify(rec, sig_ok) -> str:
         and _key_trust_bound(rec)     # the signing key is bound via profiles.key_trust
     )
     if not verified:
-        return "Core"
-    return "Trusted" if _witness_present(rec) else "Verified"
+        return "Core", []
+    if not _witness_present(rec):
+        return "Verified", []  # no Trusted claim is being made at all
+    structural = _trusted_structural_failures(rec)
+    if structural:
+        # A Trusted prerequisite demonstrably fails → the ladder stops at Verified.
+        return "Verified", structural
+    if _TRUSTED_GATES_NOT_IMPLEMENTED:
+        # Witness material is present and structurally coherent, but the checks that would make it
+        # mean anything do not run here. Never grant on presence.
+        return "TRUSTED_NOT_IMPLEMENTED", list(_TRUSTED_GATES_NOT_IMPLEMENTED)
+    return "Trusted", []  # unreachable until every gate above is actually implemented
 
 
 def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
@@ -170,10 +231,15 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
         prev = integ.get("current")
         sigstr = {True: "sig=ok", False: "sig=FAIL", None: "sig=skip"}[sig]
         status = "PASS" if not bad else "FAIL(" + ",".join(bad) + ")"
-        cls = ("INVALID" if bad else _classify(rec, sig)) if show_class else None
+        cls, withheld = None, []
+        if show_class:
+            cls, withheld = ("INVALID", []) if bad else _classify(rec, sig)
         if cls is not None and _CLASS_RANK[cls] < _CLASS_RANK[chain_class]:
             chain_class = cls
         clspart = f"  class={cls}" if show_class else ""
+        # Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
+        if withheld:
+            clspart += "  trusted_withheld=" + ",".join(withheld)
         print(f"  [{i}] {status}  {sigstr}{clspart}  {str(integ.get('current', '?'))[:23]}...")
         if bad:
             fails += 1
@@ -189,7 +255,8 @@ def main(argv=None) -> int:
     ap.add_argument("path", help="a record .json or a chain .jsonl / JSON array")
     ap.add_argument("--pubkey", default="", help="Ed25519 public key (hex) or a path to a key file")
     ap.add_argument("--class", dest="show_class", action="store_true",
-                    help="report the highest AIREP conformance class (Core/Verified/Trusted) satisfied")
+                    help="report the highest AIREP conformance class satisfied (Core/Verified/"
+                         "TRUSTED_NOT_IMPLEMENTED; Trusted is withheld while its checks are unimplemented)")
     args = ap.parse_args(argv)
     return verify(args.path, args.pubkey, show_class=args.show_class)
 

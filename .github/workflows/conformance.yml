@@ -36,6 +36,8 @@ jobs:
         run: python3 conformance/test_jcs.py
       - name: test_verifier_parity.py — verify.py and verify.mjs reach the same verdict
         run: python3 conformance/test_verifier_parity.py
+      - name: test_trusted_gates.py — AIREP-Trusted is never granted on witness PRESENCE
+        run: python3 conformance/test_trusted_gates.py
       - name: verify.mjs — independent Node verifier on the chain + signatures
         run: node conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_public_key.txt
       - name: regenerate-drift guard — committed examples must round-trip the producer
