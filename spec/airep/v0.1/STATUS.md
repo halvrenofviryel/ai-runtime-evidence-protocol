@@ -191,6 +191,10 @@ completeness.
   committed as a shared corpus under `conformance/fixtures/trusted_gates/`, run against **both**
   verifiers, asserting the same class **and** the same withheld-reason set from each, with a
   drift guard binding the corpus to its generator. Class semantics (validity, rank, exit-code
-  meaning) are normative in `conformance/CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED. The core
-  wire format and the `chain_witness` schema are unchanged — this is a verifier and documentation
-  correction only.
+  meaning) are normative in `conformance/CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED.
+  Also closed: an **empty input** (`[]` or an empty `.jsonl`) previously reported `CLASS: Trusted` at
+  exit 0 in both verifiers — the top class awarded to the maximally *unmeasured* input, because the
+  chain class was initialised to `Trusted` and no record ever lowered it. An empty input is now
+  `INVALID` at exit 1 in both, the chain class starts unset rather than at the ceiling, and the case
+  is held by the battery. The core wire format and the `chain_witness` schema are unchanged — this is
+  a verifier and documentation correction only.

@@ -30,6 +30,11 @@ The floor. A record (or chain) is **AIREP-Core** when all of SPEC §8 holds:
 Core establishes *"this is a well-formed, untampered AIREP record."* The signature need only
 **exist** at this tier; whether it *verifies* is the next tier's concern.
 
+An input containing **zero records** is `INVALID` and MUST exit non-zero. It is not a vacuously
+conformant chain: no check ran, so no class was earned. A verifier MUST NOT report any class for an
+empty input, and MUST NOT let an initial or default class value stand in for a measured one — the
+ceiling is earned by the records, never inherited.
+
 ## AIREP-Verified — cryptographically checkable
 
 **AIREP-Verified** is Core **plus** the record's authorship is cryptographically established. A

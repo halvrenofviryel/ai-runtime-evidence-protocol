@@ -290,10 +290,22 @@ function main() {
   const pub = loadPub(pi >= 0 ? args[pi + 1] : "");
   const showClass = args.includes("--class");
   const records = loadRecords(file);
+  // An empty input is not a vacuously perfect chain. Zero records means zero checks ran, and the
+  // unmeasured case must never inherit a class — reporting the top class here would be the purest
+  // form of the fail-open bug this classifier exists to prevent. (Kept in lockstep with verify.py.)
+  if (records.length === 0) {
+    console.log(`AIREP verify (node): ${file}  (0 record(s))`);
+    console.log("  FAIL(no-records)  an AIREP input MUST contain at least one record");
+    console.log("RESULT: 1 input FAILED");
+    if (showClass) console.log("CLASS: INVALID");
+    process.exit(1);
+  }
   const isChain = records.length > 1;
   let fails = 0;
   let prev = GENESIS;
-  let chainClass = "Trusted"; // a chain is only as strong as its weakest record
+  // Starts UNSET, not at the top class: the ceiling is earned by the records, never inherited from
+  // an initial value. A chain is only as strong as its weakest record.
+  let chainClass = null;
   console.log(`AIREP verify (node): ${file}  (${records.length} record(s)${isChain ? " — chain" : ""})`);
   records.forEach((rec, i) => {
     const bad = [];
@@ -314,7 +326,7 @@ function main() {
     const sigstr = sig === true ? "sig=ok" : sig === false ? "sig=FAIL" : "sig=skip";
     let cls = null, withheld = [];
     if (showClass) [cls, withheld] = bad.length ? ["INVALID", []] : classify(rec, sig);
-    if (cls !== null && CLASS_RANK[cls] < CLASS_RANK[chainClass]) chainClass = cls;
+    if (cls !== null && (chainClass === null || CLASS_RANK[cls] < CLASS_RANK[chainClass])) chainClass = cls;
     let clspart = showClass ? `  class=${cls}` : "";
     // Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
     if (withheld.length) clspart += `  trusted_withheld=${withheld.join(",")}`;
@@ -323,7 +335,7 @@ function main() {
   });
   console.log(`RESULT: ${fails ? fails + " record(s) FAILED" : "all records OK"}`);
   if (showClass) {
-    console.log(`CLASS: ${fails ? "INVALID" : chainClass}${!pub && !fails ? "  (pass --pubkey to assess Verified)" : ""}`);
+    console.log(`CLASS: ${fails ? "INVALID" : (chainClass || "INVALID")}${!pub && !fails ? "  (pass --pubkey to assess Verified)" : ""}`);
   }
   process.exit(fails ? 1 : 0);
 }

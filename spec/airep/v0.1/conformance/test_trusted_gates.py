@@ -41,6 +41,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -342,6 +343,26 @@ def main() -> int:
     print(f"  {'PASS' if named else 'FAIL'}  withheld class is NAMED "
           f"(structurally_perfect_witness -> TRUSTED_NOT_IMPLEMENTED + all 4 gates named, "
           f"got {perfect} {sorted(perfect_why)})")
+
+    # THE EMPTY-INPUT HOLE: zero records means zero checks ran. Both verifiers once initialised the
+    # chain class to "Trusted" and printed it unchanged for an empty file — the top class awarded to
+    # the maximally unmeasured input, at exit 0. An unmeasured input MUST NOT inherit a class.
+    empty_dir = Path(tempfile.mkdtemp(prefix="airep-empty-input-"))
+    empties = {"empty.jsonl": "", "empty.json": "[]\n"}
+    for fname, body in empties.items():
+        p = empty_dir / fname
+        p.write_text(body)
+        for label, cmd in (("py", [sys.executable, str(HERE / "verify.py")]),
+                           *((("mjs", ["node", str(HERE / "verify.mjs")]),) if have_node else ())):
+            r = subprocess.run(cmd + [str(p), "--class"], capture_output=True, text=True)
+            m = CLASS_RE.search(r.stdout)
+            cls = m.group(1) if m else "NO-CLASS-LINE"
+            # Must be rejected outright: INVALID class AND a non-zero exit.
+            ok = cls == "INVALID" and r.returncode != 0
+            if not ok:
+                fails += 1
+            print(f"  {'PASS' if ok else 'FAIL'}  empty input rejected ({fname}, {label}) -> "
+                  f"class={cls} exit={r.returncode}, expected class=INVALID exit!=0")
 
     if not have_node:
         # Node absent means half the parity claim was NOT MEASURED. Never let that read as a pass.

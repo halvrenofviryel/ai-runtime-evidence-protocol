@@ -206,10 +206,22 @@ def _classify(rec, sig_ok):
 def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
     pub = _load_pubkey(pubkey)
     records = _load_records(path)
+    # An empty input is not a vacuously perfect chain. Zero records means zero checks ran, and the
+    # unmeasured case must never inherit a class — reporting the top class here would be the purest
+    # form of the fail-open bug this classifier exists to prevent.
+    if not records:
+        print(f"AIREP verify: {path}  (0 record(s))")
+        print("  FAIL(no-records)  an AIREP input MUST contain at least one record")
+        print("RESULT: 1 input FAILED")
+        if show_class:
+            print("CLASS: INVALID")
+        return 1
     is_chain = len(records) > 1
     fails = 0
     prev = GENESIS
-    chain_class = "Trusted"  # a chain is only as strong as its weakest record
+    # Starts UNSET, not at the top class: the ceiling is earned by the records, never inherited from
+    # an initial value. A chain is only as strong as its weakest record.
+    chain_class = None
     print(f"AIREP verify: {path}  ({len(records)} record(s){' — chain' if is_chain else ''})")
     for i, rec in enumerate(records):
         bad = []
@@ -242,7 +254,7 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
         cls, withheld = None, []
         if show_class:
             cls, withheld = ("INVALID", []) if bad else _classify(rec, sig)
-        if cls is not None and _CLASS_RANK[cls] < _CLASS_RANK[chain_class]:
+        if cls is not None and (chain_class is None or _CLASS_RANK[cls] < _CLASS_RANK[chain_class]):
             chain_class = cls
         clspart = f"  class={cls}" if show_class else ""
         # Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
@@ -253,7 +265,7 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
             fails += 1
     print(f"RESULT: {'all records OK' if not fails else f'{fails} record(s) FAILED'}")
     if show_class:
-        print(f"CLASS: {'INVALID' if fails else chain_class}"
+        print(f"CLASS: {'INVALID' if fails else (chain_class or 'INVALID')}"
               f"{'  (pass --pubkey to assess Verified)' if not pub and not fails else ''}")
     return 0 if not fails else 1
 
