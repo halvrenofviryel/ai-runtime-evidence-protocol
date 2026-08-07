@@ -4,10 +4,13 @@
 > A record or chain has a single **highest class** it satisfies. `verify.py` and `verify.mjs`
 > report it with `--class`. The classes are a strict ladder: Trusted ⊃ Verified ⊃ Core.
 >
-> **The reference verifiers currently report only `Core`, `Verified`, and
-> `TRUSTED_NOT_IMPLEMENTED`.** `Trusted` is defined below but is **not reachable** through either
-> verifier, because four of its prerequisites are unenforced — see §TRUSTED_NOT_IMPLEMENTED. The
-> tier is specified so implementers know what it demands; it is withheld until those checks run.
+> **By default the reference verifiers report only `Core`, `Verified`, and
+> `TRUSTED_NOT_IMPLEMENTED`.** In that mode `Trusted` is **not reachable**, because four of its
+> prerequisites are unenforced — see §TRUSTED_NOT_IMPLEMENTED. **`Trusted` becomes reportable in an
+> opt-in STRICT mode** (WP-10): when the operator supplies `--trust-store` + `--freshness-window` +
+> `--revocation-source`, the four gates run for real and a record earns `Trusted` iff every one
+> passes — see §AIREP-Trusted (strict mode). Without those inputs the tier stays withheld: a
+> prerequisite that did not run is never reported as satisfied.
 
 A bare conformance result (valid / invalid) does not tell an auditor or regulator *how much* a
 record can be relied on. The classes do: they turn the spec's SHOULD-vs-MUST distinctions into a
@@ -82,18 +85,56 @@ externally vouched-for."*
 > `verify.py --class` and `verify.mjs --class` check witness *presence* only: they never re-verify
 > `chain_witness.witness.value`, cannot prove the witness key is independent of the producer key (a
 > `witness_id` string is not a key), never evaluate freshness *recency*, and consult no revocation
-> source. Four of the tier's prerequisites are therefore unenforced, so **`Trusted` is withheld for
-> every input** and the withholding is named — see §TRUSTED_NOT_IMPLEMENTED below. A prerequisite that
-> is not enforced can never be reported as satisfied; granting the tier on witness *presence* would
-> report an assurance no check produced. Implementing the four gates is the remaining v0.2-proper
-> work. This is the honest ladder, not a marketing one: a tier is claimable once its checks actually
-> run, and until then the gap is named rather than papered over.
+> source. Four of the tier's prerequisites are therefore unenforced **by default**, so `Trusted` is
+> withheld and named — see §TRUSTED_NOT_IMPLEMENTED below. A prerequisite that is not enforced can
+> never be reported as satisfied; granting the tier on witness *presence* would report an assurance
+> no check produced. **These four gates ARE enforced in the opt-in strict mode below** — the honest
+> ladder, not a marketing one: a tier is claimable once its checks actually run, and until the
+> operator supplies the inputs that let them run, the gap is named rather than papered over.
+
+## AIREP-Trusted (strict mode) — the four gates, run against operator inputs
+
+`Trusted` is reachable **only** in strict mode, engaged when the operator passes all three of
+`--trust-store`, `--freshness-window`, and `--revocation-source` (and a witness is present). Any
+input missing → the gates cannot run → `TRUSTED_NOT_IMPLEMENTED` (never a silent `Trusted`). With
+them, a record that already satisfies Verified and carries structurally-coherent witness material is
+granted `Trusted` **iff all four gates pass**; any failure drops the ceiling to `Verified` with the
+specific reason named:
+
+| Gate | Check (v1) | Failure reason(s) |
+|---|---|---|
+| witness signature | re-verify `chain_witness.witness.value` over canonical `{chain_id, decision_index, current, length}` under the key **resolved from the trust store** by `witness_id` | `witness-signature-invalid` (or `witness-unknown` if `witness_id` is not in the store, `witness-untrusted` if its entry is not `trusted:true`) |
+| witness-key independence | compare **resolved public keys**, not id strings: witness pubkey ≠ producer `key_trust.public_key` | `witness-not-independent` |
+| freshness recency | `freshness.witness_timestamp_utc` within `--freshness-window` seconds of `--now` (deterministic; default `--now` = system clock, and the evaluated `now` is printed) | `freshness-stale`, `freshness-in-future`, `no-freshness-anchor` |
+| revocation | consult `--revocation-source` for **both** the producer key_id and the witness key_id; a key signed at/after its `revoked_at` is revoked | `producer-key-revoked`, `witness-key-revoked` |
+
+**Operator input files (v1, local JSON, network-free):**
+
+```jsonc
+// --trust-store
+{ "<witness_id>": { "public_key_hex": "<64-hex>", "trusted": true } }
+// --revocation-source
+{ "<key_id>": { "revoked_at": "<iso8601>", "reason": "<str>" } }
+```
+
+**Determinism.** The freshness gate is the only time-dependent step; `--now` makes a `Trusted`
+verdict reproducible and the verdict header records the `now` used. Identical inputs (including
+`--now`) ⇒ identical verdict.
+
+**v1 scope, stated so it is not misread.** Exactly **one** independent trusted witness — **no N-of-M
+quorum**. Local JSON inputs only — **no transparency-log / `inclusion_proof` verification** and **no
+online CRL/OCSP**. Timestamp freshness only — **no nonce/challenge** protocol. These remain named
+future work; the strict verdict never claims more than it checked. The WP-09 **self-declared**
+revocation caveat (`verified_withheld=producer-key-revoked`) is unchanged and independent of the
+external `--revocation-source`.
 
 ## TRUSTED_NOT_IMPLEMENTED — the withheld top class
 
-`TRUSTED_NOT_IMPLEMENTED` is the class the reference verifiers report for a record that has cleared
-every check they *do* run and whose remaining distance to Trusted is **unmeasured rather than
-failed**. It is normative output vocabulary, not an error string.
+`TRUSTED_NOT_IMPLEMENTED` is the class the reference verifiers report **in default mode** for a
+record that has cleared every check they *do* run and whose remaining distance to Trusted is
+**unmeasured rather than failed**. It is normative output vocabulary, not an error string. (In strict
+mode the four gates below ARE evaluated against the operator's inputs — see §AIREP-Trusted (strict
+mode) — so a strict run returns `Trusted` or `Verified`+reason, not this class.)
 
 **Validity.** A `TRUSTED_NOT_IMPLEMENTED` record is **valid**. It has passed every AIREP-Core check
 and every AIREP-Verified check; nothing about it is malformed, tampered, or unsigned. The class says

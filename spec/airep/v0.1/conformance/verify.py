@@ -23,11 +23,15 @@ two can differ on records whose `profiles` block violates its schema.
 Usage:
   python3 verify.py <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
 
-`--class` reports the highest AIREP conformance class satisfied: Core, Verified, or
-TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its prerequisites
-(witness-signature verification, witness-key distinctness, freshness recency, revocation) are not
-implemented here, and an unenforced prerequisite can never be reported as satisfied. See
-`CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED.
+`--class` reports the highest AIREP conformance class satisfied: Core, Verified, or (by default)
+TRUSTED_NOT_IMPLEMENTED. **By default Trusted is never reported** — its four prerequisites
+(witness-signature verification, witness-key distinctness, freshness recency, revocation) are
+unevaluated, and an unenforced prerequisite can never be reported as satisfied. **`Trusted` is
+reachable only in the opt-in STRICT mode (WP-10):** pass `--trust-store` + `--freshness-window` +
+`--revocation-source` and the four gates run for real; a record earns Trusted iff every one passes,
+else the ceiling is Verified with the specific reason named. Any input missing → the gates cannot run
+→ TRUSTED_NOT_IMPLEMENTED (never a silent Trusted). See `CONFORMANCE_CLASSES.md` §AIREP-Trusted
+(strict mode). v1: one independent trusted witness, local JSON inputs, timestamp freshness window.
 
 A witness-less `Verified` record whose own `profiles.key_trust.revocation.revoked` is `true` is
 still `Verified` (revocation is a Trusted gate, not a Verified requirement) but carries
@@ -48,6 +52,7 @@ import argparse
 import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -222,12 +227,129 @@ def _trusted_structural_failures(rec) -> list:
     return bad
 
 
-def _classify(rec, sig_ok):
+# ---- WP-10 strict-Trusted: the four Trusted gates, run ONLY with operator-supplied inputs -------
+# Default mode leaves these four gates unevaluated (TRUSTED_NOT_IMPLEMENTED). In strict mode the
+# operator supplies --trust-store + --freshness-window + --revocation-source and the gates run for
+# real; a record earns Trusted iff every one passes, else the ceiling is Verified with the specific
+# failure named. Kept byte-for-byte in lockstep with verify.mjs. v1 scope: exactly ONE independent
+# trusted witness (no N-of-M quorum), local JSON inputs (no transparency-log / no online CRL), a
+# timestamp freshness window (no nonce/challenge). See docs WP10_STRICT_TRUSTED_DESIGN.
+def _parse_iso(s):
+    if not isinstance(s, str) or not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _producer_pubkey_hex(kt):
+    """Resolve the producer's signing public key to lowercase hex. key_trust.public_key is either a
+    {format, value} object (the profile shape) or a bare hex string."""
+    pk = kt.get("public_key")
+    if isinstance(pk, dict) and _nonempty_str(pk.get("value")):
+        return pk["value"].strip().lower()
+    if _nonempty_str(pk):
+        return pk.strip().lower()
+    return None
+
+
+def _verify_witness_sig(cw, wit, wpub_hex):
+    """Re-verify chain_witness.witness.value over the canonical head claim, under the witness key
+    RESOLVED FROM THE TRUST STORE (not the witness_id string). Claim shape is byte-identical to the
+    one validate.py and the fixtures sign: {chain_id, decision_index, current, length}."""
+    try:
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    except ImportError:
+        return None  # NOT_MEASURED — caller treats None as "cannot evaluate"
+    head = cw.get("head") or {}
+    claim = {"chain_id": cw.get("chain_id"), "decision_index": head.get("decision_index"),
+             "current": head.get("current"), "length": head.get("length")}
+    try:
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(wpub_hex)).verify(
+            bytes.fromhex(wit.get("value", "")), _canonical(claim))
+        return True
+    except Exception:
+        return False
+
+
+def _key_revoked(revocation, key_id, relevant_time):
+    """A key is revoked if the external revocation source lists it AND the record was signed at/after
+    revoked_at (CONFORMANCE_CLASSES.md §Trusted req 3: 'a record signed after revoked_at by a revoked
+    key is untrusted'). Missing revoked_at, or an unknown signing time, is treated conservatively as
+    revoked — never as a silent pass."""
+    if not isinstance(revocation, dict) or not _nonempty_str(key_id):
+        return False
+    entry = revocation.get(key_id)
+    if not isinstance(entry, dict):
+        return False
+    ra = _parse_iso(entry.get("revoked_at"))
+    if ra is None or relevant_time is None:
+        return True
+    return relevant_time >= ra
+
+
+def _strict_trusted_failures(rec, strict):
+    """The four Trusted gates run for real against operator inputs. Returns the named failures; an
+    empty list means every gate passed and the record may be Trusted."""
+    prof = rec.get("profiles") or {}
+    cw = prof.get("chain_witness") or prof.get("freshness_witness") or {}
+    kt = prof.get("key_trust") or {}
+    wit = cw.get("witness") if isinstance(cw.get("witness"), dict) else {}
+    bad = []
+    trust_store, revocation, window, now = (
+        strict["trust_store"], strict["revocation"], strict["freshness_window"], strict["now"])
+
+    # gate 1+ (key resolution / trust / independence): resolve the witness key from the store by
+    # witness_id and decide independence on the RESOLVED PUBLIC KEYS, never on id strings.
+    wid = wit.get("witness_id")
+    entry = trust_store.get(wid) if _nonempty_str(wid) else None
+    wpub = None
+    if not isinstance(entry, dict) or not _nonempty_str(entry.get("public_key_hex")):
+        bad.append("witness-unknown")
+    else:
+        wpub = entry["public_key_hex"].strip().lower()
+        if entry.get("trusted") is not True:
+            bad.append("witness-untrusted")
+        ppub = _producer_pubkey_hex(kt)
+        if ppub is not None and wpub == ppub:
+            bad.append("witness-not-independent")
+
+    # gate: witness signature verifies under the resolved key
+    if wpub is not None:
+        ok = _verify_witness_sig(cw, wit, wpub)
+        if ok is None:
+            bad.append("witness-signature-not-evaluated")  # cryptography missing → NOT measured
+        elif ok is False:
+            bad.append("witness-signature-invalid")
+
+    # gate: freshness recency within the operator's window (deterministic against --now)
+    fr = cw.get("freshness") if isinstance(cw.get("freshness"), dict) else {}
+    wts = _parse_iso(fr.get("witness_timestamp_utc"))
+    if wts is None:
+        bad.append("no-freshness-anchor")
+    elif wts > now:
+        bad.append("freshness-in-future")
+    elif (now - wts).total_seconds() > window:
+        bad.append("freshness-stale")
+
+    # gate: revocation, consulted for BOTH the producer key and the witness key
+    rec_ts = _parse_iso((rec.get("subject") or {}).get("timestamp_utc"))
+    if _key_revoked(revocation, kt.get("key_id"), rec_ts):
+        bad.append("producer-key-revoked")
+    if _key_revoked(revocation, wid, wts):
+        bad.append("witness-key-revoked")
+    return bad
+
+
+def _classify(rec, sig_ok, strict=None):
     """Highest class of a record that already satisfies Core (see CONFORMANCE_CLASSES.md).
 
     Returns (class, withheld_reasons). AIREP-Trusted is FAIL-CLOSED: it is granted only when every
-    normative prerequisite is actually enforced and passes. Because this verifier enforces none of
-    the Trusted-tier cryptographic checks, the top class is withheld and the reason is named."""
+    normative prerequisite is actually enforced and passes. Without operator trust inputs (default
+    mode) the Trusted-tier gates cannot run, so the top class is withheld and named. With them
+    (strict mode: `strict` is a context dict) the four gates run for real."""
     alg = ((rec.get("integrity") or {}).get("signature") or {}).get("alg", "").lower()
     verified = (
         sig_ok is True                # signature actually re-verified against a supplied key
@@ -243,15 +365,43 @@ def _classify(rec, sig_ok):
     if structural:
         # A Trusted prerequisite demonstrably fails → the ladder stops at Verified.
         return "Verified", structural
-    if _TRUSTED_GATES_NOT_IMPLEMENTED:
-        # Witness material is present and structurally coherent, but the checks that would make it
-        # mean anything do not run here. Never grant on presence.
+    if strict is None:
+        # Witness material is present and structurally coherent, but with no operator trust inputs
+        # the four gates cannot run. Never grant on presence.
         return "TRUSTED_NOT_IMPLEMENTED", list(_TRUSTED_GATES_NOT_IMPLEMENTED)
-    return "Trusted", []  # unreachable until every gate above is actually implemented
+    # STRICT MODE: the four gates run for real against the operator's trust inputs.
+    gate_failures = _strict_trusted_failures(rec, strict)
+    if gate_failures:
+        return "Verified", gate_failures
+    return "Trusted", []  # every gate ran and passed
 
 
-def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
+def _build_strict(trust_store_path, freshness_window, revocation_path, now_iso):
+    """Assemble the strict-Trusted context, or None when strict mode is not (fully) requested.
+    Strict mode engages ONLY when all three operator inputs are present; a partial set falls back to
+    default (TRUSTED_NOT_IMPLEMENTED) with a printed note, never to a silent Trusted."""
+    supplied = [bool(trust_store_path), freshness_window is not None, bool(revocation_path)]
+    if not any(supplied):
+        return None, None
+    if not all(supplied):
+        return None, ("strict-Trusted needs all three of --trust-store, --freshness-window, "
+                      "--revocation-source; falling back to default (Trusted withheld)")
+    now = _parse_iso(now_iso) if now_iso else datetime.now(timezone.utc)
+    if now is None:
+        return None, f"--now is not a valid ISO-8601 timestamp: {now_iso!r} (Trusted withheld)"
+    return {
+        "trust_store": json.loads(Path(trust_store_path).read_text()),
+        "revocation": json.loads(Path(revocation_path).read_text()),
+        "freshness_window": float(freshness_window),
+        "now": now,
+    }, None
+
+
+def verify(path: str, pubkey: str = "", show_class: bool = False,
+           trust_store: str = "", freshness_window=None, revocation_source: str = "",
+           now_iso: str = "") -> int:
     pub = _load_pubkey(pubkey)
+    strict, strict_note = _build_strict(trust_store, freshness_window, revocation_source, now_iso)
     records = _load_records(path)
     # An empty input is not a vacuously perfect chain. Zero records means zero checks ran, and the
     # unmeasured case must never inherit a class — reporting the top class here would be the purest
@@ -270,6 +420,11 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
     # an initial value. A chain is only as strong as its weakest record.
     chain_class = None
     print(f"AIREP verify: {path}  ({len(records)} record(s){' — chain' if is_chain else ''})")
+    if strict_note:
+        print(f"  NOTE  {strict_note}")
+    if strict is not None:
+        print(f"  strict-Trusted mode: now={strict['now'].isoformat()} "
+              f"freshness_window={int(strict['freshness_window'])}s")
     for i, rec in enumerate(records):
         bad = []
         if list(CORE.iter_errors(rec)):
@@ -300,7 +455,7 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
         status = "PASS" if not bad else "FAIL(" + ",".join(bad) + ")"
         cls, withheld = None, []
         if show_class:
-            cls, withheld = ("INVALID", []) if bad else _classify(rec, sig)
+            cls, withheld = ("INVALID", []) if bad else _classify(rec, sig, strict)
         if cls is not None and (chain_class is None or _CLASS_RANK[cls] < _CLASS_RANK[chain_class]):
             chain_class = cls
         clspart = f"  class={cls}" if show_class else ""
@@ -334,13 +489,27 @@ def main(argv=None) -> int:
     ap.add_argument("--pubkey", default="", help="Ed25519 public key (hex) or a path to a key file")
     ap.add_argument("--class", dest="show_class", action="store_true",
                     help="report the highest AIREP conformance class satisfied: Core | Verified | "
-                         "TRUSTED_NOT_IMPLEMENTED. Trusted is NEVER reported: its prerequisites "
-                         "(witness signature, witness-key distinctness, freshness recency, "
-                         "revocation) are unimplemented, and an unenforced prerequisite is never "
-                         "reported as satisfied. Withheld classes name the unmet/unevaluated "
+                         "TRUSTED_NOT_IMPLEMENTED (default), or Trusted in strict mode. By default "
+                         "Trusted is withheld: its four prerequisites are unevaluated, and an "
+                         "unenforced prerequisite is never reported as satisfied. Pass "
+                         "--trust-store + --freshness-window + --revocation-source to run the gates "
+                         "and reach Trusted. Withheld classes name the unmet/unevaluated "
                          "prerequisites as trusted_withheld=...")
+    # WP-10 strict-Trusted (opt-in). Trusted is attempted ONLY when all three are supplied AND a
+    # witness is present; otherwise the default withheld behaviour stands. v1: one independent
+    # trusted witness, local JSON inputs, timestamp freshness window.
+    ap.add_argument("--trust-store", default="",
+                    help="JSON {witness_id: {public_key_hex, trusted}} — resolves + trusts witness keys")
+    ap.add_argument("--freshness-window", type=int, default=None,
+                    help="max seconds between the witness timestamp and --now for a fresh witness")
+    ap.add_argument("--revocation-source", default="",
+                    help="JSON {key_id: {revoked_at, reason}} — consulted for producer AND witness keys")
+    ap.add_argument("--now", default="",
+                    help="ISO-8601 evaluation time for the freshness gate (deterministic; default: system clock)")
     args = ap.parse_args(argv)
-    return verify(args.path, args.pubkey, show_class=args.show_class)
+    return verify(args.path, args.pubkey, show_class=args.show_class,
+                  trust_store=args.trust_store, freshness_window=args.freshness_window,
+                  revocation_source=args.revocation_source, now_iso=args.now)
 
 
 if __name__ == "__main__":
