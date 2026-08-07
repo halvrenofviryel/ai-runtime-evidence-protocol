@@ -29,6 +29,12 @@ TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its 
 implemented here, and an unenforced prerequisite can never be reported as satisfied. See
 `CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED.
 
+A witness-less `Verified` record whose own `profiles.key_trust.revocation.revoked` is `true` is
+still `Verified` (revocation is a Trusted gate, not a Verified requirement) but carries
+`verified_withheld=producer-key-revoked` on its line — a self-declared revoked signing key is never
+rendered as a clean Verified. `verified_withheld=` names caveats on a Verified record;
+`trusted_withheld=` names why Trusted was withheld.
+
 Exit code reflects RECORD VALIDITY ONLY, never the class: 0 when every record passed every check
 this verifier ran, 1 when a record failed or the input could not be read, 2 on usage error
 (`--help` exits 0 without verifying). A TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a
@@ -147,6 +153,17 @@ def _evidence_anchored(rec) -> bool:
 def _key_trust_bound(rec) -> bool:
     kt = (rec.get("profiles") or {}).get("key_trust")
     return isinstance(kt, dict) and all(k in kt for k in ("key_id", "algorithm", "public_key"))
+
+
+def _producer_key_revoked(rec) -> bool:
+    """The record's own profiles.key_trust declares its signing key revoked. Self-declared and
+    definitively checkable — it needs NO external revocation source (that source is the undefined
+    Trusted-tier policy, WP-10). A revoked signing key undermines the authorship a Verified record
+    asserts, so this caveat MUST be named, never rendered as a silent Verified. It does NOT change
+    the class: CONFORMANCE_CLASSES.md §Verified does not gate on revocation (that is a Trusted
+    gate), so the record stays Verified and carries `verified_withheld=producer-key-revoked`."""
+    rev = ((rec.get("profiles") or {}).get("key_trust") or {}).get("revocation")
+    return isinstance(rev, dict) and rev.get("revoked") is True
 
 
 def _witness_present(rec) -> bool:
@@ -290,6 +307,12 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
         # Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
         if withheld:
             clspart += "  trusted_withheld=" + ",".join(withheld)
+        # WP-09: a witness-less Verified record whose own key_trust declares the key revoked must
+        # not read as a clean Verified. Name the self-declared caveat; the class stays Verified per
+        # contract. (Witness-present revoked records already name producer-key-revoked above, on the
+        # Trusted path via _trusted_structural_failures.)
+        if show_class and cls == "Verified" and not _witness_present(rec) and _producer_key_revoked(rec):
+            clspart += "  verified_withheld=producer-key-revoked"
         print(f"  [{i}] {status}  {sigstr}{clspart}  {str(integ.get('current', '?'))[:23]}...")
         if bad:
             fails += 1

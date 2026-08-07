@@ -119,6 +119,17 @@ failure named (`witness-not-independent`, `no-freshness-anchor`, `no-revocation-
 `producer-key-revoked`). *Failed* and *not measured* are different states and are reported
 differently; neither is ever `Trusted`.
 
+**A revoked signing key is never a silent Verified — even off the Trusted path.** The naming above
+is reached when a record *attempts* Trusted (a witness is present). A record that makes **no**
+Trusted claim (no witness) but whose own `profiles.key_trust.revocation.revoked` is `true` is still
+reported `Verified` — revocation is a Trusted gate, not a Verified requirement, so the class is
+unchanged — but the caveat is surfaced on the record line as **`verified_withheld=producer-key-revoked`**.
+This is a self-declared, definitively-checkable state that needs no external revocation source (that
+source is the undefined Trusted-tier policy). It does not raise or lower the class; it stops a
+Verified record signed by a self-declared-revoked key from reading as a clean pass. `verified_withheld=`
+names caveats on a **Verified** record; `trusted_withheld=` names why **Trusted** was withheld — the
+two channels are distinct and a consumer reads whichever its policy floor cares about.
+
 **Exit-code meaning: none.** The exit code of `verify.py` / `verify.mjs` encodes **record validity
 only**, never a class:
 

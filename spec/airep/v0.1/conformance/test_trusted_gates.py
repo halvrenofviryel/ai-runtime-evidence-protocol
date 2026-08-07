@@ -371,6 +371,55 @@ def check_fixture_drift(cases) -> list:
     return drift
 
 
+def wp09_verified_revocation_check(have_node) -> int:
+    """WP-09: a witness-less, AIREP-Verified-eligible record whose own key_trust self-declares the
+    signing key revoked must NOT read as a clean Verified. The class stays Verified (revocation is a
+    Trusted gate, not a Verified one — CONFORMANCE_CLASSES.md §Verified), but the caveat is named
+    `verified_withheld=producer-key-revoked`. Control: the same record with revoked:false carries no
+    such annotation, proving it is the revoked STATE that triggers it, not merely a key_trust block.
+    Uses a real Ed25519 signature + the producer pubkey so the record actually reaches Verified.
+    Returns the failure count."""
+    def _rec(rev):
+        return _sign_record({
+            "airep_version": "0.1",
+            "subject": {"runtime": "phionyx-core", "producer": "phionyx/0.7.1", "decision_index": 0,
+                        "trace_id": "trace-wp09", "timestamp_utc": "2026-05-30T00:00:00Z"},
+            "input": {"input_ref": _ptr("wp09-in"),
+                      "governance_state": {"policy_version": "p1", "prior_context_bound": True}},
+            "claim": {"assertion": "verified-eligible, no witness", "basis": ["safety_gate"]},
+            "output": {"result_ref": _ptr("wp09-out"), "redacted": False},
+            "evidence": [{"type": "policy", "ref": "policy://x", "resolvable": True}],
+            "directive": {"verb": "release", "policy_basis": ["safety_gate"]},
+            "scope": {"covers": ["x"], "does_not_cover": ["y"]},
+            "integrity": {"previous": GENESIS, "canonical_json": True},
+            "profiles": {"key_trust": _key_trust(rev)},   # NO chain_witness -> Verified tier
+        })
+    fails = 0
+    print("  -- WP-09: a witness-less revoked key is NAMED, not a silent Verified --")
+    tmp = Path(tempfile.mkdtemp(prefix="airep-wp09-"))
+    for label, rev, expect_caveat in (
+            ("revoked", {"revoked": True, "revoked_at": "2026-05-29T00:00:00Z"}, True),
+            ("control(revoked=false)", {"revoked": False}, False)):
+        p = tmp / f"wp09_{label}.json"
+        p.write_text(json.dumps(_rec(rev)))
+        for who, cmd in (("py", [sys.executable, str(HERE / "verify.py")]),
+                         *((("mjs", ["node", str(HERE / "verify.mjs")]),) if have_node else ())):
+            r = subprocess.run(cmd + [str(p), "--class", "--pubkey", _pub_hex],
+                               capture_output=True, text=True)
+            cm = CLASS_RE.search(r.stdout)
+            cls = cm.group(1) if cm else "NO-CLASS"
+            has_caveat = "verified_withheld=producer-key-revoked" in r.stdout
+            ok = (r.returncode == 0 and cls == "Verified" and has_caveat == expect_caveat)
+            if not ok:
+                fails += 1
+            print(f"  {'PASS' if ok else 'FAIL'}  {label:<22} ({who}) -> class={cls} "
+                  f"verified_withheld={'present' if has_caveat else 'absent'} exit={r.returncode} "
+                  f"(want Verified, caveat={'present' if expect_caveat else 'absent'})")
+    if not have_node:
+        print("  NOT_RUN  Node half of the WP-09 check (node binary absent)")
+    return fails
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="AIREP-Trusted gate battery")
     ap.add_argument("--emit", default="", help="also write the case records into this directory")
@@ -469,6 +518,9 @@ def main() -> int:
                 fails += 1
             print(f"  {'PASS' if ok else 'FAIL'}  empty input rejected ({fname}, {label}) -> "
                   f"class={cls} exit={r.returncode}, expected class=INVALID exit!=0")
+
+    # WP-09: the Verified tier must not silently pass a self-declared revoked signing key.
+    fails += wp09_verified_revocation_check(have_node)
 
     if not have_node:
         # Node absent means half the parity claim was NOT MEASURED. Never let that read as a pass.
