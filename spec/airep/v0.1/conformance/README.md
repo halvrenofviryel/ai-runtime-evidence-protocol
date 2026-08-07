@@ -1,7 +1,10 @@
 # AIREP conformance
 
 This directory lets you check that a record really conforms to AIREP — with **two independent
-verifiers** (Python and Node) that agree byte-for-byte.
+verifiers** (Python and Node) that agree byte-for-byte on every hash, and reach the same verdict on
+the core checks. One documented exception: `verify.mjs` runs **no profile-schema validation**, so a
+record whose `profiles` block violates its schema is rejected by `verify.py` and accepted by
+`verify.mjs`. `verify.py` is the authority for exhaustive schema validation.
 
 - [`verify.py`](./verify.py) — verify **your own** record or chain (not just the bundled examples):
   `python3 verify.py <record.json | chain.jsonl> [--pubkey <hex|file>]`. For each record it runs
@@ -23,9 +26,12 @@ they can report are **`Core`, `Verified`, and `TRUSTED_NOT_IMPLEMENTED`** — `T
 reported, because four of its prerequisites (witness-signature verification, witness-key
 distinctness, freshness recency, revocation) are unenforced, and an unenforced prerequisite is never
 reported as satisfied. `TRUSTED_NOT_IMPLEMENTED` ranks **equal to `Verified`** and names each
-unevaluated gate. The **exit code encodes record validity only, never the class** — a
-`TRUSTED_NOT_IMPLEMENTED` record exits 0 because it is a valid record, so exit 0 must not be read as
-"Trusted". Full semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
+unevaluated gate. The **exit code encodes record validity only, never the class** (0 = every record
+passed every check *that verifier ran*, 1 = a record failed or the input was unreadable, 2 = usage
+error) — a `TRUSTED_NOT_IMPLEMENTED` record exits 0 because it is a valid record, so exit 0 must not
+be read as "Trusted". The two verifiers' exit codes are **not equivalent**: `verify.mjs` runs no
+profile-schema validation, so a profile-invalid record exits 1 under Python and 0 under Node. Full
+semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
 
 - [`validate.py`](./validate.py) — the one-command conformance battery over
   [`../examples/`](../examples/). It runs: FULL schema validation; the **neutrality test** (delete

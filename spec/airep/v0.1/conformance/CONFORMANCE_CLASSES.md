@@ -120,11 +120,23 @@ failure named (`witness-not-independent`, `no-freshness-anchor`, `no-revocation-
 differently; neither is ever `Trusted`.
 
 **Exit-code meaning: none.** The exit code of `verify.py` / `verify.mjs` encodes **record validity
-only** — 0 when every record passes the Core checks, 1 when any record fails. It does **not** encode
-which class was reached. A `TRUSTED_NOT_IMPLEMENTED` record exits **0**, because it is a valid
-record. Exit 0 therefore MUST NOT be read as "Trusted", or as any class at all: the class is a
-separate channel, printed as `CLASS:` on stdout. A consumer enforcing a class floor MUST parse that
-line; it MUST NOT infer a class from the process exit status.
+only**, never a class:
+
+| exit | meaning |
+|---|---|
+| `0` | every record passed every check **that verifier actually ran** |
+| `1` | at least one record failed a check, or the input could not be read/parsed |
+| `2` | usage error (no input path supplied) |
+
+`--help` exits `0` without verifying anything. A `TRUSTED_NOT_IMPLEMENTED` record exits `0`, because
+it is a valid record. Exit 0 therefore MUST NOT be read as "Trusted", or as any class at all: the
+class is a separate channel, printed as `CLASS:` on stdout. A consumer enforcing a class floor MUST
+parse that line; it MUST NOT infer a class from the process exit status.
+
+> **The two verifiers' exit codes are NOT equivalent.** `verify.mjs` runs no profile-schema
+> validation, so a record whose `profiles` block violates its profile schema exits `1` under
+> `verify.py` and `0` under `verify.mjs`. Read "every check that verifier actually ran" literally:
+> exit 0 from `verify.mjs` is a weaker statement than exit 0 from `verify.py`.
 
 > A verifier that implements a gate MUST remove its reason from the withheld list **and** add the
 > real check in the same change. Removing a reason alone re-opens the hole silently, which is the

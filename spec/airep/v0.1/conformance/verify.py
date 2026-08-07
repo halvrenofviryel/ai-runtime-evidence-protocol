@@ -16,7 +16,9 @@ checks, per SPEC §6/§8:
   - **signature** — if a public key is supplied, re-verify the Ed25519 signature over `current`;
   - **profiles** — any `profiles.<name>` block is validated against `profiles/<name>.schema.json`.
 
-The Node verifier (`verify.mjs`) performs the same checks on an independent stack; the two agree.
+The Node verifier (`verify.mjs`) re-derives the same hashes and reaches the same verdict on an
+independent stack — with one documented exception: it runs **no profile-schema validation**, so the
+two can differ on records whose `profiles` block violates its schema.
 
 Usage:
   python3 verify.py <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
@@ -27,9 +29,12 @@ TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its 
 implemented here, and an unenforced prerequisite can never be reported as satisfied. See
 `CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED.
 
-Exit code reflects RECORD VALIDITY ONLY, never the class: 0 if every record passes, 1 otherwise. A
-TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a valid record — exit 0 is NOT a statement
-that any particular class was reached. Requires `jsonschema` (+ `cryptography` for the optional
+Exit code reflects RECORD VALIDITY ONLY, never the class: 0 when every record passed every check
+this verifier ran, 1 when a record failed or the input could not be read, 2 on usage error
+(`--help` exits 0 without verifying). A TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a
+valid record — exit 0 is NOT a statement that any particular class was reached. Note `verify.mjs`
+runs no profile-schema validation, so the two verifiers' exit codes are NOT equivalent for records
+with an invalid `profiles` block. Requires `jsonschema` (+ `cryptography` for the optional
 signature check). Canonicalization is RFC 8785 (the JSON Canonicalization Scheme) via
 `conformance/jcs.py`.
 """
@@ -121,6 +126,17 @@ _TRUSTED_GATES_NOT_IMPLEMENTED = (
 )
 
 
+# Cross-runtime-stable predicates. Python and JavaScript disagree on the truthiness of `{}` and `[]`
+# (falsy in Python, truthy in JS), so every presence test on the Trusted path is expressed as an
+# explicit type + non-emptiness check that both languages evaluate identically.
+def _nonempty_str(v) -> bool:
+    return isinstance(v, str) and v != ""
+
+
+def _nonempty_obj(v) -> bool:
+    return isinstance(v, dict) and len(v) > 0
+
+
 def _evidence_anchored(rec) -> bool:
     for e in rec.get("evidence", []) or []:
         if isinstance(e, dict) and e.get("resolvable") is False and not e.get("content_hash"):
@@ -143,7 +159,15 @@ def _witness_present(rec) -> bool:
     if not isinstance(cw, dict):
         return False  # no head witness on this record → at most Verified (see chain_witness.schema.json)
     head = cw.get("head") or {}
-    return bool(cw.get("chain_id") and head.get("current") and cw.get("witness"))
+    if not isinstance(head, dict):
+        return False
+    # Type-EXPLICIT, never truthiness: `witness: {}` is falsy in Python but truthy in JavaScript, so
+    # a truthiness test made the two verifiers report different classes for identical bytes. Presence
+    # predicates on the Trusted path must be decided by type + non-emptiness, which both languages
+    # agree on. Kept in lockstep with verify.mjs::witnessPresent.
+    return bool(_nonempty_str(cw.get("chain_id"))
+                and _nonempty_str(head.get("current"))
+                and _nonempty_obj(cw.get("witness")))
 
 
 def _trusted_structural_failures(rec) -> list:
@@ -159,12 +183,18 @@ def _trusted_structural_failures(rec) -> list:
     # req 1 (necessary, not sufficient): a "witness" naming the producer's own key is theater —
     # chain_witness.schema.json: witness_id "MUST be distinct from the producer". Distinct ids do
     # NOT prove distinct keys, so passing this leaves witness-key-distinctness-unproven standing.
-    wid = (cw.get("witness") or {}).get("witness_id")
-    if wid is not None and wid == kt.get("key_id"):
+    wit = cw.get("witness")
+    wid = wit.get("witness_id") if isinstance(wit, dict) else None
+    # Compared as strings only: an id is a string, and `{} == {}` is True in Python but
+    # `{} === {}` is False in JS, so a loose comparison would diverge across the two verifiers.
+    if _nonempty_str(wid) and wid == kt.get("key_id"):
         bad.append("witness-not-independent")
-    # req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response).
-    fr = cw.get("freshness") or {}
-    if not any(fr.get(k) for k in ("witness_timestamp_utc", "nonce", "challenge_response")):
+    # req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response), and be a
+    # non-empty string — truthiness alone diverges across runtimes on {} / [].
+    fr = cw.get("freshness")
+    fr = fr if isinstance(fr, dict) else {}
+    if not any(_nonempty_str(fr.get(k))
+               for k in ("witness_timestamp_utc", "nonce", "challenge_response")):
         bad.append("no-freshness-anchor")
     # req 3: key_trust must CARRY revocation state, and a revoked key is untrusted.
     rev = kt.get("revocation")
@@ -273,8 +303,9 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Verify an AIREP record or chain",
-        epilog="Exit code reflects record validity only, never the class: 0 if every record passes "
-               "the Core checks, 1 otherwise. Exit 0 must NOT be read as 'Trusted' — the class is "
+        epilog="Exit code reflects record validity only, never the class: 0 when every record "
+               "passed every check this verifier ran, 1 when a record failed or the input could not "
+               "be read, 2 on usage error. Exit 0 must NOT be read as 'Trusted' — the class is "
                "reported on stdout and is a separate channel. See CONFORMANCE_CLASSES.md.")
     ap.add_argument("path", help="a record .json or a chain .jsonl / JSON array")
     ap.add_argument("--pubkey", default="", help="Ed25519 public key (hex) or a path to a key file")

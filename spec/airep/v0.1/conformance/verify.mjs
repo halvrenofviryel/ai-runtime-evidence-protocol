@@ -32,10 +32,12 @@
 // not implemented here, and an unenforced prerequisite can never be reported as satisfied. See
 // CONFORMANCE_CLASSES.md §TRUSTED_NOT_IMPLEMENTED.
 //
-// Exit code reflects RECORD VALIDITY ONLY, never the class: 0 if every record passes the Core
-// checks, 1 otherwise. A TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a valid record —
-// exit 0 is NOT a statement that any particular class was reached. Requires Node >= 16 (raw
-// Ed25519 keys).
+// Exit code reflects RECORD VALIDITY ONLY, never the class: 0 when every record passed every
+// check this verifier ran, 1 when a record failed or the input could not be read, 2 on usage
+// error (--help exits 0 without verifying). A TRUSTED_NOT_IMPLEMENTED record exits 0 because it
+// is a valid record — exit 0 is NOT a statement that any particular class was reached. This
+// verifier runs NO profile-schema validation, so its exit 0 is a weaker statement than
+// verify.py's. Requires Node >= 16 (raw Ed25519 keys).
 //
 // Canonicalization: sorted object keys, no whitespace, UTF-8 — RFC 8785-equivalent for the
 // float-free / simple-decimal, ASCII-key records here (JS Number->String == the ES6 form JCS
@@ -201,6 +203,12 @@ const TRUSTED_GATES_NOT_IMPLEMENTED = [
   "revocation-not-honored",             // req 3: no revocation source is consulted
 ];
 
+// Cross-runtime-stable predicates. Python and JavaScript disagree on the truthiness of `{}` and `[]`
+// (falsy in Python, truthy in JS), so every presence test on the Trusted path is expressed as an
+// explicit type + non-emptiness check that both languages evaluate identically.
+const nonemptyStr = (v) => typeof v === "string" && v !== "";
+const nonemptyObj = (v) => isObj(v) && Object.keys(v).length > 0;
+
 function evidenceAnchored(rec) {
   for (const e of rec.evidence || []) {
     if (e && e.resolvable === false && !e.content_hash) return false;
@@ -219,7 +227,12 @@ function witnessPresent(rec) {
   const cw = prof.chain_witness || prof.freshness_witness;
   if (!isObj(cw)) return false; // no head witness on this record → at most Verified
   const head = cw.head || {};
-  return Boolean(cw.chain_id && head.current && cw.witness);
+  if (!isObj(head)) return false;
+  // Type-EXPLICIT, never truthiness: `witness: {}` is falsy in Python but truthy in JavaScript, so
+  // a truthiness test made the two verifiers report different classes for identical bytes. Presence
+  // predicates on the Trusted path must be decided by type + non-emptiness, which both languages
+  // agree on. Kept in lockstep with verify.py::_witness_present.
+  return Boolean(nonemptyStr(cw.chain_id) && nonemptyStr(head.current) && nonemptyObj(cw.witness));
 }
 // Trusted prerequisites that ARE structurally checkable and DEFINITIVELY fail on this record.
 // Cheap structural reads, not cryptography: passing them earns nothing (the gates in
@@ -232,11 +245,14 @@ function trustedStructuralFailures(rec) {
   // req 1 (necessary, not sufficient): a "witness" naming the producer's own key is theater —
   // chain_witness.schema.json: witness_id "MUST be distinct from the producer". Distinct ids do
   // NOT prove distinct keys, so passing this leaves witness-key-distinctness-unproven standing.
-  const wid = (cw.witness || {}).witness_id;
-  if (wid !== undefined && wid !== null && wid === kt.key_id) bad.push("witness-not-independent");
-  // req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response).
-  const fr = cw.freshness || {};
-  if (!["witness_timestamp_utc", "nonce", "challenge_response"].some((k) => fr[k])) {
+  const wid = isObj(cw.witness) ? cw.witness.witness_id : undefined;
+  // Compared as strings only: an id is a string, and `{} == {}` is True in Python but
+  // `{} === {}` is False in JS, so a loose comparison would diverge across the two verifiers.
+  if (nonemptyStr(wid) && wid === kt.key_id) bad.push("witness-not-independent");
+  // req 2: a freshness anchor must be PRESENT (timestamp, nonce, or challenge response), and be a
+  // non-empty string — truthiness alone diverges across runtimes on {} / [].
+  const fr = isObj(cw.freshness) ? cw.freshness : {};
+  if (!["witness_timestamp_utc", "nonce", "challenge_response"].some((k) => nonemptyStr(fr[k]))) {
     bad.push("no-freshness-anchor");
   }
   // req 3: key_trust must CARRY revocation state, and a revoked key is untrusted.
@@ -275,9 +291,10 @@ Usage:
             implemented here, and an unenforced prerequisite is never reported as satisfied.
             Withheld classes name the unmet/unevaluated prerequisites as trusted_withheld=...
 
-Exit code: 0 if every record passes the Core checks, 1 otherwise. The exit code reflects record
-validity ONLY — it never encodes which class was reached, so exit 0 must not be read as "Trusted".
-See CONFORMANCE_CLASSES.md.`;
+Exit code: 0 when every record passed every check this verifier ran, 1 when a record failed or the
+input could not be read, 2 on usage error. It reflects record validity ONLY — it never encodes which
+class was reached, so exit 0 must not be read as "Trusted". This verifier runs NO profile-schema
+validation, so its exit 0 is a weaker statement than verify.py's. See CONFORMANCE_CLASSES.md.`;
 
 function main() {
   const args = process.argv.slice(2);

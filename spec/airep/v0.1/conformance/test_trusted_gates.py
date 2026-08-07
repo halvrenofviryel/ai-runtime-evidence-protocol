@@ -57,8 +57,12 @@ try:
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 except ImportError:  # pragma: no cover
-    print("SKIP: cryptography not installed — the Trusted-gate battery needs a real signer")
-    sys.exit(0)
+    # NOT_RUN, and it must NOT read as a pass. Exiting 0 here would make the whole fail-closed
+    # battery a green no-op on any machine lacking `cryptography` — the same "unmeasured reads as
+    # passed" shape this battery exists to catch, one level up in the harness.
+    print("NOT_RUN: cryptography not installed — the Trusted-gate battery needs a real signer.")
+    print("RESULT: NOT_RUN (0 cases measured). Install `cryptography` to run the battery.")
+    sys.exit(2)
 
 # The same FIXED, PUBLISHED test seeds `examples/regenerate.py` uses. TEST ONLY.
 PRODUCER_SEED = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"
@@ -124,6 +128,18 @@ def _checkpoint(key_trust: dict, chain_witness: dict) -> dict:
     return _sign_record(rec)
 
 
+def _alias_checkpoint(key_trust: dict, witness_block: dict) -> dict:
+    """Same as _checkpoint but attaches the witness under the schema-free `freshness_witness`
+    alias that both classifiers also accept (CONFORMANCE_CLASSES.md §AIREP-Trusted req 1)."""
+    rec = _checkpoint(key_trust, {})
+    prof = dict(rec["profiles"])
+    prof.pop("chain_witness", None)
+    prof["freshness_witness"] = witness_block
+    out = dict(rec)
+    out["profiles"] = prof
+    return _sign_record(out)
+
+
 def _key_trust(revocation=None) -> dict:
     kt = {
         "key_id": PRODUCER_KEY_ID, "issuer": "self", "algorithm": "Ed25519",
@@ -154,7 +170,40 @@ def _chain_witness(witness_id=WITNESS_KEY_ID, sig=None, freshness="fresh") -> di
     return cw
 
 
-# name -> (record, why it must not reach Trusted)
+def _chain_pair() -> list:
+    """A 2-record CHAIN: an ordinary Verified record, then a checkpoint with a structurally perfect
+    witness. Exists because the single-record fixtures never exercise the multi-record aggregation
+    path — the empty-input `CLASS: Trusted` bug lived in exactly that uncovered path."""
+    kt = _key_trust({"revoked": False})
+    rec0 = _sign_record({
+        "airep_version": "0.1",
+        "subject": {"runtime": "phionyx-core", "producer": "phionyx/0.7.1", "decision_index": 0,
+                    "trace_id": "trace-trusted-gate-chain", "timestamp_utc": "2026-05-30T00:00:00Z"},
+        "input": {"input_ref": _ptr("chain-input-0"),
+                  "governance_state": {"policy_version": "p1", "prior_context_bound": False}},
+        "claim": {"assertion": "ordinary decision, no witness claimed", "basis": ["safety_gate"]},
+        "output": {"result_ref": _ptr("chain-output-0"), "redacted": False},
+        "evidence": [{"type": "policy", "ref": "policy://safety/v1", "resolvable": True}],
+        "directive": {"verb": "release", "policy_basis": ["safety_gate"]},
+        "scope": {"covers": ["one decision"], "does_not_cover": ["chain head freshness"]},
+        "integrity": {"previous": GENESIS, "canonical_json": True},
+        "profiles": {"key_trust": kt},
+    })
+    head = {"decision_index": 0, "current": rec0["integrity"]["current"], "length": 1}
+    cw = {"chain_id": CHAIN_ID, "head": head,
+          "witness": {"witness_id": WITNESS_KEY_ID, "alg": "Ed25519",
+                      "value": _wsk.sign(jcs.canonicalize(
+                          {"chain_id": CHAIN_ID, "decision_index": head["decision_index"],
+                           "current": head["current"], "length": head["length"]})).hex()},
+          "freshness": {"witness_timestamp_utc": "2026-05-30T00:00:05Z"},
+          "revocation_checked": True}
+    rec1 = dict(_checkpoint(kt, cw))
+    rec1["subject"] = dict(rec1["subject"], decision_index=1)
+    rec1["integrity"] = {"previous": rec0["integrity"]["current"], "canonical_json": True}
+    return [rec0, _sign_record(rec1)]
+
+
+# name -> (record(s), why it must not reach Trusted)
 def build_cases() -> dict:
     ok_rev = {"revoked": False}
     return {
@@ -193,6 +242,22 @@ def build_cases() -> dict:
         "structurally_perfect_witness": (
             _checkpoint(_key_trust(ok_rev), _chain_witness()),
             "all gates structurally present, but none of the Trusted checks actually run"),
+        # CROSS-RUNTIME TRUTHINESS: `witness: {}` is falsy in Python and truthy in JavaScript. With
+        # truthiness-based presence tests the two verifiers returned DIFFERENT classes for these
+        # exact bytes (py Verified / mjs TRUSTED_NOT_IMPLEMENTED). An empty witness object carries no
+        # witness material, so both must read it as "no Trusted claim made" -> Verified.
+        # Uses the schema-free `freshness_witness` alias on purpose: under `chain_witness` an empty
+        # witness would trip that profile's schema in Python only, which is the SEPARATE Node
+        # profile-validation gap. The alias isolates the truthiness question by itself.
+        "empty_witness_object": (
+            _alias_checkpoint(_key_trust(ok_rev),
+                              {"chain_id": CHAIN_ID, "head": _head(), "witness": {},
+                               "freshness": {"witness_timestamp_utc": "2026-05-30T00:00:05Z"}}),
+            "witness object is empty; presence must be decided by type, not truthiness"),
+        # MULTI-RECORD: the single-record fixtures never reach the chain aggregation path.
+        "chain_verified_then_withheld": (
+            _chain_pair(),
+            "a chain is only as strong as its weakest record; the ceiling is never inherited"),
     }
 
 
@@ -210,62 +275,99 @@ NOT_IMPLEMENTED_GATES = frozenset({
 # A structural prerequisite that DEFINITIVELY fails stops the ladder at Verified and names only that
 # failure; a record with no structural failure left is withheld as TRUSTED_NOT_IMPLEMENTED and names
 # all four unevaluated gates. Neither outcome is ever Trusted.
+# Per-record expectations, in record order. The overall CLASS: line must equal the LOWEST-ranked
+# record class, which the runner derives rather than restating.
+_TNI = "TRUSTED_NOT_IMPLEMENTED"
 EXPECTED = {
-    "forged_witness_signature": ("TRUSTED_NOT_IMPLEMENTED", NOT_IMPLEMENTED_GATES),
-    "witness_is_the_producer": ("Verified", frozenset({"witness-not-independent"})),
-    "no_freshness_anchor": ("Verified", frozenset({"no-freshness-anchor"})),
-    "stale_freshness_anchor": ("TRUSTED_NOT_IMPLEMENTED", NOT_IMPLEMENTED_GATES),
-    "revoked_producer_key": ("Verified", frozenset({"producer-key-revoked"})),
-    "no_revocation_state": ("Verified", frozenset({"no-revocation-state"})),
-    "structurally_perfect_witness": ("TRUSTED_NOT_IMPLEMENTED", NOT_IMPLEMENTED_GATES),
+    "forged_witness_signature": [(_TNI, NOT_IMPLEMENTED_GATES)],
+    "witness_is_the_producer": [("Verified", frozenset({"witness-not-independent"}))],
+    "no_freshness_anchor": [("Verified", frozenset({"no-freshness-anchor"}))],
+    "stale_freshness_anchor": [(_TNI, NOT_IMPLEMENTED_GATES)],
+    "revoked_producer_key": [("Verified", frozenset({"producer-key-revoked"}))],
+    "no_revocation_state": [("Verified", frozenset({"no-revocation-state"}))],
+    "structurally_perfect_witness": [(_TNI, NOT_IMPLEMENTED_GATES)],
+    # No witness material at all once `{}` is read by type -> no Trusted claim is being made.
+    "empty_witness_object": [("Verified", frozenset())],
+    # A chain: an ordinary Verified record, then a withheld checkpoint.
+    "chain_verified_then_withheld": [("Verified", frozenset()), (_TNI, NOT_IMPLEMENTED_GATES)],
 }
+# Ranks mirror _CLASS_RANK / CLASS_RANK; written literally so the test states the ladder itself.
+_RANK = {"INVALID": 0, "Core": 1, "Verified": 2, _TNI: 2, "Trusted": 3}
 
 CLASS_RE = re.compile(r"^CLASS:\s*(\S+)", re.M)
-# The per-record verdict line carries both the class and the withheld reason set:
-#   [0] PASS  sig=ok  class=<C>  trusted_withheld=<a,b,c>  sha256:...
-RECORD_RE = re.compile(r"^\s*\[0\]\s.*?class=(\S+)(?:\s+trusted_withheld=(\S+))?", re.M)
+# EVERY per-record verdict line, not just record 0 — the chain aggregation path is where the
+# empty-input `CLASS: Trusted` bug lived, and a record-0-only regex is blind to it:
+#   [i] PASS  sig=ok  class=<C>  trusted_withheld=<a,b,c>  sha256:...
+RECORD_RE = re.compile(r"^\s*\[(\d+)\]\s.*?class=(\S+)(?:\s+trusted_withheld=(\S+))?", re.M)
 
 
 def _run_verdict(cmd, path):
-    """Return (class, withheld_set). Both come from the per-record line; the chain-level CLASS: line
-    is cross-checked so a verifier cannot report one class per record and another overall."""
+    """Return (chain_class, [(class, withheld_set) per record]). The chain-level CLASS: line is
+    cross-checked against the weakest record class, so a verifier cannot report one class per
+    record and a stronger one overall."""
     r = subprocess.run(cmd + [str(path), "--pubkey", str(SPEC / "examples" / "test_public_key.txt"),
                               "--class"], capture_output=True, text=True)
     if r.returncode != 0:
-        return f"EXIT{r.returncode}", frozenset()
-    rm = RECORD_RE.search(r.stdout)
+        return f"EXIT{r.returncode}", []
     cm = CLASS_RE.search(r.stdout)
-    if not rm or not cm:
-        return "NO-CLASS-LINE", frozenset()
-    cls, withheld = rm.group(1), rm.group(2)
-    if cls != cm.group(1):
-        return f"SPLIT:{cls}/{cm.group(1)}", frozenset()
-    return cls, frozenset(withheld.split(",")) if withheld else frozenset()
+    rows = RECORD_RE.findall(r.stdout)
+    if not cm or not rows:
+        return "NO-CLASS-LINE", []
+    per = [(cls, frozenset(w.split(",")) if w else frozenset()) for _i, cls, w in rows]
+    weakest = min((c for c, _ in per), key=lambda c: _RANK.get(c, -1))
+    if cm.group(1) != weakest:
+        return f"SPLIT:{cm.group(1)}/weakest={weakest}", per
+    return cm.group(1), per
 
 
-def _serialize(rec: dict) -> str:
-    return json.dumps(rec, indent=2) + "\n"
+def _as_records(payload) -> list:
+    return payload if isinstance(payload, list) else [payload]
+
+
+def _fixture_name(name: str, payload) -> str:
+    """Single records go to .json; chains to .jsonl (one record per line), the two input spellings
+    the verifiers accept."""
+    return f"{name}.jsonl" if isinstance(payload, list) else f"{name}.json"
+
+
+def _serialize(payload) -> str:
+    if isinstance(payload, list):
+        return "".join(json.dumps(r, sort_keys=True) + "\n" for r in payload)
+    return json.dumps(payload, indent=2) + "\n"
+
+
+# Key files are part of the corpus and are drift-guarded like the records: an unguarded key file
+# could drift from the seeds and silently change what a third party verifies against.
+def _key_files() -> dict:
+    return {"producer_public_key.txt": _pub_hex + "\n",
+            "witness_public_key.txt": _wpub_hex + "\n"}
 
 
 def sync_fixtures(cases) -> None:
     """Rewrite the committed shared corpus from the fixed seeds."""
     FIXTURES.mkdir(parents=True, exist_ok=True)
-    (FIXTURES / "producer_public_key.txt").write_text(_pub_hex + "\n")
-    (FIXTURES / "witness_public_key.txt").write_text(_wpub_hex + "\n")
-    for name, (rec, _why) in cases.items():
-        (FIXTURES / f"{name}.json").write_text(_serialize(rec))
+    for fname, body in _key_files().items():
+        (FIXTURES / fname).write_text(body)
+    for name, (payload, _why) in cases.items():
+        (FIXTURES / _fixture_name(name, payload)).write_text(_serialize(payload))
 
 
 def check_fixture_drift(cases) -> list:
     """The committed corpus MUST equal what the generator produces. Parity measured over a corpus
     that has drifted from its generator proves nothing about the cases the corpus claims to encode."""
     drift = []
-    for name, (rec, _why) in cases.items():
-        p = FIXTURES / f"{name}.json"
+    for name, (payload, _why) in cases.items():
+        p = FIXTURES / _fixture_name(name, payload)
         if not p.exists():
-            drift.append(f"{name}: MISSING from {FIXTURES.name}/")
-        elif p.read_text() != _serialize(rec):
-            drift.append(f"{name}: committed bytes differ from the generated record")
+            drift.append(f"{p.name}: MISSING from {FIXTURES.name}/")
+        elif p.read_text() != _serialize(payload):
+            drift.append(f"{p.name}: committed bytes differ from the generated record(s)")
+    for fname, body in _key_files().items():
+        p = FIXTURES / fname
+        if not p.exists():
+            drift.append(f"{fname}: MISSING from {FIXTURES.name}/")
+        elif p.read_text() != body:
+            drift.append(f"{fname}: committed key differs from the fixed seed")
     return drift
 
 
@@ -308,35 +410,39 @@ def main() -> int:
 
     print(f"  {'case':<30} | py                      | mjs                     | ok")
     print(f"  {'-' * 30}-|-------------------------|-------------------------|----")
-    for name in cases:
-        path = FIXTURES / f"{name}.json"   # BOTH verifiers read the same committed bytes
+    for name, (payload, _why) in cases.items():
+        path = FIXTURES / _fixture_name(name, payload)  # BOTH verifiers read the same committed bytes
         if not path.exists():
-            continue                        # already counted as drift above
-        exp_cls, exp_why = EXPECTED[name]
-        py, py_why = _run_verdict([sys.executable, str(HERE / "verify.py")], path)
-        # (1) the top class must never be granted; (2) the record must still reach Verified's
-        # floor, so a downgrade is a real ladder position and not an incidental failure;
-        # (3) the class and (4) the named reason set must both be the ones this case expects.
-        ok = (py != "Trusted" and py in ("Verified", "TRUSTED_NOT_IMPLEMENTED")
-              and py == exp_cls and py_why == exp_why)
-        mjs, mjs_why = "—", None
+            continue                                    # already counted as drift above
+        exp_per = EXPECTED[name]
+        exp_chain = min((c for c, _ in exp_per), key=lambda c: _RANK[c])
+        py, py_per = _run_verdict([sys.executable, str(HERE / "verify.py")], path)
+        # (1) the top class must never be granted, on ANY record; (2) every record must still reach
+        # Verified's floor, so a downgrade is a real ladder position and not an incidental failure;
+        # (3) the per-record classes and (4) their named reason sets must be the ones expected.
+        ok = (py == exp_chain
+              and all(c != "Trusted" and c in ("Verified", _TNI) for c, _ in py_per)
+              and py_per == exp_per)
+        mjs, mjs_per = "—", None
         if have_node:
-            mjs, mjs_why = _run_verdict(["node", str(HERE / "verify.mjs")], path)
-            # Parity is class AND reason: agreeing on the verdict while disagreeing on why it was
-            # withheld would leave a consumer two different answers about what is missing.
-            ok = ok and mjs == py and mjs_why == py_why
+            mjs, mjs_per = _run_verdict(["node", str(HERE / "verify.mjs")], path)
+            # Parity is class AND reason, per record: agreeing on the verdict while disagreeing on
+            # why it was withheld leaves a consumer two different answers about what is missing.
+            ok = ok and mjs == py and mjs_per == py_per
         if not ok:
             fails += 1
         print(f"  {name:<30} | {py:<23} | {mjs:<23} | {'PASS' if ok else 'FAIL'}")
         if not ok:
-            print(f"  {'':<30} | expected class={exp_cls} withheld={sorted(exp_why)}")
-            print(f"  {'':<30} | py withheld={sorted(py_why)}"
-                  + (f"  mjs withheld={sorted(mjs_why)}" if mjs_why is not None else ""))
+            print(f"  {'':<30} | expected chain={exp_chain} per-record={[(c, sorted(w)) for c, w in exp_per]}")
+            print(f"  {'':<30} | py  per-record={[(c, sorted(w)) for c, w in py_per]}")
+            if mjs_per is not None:
+                print(f"  {'':<30} | mjs per-record={[(c, sorted(w)) for c, w in mjs_per]}")
 
     # The record whose every structural gate passes must be named TRUSTED_NOT_IMPLEMENTED, not
     # quietly reported as plain Verified — a withheld class has to say why it was withheld.
-    perfect, perfect_why = _run_verdict([sys.executable, str(HERE / "verify.py")],
+    perfect, perfect_per = _run_verdict([sys.executable, str(HERE / "verify.py")],
                                         FIXTURES / "structurally_perfect_witness.json")
+    perfect_why = perfect_per[0][1] if perfect_per else frozenset()
     named = perfect == "TRUSTED_NOT_IMPLEMENTED" and perfect_why == NOT_IMPLEMENTED_GATES
     if not named:
         fails += 1

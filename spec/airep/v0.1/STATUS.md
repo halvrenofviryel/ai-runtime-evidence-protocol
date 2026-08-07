@@ -196,5 +196,17 @@ completeness.
   exit 0 in both verifiers — the top class awarded to the maximally *unmeasured* input, because the
   chain class was initialised to `Trusted` and no record ever lowered it. An empty input is now
   `INVALID` at exit 1 in both, the chain class starts unset rather than at the ceiling, and the case
-  is held by the battery. The core wire format and the `chain_witness` schema are unchanged — this is
-  a verifier and documentation correction only.
+  is held by the battery.
+  Also closed: a **Python/Node class divergence**. Presence tests on the Trusted path used
+  truthiness, and `witness: {}` is falsy in Python but truthy in JavaScript — so for identical bytes
+  `verify.py` reported `Verified` (empty withheld set) while `verify.mjs` reported
+  `TRUSTED_NOT_IMPLEMENTED` with all four gates named. Every presence predicate is now an explicit
+  type + non-emptiness check that both runtimes evaluate identically, and the case is a fixture.
+  The shared corpus gained a **multi-record chain** (the single-record fixtures never exercised the
+  chain-aggregation path where the empty-input bug lived) and the battery now compares the class and
+  reason set of **every** record, not just record 0. Missing `cryptography` now exits non-zero as
+  `NOT_RUN` instead of exiting 0 having measured nothing. The exit-code contract is now stated
+  accurately (0/1/2, `--help` = 0) and names the fact that the two verifiers' exit codes are **not**
+  equivalent while `verify.mjs` runs no profile-schema validation. The core wire format is unchanged
+  and the `chain_witness` schema changed only in two `description` strings — this is a verifier and
+  documentation correction only.
