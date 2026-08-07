@@ -24,8 +24,18 @@
 // schema validation; this verifier exists to prove the format is checkable on a second,
 // dependency-free stack.
 //
-// Usage:  node verify.mjs <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>]
-// Exit 0 if every record passes, 1 otherwise. Requires Node >= 16 (raw Ed25519 keys).
+// Usage:  node verify.mjs <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
+//
+// --class reports the highest AIREP conformance class satisfied: Core, Verified, or
+// TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its prerequisites
+// (witness-signature verification, witness-key distinctness, freshness recency, revocation) are
+// not implemented here, and an unenforced prerequisite can never be reported as satisfied. See
+// CONFORMANCE_CLASSES.md §TRUSTED_NOT_IMPLEMENTED.
+//
+// Exit code reflects RECORD VALIDITY ONLY, never the class: 0 if every record passes the Core
+// checks, 1 otherwise. A TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a valid record —
+// exit 0 is NOT a statement that any particular class was reached. Requires Node >= 16 (raw
+// Ed25519 keys).
 //
 // Canonicalization: sorted object keys, no whitespace, UTF-8 — RFC 8785-equivalent for the
 // float-free / simple-decimal, ASCII-key records here (JS Number->String == the ES6 form JCS
@@ -253,9 +263,29 @@ function classify(rec, sigOk) {
   return ["Trusted", []]; // unreachable until every gate above is actually implemented
 }
 
+const USAGE = `Verify an AIREP record or chain (Node reference verifier)
+
+Usage:
+  node verify.mjs <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
+
+  --pubkey  Ed25519 public key (hex) or a path to a key file; enables signature re-verification
+  --class   report the highest AIREP conformance class satisfied: Core | Verified |
+            TRUSTED_NOT_IMPLEMENTED. Trusted is NEVER reported: its prerequisites (witness
+            signature, witness-key distinctness, freshness recency, revocation) are not
+            implemented here, and an unenforced prerequisite is never reported as satisfied.
+            Withheld classes name the unmet/unevaluated prerequisites as trusted_withheld=...
+
+Exit code: 0 if every record passes the Core checks, 1 otherwise. The exit code reflects record
+validity ONLY — it never encodes which class was reached, so exit 0 must not be read as "Trusted".
+See CONFORMANCE_CLASSES.md.`;
+
 function main() {
   const args = process.argv.slice(2);
   const file = args[0];
+  if (!file || args.includes("--help") || args.includes("-h")) {
+    console.log(USAGE);
+    process.exit(file ? 0 : 2);
+  }
   const pi = args.indexOf("--pubkey");
   const pub = loadPub(pi >= 0 ? args[pi + 1] : "");
   const showClass = args.includes("--class");

@@ -19,10 +19,18 @@ checks, per SPEC §6/§8:
 The Node verifier (`verify.mjs`) performs the same checks on an independent stack; the two agree.
 
 Usage:
-  python3 verify.py <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>]
+  python3 verify.py <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
 
-Exit 0 if every record passes, 1 otherwise. Requires `jsonschema` (+ `cryptography` for the
-optional signature check). Canonicalization is RFC 8785 (the JSON Canonicalization Scheme) via
+`--class` reports the highest AIREP conformance class satisfied: Core, Verified, or
+TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its prerequisites
+(witness-signature verification, witness-key distinctness, freshness recency, revocation) are not
+implemented here, and an unenforced prerequisite can never be reported as satisfied. See
+`CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED.
+
+Exit code reflects RECORD VALIDITY ONLY, never the class: 0 if every record passes, 1 otherwise. A
+TRUSTED_NOT_IMPLEMENTED record exits 0 because it is a valid record — exit 0 is NOT a statement
+that any particular class was reached. Requires `jsonschema` (+ `cryptography` for the optional
+signature check). Canonicalization is RFC 8785 (the JSON Canonicalization Scheme) via
 `conformance/jcs.py`.
 """
 import argparse
@@ -251,12 +259,20 @@ def verify(path: str, pubkey: str = "", show_class: bool = False) -> int:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Verify an AIREP record or chain")
+    ap = argparse.ArgumentParser(
+        description="Verify an AIREP record or chain",
+        epilog="Exit code reflects record validity only, never the class: 0 if every record passes "
+               "the Core checks, 1 otherwise. Exit 0 must NOT be read as 'Trusted' — the class is "
+               "reported on stdout and is a separate channel. See CONFORMANCE_CLASSES.md.")
     ap.add_argument("path", help="a record .json or a chain .jsonl / JSON array")
     ap.add_argument("--pubkey", default="", help="Ed25519 public key (hex) or a path to a key file")
     ap.add_argument("--class", dest="show_class", action="store_true",
-                    help="report the highest AIREP conformance class satisfied (Core/Verified/"
-                         "TRUSTED_NOT_IMPLEMENTED; Trusted is withheld while its checks are unimplemented)")
+                    help="report the highest AIREP conformance class satisfied: Core | Verified | "
+                         "TRUSTED_NOT_IMPLEMENTED. Trusted is NEVER reported: its prerequisites "
+                         "(witness signature, witness-key distinctness, freshness recency, "
+                         "revocation) are unimplemented, and an unenforced prerequisite is never "
+                         "reported as satisfied. Withheld classes name the unmet/unevaluated "
+                         "prerequisites as trusted_withheld=...")
     args = ap.parse_args(argv)
     return verify(args.path, args.pubkey, show_class=args.show_class)
 

@@ -3,6 +3,11 @@
 > Normative. The key words MUST / SHOULD / MAY are per BCP 14 (RFC 2119, RFC 8174).
 > A record or chain has a single **highest class** it satisfies. `verify.py` and `verify.mjs`
 > report it with `--class`. The classes are a strict ladder: Trusted ⊃ Verified ⊃ Core.
+>
+> **The reference verifiers currently report only `Core`, `Verified`, and
+> `TRUSTED_NOT_IMPLEMENTED`.** `Trusted` is defined below but is **not reachable** through either
+> verifier, because four of its prerequisites are unenforced — see §TRUSTED_NOT_IMPLEMENTED. The
+> tier is specified so implementers know what it demands; it is withheld until those checks run.
 
 A bare conformance result (valid / invalid) does not tell an auditor or regulator *how much* a
 record can be relied on. The classes do: they turn the spec's SHOULD-vs-MUST distinctions into a
@@ -62,16 +67,63 @@ reports Trusted only when, in addition to Verified:
 Trusted establishes *"this is the current, untruncated head of a chain whose signing key is
 externally vouched-for."*
 
-> **Status of Trusted:** the `chain_witness` profile schema is **now published**
-> ([`../profiles/chain_witness.schema.json`](../profiles/chain_witness.schema.json)) with a worked,
-> independently-witnessed example ([`../examples/chain_witness.jsonl`](../examples/chain_witness.jsonl)),
-> so AIREP-Trusted is now **reachable**: in that vector the tail checkpoint reports `class=Trusted`
-> under both verifiers, and `validate.py` proves the witness signature verifies under a key distinct
-> from the producer's **and** that dropping the tail is detected. What is still partial within the tier
-> is requirement 3 — the verifiers check witness presence and (in `validate.py`) the witness signature,
-> but do **not** yet enforce `key_trust` rotation/revocation at classification time; that enforcement is
-> the remaining v0.2-proper item. This is the honest ladder, not a marketing one: a tier is claimable
-> once its checks are runnable, and its still-partial checks are named.
+> **Status of Trusted: NOT REPORTABLE by the reference verifiers.** The `chain_witness` profile
+> schema is published ([`../profiles/chain_witness.schema.json`](../profiles/chain_witness.schema.json))
+> with a worked, independently-witnessed example
+> ([`../examples/chain_witness.jsonl`](../examples/chain_witness.jsonl)), and the fixed-vector battery
+> `validate.py` does re-verify that vector's witness signature under a key distinct from the
+> producer's and does demonstrate that dropping the tail is detected. **That is a property of one
+> committed vector under one battery — it is not the classifier.** The general-purpose classifiers
+> `verify.py --class` and `verify.mjs --class` check witness *presence* only: they never re-verify
+> `chain_witness.witness.value`, cannot prove the witness key is independent of the producer key (a
+> `witness_id` string is not a key), never evaluate freshness *recency*, and consult no revocation
+> source. Four of the tier's prerequisites are therefore unenforced, so **`Trusted` is withheld for
+> every input** and the withholding is named — see §TRUSTED_NOT_IMPLEMENTED below. A prerequisite that
+> is not enforced can never be reported as satisfied; granting the tier on witness *presence* would
+> report an assurance no check produced. Implementing the four gates is the remaining v0.2-proper
+> work. This is the honest ladder, not a marketing one: a tier is claimable once its checks actually
+> run, and until then the gap is named rather than papered over.
+
+## TRUSTED_NOT_IMPLEMENTED — the withheld top class
+
+`TRUSTED_NOT_IMPLEMENTED` is the class the reference verifiers report for a record that has cleared
+every check they *do* run and whose remaining distance to Trusted is **unmeasured rather than
+failed**. It is normative output vocabulary, not an error string.
+
+**Validity.** A `TRUSTED_NOT_IMPLEMENTED` record is **valid**. It has passed every AIREP-Core check
+and every AIREP-Verified check; nothing about it is malformed, tampered, or unsigned. The class says
+something about the *verifier's coverage*, not about a defect in the record.
+
+**Assurance class.** It ranks **exactly equal to AIREP-Verified**, never above it. A consumer whose
+policy says "we require AIREP-Verified" MAY accept it. A consumer whose policy says "we require
+AIREP-Trusted" **MUST NOT** accept it: the Trusted prerequisites were never evaluated, and an
+unevaluated prerequisite is not a satisfied one. Formally it is AIREP-Verified plus a **named
+statement of what was not checked**, carried in the `trusted_withheld=` list on the record line:
+
+| reason | prerequisite left unevaluated |
+|---|---|
+| `witness-signature-not-verified` | req 1 — `chain_witness.witness.value` is never re-verified |
+| `witness-key-distinctness-unproven` | req 1 — a `witness_id` string is not a key |
+| `freshness-recency-not-evaluated` | req 2 — presence is checked; recency / nonce-challenge is not |
+| `revocation-not-honored` | req 3 — no revocation source is consulted |
+
+Distinguish it from a **structural failure**. When a Trusted prerequisite is checkable and
+definitively fails — a witness naming the producer's own key, a missing freshness anchor, absent or
+`revoked: true` revocation state — the record is reported as plain `Verified` with the specific
+failure named (`witness-not-independent`, `no-freshness-anchor`, `no-revocation-state`,
+`producer-key-revoked`). *Failed* and *not measured* are different states and are reported
+differently; neither is ever `Trusted`.
+
+**Exit-code meaning: none.** The exit code of `verify.py` / `verify.mjs` encodes **record validity
+only** — 0 when every record passes the Core checks, 1 when any record fails. It does **not** encode
+which class was reached. A `TRUSTED_NOT_IMPLEMENTED` record exits **0**, because it is a valid
+record. Exit 0 therefore MUST NOT be read as "Trusted", or as any class at all: the class is a
+separate channel, printed as `CLASS:` on stdout. A consumer enforcing a class floor MUST parse that
+line; it MUST NOT infer a class from the process exit status.
+
+> A verifier that implements a gate MUST remove its reason from the withheld list **and** add the
+> real check in the same change. Removing a reason alone re-opens the hole silently, which is the
+> exact failure this class exists to prevent.
 
 ## What the classes do NOT establish
 

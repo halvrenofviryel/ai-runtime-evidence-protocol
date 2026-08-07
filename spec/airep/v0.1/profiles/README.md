@@ -62,9 +62,14 @@ self-consistent worked example that the conformance checker validates against th
   (the freshness anchor maps *valid* → *current*) — and is the additional check **AIREP-Trusted**
   requires. Schema: [`chain_witness.schema.json`](./chain_witness.schema.json); worked example:
   [`../examples/chain_witness.jsonl`](../examples/chain_witness.jsonl) — a 3-record chain whose tail
-  checkpoint reports `class=Trusted` and whose witness is signed by an independent key; `validate.py`
-  verifies that witness signature and demonstrates truncation detection. **A producer-signed witness
-  provides no truncation defense** — the witness key MUST be independent, or the profile is theater.
+  checkpoint carries a witness signed by an independent key; `validate.py` verifies that witness
+  signature and demonstrates truncation detection. **Carrying this profile does not earn
+  `class=Trusted`**: the classifiers (`verify.py --class` / `verify.mjs --class`) check witness
+  *presence* only and leave four Trusted prerequisites unenforced, so the tail checkpoint is reported
+  as `TRUSTED_NOT_IMPLEMENTED` — see
+  [`../conformance/CONFORMANCE_CLASSES.md`](../conformance/CONFORMANCE_CLASSES.md)
+  §TRUSTED_NOT_IMPLEMENTED. **A producer-signed witness provides no truncation defense** — the
+  witness key MUST be independent, or the profile is theater.
 - **`eu_ai_act_log`** — EU AI Act record-keeping fields: the system's risk tier and Annex III point,
   the Article 12 use period / reference database / match, Article 14 human oversight (by pseudonymous
   role, no personal data), Article 19 log retention, and Article 72/73 post-market / serious-incident

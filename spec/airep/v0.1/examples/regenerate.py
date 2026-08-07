@@ -184,8 +184,10 @@ def build_chain_witness_example() -> None:
     independently-signed witness of the committed chain head (decision_index 1, length 2). This is
     the additional check AIREP-Trusted requires: the core only binds each record to its predecessor
     (relative), so dropping the tail is invisible; the witness pins length + head hash with a key
-    DISTINCT from the producer, making truncation detectable. The checkpoint also carries key_trust,
-    so it classifies AIREP-Trusted. rec0/rec1 are ordinary Verified-or-below records."""
+    DISTINCT from the producer, making truncation detectable. The checkpoint also carries key_trust.
+    It does NOT classify AIREP-Trusted: the classifiers check witness presence only and leave four
+    Trusted prerequisites unenforced, so the checkpoint is reported as TRUSTED_NOT_IMPLEMENTED (see
+    conformance/CONFORMANCE_CLASSES.md). rec0/rec1 are ordinary Verified-or-below records."""
     runtime, producer, trace = "phionyx-core", "phionyx/0.7.1", "trace-witness-example"
     chain_id = "airep:chain:witness-demo"
 

@@ -66,13 +66,19 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
    aid to be checked against the primary source before any compliance claim — not yet verified
    against the primary texts.
 7. **Freshness / head witness** — the **`chain_witness` profile now ships** (schema + worked
-   independently-witnessed vector), so **AIREP-Trusted is reachable**: the tail checkpoint of
-   [`examples/chain_witness.jsonl`](./examples/chain_witness.jsonl) reports `class=Trusted` under both
-   verifiers, `validate.py` verifies the witness signature under a key **distinct from the producer's**,
-   and a dropped tail is detected. What remains for **v0.2-proper** is enforcement at *classification*
-   time: the `--class` predicates check witness *presence*, but do not yet (a) re-verify the witness
-   signature inside `verify.py`/`verify.mjs` (only `validate.py` does), nor (b) honor `key_trust`
-   rotation/revocation when assigning Trusted. Those two checks are the remaining Trusted-tier work.
+   independently-witnessed vector). `validate.py` verifies that vector's witness signature under a key
+   **distinct from the producer's**, and demonstrates that a dropped tail is detected. **AIREP-Trusted
+   is nevertheless NOT reportable**: the general-purpose classifiers (`verify.py --class` /
+   `verify.mjs --class`) check witness *presence* only — they do not re-verify the witness signature,
+   cannot prove witness-key independence, do not evaluate freshness recency, and consult no revocation
+   source. Four prerequisites are unenforced, so both verifiers **withhold the top class** and report
+   `TRUSTED_NOT_IMPLEMENTED`, naming each unevaluated gate. No input reaches `Trusted` under either
+   verifier — including the shipped witness vector. Implementing those four checks at classification
+   time is the remaining **v0.2-proper** Trusted-tier work. Semantics of the withheld class:
+   [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md)
+   §TRUSTED_NOT_IMPLEMENTED; the fail-closed behaviour is held by
+   [`conformance/test_trusted_gates.py`](./conformance/test_trusted_gates.py) over a committed shared
+   corpus (`conformance/fixtures/trusted_gates/`) run against both verifiers.
 
 ### 5. `subject.principal` — added, and deliberately optional
 
@@ -166,8 +172,25 @@ completeness.
   (spec text) licenses added. `core.schema.json` and the normative rules are unchanged.
 - **v0.1 freshness / head witness (2026-05-31, no wire-format change):** the **`chain_witness`
   profile** shipped — `profiles/chain_witness.schema.json` plus a worked 3-record vector
-  (`examples/chain_witness.jsonl`) whose tail checkpoint reaches **AIREP-Trusted** under both verifiers.
-  The witness is signed by a key **independent of the producer**; `validate.py` re-verifies that
-  signature and demonstrates tail-truncation detection. This closes (at the profile level) the
+  (`examples/chain_witness.jsonl`) whose tail checkpoint then reached **AIREP-Trusted** under both
+  verifiers. The witness is signed by a key **independent of the producer**; `validate.py` re-verifies
+  that signature and demonstrates tail-truncation detection. This closes (at the profile level) the
   tail-truncation and replay-as-latest gaps `THREAT_MODEL.md` named as open. The core wire format is
   unchanged; the profile is additive.
+  **⚠ Superseded — the `class=Trusted` result described here was withdrawn; see the next entry.**
+
+- **v0.1 Trusted fail-closed (2026-08-07, no wire-format change):** granting `Trusted` on witness
+  *presence* was a fail-open bug: the classifiers never re-verified the witness signature, could not
+  prove witness-key independence, never evaluated freshness recency, and consulted no revocation
+  source — yet reported the top class anyway, including for a record whose own
+  `key_trust.revocation.revoked` was `true`. `verify.py` and `verify.mjs` now **withhold** the top
+  class and report **`TRUSTED_NOT_IMPLEMENTED`**, naming every unevaluated gate; structurally
+  checkable prerequisites that definitively fail stop the ladder at `Verified` with the specific
+  failure named. **No input reaches `Trusted` under either verifier**, including
+  `examples/chain_witness.jsonl`. New: `conformance/test_trusted_gates.py` — seven adversarial cases
+  committed as a shared corpus under `conformance/fixtures/trusted_gates/`, run against **both**
+  verifiers, asserting the same class **and** the same withheld-reason set from each, with a
+  drift guard binding the corpus to its generator. Class semantics (validity, rank, exit-code
+  meaning) are normative in `conformance/CONFORMANCE_CLASSES.md` §TRUSTED_NOT_IMPLEMENTED. The core
+  wire format and the `chain_witness` schema are unchanged — this is a verifier and documentation
+  correction only.
