@@ -231,8 +231,12 @@ Python with `cryptography` (`pip install cryptography`); run these from `spec/ai
    python3 conformance/verify.py my_record.json --pubkey my_record.pub.hex --class
    ```
 4. **Climb the ladder (optional).** The record above is **AIREP-Core**. Add a `profiles.key_trust`
-   block declaring your signing key to reach **AIREP-Verified**, and a `profiles.chain_witness` block
-   to reach **AIREP-Trusted** — see [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md).
+   block declaring your signing key to reach **AIREP-Verified** — the top tier the reference
+   verifiers can currently award. Adding a `profiles.chain_witness` block supplies what
+   **AIREP-Trusted** requires, but does **not** earn that class: four of its prerequisites are
+   unenforced, so the verifiers withhold the top class and report `TRUSTED_NOT_IMPLEMENTED` (equal in
+   rank to Verified, with each unevaluated gate named). See
+   [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md).
 5. **Use it in your own project.** Copy two stdlib-only files —
    [`producers/python/airep_producer.py`](../../../producers/python/airep_producer.py) and
    [`conformance/jcs.py`](./conformance/jcs.py) — and call `build_record(record, signing_key, previous)`.

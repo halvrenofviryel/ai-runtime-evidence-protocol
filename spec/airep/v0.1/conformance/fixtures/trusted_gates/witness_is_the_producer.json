@@ -1,0 +1,91 @@
+{
+  "airep_version": "0.1",
+  "subject": {
+    "runtime": "phionyx-core",
+    "producer": "phionyx/0.7.1",
+    "decision_index": 2,
+    "trace_id": "trace-trusted-gate-test",
+    "timestamp_utc": "2026-05-30T00:00:02Z"
+  },
+  "input": {
+    "input_ref": "sha256:4baa7795f4485e2fa7f22b39816a556660007a4471c306941a7c5bf73bec5ec7",
+    "governance_state": {
+      "policy_version": "p1",
+      "prior_context_bound": true
+    }
+  },
+  "claim": {
+    "assertion": "checkpoint: witnesses a committed chain head",
+    "basis": [
+      "safety_gate"
+    ]
+  },
+  "output": {
+    "result_ref": "sha256:beffb2d13cc29a7af4a5e356921be9a678566612ce51c12d635eddf60451f582",
+    "redacted": false
+  },
+  "evidence": [
+    {
+      "type": "policy",
+      "ref": "policy://safety/v1",
+      "resolvable": true
+    }
+  ],
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "safety_gate"
+    ]
+  },
+  "scope": {
+    "covers": [
+      "chain head pinned by a witness"
+    ],
+    "does_not_cover": [
+      "witness key trust is asserted, not corroborated here"
+    ]
+  },
+  "integrity": {
+    "previous": "sha256:89c7b5654ddc32e931b544f45a442d54802b19598dcc9509d6c7afe4a719d704",
+    "canonical_json": true,
+    "current": "sha256:05beff4ce69856c7982bcd750d6678a2b0193f61846496b624b9da3970c1bcf7",
+    "signature": {
+      "alg": "Ed25519",
+      "value": "d9293fa686cd9b66ac6699ee0b0efc3aa8492ff636116369bdce2736dfc78072fe14b018a3b45a2dc3568dd012930427893aa3b3ce7bd646a90caf9d748ba10c"
+    }
+  },
+  "profiles": {
+    "key_trust": {
+      "key_id": "airep-test-key-1",
+      "issuer": "self",
+      "algorithm": "Ed25519",
+      "public_key": {
+        "format": "raw_hex",
+        "value": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b"
+      },
+      "validity": {
+        "not_before": "2026-05-30T00:00:00Z"
+      },
+      "revocation": {
+        "revoked": false
+      }
+    },
+    "chain_witness": {
+      "chain_id": "airep:chain:trusted-gate-test",
+      "head": {
+        "decision_index": 1,
+        "current": "sha256:89c7b5654ddc32e931b544f45a442d54802b19598dcc9509d6c7afe4a719d704",
+        "length": 2
+      },
+      "witness": {
+        "witness_id": "airep-test-key-1",
+        "alg": "Ed25519",
+        "value": "ec98a8cd3454455509a7cccaa870ff5d6b5054f75a078c52c71eaae3dacb2016bde61c8aded0cd15ffee5f23b92308d555c8d44294776c81c08f03af4dd9ad0c"
+      },
+      "revocation_checked": true,
+      "freshness": {
+        "witness_timestamp_utc": "2026-05-30T00:00:05Z"
+      }
+    }
+  }
+}

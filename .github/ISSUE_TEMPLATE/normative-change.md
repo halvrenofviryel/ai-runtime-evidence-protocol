@@ -15,4 +15,6 @@ labels: [normative, needs-design]
 
 **Updated example vectors** (normative text and conformance vectors change in lockstep):
 
-**Conformance-class impact** (Core / Verified / Trusted — see `conformance/CONFORMANCE_CLASSES.md`):
+**Conformance-class impact** (Core / Verified / TRUSTED_NOT_IMPLEMENTED / Trusted — see
+`conformance/CONFORMANCE_CLASSES.md`; note the reference verifiers currently report only the
+first three, and `Trusted` is withheld while its prerequisites are unenforced):

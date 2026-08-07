@@ -40,8 +40,12 @@ above, a record or chain has an *assurance tier* stating how much a consumer may
 re-verified authorship under a key bound by a `key_trust` profile. **AIREP-Trusted** adds an
 independent freshness / head witness. The tiers are a strict ladder, defined normatively in
 [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md); the reference verifiers
-report the highest tier a record satisfies with `--class`. (The witness profile that AIREP-Trusted
-requires is a v0.2 item, so no record reaches Trusted yet — see [`STATUS.md`](./STATUS.md).)
+report the highest tier a record satisfies with `--class`. (The `chain_witness` profile AIREP-Trusted
+requires now ships, but four of the tier's prerequisites are unenforced by the reference verifiers,
+so **no record reaches Trusted**: such records are reported as `TRUSTED_NOT_IMPLEMENTED`, which ranks
+equal to Verified and names each unevaluated gate — see
+[`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md) and
+[`STATUS.md`](./STATUS.md).)
 
 ## 3. The core record
 

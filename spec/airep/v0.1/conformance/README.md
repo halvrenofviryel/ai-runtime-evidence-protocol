@@ -1,7 +1,10 @@
 # AIREP conformance
 
 This directory lets you check that a record really conforms to AIREP — with **two independent
-verifiers** (Python and Node) that agree byte-for-byte.
+verifiers** (Python and Node) that agree byte-for-byte on every hash, and reach the same verdict on
+the core checks. One documented exception: `verify.mjs` runs **no profile-schema validation**, so a
+record whose `profiles` block violates its schema is rejected by `verify.py` and accepted by
+`verify.mjs`. `verify.py` is the authority for exhaustive schema validation.
 
 - [`verify.py`](./verify.py) — verify **your own** record or chain (not just the bundled examples):
   `python3 verify.py <record.json | chain.jsonl> [--pubkey <hex|file>]`. For each record it runs
@@ -18,6 +21,18 @@ verifiers** (Python and Node) that agree byte-for-byte.
   record with a stray vendor key and both report `FAIL(extra-top, neutrality, …)`; tamper a field and
   both report `FAIL(hash)`.)
 
+Both verifiers accept `--class`, which reports the highest conformance class satisfied. The classes
+they can report are **`Core`, `Verified`, and `TRUSTED_NOT_IMPLEMENTED`** — `Trusted` is **never**
+reported, because four of its prerequisites (witness-signature verification, witness-key
+distinctness, freshness recency, revocation) are unenforced, and an unenforced prerequisite is never
+reported as satisfied. `TRUSTED_NOT_IMPLEMENTED` ranks **equal to `Verified`** and names each
+unevaluated gate. The **exit code encodes record validity only, never the class** (0 = every record
+passed every check *that verifier ran*, 1 = a record failed or the input was unreadable, 2 = usage
+error) — a `TRUSTED_NOT_IMPLEMENTED` record exits 0 because it is a valid record, so exit 0 must not
+be read as "Trusted". The two verifiers' exit codes are **not equivalent**: `verify.mjs` runs no
+profile-schema validation, so a profile-invalid record exits 1 under Python and 0 under Node. Full
+semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
+
 - [`validate.py`](./validate.py) — the one-command conformance battery over
   [`../examples/`](../examples/). It runs: FULL schema validation; the **neutrality test** (delete
   `profiles`, still valid); **negative tests** (a stray vendor key and a missing `scope` must be
@@ -30,6 +45,16 @@ verifiers** (Python and Node) that agree byte-for-byte.
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong
   (`1.0`→`1`, `1e-07`→`1e-7`, `-0.0`→`0`). If Node is absent it falls back to hand-verified vectors.
+- [`test_trusted_gates.py`](./test_trusted_gates.py) — the **Trusted fail-closed battery**. Seven
+  adversarial records — a forged witness signature, a "witness" that is the producer, a missing
+  freshness anchor, a stale one, a revoked producer key, absent revocation state, and a
+  structurally-perfect witness — are committed as a **shared corpus** under
+  [`fixtures/trusted_gates/`](./fixtures/trusted_gates/) and run through **both** verifiers. It
+  asserts none reaches `Trusted`, that each lands on the expected class, and that Python and Node
+  emit the **same class AND the same `trusted_withheld` reason set** (agreeing on the verdict while
+  disagreeing on *why* is not parity). A drift guard re-derives every case from its fixed seeds and
+  fails if the committed bytes diverged, so the corpus cannot rot away from its generator
+  (`--write-fixtures` regenerates it). Node absent is reported as `NOT_RUN`, never as a pass.
 - [`test_verifier_parity.py`](./test_verifier_parity.py) — the **verdict-parity test**. It runs both
   `verify.py` and `verify.mjs` over a battery of good and adversarial records (vendor-leak, bad verb,
   missing nested member, wrong type, empty `minItems`, non-`const`, tampered hash) and asserts the two

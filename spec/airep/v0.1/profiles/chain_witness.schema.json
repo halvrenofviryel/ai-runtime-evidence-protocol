@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/chain_witness.schema.json",
   "title": "AIREP profile: chain_witness (freshness / head witness) v0.1",
-  "description": "Closes the structural gaps the neutral core leaves OPEN (THREAT_MODEL.md): tail-truncation, replay-as-latest, and 'is this the current head?'. The core binds each record only to its immediate predecessor (relative binding); this profile adds an ABSOLUTE binding — a stable chain_id and a signed head witness (length + head hash) produced by a key DISTINCT from the producer — plus a freshness anchor. With it, dropping the last N records is detectable (the witnessed length exceeds the presented chain) and a stale-but-valid head fails the freshness check. CRITICAL HONESTY: a witness signed by the PRODUCER's own key provides NO truncation defense (the producer could self-truncate and re-witness); the witness key MUST be independent of the producer, or this profile provides no guarantee. It is the additional check AIREP-Trusted requires (CONFORMANCE_CLASSES.md). Attaches under profiles.chain_witness; never changes the core; carries no personal data.",
+  "description": "Closes the structural gaps the neutral core leaves OPEN (THREAT_MODEL.md): tail-truncation, replay-as-latest, and 'is this the current head?'. The core binds each record only to its immediate predecessor (relative binding); this profile adds an ABSOLUTE binding — a stable chain_id and a signed head witness (length + head hash) produced by a key DISTINCT from the producer — plus a freshness anchor. With it, dropping the last N records is detectable (the witnessed length exceeds the presented chain) and a stale-but-valid head fails the freshness check. CRITICAL HONESTY: a witness signed by the PRODUCER's own key provides NO truncation defense (the producer could self-truncate and re-witness); the witness key MUST be independent of the producer, or this profile provides no guarantee. It is the additional check AIREP-Trusted requires (CONFORMANCE_CLASSES.md). NOTE: carrying this profile does NOT earn class=Trusted from the reference verifiers — they check witness PRESENCE only and leave four Trusted prerequisites unenforced, so such records are reported as TRUSTED_NOT_IMPLEMENTED (see CONFORMANCE_CLASSES.md). Attaches under profiles.chain_witness; never changes the core; carries no personal data.",
   "type": "object",
   "additionalProperties": true,
   "required": ["chain_id", "head", "witness"],
@@ -26,7 +26,7 @@
       "type": "object",
       "additionalProperties": true,
       "required": ["witness_id", "alg", "value"],
-      "description": "A signature over the head claim by a witness key INDEPENDENT of the producer key. A producer-signed witness is theater and does NOT satisfy AIREP-Trusted.",
+      "description": "A signature over the head claim by a witness key INDEPENDENT of the producer key. A producer-signed witness is theater and does NOT satisfy AIREP-Trusted. An independently-signed witness is NECESSARY for that tier but not sufficient, and does not by itself earn the class — the witness signature is never re-verified at classification time.",
       "properties": {
         "witness_id": { "type": "string", "description": "Identifier of the witness key/authority. MUST be distinct from the record's producer/signing key." },
         "alg": { "type": "string", "description": "Signature algorithm (for example 'Ed25519')." },
