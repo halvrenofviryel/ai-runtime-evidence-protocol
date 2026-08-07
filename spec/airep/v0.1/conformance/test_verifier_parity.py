@@ -11,6 +11,7 @@ bytes. The Node half is skipped if `node` is not installed (the expected-verdict
 Usage:  python3 test_verifier_parity.py    (exit 0 if every case agrees, 1 otherwise)
 """
 import copy
+import hashlib
 import json
 import shutil
 import subprocess
@@ -20,6 +21,10 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SPEC = HERE.parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+import jcs  # noqa: E402  (RFC 8785 canonicalization — conformance/jcs.py)
+
 BASE = json.loads((SPEC / "examples" / "neutral_record.json").read_text())
 
 
@@ -64,6 +69,60 @@ def run(cmd, rec):
         Path(path).unlink(missing_ok=True)
 
 
+def run_out(cmd, rec, extra=()):
+    """Run a verifier, returning (exit0: bool, stdout: str). The record path is the FIRST
+    argument (verify.mjs reads args[0] positionally as the file); flags go AFTER it."""
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump(rec, f)
+        path = f.name
+    try:
+        p = subprocess.run(cmd + [path, *extra], capture_output=True, text=True)
+        return p.returncode == 0, p.stdout
+    finally:
+        Path(path).unlink(missing_ok=True)
+
+
+def _profile_divergence_record():
+    """BASE + a key_trust profile block that VIOLATES profiles/key_trust.schema.json
+    (public_key must be a string; here it is an int), with integrity.current recomputed so the
+    ONLY failing dimension is the profile schema. This is the isolated WP-08 reproducer."""
+    r = copy.deepcopy(BASE)
+    r["profiles"] = {"key_trust": {"public_key": 12345}}
+    body = {k: v for k, v in r.items() if k != "integrity"}
+    integ = r["integrity"]
+    body["integrity"] = {k: v for k, v in integ.items() if k not in ("current", "signature")}
+    r["integrity"]["current"] = "sha256:" + hashlib.sha256(jcs.canonicalize(body)).hexdigest()
+    return r
+
+
+def profile_divergence_check(have_node):
+    """WP-08 regression. The profile-schema dimension is the ONE place the two verifiers diverge
+    BY DESIGN: verify.py validates profiles and rejects an invalid block (INVALID, exit 1); the
+    Node verifier runs no profile-schema engine. The pin is NOT that they agree on exit code — it
+    is that Node no longer renders its exit 0 as a clean pass: it must NAME the unmeasured profile
+    dimension (`profile_not_measured=key_trust`) rather than a bare `class=Core`. Returns
+    (ok, lines)."""
+    rec = _profile_divergence_record()
+    lines = ["", "WP-08 profile-dimension divergence (invalid key_trust block):"]
+    ok = True
+
+    py_ok, py_out = run_out([sys.executable, str(HERE / "verify.py")], rec, extra=["--class"])
+    py_reject = (not py_ok) and ("profile:key_trust" in py_out) and ("INVALID" in py_out)
+    lines.append(f"  verify.py : rejects on profile schema (INVALID, exit!=0) -> {'✓' if py_reject else '✗'}")
+    ok = ok and py_reject
+
+    if have_node:
+        node_ok, node_out = run_out(["node", str(HERE / "verify.mjs")], rec, extra=["--class"])
+        # Declared: Node's core checks pass (exit 0) — matching verify.py's exit is NOT the goal.
+        # Required: it must not read as a clean Core; the unmeasured profile dimension is named.
+        node_names_gap = node_ok and ("profile_not_measured=key_trust" in node_out)
+        lines.append(f"  verify.mjs: exit 0 BUT names profile_not_measured=key_trust (not a bare Core) -> {'✓' if node_names_gap else '✗'}")
+        ok = ok and node_names_gap
+    else:
+        lines.append("  verify.mjs: skipped (node absent)")
+    return ok, lines
+
+
 def main():
     have_node = shutil.which("node") is not None
     fails = 0
@@ -81,6 +140,13 @@ def main():
         if not ok:
             fails += 1
         print(f"  {name:<36} | {' P ' if py else ' F '} |{mjs_str}| {'  P   ' if expect_pass else '  F   '} | {'✓' if ok else '✗'}")
+
+    div_ok, div_lines = profile_divergence_check(have_node)
+    for ln in div_lines:
+        print(ln)
+    if not div_ok:
+        fails += 1
+
     print(f"RESULT: {'all verifiers agree with the expected verdict' if not fails else f'{fails} disagreement(s)'}")
     sys.exit(0 if not fails else 1)
 
