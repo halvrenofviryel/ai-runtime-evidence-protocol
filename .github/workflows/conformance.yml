@@ -38,6 +38,8 @@ jobs:
         run: python3 conformance/test_verifier_parity.py
       - name: test_trusted_gates.py — AIREP-Trusted is never granted on witness PRESENCE
         run: python3 conformance/test_trusted_gates.py
+      - name: test_strict_trusted.py — strict-Trusted grants Trusted only when all four gates pass
+        run: python3 conformance/test_strict_trusted.py
       - name: verify.mjs — independent Node verifier on the chain + signatures
         run: node conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_public_key.txt
       - name: regenerate-drift guard — committed examples must round-trip the producer

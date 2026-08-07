@@ -26,11 +26,15 @@
 //
 // Usage:  node verify.mjs <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
 //
-// --class reports the highest AIREP conformance class satisfied: Core, Verified, or
-// TRUSTED_NOT_IMPLEMENTED. **Trusted is never reported by this verifier** — its prerequisites
+// --class reports the highest AIREP conformance class satisfied: Core, Verified, or (by default)
+// TRUSTED_NOT_IMPLEMENTED. **By default Trusted is never reported** — its four prerequisites
 // (witness-signature verification, witness-key distinctness, freshness recency, revocation) are
-// not implemented here, and an unenforced prerequisite can never be reported as satisfied. See
-// CONFORMANCE_CLASSES.md §TRUSTED_NOT_IMPLEMENTED.
+// unevaluated, and an unenforced prerequisite can never be reported as satisfied. **Trusted is
+// reachable only in the opt-in STRICT mode (WP-10):** pass --trust-store + --freshness-window +
+// --revocation-source and the four gates run for real; a record earns Trusted iff every one passes,
+// else the ceiling is Verified with the specific reason named. Any input missing → the gates cannot
+// run → TRUSTED_NOT_IMPLEMENTED (never a silent Trusted). See CONFORMANCE_CLASSES.md §AIREP-Trusted
+// (strict mode). v1: one independent trusted witness, local JSON inputs, timestamp freshness window.
 //
 // A witness-less `Verified` record whose own profiles.key_trust.revocation.revoked is true is still
 // `Verified` (revocation is a Trusted gate, not a Verified requirement) but carries
@@ -296,35 +300,154 @@ function trustedStructuralFailures(rec) {
   else if (rev.revoked === true) bad.push("producer-key-revoked");
   return bad;
 }
+// ---- WP-10 strict-Trusted: the four Trusted gates, run ONLY with operator-supplied inputs -------
+// Default mode leaves these four gates unevaluated (TRUSTED_NOT_IMPLEMENTED). In strict mode the
+// operator supplies --trust-store + --freshness-window + --revocation-source and the gates run for
+// real; a record earns Trusted iff every one passes, else the ceiling is Verified with the specific
+// failure named. Kept byte-for-byte in lockstep with verify.py. v1 scope: exactly ONE independent
+// trusted witness (no N-of-M quorum), local JSON inputs (no transparency-log / no online CRL), a
+// timestamp freshness window (no nonce/challenge). See docs WP10_STRICT_TRUSTED_DESIGN.
+function parseIso(s) {
+  if (!nonemptyStr(s)) return null;
+  const t = Date.parse(s);
+  return Number.isNaN(t) ? null : t; // epoch millis
+}
+function producerPubkeyHex(kt) {
+  const pk = kt.public_key;
+  if (isObj(pk) && nonemptyStr(pk.value)) return pk.value.trim().toLowerCase();
+  if (nonemptyStr(pk)) return pk.trim().toLowerCase();
+  return null;
+}
+function verifyWitnessSig(cw, wit, wpubHex) {
+  // Re-verify chain_witness.witness.value over the canonical head claim, under the witness key
+  // RESOLVED FROM THE TRUST STORE. Claim shape is byte-identical to verify.py / the fixtures:
+  // {chain_id, decision_index, current, length}. canonical() matches verify.py's jcs for these.
+  const head = cw.head || {};
+  const claim = { chain_id: cw.chain_id, decision_index: head.decision_index,
+                  current: head.current, length: head.length };
+  try {
+    const pub = loadPub(wpubHex);
+    return crypto.verify(null, Buffer.from(canonical(claim), "utf8"), pub,
+      Buffer.from(String((wit || {}).value || ""), "hex"));
+  } catch {
+    return false;
+  }
+}
+function keyRevoked(revocation, keyId, relevantTime) {
+  // Revoked iff the external source lists the key AND the record was signed at/after revoked_at
+  // (CONFORMANCE_CLASSES.md §Trusted req 3). Missing revoked_at / unknown signing time → treated
+  // conservatively as revoked, never a silent pass. Kept in lockstep with verify.py::_key_revoked.
+  if (!isObj(revocation) || !nonemptyStr(keyId)) return false;
+  const entry = revocation[keyId];
+  if (!isObj(entry)) return false;
+  const ra = parseIso(entry.revoked_at);
+  if (ra === null || relevantTime === null) return true;
+  return relevantTime >= ra;
+}
+function strictTrustedFailures(rec, strict) {
+  const prof = rec.profiles || {};
+  const cw = prof.chain_witness || prof.freshness_witness || {};
+  const kt = prof.key_trust || {};
+  const wit = isObj(cw.witness) ? cw.witness : {};
+  const bad = [];
+  const { trustStore, revocation, window, now } = strict;
+
+  // gate 1+ (key resolution / trust / independence): resolve the witness key from the store by
+  // witness_id and decide independence on the RESOLVED PUBLIC KEYS, never on id strings.
+  const wid = wit.witness_id;
+  const entry = nonemptyStr(wid) ? trustStore[wid] : undefined;
+  let wpub = null;
+  if (!isObj(entry) || !nonemptyStr(entry.public_key_hex)) {
+    bad.push("witness-unknown");
+  } else {
+    wpub = entry.public_key_hex.trim().toLowerCase();
+    if (entry.trusted !== true) bad.push("witness-untrusted");
+    const ppub = producerPubkeyHex(kt);
+    if (ppub !== null && wpub === ppub) bad.push("witness-not-independent");
+  }
+
+  // gate: witness signature verifies under the resolved key
+  if (wpub !== null && verifyWitnessSig(cw, wit, wpub) !== true) bad.push("witness-signature-invalid");
+
+  // gate: freshness recency within the operator's window (deterministic against --now)
+  const fr = isObj(cw.freshness) ? cw.freshness : {};
+  const wts = parseIso(fr.witness_timestamp_utc);
+  if (wts === null) bad.push("no-freshness-anchor");
+  else if (wts > now) bad.push("freshness-in-future");
+  else if ((now - wts) / 1000 > window) bad.push("freshness-stale");
+
+  // gate: revocation, consulted for BOTH the producer key and the witness key
+  const recTs = parseIso((rec.subject || {}).timestamp_utc);
+  if (keyRevoked(revocation, kt.key_id, recTs)) bad.push("producer-key-revoked");
+  if (keyRevoked(revocation, wid, wts)) bad.push("witness-key-revoked");
+  return bad;
+}
+
 // Returns [class, withheldReasons]. AIREP-Trusted is FAIL-CLOSED: granted only when every
-// normative prerequisite is actually enforced and passes. This verifier enforces none of the
-// Trusted-tier cryptographic checks, so the top class is withheld and the reason is named.
-function classify(rec, sigOk) {
+// normative prerequisite is actually enforced and passes. Without operator trust inputs (default
+// mode) the Trusted-tier gates cannot run, so the top class is withheld and named. With them
+// (strict mode: `strict` is a context object) the four gates run for real.
+function classify(rec, sigOk, strict) {
   const alg = String((((rec.integrity || {}).signature) || {}).alg || "").toLowerCase();
   const verified = sigOk === true && REAL_ALGS.has(alg) && evidenceAnchored(rec) && keyTrustBound(rec);
   if (!verified) return ["Core", []];
   if (!witnessPresent(rec)) return ["Verified", []]; // no Trusted claim is being made at all
   const structural = trustedStructuralFailures(rec);
   if (structural.length) return ["Verified", structural]; // a prerequisite demonstrably fails
-  if (TRUSTED_GATES_NOT_IMPLEMENTED.length) {
-    // Witness material is present and structurally coherent, but the checks that would make it
-    // mean anything do not run here. Never grant on presence.
+  if (!strict) {
+    // Witness material is present and structurally coherent, but with no operator trust inputs the
+    // four gates cannot run. Never grant on presence.
     return ["TRUSTED_NOT_IMPLEMENTED", [...TRUSTED_GATES_NOT_IMPLEMENTED]];
   }
-  return ["Trusted", []]; // unreachable until every gate above is actually implemented
+  // STRICT MODE: the four gates run for real against the operator's trust inputs.
+  const gateFailures = strictTrustedFailures(rec, strict);
+  if (gateFailures.length) return ["Verified", gateFailures];
+  return ["Trusted", []]; // every gate ran and passed
+}
+
+// Assemble the strict-Trusted context, or [null, note]. Strict engages ONLY when all three inputs
+// are present; a partial set falls back to default with a printed note, never a silent Trusted.
+function buildStrict(args) {
+  const val = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
+  const tsPath = val("--trust-store");
+  const windowRaw = val("--freshness-window");
+  const revPath = val("--revocation-source");
+  const nowRaw = val("--now");
+  const supplied = [Boolean(tsPath), windowRaw !== undefined, Boolean(revPath)];
+  if (!supplied.some(Boolean)) return [null, null];
+  if (!supplied.every(Boolean)) {
+    return [null, "strict-Trusted needs all three of --trust-store, --freshness-window, " +
+                  "--revocation-source; falling back to default (Trusted withheld)"];
+  }
+  const now = nowRaw ? parseIso(nowRaw) : Date.now();
+  if (now === null) return [null, `--now is not a valid ISO-8601 timestamp: ${nowRaw} (Trusted withheld)`];
+  return [{
+    trustStore: JSON.parse(fs.readFileSync(tsPath, "utf8")),
+    revocation: JSON.parse(fs.readFileSync(revPath, "utf8")),
+    window: Number(windowRaw),
+    now,
+  }, null];
 }
 
 const USAGE = `Verify an AIREP record or chain (Node reference verifier)
 
 Usage:
   node verify.mjs <record.json | chain.jsonl> [--pubkey <hex | path-to-key-file>] [--class]
+                  [--trust-store <p> --freshness-window <s> --revocation-source <p> [--now <iso>]]
 
   --pubkey  Ed25519 public key (hex) or a path to a key file; enables signature re-verification
   --class   report the highest AIREP conformance class satisfied: Core | Verified |
-            TRUSTED_NOT_IMPLEMENTED. Trusted is NEVER reported: its prerequisites (witness
-            signature, witness-key distinctness, freshness recency, revocation) are not
-            implemented here, and an unenforced prerequisite is never reported as satisfied.
-            Withheld classes name the unmet/unevaluated prerequisites as trusted_withheld=...
+            TRUSTED_NOT_IMPLEMENTED (default), or Trusted in strict mode. By default Trusted is
+            withheld: its four prerequisites (witness signature, witness-key distinctness, freshness
+            recency, revocation) are unevaluated, and an unenforced prerequisite is never reported
+            as satisfied. Withheld classes name them as trusted_withheld=...
+  strict-Trusted (WP-10): pass ALL of --trust-store, --freshness-window, --revocation-source (and
+            optionally --now for deterministic freshness) to run the four gates for real. Trusted iff
+            all pass, else Verified + named reason. v1: one independent trusted witness, local JSON.
+            --trust-store        {witness_id: {public_key_hex, trusted}}
+            --freshness-window   max seconds between the witness timestamp and --now
+            --revocation-source  {key_id: {revoked_at, reason}} — producer AND witness keys
+            --now                ISO-8601 evaluation time (default: system clock)
 
 Exit code: 0 when every record passed every check this verifier ran, 1 when a record failed or the
 input could not be read, 2 on usage error. It reflects record validity ONLY — it never encodes which
@@ -341,6 +464,7 @@ function main() {
   const pi = args.indexOf("--pubkey");
   const pub = loadPub(pi >= 0 ? args[pi + 1] : "");
   const showClass = args.includes("--class");
+  const [strict, strictNote] = buildStrict(args);
   const records = loadRecords(file);
   // An empty input is not a vacuously perfect chain. Zero records means zero checks ran, and the
   // unmeasured case must never inherit a class — reporting the top class here would be the purest
@@ -360,6 +484,11 @@ function main() {
   // an initial value. A chain is only as strong as its weakest record.
   let chainClass = null;
   console.log(`AIREP verify (node): ${file}  (${records.length} record(s)${isChain ? " — chain" : ""})`);
+  if (strictNote) console.log(`  NOTE  ${strictNote}`);
+  if (strict) {
+    console.log(`  strict-Trusted mode: now=${new Date(strict.now).toISOString()} `
+      + `freshness_window=${Math.trunc(strict.window)}s`);
+  }
   records.forEach((rec, i) => {
     const bad = [];
     bad.push(...schemaCheck(rec));
@@ -378,7 +507,7 @@ function main() {
     prev = integ.current;
     const sigstr = sig === true ? "sig=ok" : sig === false ? "sig=FAIL" : "sig=skip";
     let cls = null, withheld = [];
-    if (showClass) [cls, withheld] = bad.length ? ["INVALID", []] : classify(rec, sig);
+    if (showClass) [cls, withheld] = bad.length ? ["INVALID", []] : classify(rec, sig, strict);
     if (cls !== null && (chainClass === null || CLASS_RANK[cls] < CLASS_RANK[chainClass])) chainClass = cls;
     let clspart = showClass ? `  class=${cls}` : "";
     // Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
