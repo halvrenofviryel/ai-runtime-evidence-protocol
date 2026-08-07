@@ -39,6 +39,17 @@
 // verifier runs NO profile-schema validation, so its exit 0 is a weaker statement than
 // verify.py's. Requires Node >= 16 (raw Ed25519 keys).
 //
+// PROFILE DIMENSION IS NOT_MEASURED HERE, AND SAYS SO. Because no profile schema is validated,
+// a record carrying a `profiles` block is NOT reported as a clean pass over that block: every
+// such record is annotated `profile_not_measured=<names>` on its line and the CLASS summary
+// names it. verify.py (full jsonschema) is the authority that DOES validate `profiles.<name>`
+// against `profiles/<name>.schema.json`, so for a record whose profile block VIOLATES its schema
+// the two verifiers diverge BY DESIGN — verify.py exits 1 (INVALID), this verifier's core checks
+// still pass and it exits 0. The annotation is what stops that exit 0 from reading as "the
+// profile was validated and passed". It is NOT_MEASURED, not PASS. (Kept in lockstep with
+// verify.py's PROFILE_VALIDATORS; matching verify.py's exit code would mean duplicating its
+// Draft-2020-12 profile engine, which this second stack deliberately does not do.)
+//
 // Canonicalization: sorted object keys, no whitespace, UTF-8 — RFC 8785-equivalent for the
 // float-free / simple-decimal, ASCII-key records here (JS Number->String == the ES6 form JCS
 // mandates, and Python json.dumps matches it for these values, so both impls agree).
@@ -122,6 +133,15 @@ function schemaCheck(rec) {
     });
   }
   return bad;
+}
+
+// The profile-schema dimension this verifier does NOT measure. verify.py validates each
+// `profiles.<name>` against `profiles/<name>.schema.json`; this stack runs no such engine, so
+// every profile block present is reported NOT_MEASURED by name — never silently passed. Returns
+// the sorted profile names carried by the record.
+function profilesNotMeasured(rec) {
+  if (!isObj(rec) || !isObj(rec.profiles)) return [];
+  return Object.keys(rec.profiles).sort();
 }
 
 // Neutrality (SPEC §8.2): delete `profiles` and the record must still be a valid core record.
@@ -319,6 +339,7 @@ function main() {
   }
   const isChain = records.length > 1;
   let fails = 0;
+  let anyProfiles = false;
   let prev = GENESIS;
   // Starts UNSET, not at the top class: the ceiling is earned by the records, never inherited from
   // an initial value. A chain is only as strong as its weakest record.
@@ -347,12 +368,20 @@ function main() {
     let clspart = showClass ? `  class=${cls}` : "";
     // Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
     if (withheld.length) clspart += `  trusted_withheld=${withheld.join(",")}`;
+    // Never render an unmeasured dimension as a clean pass: name any profile block present,
+    // whose schema this verifier did not validate (verify.py is the authority — see header).
+    const profNM = profilesNotMeasured(rec);
+    if (profNM.length) { anyProfiles = true; clspart += `  profile_not_measured=${profNM.join(",")}`; }
     console.log(`  [${i}] ${bad.length ? "FAIL(" + bad.join(",") + ")" : "PASS"}  ${sigstr}${clspart}  ${String(integ.current).slice(0, 23)}...`);
     if (bad.length) fails++;
   });
   console.log(`RESULT: ${fails ? fails + " record(s) FAILED" : "all records OK"}`);
   if (showClass) {
-    console.log(`CLASS: ${fails ? "INVALID" : (chainClass || "INVALID")}${!pub && !fails ? "  (pass --pubkey to assess Verified)" : ""}`);
+    const pubNote = !pub && !fails ? "  (pass --pubkey to assess Verified)" : "";
+    // A class earned here never certifies the profile blocks: this verifier did not schema-validate
+    // them. Say so on the summary so the class is not read as "profile validated" (see verify.py).
+    const profNote = anyProfiles ? "  (profiles present — NOT schema-validated by this verifier; run verify.py)" : "";
+    console.log(`CLASS: ${fails ? "INVALID" : (chainClass || "INVALID")}${pubNote}${profNote}`);
   }
   process.exit(fails ? 1 : 0);
 }
