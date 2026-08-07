@@ -32,6 +32,12 @@
 // not implemented here, and an unenforced prerequisite can never be reported as satisfied. See
 // CONFORMANCE_CLASSES.md §TRUSTED_NOT_IMPLEMENTED.
 //
+// A witness-less `Verified` record whose own profiles.key_trust.revocation.revoked is true is still
+// `Verified` (revocation is a Trusted gate, not a Verified requirement) but carries
+// verified_withheld=producer-key-revoked on its line — a self-declared revoked signing key is never
+// rendered as a clean Verified. verified_withheld= names caveats on a Verified record;
+// trusted_withheld= names why Trusted was withheld.
+//
 // Exit code reflects RECORD VALIDITY ONLY, never the class: 0 when every record passed every
 // check this verifier ran, 1 when a record failed or the input could not be read, 2 on usage
 // error (--help exits 0 without verifying). A TRUSTED_NOT_IMPLEMENTED record exits 0 because it
@@ -239,6 +245,15 @@ function keyTrustBound(rec) {
   const kt = (rec.profiles || {}).key_trust;
   return isObj(kt) && ["key_id", "algorithm", "public_key"].every((k) => k in kt);
 }
+// WP-09: the record's own key_trust declares its signing key revoked. Self-declared, definitively
+// checkable, needs NO external revocation source (that source is the undefined Trusted-tier policy).
+// A revoked signing key undermines the authorship a Verified record asserts, so it is named — never
+// a silent Verified — but the class stays Verified (CONFORMANCE_CLASSES.md §Verified does not gate
+// on revocation; that is a Trusted gate). Kept in lockstep with verify.py::_producer_key_revoked.
+function producerKeyRevoked(rec) {
+  const rev = ((rec.profiles || {}).key_trust || {}).revocation;
+  return isObj(rev) && rev.revoked === true;
+}
 // Witness material is PRESENT. Presence is not verification: this says a chain_witness block
 // exists and is populated, NOT that the witness signature is valid, that the witness key is
 // independent of the producer, or that the anchor is fresh. Necessary for Trusted, never sufficient.
@@ -368,6 +383,12 @@ function main() {
     let clspart = showClass ? `  class=${cls}` : "";
     // Never downgrade silently: say which Trusted prerequisite was unmet or unevaluated.
     if (withheld.length) clspart += `  trusted_withheld=${withheld.join(",")}`;
+    // WP-09: a witness-less Verified record whose own key_trust declares the key revoked must not
+    // read as a clean Verified. Name the self-declared caveat; the class stays Verified per contract.
+    // (Witness-present revoked records already name producer-key-revoked via trustedStructuralFailures.)
+    if (showClass && cls === "Verified" && !witnessPresent(rec) && producerKeyRevoked(rec)) {
+      clspart += "  verified_withheld=producer-key-revoked";
+    }
     // Never render an unmeasured dimension as a clean pass: name any profile block present,
     // whose schema this verifier did not validate (verify.py is the authority — see header).
     const profNM = profilesNotMeasured(rec);
