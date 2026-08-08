@@ -32,6 +32,17 @@ normative `SPEC.md` on purpose.
 
 These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
 
+> **Prepared ENAS profile work.** Eleven standalone ENAS evidence-contract
+> schemas and two bounded fixture corpora (40 record cases total) are present
+> as working-tree additions. The conformance helper now also reconciles exact
+> issuer and receiver graph cardinality, embedded record references and
+> digests, typed-edge endpoints, and issuer-to-lifecycle identity. This closes
+> a local graph-splice acceptance surface; it does not prove that a named
+> producer or deployment boundary ran.
+> This advances the named record contracts to schema maturity only. Release,
+> runtime emission, receiver acknowledgement, effect observation, complete
+> mediation, independent reproduction, and external acceptance are not claimed.
+
 1. **Hash domain & canonicalization** — the spec pins one rule (SPEC §6): the hash covers the canonical
    form with `integrity.current` and `integrity.signature` removed and `integrity.previous` retained, so
    content is bound to chain position (this is what detects a replayed or spliced record). The reference

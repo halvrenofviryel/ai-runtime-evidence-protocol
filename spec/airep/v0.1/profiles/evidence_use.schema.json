@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/evidence_use.schema.json",
+  "title": "ENAS evidence-use event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "event_id", "trace_id", "action_attempt_id", "decision_id", "manifest_id", "evidence_id", "evidence_digest", "relation", "observed_at"],
+  "properties": {
+    "profile_type": {"const": "evidence_use"}, "schema_version": {"const": "enas-profile-0.1"},
+    "event_id": {"$ref": "#/$defs/id"}, "trace_id": {"$ref": "#/$defs/id"}, "action_attempt_id": {"$ref": "#/$defs/id"}, "decision_id": {"$ref": "#/$defs/id"}, "manifest_id": {"$ref": "#/$defs/id"}, "evidence_id": {"$ref": "#/$defs/id"},
+    "evidence_digest": {"$ref": "#/$defs/digest"},
+    "relation": {"enum": ["PRESENTED", "CITED", "USED_MATERIAL", "NOT_USED", "NOT_MEASURED"]},
+    "measurement_basis": {"type": "string", "minLength": 1},
+    "observed_at": {"type": "string", "format": "date-time"}
+  },
+  "allOf": [{"if": {"properties": {"relation": {"const": "USED_MATERIAL"}}}, "then": {"required": ["measurement_basis"]}}],
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

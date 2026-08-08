@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/effect_observation.schema.json",
+  "title": "ENAS bounded effect observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "effect_observation_id", "trace_id", "action_attempt_id", "decision_id", "execution_id", "execution_digest", "expected_state_digest", "target_ref_digest", "pre_state_digest", "post_state_digest", "observer_id", "custody", "observation_method", "observation_boundary", "window_start", "window_end", "freshness_seconds", "result", "basis_types", "source_of_truth_readback", "observer_health", "evidence_channel", "limitations"],
+  "properties": {
+    "profile_type": {"const": "effect_observation"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "effect_observation_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "action_attempt_id": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "execution_id": {"$ref": "#/$defs/id"},
+    "execution_digest": {"$ref": "#/$defs/digest"},
+    "expected_state_digest": {"$ref": "#/$defs/digest"},
+    "target_ref_digest": {"$ref": "#/$defs/digest"},
+    "pre_state_digest": {"$ref": "#/$defs/digest"},
+    "post_state_digest": {"$ref": "#/$defs/digest"},
+    "observer_id": {"$ref": "#/$defs/id"},
+    "custody": {"enum": ["SAME_PROCESS", "SAME_TRUST_BOUNDARY", "SEPARATE_PROCESS", "SEPARATE_TRUST_BOUNDARY", "INDEPENDENT"]},
+    "observation_method": {"type": "object", "additionalProperties": false, "required": ["method_id", "version"], "properties": {"method_id": {"$ref": "#/$defs/id"}, "version": {"$ref": "#/$defs/id"}}},
+    "observation_boundary": {"type": "string", "minLength": 1},
+    "window_start": {"type": "string", "format": "date-time"},
+    "window_end": {"type": "string", "format": "date-time"},
+    "freshness_seconds": {"type": "number", "minimum": 0},
+    "result": {"enum": ["OBSERVED", "NOT_OBSERVED_WITHIN_BOUNDARY", "INCONCLUSIVE", "ERROR"]},
+    "basis_types": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["SOURCE_OF_TRUTH_READBACK", "TRANSPORT_RESPONSE", "CORROBORATING_OBSERVER", "OTHER"]}},
+    "source_of_truth_readback": {"type": "boolean"},
+    "observer_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]},
+    "evidence_channel": {"$ref": "#/$defs/health"},
+    "corroboration_ref_digest": {"$ref": "#/$defs/digest"},
+    "limitations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "health": {"type": "object", "additionalProperties": false, "required": ["id", "health"], "properties": {"id": {"$ref": "#/$defs/id"}, "health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}}}
+  }
+}

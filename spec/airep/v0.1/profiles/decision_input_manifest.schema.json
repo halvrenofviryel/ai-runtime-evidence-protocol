@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/decision_input_manifest.schema.json",
+  "title": "ENAS decision-input manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "manifest_id", "trace_id", "action_attempt_id", "decision_id", "inputs", "policy_artifact", "method_configuration"],
+  "properties": {
+    "profile_type": {"const": "decision_input_manifest"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "manifest_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "action_attempt_id": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "inputs": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["input_id", "digest", "category", "availability"], "properties": {"input_id": {"$ref": "#/$defs/id"}, "digest": {"$ref": "#/$defs/digest"}, "category": {"enum": ["ACTION_COMMITMENT", "CLASSIFIER_CONFIGURATION", "POLICY_ARTIFACT", "AUTHORITY_SIGNAL", "OTHER"]}, "availability": {"enum": ["PRESENTED", "RESOLVED", "NOT_AVAILABLE"]}}}},
+    "policy_artifact": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "digest"], "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "digest": {"$ref": "#/$defs/digest"}}},
+    "method_configuration": {"type": "object", "additionalProperties": false, "required": ["configuration_id", "digest"], "properties": {"configuration_id": {"$ref": "#/$defs/id"}, "digest": {"$ref": "#/$defs/digest"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}
