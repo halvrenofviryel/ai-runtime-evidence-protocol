@@ -1,0 +1,132 @@
+{
+  "boundary": "T4_PRE_TOOL_USE_ISSUER",
+  "bundle_id": "enas-t4-e4af80f7-79e5-4fd6-84c5-db86e219ef68",
+  "claim_limitations": [
+    "No raw command or approval reason is persisted.",
+    "No receiver acknowledgement or enforcement application is recorded.",
+    "No execution, effect, prevention, complete mediation, independent verification, or external conformance is claimed."
+  ],
+  "created_at": "2026-08-09T07:07:37.731611Z",
+  "disposition": "ALLOW",
+  "records": [
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "inputs": [
+        {
+          "availability": "PRESENTED",
+          "category": "ACTION_COMMITMENT",
+          "digest": "sha256:e430040acaa80965d000a8ec9bc7edf00a3325dda19d564811e4bb2b11ed431f",
+          "input_id": "action-commitment"
+        },
+        {
+          "availability": "RESOLVED",
+          "category": "CLASSIFIER_CONFIGURATION",
+          "digest": "sha256:642cf6a6d87377a476ad7e90af0094a80ebb000cae3a48ed0a39b601bb130ed2",
+          "input_id": "classifier-configuration"
+        },
+        {
+          "availability": "PRESENTED",
+          "category": "AUTHORITY_SIGNAL",
+          "digest": "sha256:55f4b616d6a42c74367c3f3fc14952a2b25c4062ad567345514fb83b15e8ff0a",
+          "input_id": "approval-authority-signal"
+        }
+      ],
+      "manifest_id": "manifest-f9b6b420-1dfe-4215-b6fa-1b796e4e3a34",
+      "method_configuration": {
+        "configuration_id": "t4-classifier",
+        "digest": "sha256:642cf6a6d87377a476ad7e90af0094a80ebb000cae3a48ed0a39b601bb130ed2"
+      },
+      "policy_artifact": {
+        "artifact_id": "t4-default-deny-policy",
+        "digest": "sha256:8820c5cea86d5afc00f243facc2a84ce03058f53c78e24a3f72d4be5df8343c2"
+      },
+      "profile_type": "decision_input_manifest",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "event_id": "use-d72e28ba-a7c2-4401-8b0e-4ca625f19154",
+      "evidence_digest": "sha256:e430040acaa80965d000a8ec9bc7edf00a3325dda19d564811e4bb2b11ed431f",
+      "evidence_id": "action-commitment",
+      "manifest_id": "manifest-f9b6b420-1dfe-4215-b6fa-1b796e4e3a34",
+      "measurement_basis": "Input materially participated in the T4 issuer decision.",
+      "observed_at": "2026-08-09T07:07:37.731611Z",
+      "profile_type": "evidence_use",
+      "relation": "USED_MATERIAL",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "event_id": "use-70f97129-a953-4a5f-b77d-457278c83750",
+      "evidence_digest": "sha256:642cf6a6d87377a476ad7e90af0094a80ebb000cae3a48ed0a39b601bb130ed2",
+      "evidence_id": "classifier-configuration",
+      "manifest_id": "manifest-f9b6b420-1dfe-4215-b6fa-1b796e4e3a34",
+      "measurement_basis": "Input materially participated in the T4 issuer decision.",
+      "observed_at": "2026-08-09T07:07:37.731611Z",
+      "profile_type": "evidence_use",
+      "relation": "USED_MATERIAL",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "event_id": "use-16084b24-17f2-4e04-a3fc-20de1c8ba203",
+      "evidence_digest": "sha256:55f4b616d6a42c74367c3f3fc14952a2b25c4062ad567345514fb83b15e8ff0a",
+      "evidence_id": "approval-authority-signal",
+      "manifest_id": "manifest-f9b6b420-1dfe-4215-b6fa-1b796e4e3a34",
+      "measurement_basis": "Input materially participated in the T4 issuer decision.",
+      "observed_at": "2026-08-09T07:07:37.731611Z",
+      "profile_type": "evidence_use",
+      "relation": "USED_MATERIAL",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-e5d70828-f7d2-43e1-b51c-37381cd6b941",
+      "profile_type": "execution_link",
+      "relation": "ACTION_TO_DECISION",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:e430040acaa80965d000a8ec9bc7edf00a3325dda19d564811e4bb2b11ed431f",
+        "id": "action-commitment",
+        "type": "ACTION"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:a3211f883b347cb3102275a15b3e0ba4a86a4616934935349067a13b7c4e1788",
+        "id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+        "type": "DECISION"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-16f5df9a-8f80-485a-a3e3-9cd9c8afa19f",
+      "profile_type": "execution_link",
+      "relation": "DECISION_TO_INSTRUCTION",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:a3211f883b347cb3102275a15b3e0ba4a86a4616934935349067a13b7c4e1788",
+        "id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+        "type": "DECISION"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:264b371c965bbfdd9d06b5ac1d043f88dd6ad3fe6f3c522da7b3cba0527f37d5",
+        "id": "instruction-d4d4f909-9ed6-4642-956e-11358031cbe1",
+        "type": "INSTRUCTION"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    }
+  ],
+  "t4_class": "network_write"
+}

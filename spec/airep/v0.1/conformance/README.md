@@ -44,11 +44,25 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
 - [`enas_profiles.py`](./enas_profiles.py) — validates eleven experimental,
   standalone ENAS evidence contracts against Draft 2020-12 schemas and bounded
   cross-field and typed-graph rules. Its two corpora contain 40 cases: eleven
-  expected passes and twenty-nine expected rejections. Bundle-level checks add
-  exact record/link cardinality, embedded-reference and digest reconciliation,
-  issuer-to-receiver identity, and bounded timestamp ordering. A pass is
-  schema/semantic and local graph-reconciliation evidence only; it is not
-  runtime, effect, independent, or external conformance evidence.
+  expected passes and twenty-nine expected rejections. The bundle validators
+  (`validate_issuer_bundle`, `validate_lifecycle_bundle`,
+  `validate_issuer_lifecycle_pair`) add exact record/link cardinality,
+  embedded-reference and digest reconciliation, issuer-to-receiver identity, and
+  bounded timestamp ordering. They are **total** over malformed input — a missing
+  required field, or a non-object record/link/endpoint, returns a validation-error
+  list, never an exception. A pass is schema/semantic and local
+  graph-reconciliation evidence only; it is not runtime, effect, independent, or
+  external conformance evidence.
+- [`test_enas_bundle_validators.py`](./test_enas_bundle_validators.py) — the
+  bundle-reconciliation test battery for the three validators above: positive
+  baselines from a golden issuer/lifecycle fixture pair, negative cases (missing
+  record id, non-object record/link/endpoint, unknown `profile_type`, missing /
+  duplicate manifest / use / typed link, missing / duplicate lifecycle relation,
+  cross-attempt / cross-trace / cross-decision joins, digest mismatch, unbound
+  instruction, broken timestamp, pair disposition mismatch), and totality checks
+  that every malformed input returns errors rather than raising.
+- [`test_enas_profiles.py`](./test_enas_profiles.py) — pins the two fixture-corpus
+  outcomes (40 cases) against their expected pass/reject labels.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong

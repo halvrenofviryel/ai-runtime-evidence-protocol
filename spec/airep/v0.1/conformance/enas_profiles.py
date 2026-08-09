@@ -51,6 +51,16 @@ def _duplicates(values: list[str]) -> bool:
     return len(values) != len(set(values))
 
 
+def _as_dict(value: Any) -> dict[str, Any]:
+    """Return ``value`` if it is a dict, else an empty dict.
+
+    Bundle validators must be TOTAL over malformed input: a record/link/endpoint that is
+    present but not an object must yield a validation error, never an ``AttributeError``.
+    Every ``.get`` on a value that a caller supplied inside a list/field goes through this.
+    """
+    return value if isinstance(value, dict) else {}
+
+
 def _decision_input_manifest(doc: dict[str, Any]) -> list[str]:
     ids = [item["input_id"] for item in doc["inputs"]]
     return ["duplicate input_id"] if _duplicates(ids) else []
@@ -243,6 +253,8 @@ def _canonical_digest(document: dict[str, Any]) -> str:
 
 def validate_issuer_bundle(bundle: dict[str, Any]) -> list[str]:
     """Validate the bounded T4 issuer graph before a receiver relies on it."""
+    if not isinstance(bundle, dict):
+        return ["issuer bundle is not an object"]
     errors: list[str] = []
     if bundle.get("boundary") != "T4_PRE_TOOL_USE_ISSUER":
         errors.append("issuer bundle has an unsupported boundary")
@@ -294,11 +306,13 @@ def validate_issuer_bundle(bundle: dict[str, Any]) -> list[str]:
             or link.get("target_attempt_id") != attempt_id
         ):
             errors.append("issuer link crosses manifest identity")
-    if action_link.get("target", {}).get("id") != decision_id:
+    action_target = _as_dict(action_link.get("target"))
+    instruction_source = _as_dict(instruction_link.get("source"))
+    if action_target.get("id") != decision_id:
         errors.append("issuer action link does not target the manifest decision")
-    if instruction_link.get("source", {}).get("id") != decision_id:
+    if instruction_source.get("id") != decision_id:
         errors.append("issuer instruction link does not originate from the manifest decision")
-    if action_link.get("target", {}).get("digest") != instruction_link.get("source", {}).get("digest"):
+    if action_target.get("digest") != instruction_source.get("digest"):
         errors.append("issuer decision digest differs across typed links")
 
     inputs = manifest.get("inputs")
@@ -310,7 +324,7 @@ def validate_issuer_bundle(bundle: dict[str, Any]) -> list[str]:
     if len(input_by_id) != len(inputs) or None in input_by_id:
         errors.append("issuer manifest has duplicate or invalid input identifiers")
     action_input = input_by_id.get("action-commitment")
-    if action_input is None or action_link.get("source", {}).get("digest") != action_input.get("digest"):
+    if action_input is None or _as_dict(action_link.get("source")).get("digest") != action_input.get("digest"):
         errors.append("issuer action commitment does not match the action link")
     if len(uses) != len(inputs):
         errors.append("issuer bundle requires one evidence-use event per input")
@@ -342,6 +356,8 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
     cross-attempt joins. It does not establish that a producer ran at the named
     deployment boundary.
     """
+    if not isinstance(bundle, dict):
+        return ["lifecycle bundle is not an object"]
     errors: list[str] = []
     records = bundle.get("records")
     links = bundle.get("links")
@@ -382,10 +398,16 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
         if record.get("trace_id") != trace_id or record.get("decision_id") != decision_id:
             errors.append("lifecycle record crosses trace or decision identity")
         node_type, id_field = id_fields[profile]
-        nodes[(node_type, record[id_field])] = (_canonical_digest(record), record)
+        record_id = record.get(id_field)
+        if record_id is None:
+            errors.append(f"lifecycle {profile} record is missing its {id_field}")
+            continue
+        nodes[(node_type, record_id)] = (_canonical_digest(record), record)
 
     instruction_key = ("INSTRUCTION", instruction.get("id"))
     nodes[instruction_key] = (instruction.get("digest"), instruction)
+    if not all(isinstance(link, dict) for link in links):
+        errors.append("lifecycle links must all be objects")
     expected_relations = {
         "INSTRUCTION_TO_ACKNOWLEDGEMENT",
         "ACKNOWLEDGEMENT_TO_APPLICATION",
@@ -404,6 +426,9 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
 
     observed_relations: set[str] = set()
     for link in links:
+        if not isinstance(link, dict):
+            errors.append("lifecycle link is not an object")
+            continue
         link_errors = validate_document("execution_link", link)
         errors.extend(f"execution_link: {message}" for message in link_errors)
         if link.get("action_attempt_id") != attempt_id or link.get("trace_id") != trace_id:
@@ -411,7 +436,7 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
         relation = link.get("relation")
         observed_relations.add(relation)
         for endpoint in ("source", "target"):
-            node = link.get(endpoint, {})
+            node = _as_dict(link.get(endpoint))
             known = nodes.get((node.get("type"), node.get("id")))
             if known is None:
                 errors.append(f"execution link references unknown {endpoint} node")
@@ -423,7 +448,10 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
 
     if all(count == 1 for count in profile_counts.values()):
         by_profile = {
-            profile: next(record for record in records if record.get("profile_type") == profile)
+            profile: next(
+                record for record in records
+                if isinstance(record, dict) and record.get("profile_type") == profile
+            )
             for profile in expected_profiles
         }
         ack = by_profile["enforcement_acknowledgement"]
@@ -446,7 +474,7 @@ def validate_lifecycle_bundle(bundle: dict[str, Any]) -> list[str]:
         try:
             if _dt(application["observed_at"]) < _dt(ack["observed_at"]):
                 errors.append("application predates acknowledgement")
-        except (KeyError, TypeError, ValueError):
+        except (KeyError, TypeError, ValueError, AttributeError):
             errors.append("lifecycle contains an invalid cross-record timestamp")
     return errors
 
@@ -459,20 +487,26 @@ def validate_issuer_lifecycle_pair(
     errors.extend(
         f"lifecycle: {message}" for message in validate_lifecycle_bundle(lifecycle_bundle)
     )
+    if not isinstance(issuer_bundle, dict) or not isinstance(lifecycle_bundle, dict):
+        return errors
     records = issuer_bundle.get("records")
     if not isinstance(records, list):
         return errors
-    manifests = [record for record in records if record.get("profile_type") == "decision_input_manifest"]
+    manifests = [
+        record for record in records
+        if isinstance(record, dict) and record.get("profile_type") == "decision_input_manifest"
+    ]
     instruction_links = [
         record
         for record in records
-        if record.get("profile_type") == "execution_link"
+        if isinstance(record, dict)
+        and record.get("profile_type") == "execution_link"
         and record.get("relation") == "DECISION_TO_INSTRUCTION"
     ]
     if len(manifests) != 1 or len(instruction_links) != 1:
         return errors
     manifest = manifests[0]
-    instruction = instruction_links[0].get("target", {})
+    instruction = _as_dict(instruction_links[0].get("target"))
     for field in ("trace_id", "action_attempt_id", "decision_id"):
         if lifecycle_bundle.get(field) != manifest.get(field):
             errors.append(f"pair: lifecycle {field} does not match issuer")
@@ -482,7 +516,8 @@ def validate_issuer_lifecycle_pair(
     lifecycle_records = lifecycle_bundle.get("records")
     if isinstance(lifecycle_records, list):
         applications = [
-            record for record in lifecycle_records if record.get("profile_type") == "enforcement_result"
+            record for record in lifecycle_records
+            if isinstance(record, dict) and record.get("profile_type") == "enforcement_result"
         ]
         if len(applications) == 1 and applications[0].get("requested_disposition") != issuer_bundle.get("disposition"):
             errors.append("pair: application requested disposition does not match issuer")
