@@ -28,6 +28,26 @@ vendor-specific.
 Unlike the proposed sketches below, these profiles ship **real, published schemas**, each with a
 self-consistent worked example that the conformance checker validates against the schema.
 
+### Experimental ENAS evidence contracts
+
+Eleven standalone ENAS profile schemas are prepared alongside the AIREP extension
+catalogue: `decision_input_manifest`, `evidence_use`, `execution_link`,
+`effect_assurance`, `verification_package`, `assurance_claim`,
+`coverage_declaration`, `enforcement_acknowledgement`, `enforcement_result`,
+`execution_observation`, and `effect_observation`. Two fixture corpora contain
+40 cases in total (11 expected passes and 29 expected rejections), with bounded
+semantic and typed-graph checks in `conformance/enas_profiles.py`.
+
+These records establish `G2_SCHEMA_DEFINED` for their named contracts only. The
+receiver/application/execution/effect records preserve the lifecycle distinctions
+and reject transport-only effect claims, unhealthy-observer negatives, disposition
+substitution, cross-attempt joins, duplicate graph nodes/relations, mismatches
+between embedded record references and typed edges, and issuer/lifecycle
+identity substitution. They
+do not alter the AIREP v0.1 core, prove that a producer emitted them at a real
+boundary, establish an effect, demonstrate independent reproduction, or claim a
+released profile version. The schemas are prepared working-tree additions.
+
 - **`key_trust`** — trust metadata for the key that produced `integrity.signature`: `key_id`,
   `issuer`, `algorithm`, `public_key`, `validity`, `rotation`, `revocation`, and an optional
   `transparency_log` anchor. Schema: [`key_trust.schema.json`](./key_trust.schema.json); worked

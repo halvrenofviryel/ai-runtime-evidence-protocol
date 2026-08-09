@@ -1,0 +1,102 @@
+{
+  "description": "Seven positive and seventeen expected-rejection ENAS profile cases. PASS is bounded to schema and local semantic validation.",
+  "cases": [
+    {
+      "name": "valid decision input manifest", "profile": "decision_input_manifest", "expected": "PASS",
+      "document": {"profile_type": "decision_input_manifest", "schema_version": "enas-profile-0.1", "manifest_id": "manifest-1", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "inputs": [{"input_id": "action-commitment", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "category": "ACTION_COMMITMENT", "availability": "PRESENTED"}, {"input_id": "classifier-config", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "category": "CLASSIFIER_CONFIGURATION", "availability": "RESOLVED"}], "policy_artifact": {"artifact_id": "t4-policy", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, "method_configuration": {"configuration_id": "t4-classifier", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}}
+    },
+    {
+      "name": "valid evidence use", "profile": "evidence_use", "expected": "PASS",
+      "document": {"profile_type": "evidence_use", "schema_version": "enas-profile-0.1", "event_id": "use-1", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "manifest_id": "manifest-1", "evidence_id": "classifier-config", "evidence_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "relation": "USED_MATERIAL", "measurement_basis": "The normalized action and classifier configuration determined the T4 class.", "observed_at": "2026-08-08T12:00:00Z"}
+    },
+    {
+      "name": "valid execution link", "profile": "execution_link", "expected": "PASS",
+      "document": {"profile_type": "execution_link", "schema_version": "enas-profile-0.1", "link_id": "link-1", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "source_attempt_id": "attempt-1", "target_attempt_id": "attempt-1", "relation": "DECISION_TO_INSTRUCTION", "source": {"type": "DECISION", "id": "decision-1", "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}, "target": {"type": "INSTRUCTION", "id": "instruction-1", "digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}}
+    },
+    {
+      "name": "valid bounded effect assurance", "profile": "effect_assurance", "expected": "PASS",
+      "document": {"profile_type": "effect_assurance", "schema_version": "enas-profile-0.1", "assurance_id": "assurance-1", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "disposition": "DENY", "control_boundary": {"declared": "T4 issuer decision only", "complete_mediation": false}, "observer": {"id": "issuer-hook", "health": "HEALTHY"}, "evidence_channel": {"id": "local-evidence-store", "health": "HEALTHY"}, "effect_claim": "NONE", "basis_refs": []}
+    },
+    {
+      "name": "valid verification package", "profile": "verification_package", "expected": "PASS",
+      "document": {"profile_type": "verification_package", "schema_version": "enas-profile-0.1", "package_id": "package-1", "trace_id": "trace-1", "required_artifact_types": ["decision_input_manifest", "execution_link"], "artifacts": [{"artifact_id": "artifact-manifest", "artifact_type": "decision_input_manifest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}, {"artifact_id": "artifact-link", "artifact_type": "execution_link", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}], "replay_class": "SEMANTIC", "assurance_vector": [{"dimension": "INTEGRITY", "state": "PASS", "evidence_refs": ["artifact-manifest"]}, {"dimension": "EFFECT", "state": "NOT_MEASURED", "evidence_refs": []}], "limitations": ["No receiver acknowledgement or effect observation is included."]}
+    },
+    {
+      "name": "valid assurance claim", "profile": "assurance_claim", "expected": "PASS",
+      "document": {"profile_type": "assurance_claim", "schema_version": "enas-profile-0.1", "claim_id": "claim-1", "subject_id": "t4-issuer-slice", "configuration_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "issued_at": "2026-08-08T12:00:00Z", "valid_from": "2026-08-08T12:00:00Z", "valid_until": "2026-08-09T12:00:00Z", "validation_state": "PRODUCER_ASSERTED", "producer_id": "phionyx-core", "verifier_id": "phionyx-core", "separated_from_producer": false, "dimensions": [{"dimension": "INTEGRITY", "subject_id": "t4-issuer-slice", "state": "PASS", "evidence_refs": ["test-run-31"]}, {"dimension": "EFFECT", "subject_id": "t4-issuer-slice", "state": "NOT_MEASURED", "evidence_refs": []}], "reliance": {"asserted": false, "basis_dimensions": []}}
+    },
+    {
+      "name": "valid coverage declaration", "profile": "coverage_declaration", "expected": "PASS",
+      "document": {"profile_type": "coverage_declaration", "schema_version": "enas-profile-0.1", "coverage_id": "coverage-1", "claim_id": "claim-1", "assurance_surface_id": "t4-issuer-surface", "baseline": {"source_class": "DECLARED", "source_id": "t4-classifier-table", "separated_from_evaluator": false, "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}, "regions": [{"region_id": "issuer-decision", "state": "EXERCISED", "evidence_refs": ["test-run-31"]}, {"region_id": "receiver-effect", "state": "UNKNOWN", "evidence_refs": []}], "coverage_conclusion": "PARTIAL", "negative_result": {"asserted": true, "observer_health": "HEALTHY", "evidence_channel_health": "HEALTHY", "unknown_region_ids": ["receiver-effect"], "statement": "No failure was observed inside the issuer decision slice; receiver and effect remain unknown."}}
+    },
+
+    {
+      "name": "reject manifest duplicate input", "profile": "decision_input_manifest", "expected": "REJECT",
+      "document": {"profile_type": "decision_input_manifest", "schema_version": "enas-profile-0.1", "manifest_id": "manifest-2", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "inputs": [{"input_id": "duplicate", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "category": "ACTION_COMMITMENT", "availability": "PRESENTED"}, {"input_id": "duplicate", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "category": "OTHER", "availability": "RESOLVED"}], "policy_artifact": {"artifact_id": "policy", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, "method_configuration": {"configuration_id": "method", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}}
+    },
+    {
+      "name": "reject manifest missing digest", "profile": "decision_input_manifest", "expected": "REJECT",
+      "document": {"profile_type": "decision_input_manifest", "schema_version": "enas-profile-0.1", "manifest_id": "manifest-3", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "inputs": [{"input_id": "action", "category": "ACTION_COMMITMENT", "availability": "PRESENTED"}], "policy_artifact": {"artifact_id": "policy", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, "method_configuration": {"configuration_id": "method", "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}}
+    },
+    {
+      "name": "reject bare used relation", "profile": "evidence_use", "expected": "REJECT",
+      "document": {"profile_type": "evidence_use", "schema_version": "enas-profile-0.1", "event_id": "use-2", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "manifest_id": "manifest-1", "evidence_id": "evidence-1", "evidence_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "relation": "used", "observed_at": "2026-08-08T12:00:00Z"}
+    },
+    {
+      "name": "reject material use without basis", "profile": "evidence_use", "expected": "REJECT",
+      "document": {"profile_type": "evidence_use", "schema_version": "enas-profile-0.1", "event_id": "use-3", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "manifest_id": "manifest-1", "evidence_id": "evidence-1", "evidence_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "relation": "USED_MATERIAL", "observed_at": "2026-08-08T12:00:00Z"}
+    },
+    {
+      "name": "reject cross-attempt link", "profile": "execution_link", "expected": "REJECT",
+      "document": {"profile_type": "execution_link", "schema_version": "enas-profile-0.1", "link_id": "link-2", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "source_attempt_id": "attempt-1", "target_attempt_id": "attempt-2", "relation": "ACTION_TO_DECISION", "source": {"type": "ACTION", "id": "action-1", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "target": {"type": "DECISION", "id": "decision-1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}}
+    },
+    {
+      "name": "reject mismatched link types", "profile": "execution_link", "expected": "REJECT",
+      "document": {"profile_type": "execution_link", "schema_version": "enas-profile-0.1", "link_id": "link-3", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "source_attempt_id": "attempt-1", "target_attempt_id": "attempt-1", "relation": "ACTION_TO_DECISION", "source": {"type": "DECISION", "id": "decision-1", "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "target": {"type": "INSTRUCTION", "id": "instruction-1", "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}}
+    },
+    {
+      "name": "reject prevention without mediation", "profile": "effect_assurance", "expected": "REJECT",
+      "document": {"profile_type": "effect_assurance", "schema_version": "enas-profile-0.1", "assurance_id": "assurance-2", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "disposition": "DENY", "control_boundary": {"declared": "issuer only", "complete_mediation": false}, "observer": {"id": "observer", "health": "HEALTHY"}, "evidence_channel": {"id": "channel", "health": "HEALTHY"}, "effect_claim": "PREVENTION_OBSERVED", "basis_refs": ["decision-1"]}
+    },
+    {
+      "name": "reject effect with unhealthy observer", "profile": "effect_assurance", "expected": "REJECT",
+      "document": {"profile_type": "effect_assurance", "schema_version": "enas-profile-0.1", "assurance_id": "assurance-3", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "disposition": "ALLOW", "control_boundary": {"declared": "source observer", "complete_mediation": true}, "observer": {"id": "observer", "health": "UNHEALTHY"}, "evidence_channel": {"id": "channel", "health": "HEALTHY"}, "effect_claim": "EFFECT_OBSERVED", "basis_refs": ["effect-1"]}
+    },
+    {
+      "name": "reject effect claim without basis", "profile": "effect_assurance", "expected": "REJECT",
+      "document": {"profile_type": "effect_assurance", "schema_version": "enas-profile-0.1", "assurance_id": "assurance-4", "trace_id": "trace-1", "action_attempt_id": "attempt-1", "decision_id": "decision-1", "disposition": "ALLOW", "control_boundary": {"declared": "source observer", "complete_mediation": true}, "observer": {"id": "observer", "health": "HEALTHY"}, "evidence_channel": {"id": "channel", "health": "HEALTHY"}, "effect_claim": "EFFECT_OBSERVED", "basis_refs": []}
+    },
+    {
+      "name": "reject package missing required artifact", "profile": "verification_package", "expected": "REJECT",
+      "document": {"profile_type": "verification_package", "schema_version": "enas-profile-0.1", "package_id": "package-2", "trace_id": "trace-1", "required_artifact_types": ["decision_input_manifest", "execution_link"], "artifacts": [{"artifact_id": "manifest", "artifact_type": "decision_input_manifest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}], "replay_class": "SEMANTIC", "assurance_vector": [{"dimension": "INTEGRITY", "state": "PASS", "evidence_refs": ["manifest"]}], "limitations": ["Incomplete package."]}
+    },
+    {
+      "name": "reject package unknown evidence reference", "profile": "verification_package", "expected": "REJECT",
+      "document": {"profile_type": "verification_package", "schema_version": "enas-profile-0.1", "package_id": "package-3", "trace_id": "trace-1", "required_artifact_types": ["decision_input_manifest"], "artifacts": [{"artifact_id": "manifest", "artifact_type": "decision_input_manifest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}], "replay_class": "STRUCTURAL", "assurance_vector": [{"dimension": "INTEGRITY", "state": "PASS", "evidence_refs": ["missing-artifact"]}], "limitations": ["Unknown reference."]}
+    },
+    {
+      "name": "reject scalar valid", "profile": "assurance_claim", "expected": "REJECT",
+      "document": {"profile_type": "assurance_claim", "schema_version": "enas-profile-0.1", "claim_id": "claim-2", "subject_id": "subject", "configuration_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "issued_at": "2026-08-08T12:00:00Z", "valid_from": "2026-08-08T12:00:00Z", "valid_until": "2026-08-09T12:00:00Z", "validation_state": "PRODUCER_ASSERTED", "producer_id": "producer", "verifier_id": "producer", "separated_from_producer": false, "valid": true, "dimensions": [{"dimension": "INTEGRITY", "subject_id": "subject", "state": "PASS", "evidence_refs": ["evidence-1"]}], "reliance": {"asserted": false, "basis_dimensions": []}}
+    },
+    {
+      "name": "reject pass without evidence", "profile": "assurance_claim", "expected": "REJECT",
+      "document": {"profile_type": "assurance_claim", "schema_version": "enas-profile-0.1", "claim_id": "claim-3", "subject_id": "subject", "configuration_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "issued_at": "2026-08-08T12:00:00Z", "valid_from": "2026-08-08T12:00:00Z", "valid_until": "2026-08-09T12:00:00Z", "validation_state": "PRODUCER_ASSERTED", "producer_id": "producer", "verifier_id": "producer", "separated_from_producer": false, "dimensions": [{"dimension": "INTEGRITY", "subject_id": "subject", "state": "PASS", "evidence_refs": []}], "reliance": {"asserted": false, "basis_dimensions": []}}
+    },
+    {
+      "name": "reject reliance on not measured", "profile": "assurance_claim", "expected": "REJECT",
+      "document": {"profile_type": "assurance_claim", "schema_version": "enas-profile-0.1", "claim_id": "claim-4", "subject_id": "subject", "configuration_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333", "issued_at": "2026-08-08T12:00:00Z", "valid_from": "2026-08-08T12:00:00Z", "valid_until": "2026-08-09T12:00:00Z", "validation_state": "PRODUCER_ASSERTED", "producer_id": "producer", "verifier_id": "producer", "separated_from_producer": false, "dimensions": [{"dimension": "EFFECT", "subject_id": "subject", "state": "NOT_MEASURED", "evidence_refs": []}], "reliance": {"asserted": true, "basis_dimensions": ["EFFECT"], "valid_until": "2026-08-09T12:00:00Z"}}
+    },
+    {
+      "name": "reject independent coverage without separation", "profile": "coverage_declaration", "expected": "REJECT",
+      "document": {"profile_type": "coverage_declaration", "schema_version": "enas-profile-0.1", "coverage_id": "coverage-2", "claim_id": "claim-1", "assurance_surface_id": "surface", "baseline": {"source_class": "INDEPENDENT", "source_id": "evaluator", "separated_from_evaluator": false, "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}, "regions": [{"region_id": "region-1", "state": "EXERCISED", "evidence_refs": ["test-1"]}], "coverage_conclusion": "PARTIAL", "negative_result": {"asserted": false, "observer_health": "NOT_MEASURED", "evidence_channel_health": "NOT_MEASURED", "unknown_region_ids": [], "statement": "No negative result asserted."}}
+    },
+    {
+      "name": "reject scalar complete coverage", "profile": "coverage_declaration", "expected": "REJECT",
+      "document": {"profile_type": "coverage_declaration", "schema_version": "enas-profile-0.1", "coverage_id": "coverage-3", "claim_id": "claim-1", "assurance_surface_id": "surface", "baseline": {"source_class": "DECLARED", "source_id": "baseline", "separated_from_evaluator": false, "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}, "regions": [{"region_id": "region-1", "state": "EXERCISED", "evidence_refs": ["test-1"]}], "coverage_conclusion": "COMPLETE", "complete_coverage": true, "negative_result": {"asserted": false, "observer_health": "HEALTHY", "evidence_channel_health": "HEALTHY", "unknown_region_ids": [], "statement": "No negative result asserted."}}
+    },
+    {
+      "name": "reject negative result hiding unknown region", "profile": "coverage_declaration", "expected": "REJECT",
+      "document": {"profile_type": "coverage_declaration", "schema_version": "enas-profile-0.1", "coverage_id": "coverage-4", "claim_id": "claim-1", "assurance_surface_id": "surface", "baseline": {"source_class": "DECLARED", "source_id": "baseline", "separated_from_evaluator": false, "digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"}, "regions": [{"region_id": "tested", "state": "EXERCISED", "evidence_refs": ["test-1"]}, {"region_id": "hidden", "state": "UNKNOWN", "evidence_refs": []}], "coverage_conclusion": "PARTIAL", "negative_result": {"asserted": true, "observer_health": "HEALTHY", "evidence_channel_health": "HEALTHY", "unknown_region_ids": [], "statement": "No failure observed."}}
+    }
+  ]
+}

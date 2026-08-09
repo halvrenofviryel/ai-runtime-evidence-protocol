@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/execution_observation.schema.json",
+  "title": "ENAS execution-boundary observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "execution_id", "trace_id", "action_attempt_id", "decision_id", "enforcement_result_id", "enforcement_result_digest", "applied_disposition", "executor_id", "execution_boundary", "status", "transport_status", "started_at", "completed_at", "evidence_channel"],
+  "properties": {
+    "profile_type": {"const": "execution_observation"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "execution_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "action_attempt_id": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "enforcement_result_id": {"$ref": "#/$defs/id"},
+    "enforcement_result_digest": {"$ref": "#/$defs/digest"},
+    "applied_disposition": {"enum": ["ALLOW", "DENY", "DEFER", "NONE"]},
+    "executor_id": {"$ref": "#/$defs/id"},
+    "execution_boundary": {"type": "string", "minLength": 1},
+    "status": {"enum": ["SUPPRESSED", "ATTEMPTED", "ACCEPTED", "REJECTED", "ERROR"]},
+    "transport_status": {"enum": ["NOT_ATTEMPTED", "ACCEPTED", "REJECTED", "ERROR", "NOT_MEASURED"]},
+    "started_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "output_digest": {"$ref": "#/$defs/digest"},
+    "evidence_channel": {"$ref": "#/$defs/health"},
+    "limitations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "health": {"type": "object", "additionalProperties": false, "required": ["id", "health"], "properties": {"id": {"$ref": "#/$defs/id"}, "health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}}}
+  }
+}

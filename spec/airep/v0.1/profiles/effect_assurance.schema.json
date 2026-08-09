@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/effect_assurance.schema.json",
+  "title": "ENAS bounded effect assurance",
+  "type": "object", "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "assurance_id", "trace_id", "action_attempt_id", "decision_id", "disposition", "control_boundary", "observer", "evidence_channel", "effect_claim", "basis_refs"],
+  "properties": {
+    "profile_type": {"const": "effect_assurance"}, "schema_version": {"const": "enas-profile-0.1"},
+    "assurance_id": {"$ref": "#/$defs/id"}, "trace_id": {"$ref": "#/$defs/id"}, "action_attempt_id": {"$ref": "#/$defs/id"}, "decision_id": {"$ref": "#/$defs/id"},
+    "disposition": {"enum": ["ALLOW", "DENY", "DEFER", "ERROR"]},
+    "control_boundary": {"type": "object", "additionalProperties": false, "required": ["declared", "complete_mediation"], "properties": {"declared": {"type": "string", "minLength": 1}, "complete_mediation": {"type": "boolean"}}},
+    "observer": {"type": "object", "additionalProperties": false, "required": ["id", "health"], "properties": {"id": {"$ref": "#/$defs/id"}, "health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}}},
+    "evidence_channel": {"type": "object", "additionalProperties": false, "required": ["id", "health"], "properties": {"id": {"$ref": "#/$defs/id"}, "health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}}},
+    "effect_claim": {"enum": ["NONE", "EXECUTION_OBSERVED", "EFFECT_OBSERVED", "PREVENTION_OBSERVED"]},
+    "basis_refs": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}}
+}

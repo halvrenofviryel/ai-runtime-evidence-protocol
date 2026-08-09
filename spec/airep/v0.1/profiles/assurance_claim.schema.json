@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/assurance_claim.schema.json",
+  "title": "ENAS configuration-bound assurance claim",
+  "type": "object", "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "claim_id", "subject_id", "configuration_digest", "issued_at", "valid_from", "valid_until", "validation_state", "producer_id", "verifier_id", "separated_from_producer", "dimensions", "reliance"],
+  "properties": {
+    "profile_type": {"const": "assurance_claim"}, "schema_version": {"const": "enas-profile-0.1"}, "claim_id": {"$ref": "#/$defs/id"}, "subject_id": {"$ref": "#/$defs/id"}, "configuration_digest": {"$ref": "#/$defs/digest"},
+    "issued_at": {"type": "string", "format": "date-time"}, "valid_from": {"type": "string", "format": "date-time"}, "valid_until": {"type": "string", "format": "date-time"},
+    "validation_state": {"enum": ["PRODUCER_ASSERTED", "INDEPENDENTLY_VALIDATED"]}, "producer_id": {"$ref": "#/$defs/id"}, "verifier_id": {"$ref": "#/$defs/id"}, "separated_from_producer": {"type": "boolean"},
+    "dimensions": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "subject_id", "state", "evidence_refs"], "properties": {"dimension": {"enum": ["INTEGRITY", "SEMANTICS", "AUTHORITY", "MEASUREMENT", "ENFORCEMENT", "EFFECT"]}, "subject_id": {"$ref": "#/$defs/id"}, "state": {"enum": ["PASS", "FAIL", "NOT_MEASURED", "INCONCLUSIVE", "ERROR"]}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}}},
+    "reliance": {"type": "object", "additionalProperties": false, "required": ["asserted", "basis_dimensions"], "properties": {"asserted": {"type": "boolean"}, "basis_dimensions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "valid_until": {"type": "string", "format": "date-time"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

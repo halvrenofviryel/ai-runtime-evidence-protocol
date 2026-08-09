@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/execution_link.schema.json",
+  "title": "ENAS typed execution link",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "link_id", "trace_id", "action_attempt_id", "source_attempt_id", "target_attempt_id", "relation", "source", "target"],
+  "properties": {
+    "profile_type": {"const": "execution_link"}, "schema_version": {"const": "enas-profile-0.1"},
+    "link_id": {"$ref": "#/$defs/id"}, "trace_id": {"$ref": "#/$defs/id"}, "action_attempt_id": {"$ref": "#/$defs/id"}, "source_attempt_id": {"$ref": "#/$defs/id"}, "target_attempt_id": {"$ref": "#/$defs/id"},
+    "relation": {"enum": ["ACTION_TO_DECISION", "DECISION_TO_INSTRUCTION", "INSTRUCTION_TO_ACKNOWLEDGEMENT", "ACKNOWLEDGEMENT_TO_APPLICATION", "APPLICATION_TO_EXECUTION", "EXECUTION_TO_EFFECT"]},
+    "source": {"$ref": "#/$defs/node"}, "target": {"$ref": "#/$defs/node"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "node": {"type": "object", "additionalProperties": false, "required": ["type", "id", "digest"], "properties": {"type": {"enum": ["ACTION", "DECISION", "INSTRUCTION", "ACKNOWLEDGEMENT", "APPLICATION", "EXECUTION", "EFFECT"]}, "id": {"$ref": "#/$defs/id"}, "digest": {"$ref": "#/$defs/digest"}}}
+  }
+}

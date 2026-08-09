@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/verification_package.schema.json",
+  "title": "ENAS verification package",
+  "type": "object", "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "package_id", "trace_id", "required_artifact_types", "artifacts", "replay_class", "assurance_vector", "limitations"],
+  "properties": {
+    "profile_type": {"const": "verification_package"}, "schema_version": {"const": "enas-profile-0.1"}, "package_id": {"$ref": "#/$defs/id"}, "trace_id": {"$ref": "#/$defs/id"},
+    "required_artifact_types": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "artifacts": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "artifact_type", "digest"], "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "artifact_type": {"type": "string", "minLength": 1}, "digest": {"$ref": "#/$defs/digest"}}}},
+    "replay_class": {"enum": ["STRUCTURAL", "SEMANTIC", "HISTORICAL", "INDEPENDENT"]},
+    "assurance_vector": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "state", "evidence_refs"], "properties": {"dimension": {"enum": ["INTEGRITY", "SEMANTICS", "AUTHORITY", "MEASUREMENT", "ENFORCEMENT", "EFFECT"]}, "state": {"enum": ["PASS", "FAIL", "NOT_MEASURED", "INCONCLUSIVE", "ERROR"]}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}}},
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

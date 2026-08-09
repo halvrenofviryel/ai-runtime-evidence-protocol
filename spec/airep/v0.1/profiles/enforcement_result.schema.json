@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/enforcement_result.schema.json",
+  "title": "ENAS receiver-side enforcement result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "enforcement_result_id", "trace_id", "action_attempt_id", "decision_id", "instruction_id", "instruction_digest", "enforcement_ack_id", "acknowledgement_digest", "acknowledgement_result", "enforcement_point_id", "deployment_instance", "requested_disposition", "application_status", "applied_disposition", "observed_at", "evidence_channel"],
+  "properties": {
+    "profile_type": {"const": "enforcement_result"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "enforcement_result_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "action_attempt_id": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "instruction_id": {"$ref": "#/$defs/id"},
+    "instruction_digest": {"$ref": "#/$defs/digest"},
+    "enforcement_ack_id": {"$ref": "#/$defs/id"},
+    "acknowledgement_digest": {"$ref": "#/$defs/digest"},
+    "acknowledgement_result": {"enum": ["ACCEPTED", "REFUSED", "UNSUPPORTED_VERSION", "EXPIRED", "DUPLICATE", "ERROR"]},
+    "enforcement_point_id": {"$ref": "#/$defs/id"},
+    "deployment_instance": {"$ref": "#/$defs/id"},
+    "requested_disposition": {"enum": ["ALLOW", "DENY", "DEFER", "ERROR"]},
+    "application_status": {"enum": ["APPLIED", "FAILED", "REFUSED", "ERROR"]},
+    "applied_disposition": {"enum": ["ALLOW", "DENY", "DEFER", "NONE"]},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "evidence_channel": {"$ref": "#/$defs/health"},
+    "limitations": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "health": {"type": "object", "additionalProperties": false, "required": ["id", "health"], "properties": {"id": {"$ref": "#/$defs/id"}, "health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}}}
+  }
+}

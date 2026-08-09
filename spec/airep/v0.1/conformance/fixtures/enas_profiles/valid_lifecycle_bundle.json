@@ -1,0 +1,213 @@
+{
+  "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+  "boundary": "ENAS_LOCAL_FILE_REFERENCE",
+  "bundle_id": "enas-lifecycle-5f4c6876-3d16-4a32-8a2d-778da75bf080",
+  "claim_limitations": [
+    "This is a bounded local reference lifecycle, not a production T4 host observation.",
+    "No complete mediation, universal prevention, independent verification, release, or external conformance is claimed."
+  ],
+  "created_at": "2026-08-09T07:07:37.741895Z",
+  "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+  "instruction": {
+    "digest": "sha256:264b371c965bbfdd9d06b5ac1d043f88dd6ad3fe6f3c522da7b3cba0527f37d5",
+    "id": "instruction-d4d4f909-9ed6-4642-956e-11358031cbe1"
+  },
+  "links": [
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-0cc7ecca-d8be-4311-980e-a8450c9d7df7",
+      "profile_type": "execution_link",
+      "relation": "INSTRUCTION_TO_ACKNOWLEDGEMENT",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:264b371c965bbfdd9d06b5ac1d043f88dd6ad3fe6f3c522da7b3cba0527f37d5",
+        "id": "instruction-d4d4f909-9ed6-4642-956e-11358031cbe1",
+        "type": "INSTRUCTION"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:39b3b14833ff965bdaf21cff53223cd293e548b72c8fb7c09d932923696431c7",
+        "id": "ack-4a25da84-5007-4fb6-99e3-0f4d9a665ea7",
+        "type": "ACKNOWLEDGEMENT"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-9b1f02a7-7ecc-461e-9b6e-240a2712f0ca",
+      "profile_type": "execution_link",
+      "relation": "ACKNOWLEDGEMENT_TO_APPLICATION",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:39b3b14833ff965bdaf21cff53223cd293e548b72c8fb7c09d932923696431c7",
+        "id": "ack-4a25da84-5007-4fb6-99e3-0f4d9a665ea7",
+        "type": "ACKNOWLEDGEMENT"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:34a2b9c1cf9cdf1baf0216606789beb92d6f1e5f4141eb20ec7ca90ee781da4c",
+        "id": "application-e7300620-4a1b-4338-9a5a-40118f256d73",
+        "type": "APPLICATION"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-81641723-53d5-4bd5-a8df-3efc31c5bdc1",
+      "profile_type": "execution_link",
+      "relation": "APPLICATION_TO_EXECUTION",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:34a2b9c1cf9cdf1baf0216606789beb92d6f1e5f4141eb20ec7ca90ee781da4c",
+        "id": "application-e7300620-4a1b-4338-9a5a-40118f256d73",
+        "type": "APPLICATION"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:73fff87e089d6e1860a27928e082fa5f32504da17c0c3bb82768c1730a364b19",
+        "id": "execution-16a06419-eb70-4907-8b01-eefbf0729b89",
+        "type": "EXECUTION"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "link_id": "link-db164ba0-9675-4ce6-a3f2-f0740255f20e",
+      "profile_type": "execution_link",
+      "relation": "EXECUTION_TO_EFFECT",
+      "schema_version": "enas-profile-0.1",
+      "source": {
+        "digest": "sha256:73fff87e089d6e1860a27928e082fa5f32504da17c0c3bb82768c1730a364b19",
+        "id": "execution-16a06419-eb70-4907-8b01-eefbf0729b89",
+        "type": "EXECUTION"
+      },
+      "source_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "target": {
+        "digest": "sha256:aa1c37cc6ef4068486486429f0f6a3fa402908950ab7431c49216d212ff8c3e5",
+        "id": "effect-e3fb2ca1-89c6-47ce-bcc3-8bbb9de22c48",
+        "type": "EFFECT"
+      },
+      "target_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "trace_id": "t-demo"
+    }
+  ],
+  "records": [
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "channel_endpoint": "in-process-reference-dispatch",
+      "custody": "SAME_PROCESS",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "deployment_instance": "local-reference-instance",
+      "enforcement_ack_id": "ack-4a25da84-5007-4fb6-99e3-0f4d9a665ea7",
+      "enforcement_point_id": "enas-local-reference-gate",
+      "evidence_channel": {
+        "health": "HEALTHY",
+        "id": "enas-local-reference-evidence"
+      },
+      "instruction_digest": "sha256:264b371c965bbfdd9d06b5ac1d043f88dd6ad3fe6f3c522da7b3cba0527f37d5",
+      "instruction_id": "instruction-d4d4f909-9ed6-4642-956e-11358031cbe1",
+      "limitations": [
+        "Acknowledgement is limited to the local reference adapter, not the production T4 host."
+      ],
+      "observed_at": "2026-08-09T07:07:37.741591Z",
+      "profile_type": "enforcement_acknowledgement",
+      "receiver_id": "enas-local-reference-receiver",
+      "receiver_state_version": "sha256:13e6ff7c920dcc801b12d0fafa8f90fdbc307bb4c9ba39a499d47bef3b29355f",
+      "result": "ACCEPTED",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "acknowledgement_digest": "sha256:39b3b14833ff965bdaf21cff53223cd293e548b72c8fb7c09d932923696431c7",
+      "acknowledgement_result": "ACCEPTED",
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "application_status": "APPLIED",
+      "applied_disposition": "ALLOW",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "deployment_instance": "local-reference-instance",
+      "enforcement_ack_id": "ack-4a25da84-5007-4fb6-99e3-0f4d9a665ea7",
+      "enforcement_point_id": "enas-local-reference-gate",
+      "enforcement_result_id": "application-e7300620-4a1b-4338-9a5a-40118f256d73",
+      "evidence_channel": {
+        "health": "HEALTHY",
+        "id": "enas-local-reference-evidence"
+      },
+      "instruction_digest": "sha256:264b371c965bbfdd9d06b5ac1d043f88dd6ad3fe6f3c522da7b3cba0527f37d5",
+      "instruction_id": "instruction-d4d4f909-9ed6-4642-956e-11358031cbe1",
+      "limitations": [
+        "Application is limited to the local reference gate and does not establish host enforcement."
+      ],
+      "observed_at": "2026-08-09T07:07:37.741723Z",
+      "profile_type": "enforcement_result",
+      "requested_disposition": "ALLOW",
+      "schema_version": "enas-profile-0.1",
+      "trace_id": "t-demo"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "applied_disposition": "ALLOW",
+      "completed_at": "2026-08-09T07:07:37.741800Z",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "enforcement_result_digest": "sha256:34a2b9c1cf9cdf1baf0216606789beb92d6f1e5f4141eb20ec7ca90ee781da4c",
+      "enforcement_result_id": "application-e7300620-4a1b-4338-9a5a-40118f256d73",
+      "evidence_channel": {
+        "health": "HEALTHY",
+        "id": "enas-local-reference-evidence"
+      },
+      "execution_boundary": "local-file-reference-only",
+      "execution_id": "execution-16a06419-eb70-4907-8b01-eefbf0729b89",
+      "executor_id": "enas-local-reference-executor",
+      "limitations": [
+        "Transport status is not used as proof of an effect."
+      ],
+      "profile_type": "execution_observation",
+      "schema_version": "enas-profile-0.1",
+      "started_at": "2026-08-09T07:07:37.741740Z",
+      "status": "ACCEPTED",
+      "trace_id": "t-demo",
+      "transport_status": "ACCEPTED"
+    },
+    {
+      "action_attempt_id": "attempt-bf2ed96b-ac05-4617-903a-e6118f3363be",
+      "basis_types": [
+        "SOURCE_OF_TRUTH_READBACK"
+      ],
+      "custody": "SAME_TRUST_BOUNDARY",
+      "decision_id": "decision-c25a09eb-1f2d-4971-95af-2f9c86d60b65",
+      "effect_observation_id": "effect-e3fb2ca1-89c6-47ce-bcc3-8bbb9de22c48",
+      "evidence_channel": {
+        "health": "HEALTHY",
+        "id": "enas-local-reference-evidence"
+      },
+      "execution_digest": "sha256:73fff87e089d6e1860a27928e082fa5f32504da17c0c3bb82768c1730a364b19",
+      "execution_id": "execution-16a06419-eb70-4907-8b01-eefbf0729b89",
+      "expected_state_digest": "sha256:02d638e8857495d8d110b318ca5e59eda0e4abaf2d78fd085a64b52c1312b2f0",
+      "freshness_seconds": 0,
+      "limitations": [
+        "Observation covers one declared local-file target only.",
+        "No complete mediation, side-channel exclusion, production T4 effect, or external conformance is claimed."
+      ],
+      "observation_boundary": "one declared local file target",
+      "observation_method": {
+        "method_id": "fresh-file-read",
+        "version": "1"
+      },
+      "observer_health": "HEALTHY",
+      "observer_id": "enas-local-file-readback",
+      "post_state_digest": "sha256:02d638e8857495d8d110b318ca5e59eda0e4abaf2d78fd085a64b52c1312b2f0",
+      "pre_state_digest": "sha256:13e6ff7c920dcc801b12d0fafa8f90fdbc307bb4c9ba39a499d47bef3b29355f",
+      "profile_type": "effect_observation",
+      "result": "OBSERVED",
+      "schema_version": "enas-profile-0.1",
+      "source_of_truth_readback": true,
+      "target_ref_digest": "sha256:7e6b853a385800f98b51de7d24b25b1570155a4ac1ca6c063d95c1e601dcc971",
+      "trace_id": "t-demo",
+      "window_end": "2026-08-09T07:07:37.741857Z",
+      "window_start": "2026-08-09T07:07:37.741591Z"
+    }
+  ],
+  "trace_id": "t-demo"
+}

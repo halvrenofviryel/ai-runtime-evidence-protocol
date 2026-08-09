@@ -27,11 +27,15 @@ jobs:
         with:
           node-version: '20'
       - name: Install Python deps
-        run: pip install jsonschema cryptography
+        run: pip install jsonschema cryptography pytest
       - name: Node must be present (cross-runtime tests must not skip)
         run: node --version
       - name: validate.py — full conformance battery (schema, neutrality, integrity, chain, tamper, profiles)
         run: python3 conformance/validate.py
+      - name: enas_profiles.py — ENAS profile + bundle fixture runner (two corpora)
+        run: python3 conformance/enas_profiles.py
+      - name: pytest — ENAS profile fixtures + bundle reconciliation validators (positive + negative + totality)
+        run: python3 -m pytest conformance/test_enas_profiles.py conformance/test_enas_bundle_validators.py -q
       - name: test_jcs.py — Python<->Node RFC 8785 canonicalization agree byte-for-byte
         run: python3 conformance/test_jcs.py
       - name: test_verifier_parity.py — verify.py and verify.mjs reach the same verdict
