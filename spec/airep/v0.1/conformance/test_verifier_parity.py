@@ -123,6 +123,33 @@ def profile_divergence_check(have_node):
     return ok, lines
 
 
+def empty_input_check(have_node):
+    """WP-02 regression. An empty input (zero records) is not a vacuously perfect chain: zero
+    records means zero checks ran, so the unmeasured case must never inherit a pass. BOTH verifiers
+    MUST fail-closed (exit != 0) AND name the reason (`no-records`) — never 'all records OK' / exit 0.
+    That fail-open on absence is precisely the bug class this kit exists to prevent, so it is pinned
+    here directly (the CASES battery only exercises single non-empty records). Returns (ok, lines)."""
+    lines = ["", "WP-02 empty-input fail-closed (zero-record .jsonl):"]
+    ok = True
+    with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+        path = f.name  # left intentionally empty: zero records
+    try:
+        p = subprocess.run([sys.executable, str(HERE / "verify.py"), path], capture_output=True, text=True)
+        py_closed = (p.returncode != 0) and ("no-records" in p.stdout)
+        lines.append(f"  verify.py : rejects empty input (no-records, exit!=0) -> {'✓' if py_closed else '✗'}")
+        ok = ok and py_closed
+        if have_node:
+            pn = subprocess.run(["node", str(HERE / "verify.mjs"), path], capture_output=True, text=True)
+            node_closed = (pn.returncode != 0) and ("no-records" in pn.stdout)
+            lines.append(f"  verify.mjs: rejects empty input (no-records, exit!=0) -> {'✓' if node_closed else '✗'}")
+            ok = ok and node_closed
+        else:
+            lines.append("  verify.mjs: skipped (node absent)")
+    finally:
+        Path(path).unlink(missing_ok=True)
+    return ok, lines
+
+
 def main():
     have_node = shutil.which("node") is not None
     fails = 0
@@ -145,6 +172,12 @@ def main():
     for ln in div_lines:
         print(ln)
     if not div_ok:
+        fails += 1
+
+    empty_ok, empty_lines = empty_input_check(have_node)
+    for ln in empty_lines:
+        print(ln)
+    if not empty_ok:
         fails += 1
 
     print(f"RESULT: {'all verifiers agree with the expected verdict' if not fails else f'{fails} disagreement(s)'}")
