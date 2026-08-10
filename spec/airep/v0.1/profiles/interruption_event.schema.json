@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/interruption_event.schema.json",
+  "title": "ENAS interruption event (WP-SR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "interruption_id", "trace_id", "action_attempt_ids", "governance_run_id", "decision_id", "origin_contract_id", "affected_obligations", "stage", "independent_witness", "evidence_channel_health", "result", "limitations"],
+  "properties": {
+    "profile_type": {"const": "interruption_event"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "interruption_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "action_attempt_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "governance_run_id": {"$ref": "#/$defs/id"},
+    "decision_id": {"$ref": "#/$defs/id"},
+    "origin_contract_id": {"$ref": "#/$defs/id"},
+    "affected_obligations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "stage": {"enum": ["STOP_AUTHORIZED", "STOP_ISSUED", "STOP_ACKNOWLEDGED", "CESSATION_APPLIED", "CESSATION_OBSERVED", "RESIDUAL_EFFECTS_ACCOUNTED", "RESUMPTION_AUTHORIZED"]},
+    "authority": {"type": "object", "additionalProperties": false, "required": ["principal_id", "authority_basis", "target_scope", "validity"], "properties": {"principal_id": {"$ref": "#/$defs/id"}, "authority_basis": {"type": "string", "minLength": 1}, "target_scope": {"type": "string", "minLength": 1}, "validity": {"type": "string", "minLength": 1}}},
+    "instruction": {"type": "object", "additionalProperties": false, "required": ["instruction_digest", "configuration_digest", "channel", "issuer_time", "sequence", "deadline"], "properties": {"instruction_digest": {"$ref": "#/$defs/digest"}, "configuration_digest": {"$ref": "#/$defs/digest"}, "channel": {"type": "string", "minLength": 1}, "issuer_time": {"type": "string", "format": "date-time"}, "sequence": {"type": "number", "minimum": 0}, "deadline": {"type": "string", "minLength": 1}}},
+    "receiver": {"type": "object", "additionalProperties": false, "required": ["receiver_id", "instruction_digest", "accept_or_refuse", "local_sequence"], "properties": {"receiver_id": {"$ref": "#/$defs/id"}, "instruction_digest": {"$ref": "#/$defs/digest"}, "accept_or_refuse": {"enum": ["ACCEPT", "REFUSE"]}, "local_sequence": {"type": "number", "minimum": 0}}},
+    "cessation_result": {"type": "object", "additionalProperties": false, "required": ["primary_stopped", "new_actions_blocked", "in_flight_disposition", "exceptions", "failure_state"], "properties": {"primary_stopped": {"type": "boolean"}, "new_actions_blocked": {"type": "boolean"}, "in_flight_disposition": {"enum": ["RESOLVED", "PENDING", "NONE"]}, "exceptions": {"type": "array", "items": {"type": "string", "minLength": 1}}, "failure_state": {"enum": ["NONE", "PARTIAL", "FAILED"]}}},
+    "observation": {"type": "object", "additionalProperties": false, "required": ["observer_id", "observation_window", "observer_result"], "properties": {"observer_id": {"$ref": "#/$defs/id"}, "observation_window": {"type": "string", "minLength": 1}, "observer_result": {"enum": ["CONFIRMED", "NOT_CONFIRMED", "INCONCLUSIVE"]}}},
+    "residual_accounting": {"type": "object", "additionalProperties": false, "required": ["items"], "properties": {"items": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["item_id", "kind", "classified", "disposition"], "properties": {"item_id": {"$ref": "#/$defs/id"}, "kind": {"enum": ["IN_FLIGHT", "QUEUED", "DELEGATED", "PERSISTENT", "EXTERNAL"]}, "classified": {"type": "boolean"}, "disposition": {"enum": ["TERMINATED", "DRAINED", "TRANSFERRED", "RETAINED_AUTHORIZED", "UNRESOLVED"]}}}}}},
+    "resumption": {"type": "object", "additionalProperties": false, "required": ["new_authority_event", "control_health", "evidence_health", "reconciliation", "revalidation", "successor_attempt_id"], "properties": {"new_authority_event": {"$ref": "#/$defs/id"}, "control_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}, "evidence_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}, "reconciliation": {"type": "string", "minLength": 1}, "revalidation": {"type": "string", "minLength": 1}, "successor_attempt_id": {"$ref": "#/$defs/id"}}},
+    "independent_witness": {"type": "object", "additionalProperties": false, "required": ["assurance_level", "sole_enforcement_path", "sole_witness"], "properties": {"assurance_level": {"enum": ["STANDARD", "HIGH"]}, "sole_enforcement_path": {"type": "boolean"}, "sole_witness": {"type": "boolean"}}},
+    "evidence_channel_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]},
+    "result": {"enum": ["STAGE_RECORDED", "CESSATION_PROVEN", "RESIDUALS_ACCOUNTED", "CLOSURE_COMPLETE"]},
+    "limitations": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  },
+  "allOf": [
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "STOP_AUTHORIZED"}}}, "then": {"required": ["authority"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "STOP_ISSUED"}}}, "then": {"required": ["instruction"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "STOP_ACKNOWLEDGED"}}}, "then": {"required": ["receiver"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "CESSATION_APPLIED"}}}, "then": {"required": ["cessation_result"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "CESSATION_OBSERVED"}}}, "then": {"required": ["observation"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "RESIDUAL_EFFECTS_ACCOUNTED"}}}, "then": {"required": ["residual_accounting"]}},
+    {"if": {"required": ["stage"], "properties": {"stage": {"const": "RESUMPTION_AUTHORIZED"}}}, "then": {"required": ["resumption"]}}
+  ],
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

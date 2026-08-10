@@ -32,7 +32,7 @@ jobs:
         run: node --version
       - name: validate.py — full conformance battery (schema, neutrality, integrity, chain, tamper, profiles)
         run: python3 conformance/validate.py
-      - name: enas_profiles.py — ENAS profile + bundle fixture runner (two corpora)
+      - name: enas_profiles.py — ENAS profile + bundle fixture runner (three corpora)
         run: python3 conformance/enas_profiles.py
       - name: pytest — ENAS profile fixtures + bundle reconciliation validators (positive + negative + totality)
         run: python3 -m pytest conformance/test_enas_profiles.py conformance/test_enas_bundle_validators.py -q

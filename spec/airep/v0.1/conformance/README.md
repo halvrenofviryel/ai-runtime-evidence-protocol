@@ -41,10 +41,10 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   detection** (an edited field, a rewritten `previous`, and a corrupted signature must each break
   exactly the right check); and **profile conformance** (every `profiles.<name>` validates against
   `profiles/<name>.schema.json`). Exit 0 when all pass.
-- [`enas_profiles.py`](./enas_profiles.py) — validates eleven experimental,
+- [`enas_profiles.py`](./enas_profiles.py) — validates twenty-five experimental,
   standalone ENAS evidence contracts against Draft 2020-12 schemas and bounded
-  cross-field and typed-graph rules. Its two corpora contain 40 cases: eleven
-  expected passes and twenty-nine expected rejections. The bundle validators
+  cross-field and typed-graph rules. Its three corpora contain 95 cases: twenty-seven
+  expected passes and sixty-eight expected rejections. The bundle validators
   (`validate_issuer_bundle`, `validate_lifecycle_bundle`,
   `validate_issuer_lifecycle_pair`) add exact record/link cardinality,
   embedded-reference and digest reconciliation, issuer-to-receiver identity, and
@@ -61,8 +61,8 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   cross-attempt / cross-trace / cross-decision joins, digest mismatch, unbound
   instruction, broken timestamp, pair disposition mismatch), and totality checks
   that every malformed input returns errors rather than raising.
-- [`test_enas_profiles.py`](./test_enas_profiles.py) — pins the two fixture-corpus
-  outcomes (40 cases) against their expected pass/reject labels.
+- [`test_enas_profiles.py`](./test_enas_profiles.py) — pins the three fixture-corpus
+  outcomes (95 cases) against their expected pass/reject labels.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong
@@ -112,7 +112,7 @@ cd ..                                   # still runs and the signature check is 
 python3 conformance/validate.py             # full battery over the examples
 python3 conformance/test_jcs.py             # Python vs Node canonicalization
 python3 conformance/test_verifier_parity.py # verify.py and verify.mjs agree on every case
-python3 conformance/enas_profiles.py         # 11 ENAS schemas / 40 expected outcomes
+python3 conformance/enas_profiles.py         # 25 ENAS schemas / 95 expected outcomes
 python3 conformance/verify.py  examples/chain.jsonl --pubkey examples/test_public_key.txt
 node      conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_public_key.txt
 ```

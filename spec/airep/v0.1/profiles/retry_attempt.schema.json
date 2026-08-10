@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/retry_attempt.schema.json",
+  "title": "ENAS retry attempt (WP-LV)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "attempt_id", "trace_id", "failed_attempt_ref", "retry_reason", "budget_consumed", "changed", "prior_failure_evidence_ref"],
+  "properties": {
+    "profile_type": {"const": "retry_attempt"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "attempt_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "failed_attempt_ref": {"$ref": "#/$defs/id"},
+    "retry_reason": {"type": "string", "minLength": 1},
+    "budget_consumed": {"type": "object", "additionalProperties": false, "required": ["budget_type", "amount"], "properties": {"budget_type": {"type": "string", "minLength": 1}, "amount": {"type": "number", "minimum": 0}}},
+    "changed": {"type": "object", "additionalProperties": false, "required": ["input", "condition", "method", "expected_evidence"], "properties": {"input": {"type": "boolean"}, "condition": {"type": "boolean"}, "method": {"type": "boolean"}, "expected_evidence": {"type": "boolean"}}},
+    "prior_failure_evidence_ref": {"$ref": "#/$defs/id"}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}
