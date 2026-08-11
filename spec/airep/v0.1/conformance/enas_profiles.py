@@ -30,6 +30,12 @@ RECOVERY_CLOSURE_FIXTURE = (
     / "enas_profiles"
     / "enas_recovery_closure_cases.json"
 )
+CLAIM_COVERAGE_FIXTURE = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "enas_profiles"
+    / "enas_claim_coverage_cases.json"
+)
 
 SCHEMAS = {
     name: PROFILE_DIR / f"{name}.schema.json"
@@ -59,6 +65,11 @@ SCHEMAS = {
         "liveness_closure",
         "fairness_declaration",
         "failure_class_response",
+        "claim_configuration",
+        "nondeterminism_record",
+        "reliance_claim",
+        "observed_operating_path",
+        "claim_coverage_registry",
     )
 }
 
@@ -516,6 +527,60 @@ def _residual_capability_disposition(doc: dict[str, Any]) -> list[str]:
     return errors
 
 
+# --- WP-CC: claim configuration and coverage (ENAS spec §4.34-4.47, P34-P47) ---
+
+def _claim_configuration(doc: dict[str, Any]) -> list[str]:
+    # §4.34 / P36: a product name or mutable version label is NOT a configuration identity.
+    if doc["identity_basis"] != "CONTENT_ADDRESSED":
+        return ["a product name or mutable version label is not a configuration identity"]
+    return []
+
+
+def _nondeterminism_record(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if not doc["run_design"]["declared_before_evaluation"] and doc["supports_unqualified_claim"]:
+        errors.append("a post-hoc run design cannot support an unqualified assurance claim")
+    if doc["reproduction_class"] == "PROBABILISTIC_REDISCOVERY" and doc["claimed_as"] == "DETERMINISTIC":
+        errors.append("probabilistic rediscovery must remain distinct from deterministic reproduction")
+    if doc["reproduction_class"] == "PROBABILISTIC_REDISCOVERY" and (not doc["stochastic_inputs"] or not doc["variance_sources"]):
+        errors.append("probabilistic rediscovery must expose its stochastic inputs and material variance")
+    return errors
+
+
+def _reliance_claim(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if _dt(doc["validity"]["until"]) <= _dt(doc["validity"]["from"]):
+        errors.append("reliance validity window is not positive")
+    if doc["inherits_without_acceptance"]:
+        errors.append("technical assurance must not silently inherit legal/acceptance/substitution meaning")
+    if doc["asserted_meaning"] != "TECHNICAL_ASSURANCE" and not doc["external_acceptance_dependencies"]:
+        errors.append("a non-technical reliance meaning requires declared external acceptance dependencies")
+    return errors
+
+
+def _observed_operating_path(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if doc["declared_capability_only"]:
+        errors.append("declared capability is not evidence of the path actually taken")
+    if any(event["material"] and not event["disclosed"] for event in doc["assistance_events"]):
+        errors.append("undisclosed material assistance invalidates the autonomy/independence/verification dimensions")
+    if not doc["classification"]["uses_least_assured"]:
+        errors.append("a multi-class path must use the least-assured truthful classification per dimension")
+    return errors
+
+
+def _claim_coverage_registry(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if doc["config_identity_basis"] != "CONTENT_ADDRESSED":
+        errors.append("a claim must be bound to a content-addressed configuration, not a product name or mutable version")
+    change = doc["config_change"]
+    # §P36: a material change may keep a claim ACTIVE ONLY with an explicit carry-forward
+    # justification; NONE / INVALIDATED / SUSPENDED with an ACTIVE claim is automatic inheritance.
+    if change["material_change_occurred"] and doc["claim_status"] == "ACTIVE" and change["disposition"] != "CARRY_FORWARD_JUSTIFIED":
+        errors.append("a material configuration change requires an explicit carry-forward justification to keep a claim ACTIVE (no automatic inheritance)")
+    return errors
+
+
 SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "decision_input_manifest": _decision_input_manifest,
     "evidence_use": _evidence_use,
@@ -542,6 +607,11 @@ SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "interruption_event": _interruption_event,
     "oversight_loss_event": _oversight_loss_event,
     "residual_capability_disposition": _residual_capability_disposition,
+    "claim_configuration": _claim_configuration,
+    "nondeterminism_record": _nondeterminism_record,
+    "reliance_claim": _reliance_claim,
+    "observed_operating_path": _observed_operating_path,
+    "claim_coverage_registry": _claim_coverage_registry,
 }
 
 
@@ -843,7 +913,7 @@ def run_fixture(path: Path = FIXTURE) -> list[tuple[str, str, list[str]]]:
 
 
 def main() -> int:
-    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE, RECOVERY_CLOSURE_FIXTURE)
+    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE, RECOVERY_CLOSURE_FIXTURE, CLAIM_COVERAGE_FIXTURE)
     fixtures = [json.loads(path.read_text(encoding="utf-8")) for path in fixture_paths]
     outcomes = [outcome for path in fixture_paths for outcome in run_fixture(path)]
     expected = {
@@ -861,7 +931,7 @@ def main() -> int:
         for name, errors in failures:
             print(f"  {name}: {errors}")
         return 1
-    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across three fixture corpora")
+    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across four fixture corpora")
     return 0
 
 

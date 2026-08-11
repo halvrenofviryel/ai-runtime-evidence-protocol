@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/observed_operating_path.schema.json",
+  "title": "ENAS observed operating path and assistance events (WP-CC)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "path_id", "config_id", "segments", "assistance_events", "classification", "declared_capability_only"],
+  "properties": {
+    "profile_type": {"const": "observed_operating_path"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "path_id": {"$ref": "#/$defs/id"},
+    "config_id": {"$ref": "#/$defs/id"},
+    "segments": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["configuration", "autonomy_state", "context_sources", "trust_boundary_transition"], "properties": {"configuration": {"$ref": "#/$defs/id"}, "autonomy_state": {"type": "string", "minLength": 1}, "context_sources": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}, "trust_boundary_transition": {"type": "string", "minLength": 1}}}},
+    "assistance_events": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["actor_id", "authority", "role", "time", "contribution", "affected_object", "effect_on_claim", "material", "disclosed"], "properties": {"actor_id": {"$ref": "#/$defs/id"}, "authority": {"type": "string", "minLength": 1}, "role": {"enum": ["SAFETY", "ANALYTICAL", "OTHER"]}, "time": {"type": "string", "format": "date-time"}, "contribution": {"enum": ["STRATEGY", "AUTHORIZATION", "INTERPRETATION", "EXECUTION", "VALIDATION", "PRIORITIZATION", "REPORTING"]}, "affected_object": {"type": "object", "additionalProperties": false, "required": ["kind", "target_id"], "properties": {"kind": {"enum": ["ACTION", "OBLIGATION", "DECISION", "ARTIFACT"]}, "target_id": {"$ref": "#/$defs/id"}}}, "effect_on_claim": {"type": "string", "minLength": 1}, "material": {"type": "boolean"}, "disclosed": {"type": "boolean"}}}},
+    "classification": {"type": "object", "additionalProperties": false, "required": ["autonomy_class", "assurance_class", "uses_least_assured"], "properties": {"autonomy_class": {"type": "string", "minLength": 1}, "assurance_class": {"type": "string", "minLength": 1}, "uses_least_assured": {"type": "boolean"}}},
+    "declared_capability_only": {"type": "boolean"}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

@@ -30,7 +30,7 @@ self-consistent worked example that the conformance checker validates against th
 
 ### Experimental ENAS evidence contracts
 
-Twenty-five standalone ENAS profile schemas are prepared alongside the AIREP
+Thirty standalone ENAS profile schemas are prepared alongside the AIREP
 extension catalogue. The original eleven — `decision_input_manifest`,
 `evidence_use`, `execution_link`, `effect_assurance`, `verification_package`,
 `assurance_claim`, `coverage_declaration`, `enforcement_acknowledgement`,
@@ -41,9 +41,12 @@ WP-SR/CQ/DR/LV: `interruption_event`, `oversight_loss_event`,
 `re_establishment_record` (WP-CQ); `disclosure_manifest`,
 `retention_policy_binding`, `disposition_event`, `lifecycle_record_manifest`
 (WP-DR); and `retry_attempt`, `liveness_budget`, `liveness_closure`,
-`fairness_declaration`, `failure_class_response` (WP-LV). Three fixture corpora
-contain 95 cases in total (27 expected passes and 68 expected rejections), with
-bounded semantic and typed-graph checks in `conformance/enas_profiles.py`.
+`fairness_declaration`, `failure_class_response` (WP-LV); and five claim
+configuration-and-coverage records for WP-CC: `claim_configuration`,
+`nondeterminism_record`, `reliance_claim`, `observed_operating_path`, and
+`claim_coverage_registry`. Four fixture corpora contain 115 cases in total (33
+expected passes and 82 expected rejections), with bounded semantic and
+typed-graph checks in `conformance/enas_profiles.py`.
 
 These records establish `G2_SCHEMA_DEFINED` for their named contracts only. The
 receiver/application/execution/effect records preserve the lifecycle distinctions
