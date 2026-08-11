@@ -44,8 +44,8 @@ WP-SR/CQ/DR/LV: `interruption_event`, `oversight_loss_event`,
 `fairness_declaration`, `failure_class_response` (WP-LV); and five claim
 configuration-and-coverage records for WP-CC: `claim_configuration`,
 `nondeterminism_record`, `reliance_claim`, `observed_operating_path`, and
-`claim_coverage_registry`. Four fixture corpora contain 115 cases in total (33
-expected passes and 82 expected rejections), with bounded semantic and
+`claim_coverage_registry`. Four fixture corpora contain 126 cases in total (38
+expected passes and 88 expected rejections), with bounded semantic and
 typed-graph checks in `conformance/enas_profiles.py`.
 
 These records establish `G2_SCHEMA_DEFINED` for their named contracts only. The
@@ -57,6 +57,19 @@ identity substitution. They
 do not alter the AIREP v0.1 core, prove that a producer emitted them at a real
 boundary, establish an effect, demonstrate independent reproduction, or claim a
 released profile version. The schemas are prepared working-tree additions.
+
+The WP-CC semantic checks are **single-record** and enforce only internal
+consistency and declared-field presence: an observed path's aggregate assurance
+class must equal its weakest declared segment (no self-attested uplift); a
+material configuration change that keeps a claim `ACTIVE` must carry a structured
+carry-forward justification; a non-`ACTIVE` lifecycle state must name its
+supporting reference. They do **not** verify that a self-attested per-segment
+`assurance_class` is truthful, that a `carry_forward`/`bound_records`/`lifecycle`
+reference resolves to a real record, or that an *undeclared* material change did
+not occur — those are cross-record **bundle-reconciliation** concerns (comparing
+content-addressed configuration digests and joining bound records), not
+properties a single record can establish. A single-record `PASS` therefore means
+"internally well-formed and self-consistent", not "independently confirmed".
 
 - **`key_trust`** — trust metadata for the key that produced `integrity.signature`: `key_id`,
   `issuer`, `algorithm`, `public_key`, `validity`, `rotation`, `revocation`, and an optional

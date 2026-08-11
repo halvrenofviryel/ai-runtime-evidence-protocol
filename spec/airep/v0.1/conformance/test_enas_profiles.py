@@ -55,8 +55,8 @@ def test_enas_claim_coverage_fixture_outcomes():
     fixture = json.loads(CLAIM_COVERAGE_FIXTURE.read_text(encoding="utf-8"))
     expected = {case["name"]: case["expected"] for case in fixture["cases"]}
     outcomes = run_fixture(CLAIM_COVERAGE_FIXTURE)
-    assert len(outcomes) == 20
-    assert sum(value == "PASS" for value in expected.values()) == 6
-    assert sum(value == "REJECT" for value in expected.values()) == 14
+    assert len(outcomes) == 31
+    assert sum(value == "PASS" for value in expected.values()) == 11
+    assert sum(value == "REJECT" for value in expected.values()) == 20
     for name, actual, errors in outcomes:
         assert actual == expected[name], (name, errors)

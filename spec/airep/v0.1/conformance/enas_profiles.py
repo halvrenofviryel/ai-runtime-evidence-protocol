@@ -542,8 +542,10 @@ def _nondeterminism_record(doc: dict[str, Any]) -> list[str]:
         errors.append("a post-hoc run design cannot support an unqualified assurance claim")
     if doc["reproduction_class"] == "PROBABILISTIC_REDISCOVERY" and doc["claimed_as"] == "DETERMINISTIC":
         errors.append("probabilistic rediscovery must remain distinct from deterministic reproduction")
-    if doc["reproduction_class"] == "PROBABILISTIC_REDISCOVERY" and (not doc["stochastic_inputs"] or not doc["variance_sources"]):
-        errors.append("probabilistic rediscovery must expose its stochastic inputs and material variance")
+    if doc["reproduction_class"] == "PROBABILISTIC_REDISCOVERY" and (
+        not (doc["stochastic_inputs"] or doc["uncontrolled_dependencies"]) or not doc["variance_sources"]
+    ):
+        errors.append("probabilistic rediscovery must name a nondeterminism source and expose material variance")
     return errors
 
 
@@ -564,8 +566,16 @@ def _observed_operating_path(doc: dict[str, Any]) -> list[str]:
         errors.append("declared capability is not evidence of the path actually taken")
     if any(event["material"] and not event["disclosed"] for event in doc["assistance_events"]):
         errors.append("undisclosed material assistance invalidates the autonomy/independence/verification dimensions")
-    if not doc["classification"]["uses_least_assured"]:
-        errors.append("a multi-class path must use the least-assured truthful classification per dimension")
+    # §P35: the aggregate assurance class IS the weakest link — the claimed class MUST EQUAL the
+    # least-assured segment. Derived from the ordered per-segment classes; there is no "claim
+    # higher" escape hatch (a composition rule raising assurance above the weakest segment would be
+    # exactly the self-attested uplift ENAS forbids). NOTE: the per-segment labels themselves are
+    # producer-attested; verifying their truthfulness is a bundle-reconciliation concern, not
+    # something a single-record checker can establish.
+    order = {"OBSERVED": 0, "PRODUCER_VALIDATED": 1, "INDEPENDENTLY_CONFIRMED": 2, "RETESTED": 3}
+    least = min(order[segment["assurance_class"]] for segment in doc["segments"])
+    if order[doc["classification"]["claimed_assurance_class"]] != least:
+        errors.append("the claimed assurance class must equal the least-assured segment (the aggregate is the weakest link)")
     return errors
 
 
@@ -578,6 +588,19 @@ def _claim_coverage_registry(doc: dict[str, Any]) -> list[str]:
     # justification; NONE / INVALIDATED / SUSPENDED with an ACTIVE claim is automatic inheritance.
     if change["material_change_occurred"] and doc["claim_status"] == "ACTIVE" and change["disposition"] != "CARRY_FORWARD_JUSTIFIED":
         errors.append("a material configuration change requires an explicit carry-forward justification to keep a claim ACTIVE (no automatic inheritance)")
+    # §P36: the carry-forward itself must be substantiated (rule/unchanged-properties/evidence),
+    # not self-certified by the enum value alone.
+    if change["disposition"] == "CARRY_FORWARD_JUSTIFIED" and "carry_forward" not in change:
+        errors.append("a carry-forward justification requires structured evidence (rule, unchanged properties, evidence refs)")
+    # §P42: a non-current lifecycle state must be machine-resolvable to its supporting event/reference.
+    lifecycle = doc.get("lifecycle", {})
+    status = doc["claim_status"]
+    if status == "REVOKED" and "revocation_ref" not in lifecycle:
+        errors.append("a REVOKED claim requires a resolvable revocation reference")
+    if status == "SUPERSEDED" and "successor_claim_ref" not in lifecycle:
+        errors.append("a SUPERSEDED claim requires a resolvable successor claim reference")
+    if status == "UNDER_REVIEW" and "review_ref" not in lifecycle:
+        errors.append("an UNDER_REVIEW claim requires a resolvable review reference")
     return errors
 
 
