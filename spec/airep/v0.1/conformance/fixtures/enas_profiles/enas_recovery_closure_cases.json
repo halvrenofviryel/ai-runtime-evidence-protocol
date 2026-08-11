@@ -1,0 +1,1794 @@
+{
+  "description": "ENAS WP-SR/CQ/DR/LV recovery-and-closure profile cases: 16 positive and 39 expected-rejection cases across 14 record schemas. PASS is bounded to schema and local semantic validation; it does not establish that a runtime emitted the record at a real boundary.",
+  "cases": [
+    {
+      "name": "valid interruption event residuals accounted",
+      "profile": "interruption_event",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-1",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "RESIDUAL_EFFECTS_ACCOUNTED",
+        "residual_accounting": {
+          "items": [
+            {
+              "item_id": "rf-1",
+              "kind": "QUEUED",
+              "classified": true,
+              "disposition": "TERMINATED"
+            },
+            {
+              "item_id": "rf-2",
+              "kind": "DELEGATED",
+              "classified": true,
+              "disposition": "TRANSFERRED"
+            }
+          ]
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "RESIDUALS_ACCOUNTED",
+        "limitations": [
+          "Bounded to the recorded action attempt."
+        ]
+      }
+    },
+    {
+      "name": "valid oversight loss event",
+      "profile": "oversight_loss_event",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "oversight_loss_event",
+        "schema_version": "enas-profile-0.1",
+        "event_id": "ole-1",
+        "trace_id": "trace-1",
+        "tolerated_degradation": {
+          "monitoring": "<= 5s gap",
+          "operator_connectivity": "<= 10s",
+          "control_delivery": "ack within 2s",
+          "logging": "no loss",
+          "evidence_capture": "no loss",
+          "effect_observation": "within reaction window"
+        },
+        "crossed_tolerance": true,
+        "new_high_risk_prevented": true,
+        "action_taken": "PAUSED"
+      }
+    },
+    {
+      "name": "valid residual capability disposition",
+      "profile": "residual_capability_disposition",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "residual_capability_disposition",
+        "schema_version": "enas-profile-0.1",
+        "capability_id": "cap-1",
+        "type": "oauth_token",
+        "issuer_or_source": "auth-service",
+        "holder": "agent-runtime",
+        "target": "evidence-store-api",
+        "scope": "read:records",
+        "authority": "delegated under contract-1",
+        "creation_event": "ev-create-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "credential_ref": "token-handle://cap-1",
+        "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "current_state": "REVOKED",
+        "disposition_method": "revocation at the authorization server",
+        "responsible_principal": "auth-admin",
+        "deadline": "2026-08-10T13:00:00Z",
+        "verification_method": "AUTHORITATIVE_ACCESS_SYSTEM",
+        "observer": "auth-server-audit",
+        "evidence": "revocation-log-1",
+        "result": "CONFIRMED",
+        "successor_obligation": "none",
+        "residual_risk": "cached token TTL up to 60s",
+        "claim_impact": "capability no longer usable after TTL",
+        "closure_claimed_complete": false
+      }
+    },
+    {
+      "name": "reject cessation stage without cessation result",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-2",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_APPLIED",
+        "receiver": {
+          "receiver_id": "recv-1",
+          "instruction_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "accept_or_refuse": "ACCEPT",
+          "local_sequence": 1
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "STAGE_RECORDED",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject primary cessation proven while in-flight pending",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-3",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_APPLIED",
+        "cessation_result": {
+          "primary_stopped": true,
+          "new_actions_blocked": true,
+          "in_flight_disposition": "PENDING",
+          "exceptions": [],
+          "failure_state": "PARTIAL"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject interruption claimed at acknowledgement stage",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-4",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "STOP_ACKNOWLEDGED",
+        "receiver": {
+          "receiver_id": "recv-1",
+          "instruction_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "accept_or_refuse": "ACCEPT",
+          "local_sequence": 1
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject residuals accounted with an unresolved item",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-5",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "RESIDUAL_EFFECTS_ACCOUNTED",
+        "residual_accounting": {
+          "items": [
+            {
+              "item_id": "rf-1",
+              "kind": "EXTERNAL",
+              "classified": true,
+              "disposition": "UNRESOLVED"
+            }
+          ]
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "RESIDUALS_ACCOUNTED",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject high-assurance interruption with sole witness",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-6",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "STOP_AUTHORIZED",
+        "authority": {
+          "principal_id": "operator-1",
+          "authority_basis": "contract-1 stop clause",
+          "target_scope": "all attempts in trace-1",
+          "validity": "immediate"
+        },
+        "independent_witness": {
+          "assurance_level": "HIGH",
+          "sole_enforcement_path": false,
+          "sole_witness": true
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "STAGE_RECORDED",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject oversight crossed with continued autonomous operation",
+      "profile": "oversight_loss_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "oversight_loss_event",
+        "schema_version": "enas-profile-0.1",
+        "event_id": "ole-2",
+        "trace_id": "trace-1",
+        "tolerated_degradation": {
+          "monitoring": "<= 5s gap",
+          "operator_connectivity": "<= 10s",
+          "control_delivery": "ack within 2s",
+          "logging": "no loss",
+          "evidence_capture": "no loss",
+          "effect_observation": "within reaction window"
+        },
+        "crossed_tolerance": true,
+        "new_high_risk_prevented": false,
+        "action_taken": "CONTINUED_AUTONOMOUS"
+      }
+    },
+    {
+      "name": "reject holder self-declaration as removed",
+      "profile": "residual_capability_disposition",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "residual_capability_disposition",
+        "schema_version": "enas-profile-0.1",
+        "capability_id": "cap-2",
+        "type": "oauth_token",
+        "issuer_or_source": "auth-service",
+        "holder": "agent-runtime",
+        "target": "evidence-store-api",
+        "scope": "read:records",
+        "authority": "delegated under contract-1",
+        "creation_event": "ev-create-2",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "credential_ref": "token-handle://cap-2",
+        "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "current_state": "REMOVED",
+        "disposition_method": "the holder said it deleted the token",
+        "responsible_principal": "agent-runtime",
+        "deadline": "2026-08-10T13:00:00Z",
+        "verification_method": "HOLDER_SELF_DECLARATION",
+        "observer": "none",
+        "evidence": "self-report-1",
+        "result": "UNCONFIRMED",
+        "successor_obligation": "none",
+        "residual_risk": "token may still be valid",
+        "claim_impact": "unverified",
+        "closure_claimed_complete": false
+      }
+    },
+    {
+      "name": "reject unaccounted residual while closure claims complete",
+      "profile": "residual_capability_disposition",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "residual_capability_disposition",
+        "schema_version": "enas-profile-0.1",
+        "capability_id": "cap-3",
+        "type": "delegated_agent_session",
+        "issuer_or_source": "orchestrator",
+        "holder": "subagent-7",
+        "target": "external-tool",
+        "scope": "invoke:tool",
+        "authority": "delegated under contract-1",
+        "creation_event": "ev-create-3",
+        "affected_obligations": [
+          "obl-2"
+        ],
+        "credential_ref": "session-handle://cap-3",
+        "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "current_state": "UNACCOUNTED",
+        "disposition_method": "unknown",
+        "responsible_principal": "orchestrator",
+        "deadline": "2026-08-10T13:00:00Z",
+        "verification_method": "NONE",
+        "observer": "none",
+        "evidence": "none",
+        "result": "INCONCLUSIVE",
+        "successor_obligation": "locate and revoke",
+        "residual_risk": "subagent may still hold an active session",
+        "claim_impact": "closure cannot be complete",
+        "closure_claimed_complete": true
+      }
+    },
+    {
+      "name": "reject stop-issued stage claiming proven cessation",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-7",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "STOP_ISSUED",
+        "instruction": {
+          "instruction_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "configuration_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "channel": "ops",
+          "issuer_time": "2026-08-10T12:00:00Z",
+          "sequence": 1,
+          "deadline": "2026-08-10T12:00:05Z"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject cessation-applied stage claiming closure complete",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-8",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_APPLIED",
+        "cessation_result": {
+          "primary_stopped": true,
+          "new_actions_blocked": true,
+          "in_flight_disposition": "RESOLVED",
+          "exceptions": [],
+          "failure_state": "NONE"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CLOSURE_COMPLETE",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject oversight crossed without preventing new high-risk",
+      "profile": "oversight_loss_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "oversight_loss_event",
+        "schema_version": "enas-profile-0.1",
+        "event_id": "ole-3",
+        "trace_id": "trace-1",
+        "tolerated_degradation": {
+          "monitoring": "<= 5s gap",
+          "operator_connectivity": "<= 10s",
+          "control_delivery": "ack within 2s",
+          "logging": "no loss",
+          "evidence_capture": "no loss",
+          "effect_observation": "within reaction window"
+        },
+        "crossed_tolerance": true,
+        "new_high_risk_prevented": false,
+        "action_taken": "PAUSED"
+      }
+    },
+    {
+      "name": "valid cessation observed proven",
+      "profile": "interruption_event",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-9",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_OBSERVED",
+        "observation": {
+          "observer_id": "independent-observer-1",
+          "observation_window": "2026-08-10T12:00:00Z/2026-08-10T12:00:05Z",
+          "observer_result": "CONFIRMED"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject proven cessation without a confirmed observation",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-10",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_OBSERVED",
+        "observation": {
+          "observer_id": "independent-observer-1",
+          "observation_window": "2026-08-10T12:00:00Z/2026-08-10T12:00:05Z",
+          "observer_result": "NOT_CONFIRMED"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "valid resumption closure complete",
+      "profile": "interruption_event",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-11",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "RESUMPTION_AUTHORIZED",
+        "resumption": {
+          "new_authority_event": "auth-ev-2",
+          "control_health": "HEALTHY",
+          "evidence_health": "HEALTHY",
+          "reconciliation": "all in-flight work reconciled",
+          "revalidation": "affected claims revalidated",
+          "successor_attempt_id": "attempt-2"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CLOSURE_COMPLETE",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject closure complete with unhealthy resumption paths",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-12",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "RESUMPTION_AUTHORIZED",
+        "resumption": {
+          "new_authority_event": "auth-ev-2",
+          "control_health": "UNHEALTHY",
+          "evidence_health": "HEALTHY",
+          "reconciliation": "partial",
+          "revalidation": "pending",
+          "successor_attempt_id": "attempt-2"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "HEALTHY",
+        "result": "CLOSURE_COMPLETE",
+        "limitations": []
+      }
+    },
+    {
+      "name": "reject proven cessation on an unhealthy evidence channel",
+      "profile": "interruption_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "interruption_event",
+        "schema_version": "enas-profile-0.1",
+        "interruption_id": "int-13",
+        "trace_id": "trace-1",
+        "action_attempt_ids": [
+          "attempt-1"
+        ],
+        "governance_run_id": "gov-1",
+        "decision_id": "decision-1",
+        "origin_contract_id": "contract-1",
+        "affected_obligations": [
+          "obl-1"
+        ],
+        "stage": "CESSATION_OBSERVED",
+        "observation": {
+          "observer_id": "independent-observer-1",
+          "observation_window": "2026-08-10T12:00:00Z/2026-08-10T12:00:05Z",
+          "observer_result": "CONFIRMED"
+        },
+        "independent_witness": {
+          "assurance_level": "STANDARD",
+          "sole_enforcement_path": false,
+          "sole_witness": false
+        },
+        "evidence_channel_health": "UNHEALTHY",
+        "result": "CESSATION_PROVEN",
+        "limitations": []
+      }
+    },
+    {
+      "name": "valid contamination record",
+      "profile": "contamination_record",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "contamination_record",
+        "schema_version": "enas-profile-0.1",
+        "contamination_id": "contam-1",
+        "trace_id": "trace-1",
+        "triggering_integrity_event": {
+          "event_id": "ev-1",
+          "kind": "poisoned_dependency_detected"
+        },
+        "detection_method": "signature mismatch on a dependency digest",
+        "earliest_influence": "2026-08-01T00:00:00Z",
+        "latest_influence": "2026-08-08T00:00:00Z",
+        "dependency_graph": {
+          "member_ids": [
+            "dep-a",
+            "dep-b",
+            "dep-c"
+          ],
+          "statement": "full transitive region of the poisoned dependency"
+        },
+        "affected_states": [
+          "state-1"
+        ],
+        "affected_evidence": [
+          "ev-store-1"
+        ],
+        "affected_decisions": [
+          "decision-1"
+        ],
+        "affected_actions": [
+          "action-1"
+        ],
+        "affected_claims": [
+          "claim-1"
+        ],
+        "quarantine_region": {
+          "member_ids": [
+            "state-1",
+            "ev-store-1",
+            "decision-1",
+            "action-1",
+            "claim-1",
+            "dep-a",
+            "dep-b",
+            "dep-c"
+          ],
+          "complete": true,
+          "statement": "entire unresolved region quarantined"
+        },
+        "residual_uncertainty": "Whether an upstream mirror served the poisoned artifact to other traces is unknown."
+      }
+    },
+    {
+      "name": "valid re-establishment record",
+      "profile": "re_establishment_record",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "re_establishment_record",
+        "schema_version": "enas-profile-0.1",
+        "reestablishment_id": "reest-1",
+        "contamination_id": "contam-1",
+        "trusted_recovery_anchor": {
+          "anchor_id": "anchor-1",
+          "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "restoration_or_replacement_method": "REPLACE_COMPONENTS",
+        "changed_credentials": [
+          "cred-1"
+        ],
+        "changed_components": [
+          "dep-a",
+          "dep-b"
+        ],
+        "independent_checks": [
+          {
+            "check_id": "chk-1",
+            "separated_from_producer": true
+          }
+        ],
+        "remeasurements": [
+          {
+            "measurement_id": "rem-1",
+            "result": "PASS"
+          }
+        ],
+        "claim_status_changes": [
+          {
+            "claim_id": "claim-1",
+            "new_status": "UNDER_REVIEW"
+          }
+        ],
+        "unresolved_region": {
+          "member_ids": [],
+          "statement": "no unresolved region remains after replacement"
+        }
+      }
+    },
+    {
+      "name": "reject quarantine narrower than affected region",
+      "profile": "contamination_record",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "contamination_record",
+        "schema_version": "enas-profile-0.1",
+        "contamination_id": "contam-2",
+        "trace_id": "trace-1",
+        "triggering_integrity_event": {
+          "event_id": "ev-2",
+          "kind": "poisoned_dependency_detected"
+        },
+        "detection_method": "signature mismatch on a dependency digest",
+        "earliest_influence": "2026-08-01T00:00:00Z",
+        "latest_influence": "2026-08-08T00:00:00Z",
+        "dependency_graph": {
+          "member_ids": [
+            "dep-a",
+            "dep-b",
+            "dep-c"
+          ],
+          "statement": "full transitive region"
+        },
+        "affected_states": [
+          "state-1"
+        ],
+        "affected_evidence": [
+          "ev-store-1"
+        ],
+        "affected_decisions": [
+          "decision-1"
+        ],
+        "affected_actions": [
+          "action-1"
+        ],
+        "affected_claims": [
+          "claim-1"
+        ],
+        "quarantine_region": {
+          "member_ids": [
+            "state-1"
+          ],
+          "complete": true,
+          "statement": "only the first detected artifact was quarantined"
+        },
+        "residual_uncertainty": "unknown"
+      }
+    },
+    {
+      "name": "reject time expiry alone as removal",
+      "profile": "re_establishment_record",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "re_establishment_record",
+        "schema_version": "enas-profile-0.1",
+        "reestablishment_id": "reest-2",
+        "contamination_id": "contam-1",
+        "trusted_recovery_anchor": {
+          "anchor_id": "anchor-1",
+          "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "restoration_or_replacement_method": "TIME_EXPIRY",
+        "changed_credentials": [],
+        "changed_components": [],
+        "independent_checks": [
+          {
+            "check_id": "chk-1",
+            "separated_from_producer": true
+          }
+        ],
+        "remeasurements": [
+          {
+            "measurement_id": "rem-1",
+            "result": "PASS"
+          }
+        ],
+        "claim_status_changes": [
+          {
+            "claim_id": "claim-1",
+            "new_status": "UNDER_REVIEW"
+          }
+        ],
+        "unresolved_region": {
+          "member_ids": [],
+          "statement": "assumed clear after time"
+        }
+      }
+    },
+    {
+      "name": "reject re-establishment without independent check or remeasurement",
+      "profile": "re_establishment_record",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "re_establishment_record",
+        "schema_version": "enas-profile-0.1",
+        "reestablishment_id": "reest-3",
+        "contamination_id": "contam-1",
+        "trusted_recovery_anchor": {
+          "anchor_id": "anchor-1",
+          "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "restoration_or_replacement_method": "RESTORE_TRUSTED_ANCHOR",
+        "changed_credentials": [
+          "cred-1"
+        ],
+        "changed_components": [
+          "dep-a"
+        ],
+        "independent_checks": [
+          {
+            "check_id": "chk-1",
+            "separated_from_producer": false
+          }
+        ],
+        "remeasurements": [],
+        "claim_status_changes": [
+          {
+            "claim_id": "claim-1",
+            "new_status": "UNDER_REVIEW"
+          }
+        ],
+        "unresolved_region": {
+          "member_ids": [],
+          "statement": "none"
+        }
+      }
+    },
+    {
+      "name": "reject affected claim left active pending revalidation",
+      "profile": "re_establishment_record",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "re_establishment_record",
+        "schema_version": "enas-profile-0.1",
+        "reestablishment_id": "reest-4",
+        "contamination_id": "contam-1",
+        "trusted_recovery_anchor": {
+          "anchor_id": "anchor-1",
+          "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "restoration_or_replacement_method": "REPLACE_COMPONENTS",
+        "changed_credentials": [
+          "cred-1"
+        ],
+        "changed_components": [
+          "dep-a"
+        ],
+        "independent_checks": [
+          {
+            "check_id": "chk-1",
+            "separated_from_producer": true
+          }
+        ],
+        "remeasurements": [
+          {
+            "measurement_id": "rem-1",
+            "result": "PASS"
+          }
+        ],
+        "claim_status_changes": [
+          {
+            "claim_id": "claim-1",
+            "new_status": "ACTIVE"
+          }
+        ],
+        "unresolved_region": {
+          "member_ids": [],
+          "statement": "none"
+        }
+      }
+    },
+    {
+      "name": "reject quarantine that omits the dependency region",
+      "profile": "contamination_record",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "contamination_record",
+        "schema_version": "enas-profile-0.1",
+        "contamination_id": "contam-3",
+        "trace_id": "trace-1",
+        "triggering_integrity_event": {
+          "event_id": "ev-3",
+          "kind": "poisoned_dependency_detected"
+        },
+        "detection_method": "signature mismatch on a dependency digest",
+        "earliest_influence": "2026-08-01T00:00:00Z",
+        "latest_influence": "2026-08-08T00:00:00Z",
+        "dependency_graph": {
+          "member_ids": [
+            "dep-a",
+            "dep-b",
+            "dep-c"
+          ],
+          "statement": "full transitive region"
+        },
+        "affected_states": [
+          "state-1"
+        ],
+        "affected_evidence": [
+          "ev-store-1"
+        ],
+        "affected_decisions": [
+          "decision-1"
+        ],
+        "affected_actions": [
+          "action-1"
+        ],
+        "affected_claims": [
+          "claim-1"
+        ],
+        "quarantine_region": {
+          "member_ids": [
+            "state-1",
+            "ev-store-1",
+            "decision-1",
+            "action-1",
+            "claim-1"
+          ],
+          "complete": true,
+          "statement": "affected artifacts quarantined but the poisoned dependency region was left out"
+        },
+        "residual_uncertainty": "unknown"
+      }
+    },
+    {
+      "name": "valid disclosure manifest",
+      "profile": "disclosure_manifest",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "disclosure_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "dm-1",
+        "claim_id": "claim-1",
+        "producer_id": "phionyx-core",
+        "verifier_id": "phionyx-core",
+        "separated_from_producer": false,
+        "required_artifact_types": [
+          "decision",
+          "enforcement_result"
+        ],
+        "artifacts": [
+          {
+            "artifact_id": "art-1",
+            "artifact_type": "decision",
+            "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "disposition": "PRESENT"
+          },
+          {
+            "artifact_id": "art-2",
+            "artifact_type": "enforcement_result",
+            "content_commitment": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "disposition": "PRESENT"
+          }
+        ],
+        "selective_disclosure_proof": {
+          "asserted": false,
+          "statement": "no selective disclosure was performed",
+          "implies_no_uncommitted": false
+        },
+        "withheld_dimensions": [],
+        "claim_validation_state": "PRODUCER_VALIDATED_UNDER_METHOD",
+        "disposition_event_refs": []
+      }
+    },
+    {
+      "name": "valid retention policy binding",
+      "profile": "retention_policy_binding",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "retention_policy_binding",
+        "schema_version": "enas-profile-0.1",
+        "binding_id": "rpb-1",
+        "evidence_class": "governance-decision-records",
+        "purpose": "audit reconstruction",
+        "lawful_or_contractual_basis": "controller obligation under the service contract",
+        "minimum_necessary_content": "decision id, digests, disposition; no user payload",
+        "access_class": "restricted-auditor",
+        "retention_or_expiry_rule": {
+          "kind": "FIXED_PERIOD",
+          "value": "P365D",
+          "basis": "BOUNDED"
+        },
+        "terminal_disposition": "DESTROY",
+        "observed_retention": {
+          "matches_policy": true,
+          "relied_on_by_claim": true
+        }
+      }
+    },
+    {
+      "name": "valid disposition event",
+      "profile": "disposition_event",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "disposition_event",
+        "schema_version": "enas-profile-0.1",
+        "event_id": "de-1",
+        "artifact_id": "art-9",
+        "principal": "retention-worker",
+        "observed_at": "2026-08-10T12:00:00Z",
+        "action": "RELEASE",
+        "resulting_disposition": "released to the requesting auditor under access-class restricted",
+        "replayability": "REPLAYABLE"
+      }
+    },
+    {
+      "name": "valid lifecycle record manifest",
+      "profile": "lifecycle_record_manifest",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "lifecycle_record_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "lrm-1",
+        "required_record_types": [
+          "ACTION_ATTEMPT",
+          "DECISION",
+          "ENFORCEMENT_INSTRUCTION",
+          "ENFORCEMENT_ACKNOWLEDGEMENT",
+          "ENFORCEMENT_RESULT",
+          "EXECUTION",
+          "EFFECT_OBSERVATION",
+          "EVIDENCE_CHANNEL_HEALTH"
+        ],
+        "records": [
+          {
+            "record_type": "ACTION_ATTEMPT",
+            "producer_or_observer": "runtime",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "DECISION",
+            "producer_or_observer": "runtime",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_INSTRUCTION",
+            "producer_or_observer": "issuer",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_ACKNOWLEDGEMENT",
+            "producer_or_observer": "receiver",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_RESULT",
+            "producer_or_observer": "enforcement-point",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "EXECUTION",
+            "producer_or_observer": "executor",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "EFFECT_OBSERVATION",
+            "producer_or_observer": "observer",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "EVIDENCE_CHANNEL_HEALTH",
+            "producer_or_observer": "evidence-store",
+            "semantically_distinct": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject withheld artifact not reflected in withheld dimensions",
+      "profile": "disclosure_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "disclosure_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "dm-2",
+        "claim_id": "claim-1",
+        "producer_id": "phionyx-core",
+        "verifier_id": "phionyx-core",
+        "separated_from_producer": false,
+        "required_artifact_types": [
+          "decision"
+        ],
+        "artifacts": [
+          {
+            "artifact_id": "art-1",
+            "artifact_type": "decision",
+            "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "disposition": "COMMITTED_WITHHELD"
+          }
+        ],
+        "selective_disclosure_proof": {
+          "asserted": true,
+          "statement": "one artifact withheld under minimization",
+          "implies_no_uncommitted": false
+        },
+        "withheld_dimensions": [],
+        "claim_validation_state": "PRODUCER_VALIDATED_UNDER_METHOD",
+        "disposition_event_refs": []
+      }
+    },
+    {
+      "name": "reject selective disclosure implying no uncommitted artifact",
+      "profile": "disclosure_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "disclosure_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "dm-3",
+        "claim_id": "claim-1",
+        "producer_id": "phionyx-core",
+        "verifier_id": "phionyx-core",
+        "separated_from_producer": false,
+        "required_artifact_types": [
+          "decision"
+        ],
+        "artifacts": [
+          {
+            "artifact_id": "art-1",
+            "artifact_type": "decision",
+            "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "disposition": "PRESENT"
+          }
+        ],
+        "selective_disclosure_proof": {
+          "asserted": true,
+          "statement": "the disclosed set is exhaustive",
+          "implies_no_uncommitted": true
+        },
+        "withheld_dimensions": [],
+        "claim_validation_state": "PRODUCER_VALIDATED_UNDER_METHOD",
+        "disposition_event_refs": []
+      }
+    },
+    {
+      "name": "reject disposition performed without a disposition event",
+      "profile": "disclosure_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "disclosure_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "dm-4",
+        "claim_id": "claim-1",
+        "producer_id": "phionyx-core",
+        "verifier_id": "phionyx-core",
+        "separated_from_producer": false,
+        "required_artifact_types": [
+          "decision"
+        ],
+        "artifacts": [
+          {
+            "artifact_id": "art-1",
+            "artifact_type": "decision",
+            "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "disposition": "REDACTED"
+          }
+        ],
+        "selective_disclosure_proof": {
+          "asserted": false,
+          "statement": "n/a",
+          "implies_no_uncommitted": false
+        },
+        "withheld_dimensions": [
+          "SEMANTICS"
+        ],
+        "claim_validation_state": "PRODUCER_VALIDATED_UNDER_METHOD",
+        "disposition_event_refs": []
+      }
+    },
+    {
+      "name": "reject producer assertion presented as independent confirmation",
+      "profile": "disclosure_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "disclosure_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "dm-5",
+        "claim_id": "claim-1",
+        "producer_id": "phionyx-core",
+        "verifier_id": "phionyx-core",
+        "separated_from_producer": false,
+        "required_artifact_types": [
+          "decision"
+        ],
+        "artifacts": [
+          {
+            "artifact_id": "art-1",
+            "artifact_type": "decision",
+            "content_commitment": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "disposition": "PRESENT"
+          }
+        ],
+        "selective_disclosure_proof": {
+          "asserted": false,
+          "statement": "n/a",
+          "implies_no_uncommitted": false
+        },
+        "withheld_dimensions": [],
+        "claim_validation_state": "INDEPENDENTLY_CONFIRMED",
+        "disposition_event_refs": []
+      }
+    },
+    {
+      "name": "reject indefinite retention by default",
+      "profile": "retention_policy_binding",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "retention_policy_binding",
+        "schema_version": "enas-profile-0.1",
+        "binding_id": "rpb-2",
+        "evidence_class": "governance-decision-records",
+        "purpose": "audit reconstruction",
+        "lawful_or_contractual_basis": "append-only provenance store",
+        "minimum_necessary_content": "all",
+        "access_class": "restricted-auditor",
+        "retention_or_expiry_rule": {
+          "kind": "INDEFINITE",
+          "value": "kept forever because provenance is append-only",
+          "basis": "APPEND_ONLY_INFERENCE"
+        },
+        "terminal_disposition": "ARCHIVE_RESTRICTED",
+        "observed_retention": {
+          "matches_policy": true,
+          "relied_on_by_claim": false
+        }
+      }
+    },
+    {
+      "name": "reject evidence retained contrary to policy supporting a claim",
+      "profile": "retention_policy_binding",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "retention_policy_binding",
+        "schema_version": "enas-profile-0.1",
+        "binding_id": "rpb-3",
+        "evidence_class": "governance-decision-records",
+        "purpose": "audit reconstruction",
+        "lawful_or_contractual_basis": "controller obligation",
+        "minimum_necessary_content": "decision id, digests",
+        "access_class": "restricted-auditor",
+        "retention_or_expiry_rule": {
+          "kind": "FIXED_PERIOD",
+          "value": "P30D",
+          "basis": "BOUNDED"
+        },
+        "terminal_disposition": "DESTROY",
+        "observed_retention": {
+          "matches_policy": false,
+          "relied_on_by_claim": true
+        }
+      }
+    },
+    {
+      "name": "reject destroyed evidence reported as replayable",
+      "profile": "disposition_event",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "disposition_event",
+        "schema_version": "enas-profile-0.1",
+        "event_id": "de-2",
+        "artifact_id": "art-9",
+        "principal": "retention-worker",
+        "observed_at": "2026-08-10T12:00:00Z",
+        "action": "DESTRUCTION",
+        "resulting_disposition": "artifact destroyed under policy",
+        "replayability": "REPLAYABLE"
+      }
+    },
+    {
+      "name": "reject collapsed lifecycle records",
+      "profile": "lifecycle_record_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "lifecycle_record_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "lrm-2",
+        "required_record_types": [
+          "ACTION_ATTEMPT",
+          "DECISION",
+          "ENFORCEMENT_INSTRUCTION",
+          "ENFORCEMENT_ACKNOWLEDGEMENT",
+          "ENFORCEMENT_RESULT",
+          "EXECUTION",
+          "EFFECT_OBSERVATION",
+          "EVIDENCE_CHANNEL_HEALTH"
+        ],
+        "records": [
+          {
+            "record_type": "ACTION_ATTEMPT",
+            "producer_or_observer": "runtime",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "DECISION",
+            "producer_or_observer": "runtime",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_INSTRUCTION",
+            "producer_or_observer": "issuer",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_ACKNOWLEDGEMENT",
+            "producer_or_observer": "receiver",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "ENFORCEMENT_RESULT",
+            "producer_or_observer": "enforcement-point",
+            "semantically_distinct": false
+          },
+          {
+            "record_type": "EXECUTION",
+            "producer_or_observer": "executor",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "EFFECT_OBSERVATION",
+            "producer_or_observer": "observer",
+            "semantically_distinct": true
+          },
+          {
+            "record_type": "EVIDENCE_CHANNEL_HEALTH",
+            "producer_or_observer": "evidence-store",
+            "semantically_distinct": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "reject lifecycle manifest with a self-declared subset",
+      "profile": "lifecycle_record_manifest",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "lifecycle_record_manifest",
+        "schema_version": "enas-profile-0.1",
+        "manifest_id": "lrm-3",
+        "required_record_types": [
+          "ACTION_ATTEMPT"
+        ],
+        "records": [
+          {
+            "record_type": "ACTION_ATTEMPT",
+            "producer_or_observer": "runtime",
+            "semantically_distinct": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "valid retry attempt",
+      "profile": "retry_attempt",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "retry_attempt",
+        "schema_version": "enas-profile-0.1",
+        "attempt_id": "attempt-2",
+        "trace_id": "trace-1",
+        "failed_attempt_ref": "attempt-1",
+        "retry_reason": "transient network timeout to the evidence sink",
+        "budget_consumed": {
+          "budget_type": "retry_count",
+          "amount": 1
+        },
+        "changed": {
+          "input": false,
+          "condition": true,
+          "method": false,
+          "expected_evidence": false
+        },
+        "prior_failure_evidence_ref": "evidence-fail-1"
+      }
+    },
+    {
+      "name": "valid liveness budget",
+      "profile": "liveness_budget",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "liveness_budget",
+        "schema_version": "enas-profile-0.1",
+        "budget_id": "budget-1",
+        "contract_id": "contract-1",
+        "bounds": {
+          "retry_count": 3,
+          "delegation_depth": 2,
+          "elapsed_time_seconds": 30
+        },
+        "exhaustion_outcome": "SUSPENSION"
+      }
+    },
+    {
+      "name": "valid liveness closure",
+      "profile": "liveness_closure",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-1",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "SUCCESS",
+          "recovery_class": "NONE",
+          "original_state_restored": true
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": true,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "ABSENT",
+            "ownerless_obligations": "ABSENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": false,
+        "repair_revalidation": {
+          "repair_changed_dependency": false,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "valid fairness declaration",
+      "profile": "fairness_declaration",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "fairness_declaration",
+        "schema_version": "enas-profile-0.1",
+        "fairness_id": "fair-1",
+        "applicable": true,
+        "property": "equalized allocation of the escalation queue",
+        "subject_classes": [
+          "class-a",
+          "class-b"
+        ],
+        "measurement_method": "per-class escalation latency comparison",
+        "threshold": "ratio within 1.2",
+        "time_horizon": "rolling 30 days",
+        "remedy": "reweight the queue scheduler",
+        "status": "MEASURED_PASS",
+        "disclosed_in_closure": true
+      }
+    },
+    {
+      "name": "valid failure class response",
+      "profile": "failure_class_response",
+      "expected": "PASS",
+      "document": {
+        "profile_type": "failure_class_response",
+        "schema_version": "enas-profile-0.1",
+        "response_id": "resp-1",
+        "trace_id": "trace-1",
+        "failure_class": "TRANSIENT_FAILURE",
+        "required_minimum_response": "RETRY",
+        "selected_response": "ESCALATE",
+        "axiom_violation_check": {
+          "performed": true,
+          "violation_found": false
+        }
+      }
+    },
+    {
+      "name": "reject retry without a material change",
+      "profile": "retry_attempt",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "retry_attempt",
+        "schema_version": "enas-profile-0.1",
+        "attempt_id": "attempt-3",
+        "trace_id": "trace-1",
+        "failed_attempt_ref": "attempt-1",
+        "retry_reason": "just try again",
+        "budget_consumed": {
+          "budget_type": "retry_count",
+          "amount": 1
+        },
+        "changed": {
+          "input": false,
+          "condition": false,
+          "method": false,
+          "expected_evidence": false
+        },
+        "prior_failure_evidence_ref": "evidence-fail-1"
+      }
+    },
+    {
+      "name": "reject budget exhaustion resolving to implicit success",
+      "profile": "liveness_budget",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_budget",
+        "schema_version": "enas-profile-0.1",
+        "budget_id": "budget-2",
+        "contract_id": "contract-1",
+        "bounds": {
+          "retry_count": 3
+        },
+        "exhaustion_outcome": "IMPLICIT_SUCCESS"
+      }
+    },
+    {
+      "name": "reject orphaned obligation with a global PASS",
+      "profile": "liveness_closure",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-2",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "SUCCESS",
+          "recovery_class": "NONE",
+          "original_state_restored": true
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": true,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "ABSENT",
+            "ownerless_obligations": "PRESENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": true,
+        "repair_revalidation": {
+          "repair_changed_dependency": false,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "reject compensation labeled as rollback",
+      "profile": "liveness_closure",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-3",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "TERMINAL_NON_SUCCESS",
+          "recovery_class": "ROLLBACK",
+          "original_state_restored": false
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": true,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "ABSENT",
+            "ownerless_obligations": "ABSENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": false,
+        "repair_revalidation": {
+          "repair_changed_dependency": false,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "reject repair without revalidating affected evidence",
+      "profile": "liveness_closure",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-4",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "SUCCESS",
+          "recovery_class": "NONE",
+          "original_state_restored": true
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": true,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "ABSENT",
+            "ownerless_obligations": "ABSENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": false,
+        "repair_revalidation": {
+          "repair_changed_dependency": true,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "reject undetected deadlock condition at chain conformance",
+      "profile": "liveness_closure",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-5",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "SUCCESS",
+          "recovery_class": "NONE",
+          "original_state_restored": true
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": false,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "ABSENT",
+            "ownerless_obligations": "ABSENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": false,
+        "repair_revalidation": {
+          "repair_changed_dependency": false,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "reject applicable fairness silently omitted from closure",
+      "profile": "fairness_declaration",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "fairness_declaration",
+        "schema_version": "enas-profile-0.1",
+        "fairness_id": "fair-2",
+        "applicable": true,
+        "property": "equalized allocation of the escalation queue",
+        "subject_classes": [
+          "class-a",
+          "class-b"
+        ],
+        "measurement_method": "per-class escalation latency comparison",
+        "threshold": "ratio within 1.2",
+        "time_horizon": "rolling 30 days",
+        "remedy": "reweight the queue scheduler",
+        "status": "NOT_MEASURED",
+        "disclosed_in_closure": false
+      }
+    },
+    {
+      "name": "reject selected response weaker than the required minimum",
+      "profile": "failure_class_response",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "failure_class_response",
+        "schema_version": "enas-profile-0.1",
+        "response_id": "resp-2",
+        "trace_id": "trace-1",
+        "failure_class": "INVALID_INTEGRITY",
+        "required_minimum_response": "BLOCK",
+        "selected_response": "RETRY",
+        "axiom_violation_check": {
+          "performed": true,
+          "violation_found": false
+        }
+      }
+    },
+    {
+      "name": "reject failure class self-certifying an understated minimum",
+      "profile": "failure_class_response",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "failure_class_response",
+        "schema_version": "enas-profile-0.1",
+        "response_id": "resp-3",
+        "trace_id": "trace-1",
+        "failure_class": "INVALID_INTEGRITY",
+        "required_minimum_response": "RETRY",
+        "selected_response": "RETRY",
+        "axiom_violation_check": {
+          "performed": true,
+          "violation_found": false
+        }
+      }
+    },
+    {
+      "name": "reject liveness closure with a present deadlock condition and success",
+      "profile": "liveness_closure",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "liveness_closure",
+        "schema_version": "enas-profile-0.1",
+        "closure_id": "closure-6",
+        "trace_id": "trace-1",
+        "terminal_outcome": {
+          "kind": "SUCCESS",
+          "recovery_class": "NONE",
+          "original_state_restored": true
+        },
+        "deadlock_orphan_detection": {
+          "conformance_level": "CHAIN",
+          "performed": true,
+          "detection_bound": false,
+          "conditions": {
+            "mutually_waiting_branches": "PRESENT",
+            "ownerless_obligations": "ABSENT",
+            "unacknowledged_transfers": "ABSENT",
+            "joins_on_unreachable_branches": "ABSENT",
+            "invalid_non_discharging_cycles": "ABSENT"
+          }
+        },
+        "orphaned_obligation_present": false,
+        "repair_revalidation": {
+          "repair_changed_dependency": false,
+          "affected_evidence_revalidated": false
+        }
+      }
+    },
+    {
+      "name": "reject failure class self-certifying an escalate minimum below the class floor",
+      "profile": "failure_class_response",
+      "expected": "REJECT",
+      "document": {
+        "profile_type": "failure_class_response",
+        "schema_version": "enas-profile-0.1",
+        "response_id": "resp-4",
+        "trace_id": "trace-1",
+        "failure_class": "INVALID_INTEGRITY",
+        "required_minimum_response": "ESCALATE",
+        "selected_response": "ESCALATE",
+        "axiom_violation_check": {
+          "performed": true,
+          "violation_found": false
+        }
+      }
+    }
+  ]
+}

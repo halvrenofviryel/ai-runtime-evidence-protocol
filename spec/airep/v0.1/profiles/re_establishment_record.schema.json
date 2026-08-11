@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/re_establishment_record.schema.json",
+  "title": "ENAS trusted-state re-establishment record (WP-CQ)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "reestablishment_id", "contamination_id", "trusted_recovery_anchor", "restoration_or_replacement_method", "changed_credentials", "changed_components", "independent_checks", "remeasurements", "claim_status_changes", "unresolved_region"],
+  "properties": {
+    "profile_type": {"const": "re_establishment_record"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "reestablishment_id": {"$ref": "#/$defs/id"},
+    "contamination_id": {"$ref": "#/$defs/id"},
+    "trusted_recovery_anchor": {"type": "object", "additionalProperties": false, "required": ["anchor_id", "digest"], "properties": {"anchor_id": {"$ref": "#/$defs/id"}, "digest": {"$ref": "#/$defs/digest"}}},
+    "restoration_or_replacement_method": {"enum": ["RESTORE_TRUSTED_ANCHOR", "REPLACE_COMPONENTS", "ROTATE_CREDENTIALS", "TIME_EXPIRY"]},
+    "changed_credentials": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "changed_components": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "independent_checks": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["check_id", "separated_from_producer"], "properties": {"check_id": {"$ref": "#/$defs/id"}, "separated_from_producer": {"type": "boolean"}}}},
+    "remeasurements": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["measurement_id", "result"], "properties": {"measurement_id": {"$ref": "#/$defs/id"}, "result": {"enum": ["PASS", "FAIL", "NOT_MEASURED", "INCONCLUSIVE", "ERROR"]}}}},
+    "claim_status_changes": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["claim_id", "new_status"], "properties": {"claim_id": {"$ref": "#/$defs/id"}, "new_status": {"enum": ["ACTIVE", "UNDER_REVIEW", "REVOKED", "RETIRED", "SUPERSEDED"]}}}},
+    "unresolved_region": {"type": "object", "additionalProperties": false, "required": ["member_ids", "statement"], "properties": {"member_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}, "statement": {"type": "string", "minLength": 1}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

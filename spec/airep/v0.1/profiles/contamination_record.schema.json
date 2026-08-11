@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/contamination_record.schema.json",
+  "title": "ENAS contamination record (WP-CQ)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "contamination_id", "trace_id", "triggering_integrity_event", "detection_method", "earliest_influence", "latest_influence", "dependency_graph", "affected_states", "affected_evidence", "affected_decisions", "affected_actions", "affected_claims", "quarantine_region", "residual_uncertainty"],
+  "properties": {
+    "profile_type": {"const": "contamination_record"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "contamination_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "triggering_integrity_event": {"type": "object", "additionalProperties": false, "required": ["event_id", "kind"], "properties": {"event_id": {"$ref": "#/$defs/id"}, "kind": {"type": "string", "minLength": 1}}},
+    "detection_method": {"type": "string", "minLength": 1},
+    "earliest_influence": {"type": "string", "format": "date-time"},
+    "latest_influence": {"type": "string", "format": "date-time"},
+    "dependency_graph": {"type": "object", "additionalProperties": false, "required": ["member_ids", "statement"], "properties": {"member_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}, "statement": {"type": "string", "minLength": 1}}},
+    "affected_states": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "affected_evidence": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "affected_decisions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "affected_actions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "affected_claims": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "quarantine_region": {"type": "object", "additionalProperties": false, "required": ["member_ids", "complete", "statement"], "properties": {"member_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}, "complete": {"type": "boolean"}, "statement": {"type": "string", "minLength": 1}}},
+    "residual_uncertainty": {"type": "string", "minLength": 1}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/liveness_budget.schema.json",
+  "title": "ENAS liveness budget (WP-LV)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "budget_id", "contract_id", "bounds", "exhaustion_outcome"],
+  "properties": {
+    "profile_type": {"const": "liveness_budget"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "budget_id": {"$ref": "#/$defs/id"},
+    "contract_id": {"$ref": "#/$defs/id"},
+    "bounds": {"type": "object", "additionalProperties": false, "minProperties": 1, "properties": {"delegation_depth": {"type": "number", "minimum": 0}, "branch_count": {"type": "number", "minimum": 0}, "retry_count": {"type": "number", "minimum": 0}, "elapsed_time_seconds": {"type": "number", "minimum": 0}, "cost_or_resource": {"type": "number", "minimum": 0}, "unresolved_obligation_age_seconds": {"type": "number", "minimum": 0}, "acknowledgement_wait_seconds": {"type": "number", "minimum": 0}, "repair_cycles": {"type": "number", "minimum": 0}}},
+    "exhaustion_outcome": {"enum": ["SUSPENSION", "ESCALATION", "TERMINAL_NON_SUCCESS"]}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

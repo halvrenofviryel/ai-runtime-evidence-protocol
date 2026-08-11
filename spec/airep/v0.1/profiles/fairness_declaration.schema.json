@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/fairness_declaration.schema.json",
+  "title": "ENAS fairness declaration (WP-LV)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "fairness_id", "applicable"],
+  "properties": {
+    "profile_type": {"const": "fairness_declaration"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "fairness_id": {"$ref": "#/$defs/id"},
+    "applicable": {"type": "boolean"},
+    "basis": {"type": "string", "minLength": 1},
+    "property": {"type": "string", "minLength": 1},
+    "subject_classes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "measurement_method": {"type": "string", "minLength": 1},
+    "threshold": {"type": "string", "minLength": 1},
+    "time_horizon": {"type": "string", "minLength": 1},
+    "remedy": {"type": "string", "minLength": 1},
+    "status": {"enum": ["MEASURED_PASS", "MEASURED_FAIL", "NOT_MEASURED"]},
+    "disclosed_in_closure": {"type": "boolean"}
+  },
+  "allOf": [
+    {"if": {"properties": {"applicable": {"const": false}}}, "then": {"required": ["basis"]}},
+    {"if": {"properties": {"applicable": {"const": true}}}, "then": {"required": ["property", "subject_classes", "measurement_method", "threshold", "time_horizon", "remedy", "status", "disclosed_in_closure"]}}
+  ],
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

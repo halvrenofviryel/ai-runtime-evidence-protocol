@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/oversight_loss_event.schema.json",
+  "title": "ENAS oversight-loss event (WP-SR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "event_id", "trace_id", "tolerated_degradation", "crossed_tolerance", "new_high_risk_prevented", "action_taken"],
+  "properties": {
+    "profile_type": {"const": "oversight_loss_event"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "event_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "tolerated_degradation": {"type": "object", "additionalProperties": false, "required": ["monitoring", "operator_connectivity", "control_delivery", "logging", "evidence_capture", "effect_observation"], "properties": {"monitoring": {"type": "string", "minLength": 1}, "operator_connectivity": {"type": "string", "minLength": 1}, "control_delivery": {"type": "string", "minLength": 1}, "logging": {"type": "string", "minLength": 1}, "evidence_capture": {"type": "string", "minLength": 1}, "effect_observation": {"type": "string", "minLength": 1}}},
+    "crossed_tolerance": {"type": "boolean"},
+    "new_high_risk_prevented": {"type": "boolean"},
+    "action_taken": {"enum": ["PAUSED", "CONTAINED", "TERMINATED", "ESCALATED", "CONTINUED_AUTONOMOUS"]},
+    "resumption": {"type": "object", "additionalProperties": false, "required": ["new_authority_event", "control_health", "evidence_health", "reconciliation", "revalidation", "successor_attempt_id"], "properties": {"new_authority_event": {"$ref": "#/$defs/id"}, "control_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}, "evidence_health": {"enum": ["HEALTHY", "UNHEALTHY", "NOT_MEASURED"]}, "reconciliation": {"type": "string", "minLength": 1}, "revalidation": {"type": "string", "minLength": 1}, "successor_attempt_id": {"$ref": "#/$defs/id"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

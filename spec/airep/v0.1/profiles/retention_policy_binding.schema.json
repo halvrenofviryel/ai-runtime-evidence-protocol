@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/retention_policy_binding.schema.json",
+  "title": "ENAS retention policy binding (WP-DR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "binding_id", "evidence_class", "purpose", "lawful_or_contractual_basis", "minimum_necessary_content", "access_class", "retention_or_expiry_rule", "terminal_disposition", "observed_retention"],
+  "properties": {
+    "profile_type": {"const": "retention_policy_binding"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "binding_id": {"$ref": "#/$defs/id"},
+    "evidence_class": {"type": "string", "minLength": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "lawful_or_contractual_basis": {"type": "string", "minLength": 1},
+    "minimum_necessary_content": {"type": "string", "minLength": 1},
+    "access_class": {"type": "string", "minLength": 1},
+    "retention_or_expiry_rule": {"type": "object", "additionalProperties": false, "required": ["kind", "value", "basis"], "properties": {"kind": {"enum": ["FIXED_PERIOD", "EVENT_BASED", "EXPIRY_AT", "INDEFINITE"]}, "value": {"type": "string", "minLength": 1}, "basis": {"enum": ["BOUNDED", "EXPLICIT_LAWFUL_INDEFINITE", "APPEND_ONLY_INFERENCE"]}}},
+    "terminal_disposition": {"enum": ["DESTROY", "ANONYMIZE", "ARCHIVE_RESTRICTED", "RETURN"]},
+    "observed_retention": {"type": "object", "additionalProperties": false, "required": ["matches_policy", "relied_on_by_claim"], "properties": {"matches_policy": {"type": "boolean"}, "relied_on_by_claim": {"type": "boolean"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

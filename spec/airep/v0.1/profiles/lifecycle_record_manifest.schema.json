@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/lifecycle_record_manifest.schema.json",
+  "title": "ENAS lifecycle record manifest (WP-DR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "manifest_id", "required_record_types", "records"],
+  "properties": {
+    "profile_type": {"const": "lifecycle_record_manifest"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "manifest_id": {"$ref": "#/$defs/id"},
+    "required_record_types": {"type": "array", "uniqueItems": true, "minItems": 1, "items": {"$ref": "#/$defs/record_type"}},
+    "records": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["record_type", "producer_or_observer", "semantically_distinct"], "properties": {"record_type": {"$ref": "#/$defs/record_type"}, "producer_or_observer": {"$ref": "#/$defs/id"}, "semantically_distinct": {"type": "boolean"}}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "record_type": {"enum": ["ACTION_ATTEMPT", "DECISION", "ENFORCEMENT_INSTRUCTION", "ENFORCEMENT_ACKNOWLEDGEMENT", "ENFORCEMENT_RESULT", "EXECUTION", "EFFECT_OBSERVATION", "EVIDENCE_CHANNEL_HEALTH"]}}
+}

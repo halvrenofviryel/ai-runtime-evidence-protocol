@@ -24,6 +24,12 @@ LIFECYCLE_PROFILE_FIXTURE = (
     / "enas_profiles"
     / "enas_lifecycle_profile_cases.json"
 )
+RECOVERY_CLOSURE_FIXTURE = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "enas_profiles"
+    / "enas_recovery_closure_cases.json"
+)
 
 SCHEMAS = {
     name: PROFILE_DIR / f"{name}.schema.json"
@@ -39,6 +45,20 @@ SCHEMAS = {
         "enforcement_result",
         "execution_observation",
         "effect_observation",
+        "interruption_event",
+        "oversight_loss_event",
+        "residual_capability_disposition",
+        "contamination_record",
+        "re_establishment_record",
+        "disclosure_manifest",
+        "retention_policy_binding",
+        "disposition_event",
+        "lifecycle_record_manifest",
+        "retry_attempt",
+        "liveness_budget",
+        "liveness_closure",
+        "fairness_declaration",
+        "failure_class_response",
     )
 }
 
@@ -222,6 +242,280 @@ def _coverage_declaration(doc: dict[str, Any]) -> list[str]:
     return errors
 
 
+# --- WP-CQ: contamination, quarantine, and re-establishment (ENAS spec §10.19, §4.40) ---
+
+def _contamination_record(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if _dt(doc["latest_influence"]) < _dt(doc["earliest_influence"]):
+        errors.append("contamination influence window is negative")
+    # §10.19 L2185-2186: quarantine the ENTIRE unresolved region — the affected
+    # artifacts AND the full dependency region, not the first detected artifact.
+    affected = set(
+        doc["affected_states"]
+        + doc["affected_evidence"]
+        + doc["affected_decisions"]
+        + doc["affected_actions"]
+        + doc["affected_claims"]
+        + doc["dependency_graph"]["member_ids"]
+    )
+    quarantined = set(doc["quarantine_region"]["member_ids"])
+    if affected - quarantined:
+        errors.append("quarantine region is narrower than the affected and dependency region")
+    return errors
+
+
+def _re_establishment_record(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if not any(check["separated_from_producer"] for check in doc["independent_checks"]):
+        errors.append("re-establishment requires a producer-independent check")
+    if not doc["remeasurements"]:
+        errors.append("re-establishment requires a remeasurement")
+    if (
+        doc["restoration_or_replacement_method"] == "TIME_EXPIRY"
+        and not doc["changed_components"]
+        and not doc["changed_credentials"]
+    ):
+        errors.append("time expiry alone is not removal without replacement or expiry proof")
+    if any(change["new_status"] == "ACTIVE" for change in doc["claim_status_changes"]):
+        errors.append("affected claim left ACTIVE pending revalidation")
+    return errors
+
+
+# --- WP-LV: recovery and bounded liveness (ENAS spec §11.1-11.7) ---
+
+_RESPONSE_SEVERITY = {
+    "RETRY": 1, "REPAIR": 1, "REMEASURE": 1,
+    "ESCALATE": 2, "ROLLBACK": 2,
+    "BLOCK": 3, "REJECT": 3, "TERMINAL_NON_SUCCESS": 3, "GLOBAL_PASS_PROHIBITED": 3,
+}
+
+# ENAS spec §11.1 L2202-2219 table: the acceptable responses are FIXED per failure class by
+# the spec, not self-declared. Each entry is the exact set the table permits for that
+# class (numeric severity alone is insufficient — RETRY and REPAIR share a severity
+# but are not interchangeable). Per §11.1 L2221 the origin contract MAY select a
+# STRICTER response; the only universally-valid stricter actions are escalation,
+# halting, and prohibiting the global pass — modelled explicitly below.
+_FAILURE_CLASS_ALLOWED = {
+    "UNSUPPORTED_FORMAT_OR_VERSION": {"REJECT"},
+    "INVALID_INTEGRITY": {"BLOCK"},
+    "MISSING_INPUT": {"REPAIR"},
+    "REQUIRED_MEASUREMENT_ABSENT": {"REMEASURE", "TERMINAL_NON_SUCCESS"},
+    "TRANSIENT_FAILURE": {"RETRY", "ESCALATE"},
+    "SEMANTIC_AMBIGUITY": {"REMEASURE", "ESCALATE"},
+    "UNAUTHORIZED_SCOPE": {"REJECT"},
+    "OBLIGATION_LOSS": {"REPAIR", "BLOCK"},
+    "INVARIANT_VIOLATION": {"BLOCK", "ROLLBACK", "REPAIR"},
+    "ENFORCEMENT_DELIVERY_FAILURE": {"BLOCK"},
+    "INTERRUPTION_CHANNEL_UNAVAILABLE": {"BLOCK", "TERMINAL_NON_SUCCESS"},
+    "STOP_ACK_CESSATION_UNPROVED": {"BLOCK"},
+    "MATERIAL_RESIDUAL_UNACCOUNTED": {"ESCALATE"},
+    "CONTAMINATED_DEPENDENCY": {"BLOCK", "REMEASURE"},
+    "CLAIM_CONFIG_CHANGED": {"REMEASURE"},
+    "REQUIRED_ARTIFACT_OMITTED": {"BLOCK", "REJECT"},
+    "INCOMPLETE_TERMINAL_FULFILMENT": {"GLOBAL_PASS_PROHIBITED"},
+    "BUDGET_EXHAUSTION": {"TERMINAL_NON_SUCCESS", "ESCALATE"},
+    "DEADLOCK": {"TERMINAL_NON_SUCCESS", "ESCALATE"},
+    "ORPHANED_OBLIGATION": {"GLOBAL_PASS_PROHIBITED"},
+}
+# Escalation / halting / prohibiting the global pass are valid stricter actions for
+# any class (§11.1 L2221 "MAY select a stricter response"), so they are accepted on
+# top of each class's table set — a corrective response from a different class is not.
+_STRICTER_UNIVERSAL = {"ESCALATE", "BLOCK", "REJECT", "TERMINAL_NON_SUCCESS", "GLOBAL_PASS_PROHIBITED"}
+
+
+def _retry_attempt(doc: dict[str, Any]) -> list[str]:
+    if not any(doc["changed"].values()):
+        return ["retry under materially identical conditions is not progress"]
+    return []
+
+
+def _liveness_budget(doc: dict[str, Any]) -> list[str]:
+    # Exhaustion never resolves to implicit success: the schema enum already
+    # excludes it; a budget with no bound is rejected by minProperties.
+    return []
+
+
+def _liveness_closure(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    outcome = doc["terminal_outcome"]
+    if doc["orphaned_obligation_present"] and outcome["kind"] == "SUCCESS":
+        errors.append("orphaned obligation prohibits a global PASS")
+    if outcome["recovery_class"] == "ROLLBACK" and not outcome["original_state_restored"]:
+        errors.append("rollback claimed without restoring the original state (compensation is not rollback)")
+    repair = doc["repair_revalidation"]
+    if repair["repair_changed_dependency"] and not repair["affected_evidence_revalidated"]:
+        errors.append("repair changed a dependency without revalidating affected evidence")
+    detection = doc["deadlock_orphan_detection"]
+    if detection["conformance_level"] in {"CHAIN", "SYSTEM"} and not detection["performed"] and not detection["detection_bound"]:
+        errors.append("deadlock/orphan detection neither performed nor bounded at chain-or-higher conformance")
+    # §11.6 L2270-2279: a detected condition cannot coexist with a global PASS, and
+    # an ownerless obligation is an orphaned obligation.
+    conditions = detection["conditions"]
+    if any(state == "PRESENT" for state in conditions.values()) and outcome["kind"] == "SUCCESS":
+        errors.append("a detected deadlock/orphan condition is present but the terminal outcome is SUCCESS")
+    if conditions["ownerless_obligations"] == "PRESENT" and not doc["orphaned_obligation_present"]:
+        errors.append("an ownerless obligation is present but orphaned_obligation_present is false")
+    return errors
+
+
+def _fairness_declaration(doc: dict[str, Any]) -> list[str]:
+    if doc["applicable"] and doc["status"] == "NOT_MEASURED" and not doc["disclosed_in_closure"]:
+        return ["applicable-but-unmeasured fairness property silently omitted from closure"]
+    return []
+
+
+def _failure_class_response(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    table = _FAILURE_CLASS_ALLOWED[doc["failure_class"]]
+    # The class's own minimum severity is a hard floor: a "universal stricter" action
+    # only counts when it is at least as strong as the class minimum (ESCALATE is not
+    # stronger than BLOCK, so it cannot stand in for a class whose minimum is BLOCK).
+    floor = min(_RESPONSE_SEVERITY[response] for response in table)
+
+    def acceptable(response: str) -> bool:
+        if response in table:
+            return True
+        return response in _STRICTER_UNIVERSAL and _RESPONSE_SEVERITY[response] >= floor
+
+    if not acceptable(doc["required_minimum_response"]):
+        errors.append("declared required minimum understates or mismatches the class's §11.1 response")
+    if not acceptable(doc["selected_response"]):
+        errors.append("selected response understates or mismatches the class's §11.1 response")
+    if _RESPONSE_SEVERITY[doc["selected_response"]] < _RESPONSE_SEVERITY[doc["required_minimum_response"]]:
+        errors.append("selected response is weaker than the declared required minimum")
+    check = doc["axiom_violation_check"]
+    if not check["performed"]:
+        errors.append("axiom-violation check was not performed")
+    if check["violation_found"]:
+        errors.append("selected response violates an axiom")
+    return errors
+
+
+# --- WP-DR: disclosure, retention, and claim lifecycle (ENAS spec §4.44, §13.4, §10.6, §4.45) ---
+
+def _disclosure_manifest(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    disposed = {"REDACTED", "COMMITTED_WITHHELD", "DESTROYED_BY_POLICY", "UNAVAILABLE"}
+    if any(a["disposition"] in disposed for a in doc["artifacts"]) and not doc["withheld_dimensions"]:
+        errors.append("withheld or unavailable artifact not reflected in withheld_dimensions")
+    if doc["selective_disclosure_proof"]["implies_no_uncommitted"]:
+        errors.append("selective-disclosure proof must not imply no uncommitted artifact exists")
+    evented = {ref["artifact_id"] for ref in doc["disposition_event_refs"]}
+    for artifact in doc["artifacts"]:
+        if artifact["disposition"] in {"REDACTED", "DESTROYED_BY_POLICY"} and artifact["artifact_id"] not in evented:
+            errors.append("artifact disposition performed without a disposition event")
+    if doc["claim_validation_state"] == "INDEPENDENTLY_CONFIRMED" and (
+        doc["producer_id"] == doc["verifier_id"] or not doc["separated_from_producer"]
+    ):
+        errors.append("producer assertion presented as independent confirmation")
+    return errors
+
+
+def _retention_policy_binding(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    observed = doc["observed_retention"]
+    if not observed["matches_policy"] and observed["relied_on_by_claim"]:
+        errors.append("evidence retained contrary to the declared policy supports a claim")
+    # §13.4 L2401-2402: no indefinite-by-default. Indefinite retention is admissible
+    # only with an explicit lawful basis; append-only provenance is not such a basis.
+    rule = doc["retention_or_expiry_rule"]
+    if rule["kind"] == "INDEFINITE" and rule["basis"] != "EXPLICIT_LAWFUL_INDEFINITE":
+        errors.append("indefinite retention without an explicit lawful basis (append-only is not a basis)")
+    return errors
+
+
+def _disposition_event(doc: dict[str, Any]) -> list[str]:
+    if doc["action"] == "DESTRUCTION" and doc["replayability"] != "NOT_REPLAYABLE":
+        return ["destroyed evidence cannot be reported as replayable"]
+    return []
+
+
+_REQUIRED_LIFECYCLE_TYPES = {
+    "ACTION_ATTEMPT", "DECISION", "ENFORCEMENT_INSTRUCTION", "ENFORCEMENT_ACKNOWLEDGEMENT",
+    "ENFORCEMENT_RESULT", "EXECUTION", "EFFECT_OBSERVATION", "EVIDENCE_CHANNEL_HEALTH",
+}
+
+
+def _lifecycle_record_manifest(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    present = {record["record_type"] for record in doc["records"]}
+    # §10.6 L1932-1945: all eight typed records are required and must stay distinct.
+    # The required set is fixed by the spec, not self-declared by the producer.
+    if _REQUIRED_LIFECYCLE_TYPES - set(doc["required_record_types"]):
+        errors.append("declared required set omits a spec-mandated lifecycle record type")
+    if _REQUIRED_LIFECYCLE_TYPES - present:
+        errors.append("a spec-mandated lifecycle record type is absent")
+    if any(not record["semantically_distinct"] for record in doc["records"]):
+        errors.append("typed lifecycle records collapsed into an undifferentiated status")
+    return errors
+
+
+# --- WP-SR: stop and residual closure (ENAS spec §10.16-10.18, §4.38-4.39, §11.1) ---
+
+# §10.16 L2140-2142 + §11.1 L2213: evidence of one stage MUST NOT establish a later
+# stage. Each interruption_event records ONE stage; the strongest `result` it may
+# claim is bounded by that stage. Proven cessation needs an independent observation
+# (CESSATION_OBSERVED); closure needs authorized resumption.
+_STAGE_ALLOWED_RESULTS = {
+    "STOP_AUTHORIZED": {"STAGE_RECORDED"},
+    "STOP_ISSUED": {"STAGE_RECORDED"},
+    "STOP_ACKNOWLEDGED": {"STAGE_RECORDED"},
+    "CESSATION_APPLIED": {"STAGE_RECORDED"},
+    "CESSATION_OBSERVED": {"STAGE_RECORDED", "CESSATION_PROVEN"},
+    "RESIDUAL_EFFECTS_ACCOUNTED": {"STAGE_RECORDED", "RESIDUALS_ACCOUNTED"},
+    "RESUMPTION_AUTHORIZED": {"STAGE_RECORDED", "CLOSURE_COMPLETE"},
+}
+
+
+def _interruption_event(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    stage = doc["stage"]
+    result = doc["result"]
+    if result not in _STAGE_ALLOWED_RESULTS[stage]:
+        errors.append(f"result '{result}' exceeds what stage '{stage}' establishes")
+    # An assurance-positive result cannot rest on an unhealthy/unmeasured evidence channel.
+    if result in {"CESSATION_PROVEN", "RESIDUALS_ACCOUNTED", "CLOSURE_COMPLETE"} and doc["evidence_channel_health"] != "HEALTHY":
+        errors.append(f"result '{result}' requires a HEALTHY evidence channel")
+    # A proof/closure result must be backed by the stage's own evidence, not merely
+    # asserted at a stage that could carry it (§10.16 L2136 observation; §10.17 resumption health).
+    if stage == "CESSATION_OBSERVED" and result == "CESSATION_PROVEN" and doc["observation"]["observer_result"] != "CONFIRMED":
+        errors.append("CESSATION_PROVEN requires a CONFIRMED independent observation")
+    if stage == "RESUMPTION_AUTHORIZED" and result == "CLOSURE_COMPLETE" and (
+        doc["resumption"]["control_health"] != "HEALTHY" or doc["resumption"]["evidence_health"] != "HEALTHY"
+    ):
+        errors.append("CLOSURE_COMPLETE requires healthy control and evidence paths at resumption")
+    if stage == "RESIDUAL_EFFECTS_ACCOUNTED" and result == "RESIDUALS_ACCOUNTED":
+        for item in doc["residual_accounting"]["items"]:
+            if not item["classified"] or item["disposition"] == "UNRESOLVED":
+                errors.append("residual effect listed but not classified and dispositioned")
+                break
+    witness = doc["independent_witness"]
+    if witness["assurance_level"] == "HIGH" and (witness["sole_enforcement_path"] or witness["sole_witness"]):
+        errors.append("high-assurance interruption relies on the candidate's own sole enforcement path or witness")
+    return errors
+
+
+def _oversight_loss_event(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if doc["crossed_tolerance"]:
+        # §10.17 L2153-2156: crossing tolerance MUST prevent new high-risk
+        # actualization; autonomy MUST NOT be the default response.
+        if doc["action_taken"] == "CONTINUED_AUTONOMOUS":
+            errors.append("oversight tolerance crossed but autonomous operation continued as the default")
+        if not doc["new_high_risk_prevented"]:
+            errors.append("oversight tolerance crossed without preventing new high-risk actualization")
+    return errors
+
+
+def _residual_capability_disposition(doc: dict[str, Any]) -> list[str]:
+    errors = []
+    if doc["current_state"] in {"REMOVED", "REVOKED"} and doc["verification_method"] == "HOLDER_SELF_DECLARATION":
+        errors.append("holder self-declaration cannot establish REMOVED or REVOKED")
+    if doc["current_state"] == "UNACCOUNTED" and doc["closure_claimed_complete"]:
+        errors.append("material residual capability UNACCOUNTED while closure claims complete")
+    return errors
+
+
 SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "decision_input_manifest": _decision_input_manifest,
     "evidence_use": _evidence_use,
@@ -234,6 +528,20 @@ SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "enforcement_result": _enforcement_result,
     "execution_observation": _execution_observation,
     "effect_observation": _effect_observation,
+    "contamination_record": _contamination_record,
+    "re_establishment_record": _re_establishment_record,
+    "retry_attempt": _retry_attempt,
+    "liveness_budget": _liveness_budget,
+    "liveness_closure": _liveness_closure,
+    "fairness_declaration": _fairness_declaration,
+    "failure_class_response": _failure_class_response,
+    "disclosure_manifest": _disclosure_manifest,
+    "retention_policy_binding": _retention_policy_binding,
+    "disposition_event": _disposition_event,
+    "lifecycle_record_manifest": _lifecycle_record_manifest,
+    "interruption_event": _interruption_event,
+    "oversight_loss_event": _oversight_loss_event,
+    "residual_capability_disposition": _residual_capability_disposition,
 }
 
 
@@ -535,7 +843,7 @@ def run_fixture(path: Path = FIXTURE) -> list[tuple[str, str, list[str]]]:
 
 
 def main() -> int:
-    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE)
+    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE, RECOVERY_CLOSURE_FIXTURE)
     fixtures = [json.loads(path.read_text(encoding="utf-8")) for path in fixture_paths]
     outcomes = [outcome for path in fixture_paths for outcome in run_fixture(path)]
     expected = {
@@ -553,7 +861,7 @@ def main() -> int:
         for name, errors in failures:
             print(f"  {name}: {errors}")
         return 1
-    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across two fixture corpora")
+    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across three fixture corpora")
     return 0
 
 

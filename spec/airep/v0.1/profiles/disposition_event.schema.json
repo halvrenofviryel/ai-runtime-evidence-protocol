@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/disposition_event.schema.json",
+  "title": "ENAS disposition event (WP-DR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "event_id", "artifact_id", "principal", "observed_at", "action", "resulting_disposition", "replayability"],
+  "properties": {
+    "profile_type": {"const": "disposition_event"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "event_id": {"$ref": "#/$defs/id"},
+    "artifact_id": {"$ref": "#/$defs/id"},
+    "principal": {"$ref": "#/$defs/id"},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "action": {"enum": ["DESTRUCTION", "REDACTION", "RELEASE", "TRANSFER"]},
+    "resulting_disposition": {"type": "string", "minLength": 1},
+    "replayability": {"enum": ["REPLAYABLE", "NOT_REPLAYABLE"]}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

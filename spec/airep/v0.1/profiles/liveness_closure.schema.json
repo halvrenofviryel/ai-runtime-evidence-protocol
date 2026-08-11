@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/liveness_closure.schema.json",
+  "title": "ENAS liveness closure (WP-LV)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "closure_id", "trace_id", "terminal_outcome", "deadlock_orphan_detection", "orphaned_obligation_present", "repair_revalidation"],
+  "properties": {
+    "profile_type": {"const": "liveness_closure"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "closure_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "terminal_outcome": {"type": "object", "additionalProperties": false, "required": ["kind", "recovery_class", "original_state_restored"], "properties": {"kind": {"enum": ["SUCCESS", "TERMINAL_NON_SUCCESS", "SUSPENDED", "ESCALATED"]}, "recovery_class": {"enum": ["NONE", "ROLLBACK", "COMPENSATION"]}, "original_state_restored": {"type": "boolean"}}},
+    "deadlock_orphan_detection": {"type": "object", "additionalProperties": false, "required": ["conformance_level", "performed", "detection_bound", "conditions"], "properties": {"conformance_level": {"enum": ["RECORD", "CHAIN", "SYSTEM"]}, "performed": {"type": "boolean"}, "detection_bound": {"type": "boolean"}, "conditions": {"type": "object", "additionalProperties": false, "required": ["mutually_waiting_branches", "ownerless_obligations", "unacknowledged_transfers", "joins_on_unreachable_branches", "invalid_non_discharging_cycles"], "properties": {"mutually_waiting_branches": {"$ref": "#/$defs/condition"}, "ownerless_obligations": {"$ref": "#/$defs/condition"}, "unacknowledged_transfers": {"$ref": "#/$defs/condition"}, "joins_on_unreachable_branches": {"$ref": "#/$defs/condition"}, "invalid_non_discharging_cycles": {"$ref": "#/$defs/condition"}}}}},
+    "orphaned_obligation_present": {"type": "boolean"},
+    "repair_revalidation": {"type": "object", "additionalProperties": false, "required": ["repair_changed_dependency", "affected_evidence_revalidated"], "properties": {"repair_changed_dependency": {"type": "boolean"}, "affected_evidence_revalidated": {"type": "boolean"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "condition": {"enum": ["ABSENT", "PRESENT"]}}
+}

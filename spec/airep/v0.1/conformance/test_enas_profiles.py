@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import json
 
-from enas_profiles import FIXTURE, LIFECYCLE_PROFILE_FIXTURE, run_fixture
+from enas_profiles import (
+    FIXTURE,
+    LIFECYCLE_PROFILE_FIXTURE,
+    RECOVERY_CLOSURE_FIXTURE,
+    run_fixture,
+)
 
 
 def test_enas_profile_fixture_outcomes():
@@ -23,5 +28,19 @@ def test_enas_lifecycle_profile_fixture_outcomes():
     assert len(outcomes) == 16
     assert sum(value == "PASS" for value in expected.values()) == 4
     assert sum(value == "REJECT" for value in expected.values()) == 12
+    for name, actual, errors in outcomes:
+        assert actual == expected[name], (name, errors)
+
+
+def test_enas_recovery_closure_fixture_outcomes():
+    # WP-SR / WP-CQ / WP-DR / WP-LV record schemas: G2 (machine-validatable
+    # records + negative fixtures) for the four E.2 packages whose first missing
+    # artifact was the record schema itself.
+    fixture = json.loads(RECOVERY_CLOSURE_FIXTURE.read_text(encoding="utf-8"))
+    expected = {case["name"]: case["expected"] for case in fixture["cases"]}
+    outcomes = run_fixture(RECOVERY_CLOSURE_FIXTURE)
+    assert len(outcomes) == 55
+    assert sum(value == "PASS" for value in expected.values()) == 16
+    assert sum(value == "REJECT" for value in expected.values()) == 39
     for name, actual, errors in outcomes:
         assert actual == expected[name], (name, errors)

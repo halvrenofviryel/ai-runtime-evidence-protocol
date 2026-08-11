@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/failure_class_response.schema.json",
+  "title": "ENAS failure-class response binding (WP-LV)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "response_id", "trace_id", "failure_class", "required_minimum_response", "selected_response", "axiom_violation_check"],
+  "properties": {
+    "profile_type": {"const": "failure_class_response"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "response_id": {"$ref": "#/$defs/id"},
+    "trace_id": {"$ref": "#/$defs/id"},
+    "failure_class": {"enum": ["UNSUPPORTED_FORMAT_OR_VERSION", "INVALID_INTEGRITY", "MISSING_INPUT", "REQUIRED_MEASUREMENT_ABSENT", "TRANSIENT_FAILURE", "SEMANTIC_AMBIGUITY", "UNAUTHORIZED_SCOPE", "OBLIGATION_LOSS", "INVARIANT_VIOLATION", "ENFORCEMENT_DELIVERY_FAILURE", "INTERRUPTION_CHANNEL_UNAVAILABLE", "STOP_ACK_CESSATION_UNPROVED", "MATERIAL_RESIDUAL_UNACCOUNTED", "CONTAMINATED_DEPENDENCY", "CLAIM_CONFIG_CHANGED", "REQUIRED_ARTIFACT_OMITTED", "INCOMPLETE_TERMINAL_FULFILMENT", "BUDGET_EXHAUSTION", "DEADLOCK", "ORPHANED_OBLIGATION"]},
+    "required_minimum_response": {"$ref": "#/$defs/response"},
+    "selected_response": {"$ref": "#/$defs/response"},
+    "axiom_violation_check": {"type": "object", "additionalProperties": false, "required": ["performed", "violation_found"], "properties": {"performed": {"type": "boolean"}, "violation_found": {"type": "boolean"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}, "response": {"enum": ["REJECT", "BLOCK", "REPAIR", "REMEASURE", "RETRY", "ESCALATE", "ROLLBACK", "TERMINAL_NON_SUCCESS", "GLOBAL_PASS_PROHIBITED"]}}
+}

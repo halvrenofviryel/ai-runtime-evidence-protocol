@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/disclosure_manifest.schema.json",
+  "title": "ENAS disclosure manifest (WP-DR)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "manifest_id", "claim_id", "producer_id", "verifier_id", "separated_from_producer", "required_artifact_types", "artifacts", "selective_disclosure_proof", "withheld_dimensions", "claim_validation_state", "disposition_event_refs"],
+  "properties": {
+    "profile_type": {"const": "disclosure_manifest"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "manifest_id": {"$ref": "#/$defs/id"},
+    "claim_id": {"$ref": "#/$defs/id"},
+    "producer_id": {"$ref": "#/$defs/id"},
+    "verifier_id": {"$ref": "#/$defs/id"},
+    "separated_from_producer": {"type": "boolean"},
+    "required_artifact_types": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "artifacts": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "artifact_type", "content_commitment", "disposition"], "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "artifact_type": {"type": "string", "minLength": 1}, "content_commitment": {"$ref": "#/$defs/digest"}, "disposition": {"enum": ["PRESENT", "REDACTED", "COMMITTED_WITHHELD", "DESTROYED_BY_POLICY", "UNAVAILABLE", "NOT_APPLICABLE"]}, "resolver": {"type": "string", "minLength": 1}}}},
+    "selective_disclosure_proof": {"type": "object", "additionalProperties": false, "required": ["asserted", "statement", "implies_no_uncommitted"], "properties": {"asserted": {"type": "boolean"}, "statement": {"type": "string", "minLength": 1}, "implies_no_uncommitted": {"type": "boolean"}}},
+    "withheld_dimensions": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "claim_validation_state": {"enum": ["PRODUCER_OBSERVATION", "PRODUCER_VALIDATED_UNDER_METHOD", "INDEPENDENTLY_CONFIRMED", "RETESTED_UNDER_CHANGED_CONDITIONS", "UNSUPPORTED_OR_OVERSTATED"]},
+    "disposition_event_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["artifact_id", "event_id"], "properties": {"artifact_id": {"$ref": "#/$defs/id"}, "event_id": {"$ref": "#/$defs/id"}}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}
