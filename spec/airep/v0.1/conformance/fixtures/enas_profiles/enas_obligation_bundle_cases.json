@@ -1,0 +1,118 @@
+{
+  "description": "WP-OP obligation-protocol bundle reconciler (G3 reference): origin contract + ordered conservation transitions + closure, reconciled into an end-to-end conserved-lineage global verdict.",
+  "cases": [
+    {
+      "name": "valid single-transition conserved lineage", "expected": "PASS",
+      "bundle": {
+        "bundle_id": "b-1",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-1", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "ship", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "PRESERVE", "statement": "keep gate", "assignment_mode": "OBSERVE", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-1", "transition_ref": "ho-1", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-1", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-2", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "valid multi-transition conserved lineage", "expected": "PASS",
+      "bundle": {
+        "bundle_id": "b-2",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-2", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-3", "kind": "PRESERVE", "statement": "c", "assignment_mode": "OBSERVE", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-2a", "transition_ref": "ho-2a", "before": ["ob-1", "ob-2", "ob-3"], "created": [], "after": ["ob-2", "ob-3"], "discharged": ["ob-1"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false},
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-2b", "transition_ref": "ho-2b", "before": ["ob-2", "ob-3"], "created": [], "after": ["ob-3"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-2", "contract_ref": "contract-2", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "DISCHARGED"}, {"obligation_id": "ob-3", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "valid honest-failure lineage (closure is not success)", "expected": "PASS",
+      "bundle": {
+        "bundle_id": "b-3",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-3", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-3", "transition_ref": "ho-3", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": [], "transformed": [], "revoked": [], "failed": ["ob-2"], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-3", "contract_ref": "contract-3", "obligation_dispositions": [{"obligation_id": "ob-2", "disposition": "FAILED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "FAILED", "global_verdict": "FAIL"}
+      }
+    },
+    {
+      "name": "reject broken conservation lineage between transitions", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-4",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-4", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-3", "kind": "PRESERVE", "statement": "c", "assignment_mode": "OBSERVE", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-4a", "transition_ref": "ho-4a", "before": ["ob-1", "ob-2", "ob-3"], "created": [], "after": ["ob-2", "ob-3"], "discharged": ["ob-1"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false},
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-4b", "transition_ref": "ho-4b", "before": ["ob-2"], "created": [], "after": [], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-4", "contract_ref": "contract-4", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject first transition not entering with the origin obligation set", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-5",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-5", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-3", "kind": "PRESERVE", "statement": "c", "assignment_mode": "OBSERVE", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-5", "transition_ref": "ho-5", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1", "ob-2"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-5", "contract_ref": "contract-5", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject closure that hides an in-chain unresolved obligation", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-6",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-6", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-6", "transition_ref": "ho-6", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": ["ob-2"], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-6", "contract_ref": "contract-6", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject closure that omits an outstanding obligation", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-7",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-7", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-7", "transition_ref": "ho-7", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1", "ob-2"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-7", "contract_ref": "contract-7", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject closure that disposes a superseded transformation predecessor", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-8",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-8", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-8", "transition_ref": "tr-8", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "discharged": [], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-8", "contract_ref": "contract-8", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject resurrection of a superseded obligation identity", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-10",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-10", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-10a", "transition_ref": "tr-10", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "discharged": [], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false},
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-10b", "transition_ref": "ho-10", "before": ["ob-1b"], "created": ["ob-1"], "after": ["ob-1b", "ob-1"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-10", "contract_ref": "contract-10", "obligation_dispositions": [{"obligation_id": "ob-1b", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "inconclusive when an embedded record is malformed", "expected": "INCONCLUSIVE",
+      "bundle": {
+        "bundle_id": "b-9",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-9", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-9", "transition_ref": "ho-9", "before": ["ob-1"], "created": [], "after": [], "discharged": [], "transformed": [], "revoked": [], "failed": ["ob-1"], "unresolved": [], "global_pass_claimed": true}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-9", "contract_ref": "contract-9", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "FAILED"}], "invariants_revalidated": true, "enforcement_confirmed": false, "terminal_outcome": "FAILED", "global_verdict": "FAIL"}
+      }
+    }
+  ]
+}
