@@ -101,6 +101,16 @@ def reconcile_obligation_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     for index, transition in enumerate(transitions):
         ok = _check(f"transition[{index}]", "conservation_accounting", transition) and ok
     ok = _check("closure_accounting", "closure_accounting", closure) and ok
+    # Optional justification records (a transition's WHY): handoffs / transformations / fork-joins.
+    handoffs = bundle.get("handoffs") or []
+    transformations = bundle.get("transformations") or []
+    fork_joins = bundle.get("fork_joins") or []
+    for index, record in enumerate(handoffs):
+        ok = _check(f"handoff[{index}]", "obligation_handoff", record) and ok
+    for index, record in enumerate(transformations):
+        ok = _check(f"transformation[{index}]", "transformation_record", record) and ok
+    for index, record in enumerate(fork_joins):
+        ok = _check(f"fork_join[{index}]", "fork_join_record", record) and ok
     if not ok:
         # An invalid record cannot be reconciled — this is INCONCLUSIVE, not FAIL.
         return {"global_verdict": "INCONCLUSIVE", "record_errors": record_errors, "reconciliation_errors": recon}
@@ -192,6 +202,69 @@ def reconcile_obligation_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     claims_success = closure["terminal_outcome"] == "SUCCEEDED" or closure["global_verdict"] == "PASS"
     if claims_success and (chain_has_failure or closure_has_failure):
         recon.append("a global PASS/SUCCEEDED closure is unsound: an obligation failed or was left unresolved in the lineage")
+
+    # --- 6. justification reconciliation (§4.8/§4.9/§8.7/§8.10): bind each transition's WHAT
+    # (its conservation delta) to a WHY (a handoff / transformation / fork-join record). This
+    # layer is OPT-IN per bundle: if no justification records are provided the transition_ref is
+    # an opaque pointer (checks 1-5 stand alone); if any are provided, every transition_ref MUST
+    # resolve to one and the justifying record must be consistent with the delta it explains. ---
+    justif: dict[str, tuple[str, dict[str, Any]]] = {}
+    justif_ids: list[str] = []
+    for record in handoffs:
+        justif[record["handoff_id"]] = ("handoff", record)
+        justif_ids.append(record["handoff_id"])
+    for record in transformations:
+        justif[record["transformation_id"]] = ("transformation", record)
+        justif_ids.append(record["transformation_id"])
+    for record in fork_joins:
+        justif[record["record_id"]] = ("fork_join", record)
+        justif_ids.append(record["record_id"])
+    # A transition_ref that maps to more than one justification record does not "resolve to one";
+    # ambiguous justification identity is a reconciliation failure, not a silent last-writer-wins.
+    ambiguous = {jid for jid in justif_ids if justif_ids.count(jid) > 1}
+    if justif:
+        for index, transition in enumerate(transitions):
+            ref = transition["transition_ref"]
+            if ref in ambiguous:
+                recon.append(f"transition[{index}] transition_ref '{ref}' is ambiguous — it resolves to more than one justification record")
+                continue
+            if ref not in justif:
+                recon.append(f"transition[{index}] transition_ref '{ref}' does not resolve to a provided justification record")
+                continue
+            kind, record = justif[ref]
+            transformed_ids = {item["obligation_id"] for item in transition["transformed"]}
+            carried = set(transition["created"]) | set(transition["after"])
+            if kind == "transformation":
+                # §8.10: the transformation's predecessor must be one the transition transforms,
+                # and its successors must be created/carried by that same transition.
+                if record["predecessor_obligation"] not in transformed_ids:
+                    recon.append(f"transformation {ref} predecessor is not among transition[{index}]'s transformed obligations")
+                if not set(record["successor_obligations"]).issubset(carried):
+                    recon.append(f"transformation {ref} successors are not created or carried by transition[{index}]")
+            elif kind == "handoff":
+                # §4.8/§4.9: the handoff's terminal delta must be accounted by the transition —
+                # a handoff cannot claim a disposition the conservation record does not record.
+                delta = record["semantic_delta"]
+                if not set(delta["discharged"]).issubset(set(transition["discharged"])):
+                    recon.append(f"handoff {ref} discharges obligations transition[{index}] does not account as discharged")
+                if not set(delta["revoked"]).issubset(set(transition["revoked"])):
+                    recon.append(f"handoff {ref} revokes obligations transition[{index}] does not account as revoked")
+                if not set(delta["transformed"]).issubset(transformed_ids):
+                    recon.append(f"handoff {ref} transforms obligations transition[{index}] does not account as transformed")
+                if not set(delta["created"]).issubset(set(transition["created"])):
+                    recon.append(f"handoff {ref} creates obligations transition[{index}] does not account as created")
+                if not set(delta["unresolved"]).issubset(set(transition["unresolved"])):
+                    recon.append(f"handoff {ref} leaves obligations unresolved that transition[{index}] does not account")
+                # preserved / delegated obligations remain outstanding — they must be in `after`.
+                if not (set(delta["preserved"]) | set(delta["delegated"])).issubset(set(transition["after"])):
+                    recon.append(f"handoff {ref} preserves or delegates obligations not outstanding after transition[{index}]")
+            elif kind == "fork_join":
+                # §8.7: a JOIN that closes the parent must see that parent actually accounted
+                # (discharged / transformed / revoked) in the transition it justifies.
+                if record["phase"] == "JOIN" and record.get("join", {}).get("parent_closed"):
+                    accounted_here = set(transition["discharged"]) | transformed_ids | set(transition["revoked"])
+                    if record["parent_obligation"] not in accounted_here:
+                        recon.append(f"fork_join {ref} closes parent {record['parent_obligation']} but transition[{index}] does not account it")
 
     verdict = "FAIL" if recon else "PASS"
     return {"global_verdict": verdict, "record_errors": record_errors, "reconciliation_errors": recon}

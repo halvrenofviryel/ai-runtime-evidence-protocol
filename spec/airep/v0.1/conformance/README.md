@@ -73,15 +73,40 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   predecessor is superseded, not closed), and evaluates A7 global closure (the closure
   disposes exactly the accountable obligations, consistently with each obligation's
   in-chain fate, and a global `PASS`/`SUCCEEDED` is unsound if anything failed or was
-  left unresolved). It emits `PASS` / `FAIL` / `INCONCLUSIVE` (a malformed embedded
-  record cannot be reconciled → `INCONCLUSIVE`) and is TOTAL over malformed bundles.
-  A `PASS` means "this bundle of records is a conserved, closed lineage", **not** that
-  the workflow really ran — the records remain producer-attested.
+  left unresolved). It also enforces single-use obligation identity (§P5 — no
+  resurrection of a superseded id) and an **opt-in justification layer**: if a bundle
+  carries `handoffs` / `transformations` / `fork_joins`, every transition's
+  `transition_ref` must resolve to one and the justifying record must be consistent
+  with the delta it explains (a handoff cannot discharge what its transition does not
+  account; a transformation's predecessor/successors must match). It emits
+  `PASS` / `FAIL` / `INCONCLUSIVE` (a malformed embedded record cannot be reconciled →
+  `INCONCLUSIVE`) and is TOTAL over malformed bundles. A `PASS` means "this bundle of
+  records is a conserved, closed lineage", **not** that the workflow really ran — the
+  records remain producer-attested.
 - [`test_enas_obligation_reconciler.py`](./test_enas_obligation_reconciler.py) — pins
-  the reconciler over a 9-bundle battery (3 conserved-lineage passes incl. a
-  not-success honest failure; 5 reconciliation rejects — broken lineage, wrong entry
-  set, closure hiding an unresolved obligation, omitted outstanding obligation, and a
-  disposed superseded predecessor; 1 malformed-record inconclusive) plus totality.
+  the reconciler over a 17-bundle battery (5 conserved-lineage passes incl. a
+  not-success honest failure and handoff/transformation-justified lineages; 11
+  reconciliation rejects — broken lineage, wrong entry set, closure hiding an
+  unresolved obligation, omitted outstanding obligation, disposed superseded
+  predecessor, superseded-identity resurrection, unresolved justification ref,
+  handoff created/discharge and transformation delta mismatches, and an ambiguous
+  justification id; 1 malformed-record inconclusive) plus totality.
+- [`enas_reference_orchestrator.py`](./enas_reference_orchestrator.py) — the **reference
+  emitter** that closes the other half of the bounded-G3 slice. A small in-process
+  `ObligationOrchestrator` executes an obligation lifecycle (`declare` / `discharge` /
+  `transform` / `close`) and emits the WP-OP records from its own state transitions, so
+  the records are derived from execution rather than hand-authored. `bundle()`
+  round-trips through the reconciler. Because the emitter constructs the conservation
+  math from real state and the reconciler re-derives and checks it **independently**, a
+  round-trip `PASS` is agreement between two code paths, not one trusting itself.
+  **Boundary:** this is a reference orchestrator, not a full agent framework, and the run
+  is bounded and in-process — a round-trip `PASS` does not establish that any external
+  system emits conformant records, nor is it independent reproduction (both remain
+  external-review-gated).
+- [`test_enas_reference_orchestrator.py`](./test_enas_reference_orchestrator.py) — the
+  emit→reconcile round-trip: a success run and an honest-failure run both reconcile to
+  `PASS`, a corrupted emitted bundle (one closure disposition dropped) is caught as
+  `FAIL` by the independent reconciler, and the orchestrator's step guards raise.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong

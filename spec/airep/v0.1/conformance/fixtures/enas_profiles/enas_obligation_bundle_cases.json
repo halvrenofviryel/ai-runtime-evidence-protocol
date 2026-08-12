@@ -104,6 +104,107 @@
       }
     },
     {
+      "name": "valid lineage with a handoff justifying the discharge", "expected": "PASS",
+      "bundle": {
+        "bundle_id": "b-11",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-11", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-11", "transition_ref": "ho-j1", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "handoffs": [
+          {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-j1", "obligation_ids": ["ob-2"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-2"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-11", "contract_ref": "contract-11", "obligation_dispositions": [{"obligation_id": "ob-2", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "valid lineage with a transformation justifying the supersession", "expected": "PASS",
+      "bundle": {
+        "bundle_id": "b-12",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-12", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-12", "transition_ref": "tr-j1", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "discharged": [], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "transformations": [
+          {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-j1", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1b"], "transformation_class": "STRUCTURAL_EQUIVALENCE", "loss_vector": [{"property": "scope", "status": "PRESERVED"}], "discharges_predecessor": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-12", "contract_ref": "contract-12", "obligation_dispositions": [{"obligation_id": "ob-1b", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject transition whose ref does not resolve to a provided justification", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-13",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-13", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-13", "transition_ref": "ho-missing", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "handoffs": [
+          {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-j1", "obligation_ids": ["ob-2"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-2"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-13", "contract_ref": "contract-13", "obligation_dispositions": [{"obligation_id": "ob-2", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject handoff discharging beyond what its transition accounts", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-14",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-14", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-14", "transition_ref": "ho-j2", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1", "ob-2"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "handoffs": [
+          {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-j2", "obligation_ids": ["ob-2"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-2"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-14", "contract_ref": "contract-14", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject transformation whose predecessor the transition does not transform", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-15",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-15", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-15", "transition_ref": "tr-j2", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "discharged": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "transformations": [
+          {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-j2", "predecessor_obligation": "ob-9", "successor_obligations": ["ob-1b"], "transformation_class": "STRUCTURAL_EQUIVALENCE", "loss_vector": [{"property": "scope", "status": "PRESERVED"}], "discharges_predecessor": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-15", "contract_ref": "contract-15", "obligation_dispositions": [{"obligation_id": "ob-1b", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject handoff claiming created work its transition does not account", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-16",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-16", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "REQUIRE", "statement": "b", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-16", "transition_ref": "ho-j3", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "handoffs": [
+          {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-j3", "obligation_ids": ["ob-2"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-2"], "transformed": [], "created": ["ghost-created"], "revoked": [], "unresolved": []}}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-16", "contract_ref": "contract-16", "obligation_dispositions": [{"obligation_id": "ob-2", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
+      "name": "reject ambiguous transition_ref resolving to two justification records", "expected": "FAIL",
+      "bundle": {
+        "bundle_id": "b-17",
+        "origin_contract": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-17", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "all discharged"},
+        "transitions": [
+          {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-17", "transition_ref": "dup-1", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "discharged": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+        ],
+        "handoffs": [
+          {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "dup-1", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "ACCEPTED", "semantic_delta": {"preserved": ["ob-1"], "delegated": ["ob-1"], "discharged": [], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+        ],
+        "transformations": [
+          {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "dup-1", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1b"], "transformation_class": "STRUCTURAL_EQUIVALENCE", "loss_vector": [{"property": "scope", "status": "PRESERVED"}], "discharges_predecessor": false}
+        ],
+        "closure": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-17", "contract_ref": "contract-17", "obligation_dispositions": [{"obligation_id": "ob-1b", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+      }
+    },
+    {
       "name": "inconclusive when an embedded record is malformed", "expected": "INCONCLUSIVE",
       "bundle": {
         "bundle_id": "b-9",
