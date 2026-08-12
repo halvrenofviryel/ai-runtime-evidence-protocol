@@ -63,6 +63,25 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   that every malformed input returns errors rather than raising.
 - [`test_enas_profiles.py`](./test_enas_profiles.py) — pins the five fixture-corpus
   outcomes (164 cases) against their expected pass/reject labels.
+- [`enas_obligation_reconciler.py`](./enas_obligation_reconciler.py) — the **bounded
+  G3 reference implementation** for the obligation protocol (WP-OP): the cross-record
+  layer the single-record checker deliberately does not cover. It takes a *bundle*
+  (origin contract + ordered conservation transitions + closure), reuses the G2
+  single-record checker per record, then resolves references, chains the §8.4
+  conservation transitions (`after` of one equals `before` of the next), verifies A3
+  end-to-end conservation (nothing appears or vanishes unaccounted; a transformed
+  predecessor is superseded, not closed), and evaluates A7 global closure (the closure
+  disposes exactly the accountable obligations, consistently with each obligation's
+  in-chain fate, and a global `PASS`/`SUCCEEDED` is unsound if anything failed or was
+  left unresolved). It emits `PASS` / `FAIL` / `INCONCLUSIVE` (a malformed embedded
+  record cannot be reconciled → `INCONCLUSIVE`) and is TOTAL over malformed bundles.
+  A `PASS` means "this bundle of records is a conserved, closed lineage", **not** that
+  the workflow really ran — the records remain producer-attested.
+- [`test_enas_obligation_reconciler.py`](./test_enas_obligation_reconciler.py) — pins
+  the reconciler over a 9-bundle battery (3 conserved-lineage passes incl. a
+  not-success honest failure; 5 reconciliation rejects — broken lineage, wrong entry
+  set, closure hiding an unresolved obligation, omitted outstanding obligation, and a
+  disposed superseded predecessor; 1 malformed-record inconclusive) plus totality.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong
