@@ -121,7 +121,22 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   captured** real `phionyx_session_report` ([`fixtures/enas_profiles/enas_gate_report_capture.json`](./fixtures/enas_profiles/enas_gate_report_capture.json),
   trace-fcf66f8bb7364529: 8 governed claims, 1 passed / 7 sent for revision) into a conserved
   non-success lineage; plus all-pass→SUCCEEDED, blocked→failed, a tampered closure caught
-  `FAIL`, and empty-report rejection.
+  `FAIL`, and malformed-report rejection.
+- [`enas_gate_feed.py`](./enas_gate_feed.py) — turns the one-shot adapter into a **live feed**.
+  A `GateFeed` holds a dependency-injected `report_source` callable (a running Phionyx process
+  wires the live `phionyx_session_report`; tests wire a simulated evolving source) and, on each
+  `poll()`, resamples the current report, deduplicates claims to their latest gate directive,
+  reconciles, and reports how each obligation's disposition changed since the previous poll
+  (`resolved` / `regressed` / `new_pending` / `new_terminal` / `still_pending`). It keeps two
+  verdicts separate: `global_verdict` is the **gate outcome** (PASS all-discharged / FAIL any-failed
+  / INCONCLUSIVE revision-pending) and `reconciled` is the reconciler's **structural integrity**
+  (expected PASS). The temporal view closes the snapshot's gap — a revision-pending `UNRESOLVED`
+  claim is watched **resolving** to `DISCHARGED`/`FAILED` across polls. Boundary: the feed observes
+  whatever the source reports; live wiring to a production gate remains external-review-gated.
+- [`test_enas_gate_feed.py`](./test_enas_gate_feed.py) — a simulated evolving source: a pending
+  claim is watched resolving over three polls (INCONCLUSIVE→PASS→FAIL) with `resolved` deltas;
+  revisions dedup to the latest directive; empty/malformed polls stay INCONCLUSIVE without crashing;
+  and a single poll of the captured real report reproduces the adapter's verdict.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong
