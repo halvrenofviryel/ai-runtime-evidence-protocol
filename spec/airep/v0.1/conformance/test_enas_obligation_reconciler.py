@@ -16,9 +16,9 @@ def test_obligation_bundle_fixture_outcomes():
     fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
     expected = {case["name"]: case["expected"] for case in fixture["cases"]}
     outcomes = run_bundle_fixture()
-    assert len(outcomes) == 10
-    assert sum(v == "PASS" for v in expected.values()) == 3
-    assert sum(v == "FAIL" for v in expected.values()) == 6
+    assert len(outcomes) == 17
+    assert sum(v == "PASS" for v in expected.values()) == 5
+    assert sum(v == "FAIL" for v in expected.values()) == 11
     assert sum(v == "INCONCLUSIVE" for v in expected.values()) == 1
     for name, verdict, result in outcomes:
         assert verdict == expected[name], (name, result)
