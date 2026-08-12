@@ -43,8 +43,8 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   `profiles/<name>.schema.json`). Exit 0 when all pass.
 - [`enas_profiles.py`](./enas_profiles.py) — validates thirty-seven experimental,
   standalone ENAS evidence contracts against Draft 2020-12 schemas and bounded
-  cross-field and typed-graph rules. Its five corpora contain 162 cases: forty-nine
-  expected passes and one hundred thirteen expected rejections. The bundle validators
+  cross-field and typed-graph rules. Its five corpora contain 164 cases: forty-nine
+  expected passes and one hundred fifteen expected rejections. The bundle validators
   (`validate_issuer_bundle`, `validate_lifecycle_bundle`,
   `validate_issuer_lifecycle_pair`) add exact record/link cardinality,
   embedded-reference and digest reconciliation, issuer-to-receiver identity, and
@@ -62,7 +62,7 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   instruction, broken timestamp, pair disposition mismatch), and totality checks
   that every malformed input returns errors rather than raising.
 - [`test_enas_profiles.py`](./test_enas_profiles.py) — pins the five fixture-corpus
-  outcomes (162 cases) against their expected pass/reject labels.
+  outcomes (164 cases) against their expected pass/reject labels.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong

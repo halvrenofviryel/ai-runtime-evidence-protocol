@@ -38,6 +38,10 @@
       "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-6", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": ["ob-1"], "unresolved": []}}
     },
     {
+      "name": "reject terminal disposition before the handoff is fulfilled", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-7", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "SENT", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
       "name": "valid structural-equivalence transformation", "profile": "transformation_record", "expected": "PASS",
       "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-1", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1b"], "transformation_class": "STRUCTURAL_EQUIVALENCE", "loss_vector": [{"property": "acceptance_criteria", "status": "PRESERVED"}, {"property": "authority", "status": "PRESERVED"}], "discharges_predecessor": true}
     },
@@ -68,6 +72,10 @@
     {
       "name": "valid fork record", "profile": "fork_join_record", "expected": "PASS",
       "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-1", "phase": "FORK", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}, {"branch_id": "br-b", "disposition": "PARTITIONED", "contract_version": 1}]}
+    },
+    {
+      "name": "reject fork record carrying join-closure fields", "profile": "fork_join_record", "expected": "REJECT",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-6", "phase": "FORK", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}], "join": {"join_authority": "agent-j", "coverage_complete": true, "conflicts_resolved": true, "invariants_preserved": true, "conflict_rule": "EXPLICIT", "last_writer_wins_authorized": false, "parent_closed": true}}
     },
     {
       "name": "valid join closing the parent", "profile": "fork_join_record", "expected": "PASS",

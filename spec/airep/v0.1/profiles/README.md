@@ -47,8 +47,8 @@ configuration-and-coverage records for WP-CC: `claim_configuration`,
 `claim_coverage_registry`; and seven Echo Obligation Protocol records for WP-OP:
 `origin_contract`, `obligation_handoff`, `transformation_record`,
 `fork_join_record`, `conservation_accounting`, `amendment_revocation_event`, and
-`closure_accounting`. Five fixture corpora contain 162 cases in total (49
-expected passes and 113 expected rejections), with bounded semantic and
+`closure_accounting`. Five fixture corpora contain 164 cases in total (49
+expected passes and 115 expected rejections), with bounded semantic and
 typed-graph checks in `conformance/enas_profiles.py`.
 
 These records establish `G2_SCHEMA_DEFINED` for their named contracts only. The
