@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/fork_join_record.schema.json",
+  "title": "ENAS fork and join record (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "record_id", "phase", "parent_obligation", "branches"],
+  "properties": {
+    "profile_type": {"const": "fork_join_record"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "record_id": {"$ref": "#/$defs/id"},
+    "phase": {"enum": ["FORK", "JOIN"]},
+    "parent_obligation": {"$ref": "#/$defs/id"},
+    "branches": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["branch_id", "disposition", "contract_version"], "properties": {"branch_id": {"$ref": "#/$defs/id"}, "disposition": {"enum": ["TRANSFERRED", "REPLICATED", "PARTITIONED", "RETAINED", "JOINTLY_OWNED"]}, "contract_version": {"type": "integer", "minimum": 1}}}},
+    "join": {"type": "object", "additionalProperties": false, "required": ["join_authority", "coverage_complete", "conflicts_resolved", "invariants_preserved", "conflict_rule", "last_writer_wins_authorized", "parent_closed"], "properties": {"join_authority": {"$ref": "#/$defs/id"}, "coverage_complete": {"type": "boolean"}, "conflicts_resolved": {"type": "boolean"}, "invariants_preserved": {"type": "boolean"}, "conflict_rule": {"enum": ["EXPLICIT", "LAST_WRITER_WINS"]}, "last_writer_wins_authorized": {"type": "boolean"}, "parent_closed": {"type": "boolean"}}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

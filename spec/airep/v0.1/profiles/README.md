@@ -30,7 +30,7 @@ self-consistent worked example that the conformance checker validates against th
 
 ### Experimental ENAS evidence contracts
 
-Thirty standalone ENAS profile schemas are prepared alongside the AIREP
+Thirty-seven standalone ENAS profile schemas are prepared alongside the AIREP
 extension catalogue. The original eleven — `decision_input_manifest`,
 `evidence_use`, `execution_link`, `effect_assurance`, `verification_package`,
 `assurance_claim`, `coverage_declaration`, `enforcement_acknowledgement`,
@@ -44,8 +44,11 @@ WP-SR/CQ/DR/LV: `interruption_event`, `oversight_loss_event`,
 `fairness_declaration`, `failure_class_response` (WP-LV); and five claim
 configuration-and-coverage records for WP-CC: `claim_configuration`,
 `nondeterminism_record`, `reliance_claim`, `observed_operating_path`, and
-`claim_coverage_registry`. Four fixture corpora contain 126 cases in total (38
-expected passes and 88 expected rejections), with bounded semantic and
+`claim_coverage_registry`; and seven Echo Obligation Protocol records for WP-OP:
+`origin_contract`, `obligation_handoff`, `transformation_record`,
+`fork_join_record`, `conservation_accounting`, `amendment_revocation_event`, and
+`closure_accounting`. Five fixture corpora contain 162 cases in total (49
+expected passes and 113 expected rejections), with bounded semantic and
 typed-graph checks in `conformance/enas_profiles.py`.
 
 These records establish `G2_SCHEMA_DEFINED` for their named contracts only. The
@@ -70,6 +73,21 @@ not occur — those are cross-record **bundle-reconciliation** concerns (compari
 content-addressed configuration digests and joining bound records), not
 properties a single record can establish. A single-record `PASS` therefore means
 "internally well-formed and self-consistent", not "independently confirmed".
+
+The WP-OP checks are single-record on the same footing. `conservation_accounting`
+enforces the §8.4 partition invariant *within one declared transition* — every
+entering obligation lands in exactly one resulting category and no id is dropped
+or double-counted — and the handoff/transformation/fork-join/closure checks
+enforce the local rules that a terminal label cannot outrun its evidence (an
+`OBSERVE` handoff cannot discharge; `NOT_MEASURED`/`INVALID` cannot discharge; a
+`SUCCEEDED` closure cannot hold a failed obligation; last-writer-wins needs
+explicit authorization). They do **not** confirm that the `successor_ref`,
+`obligation_id`, or `contract_ref` a record names resolves to a real record
+elsewhere, that the obligation set of one transition is the `before` set of the
+next, or that a declared transformation is *actually* equivalence-preserving —
+chaining transitions into a conserved end-to-end lineage, and validating
+transformation equivalence, are cross-record bundle-reconciliation and
+research-bounded (§20.1) concerns respectively, above what one record attests.
 
 - **`key_trust`** — trust metadata for the key that produced `integrity.signature`: `key_id`,
   `issuer`, `algorithm`, `public_key`, `validity`, `rotation`, `revocation`, and an optional
