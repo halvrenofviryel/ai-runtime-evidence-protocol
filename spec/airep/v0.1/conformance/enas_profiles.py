@@ -657,6 +657,10 @@ def _obligation_handoff(doc: dict[str, Any]) -> list[str]:
     # §4.8: a REJECTED handoff transferred nothing — it cannot have discharged or created work.
     if doc["acceptance_state"] == "REJECTED" and (delta["discharged"] or delta["created"]):
         errors.append("a REJECTED handoff cannot discharge or create obligations")
+    # §4.8: send != accept != execution != fulfilment — a terminal disposition (discharge,
+    # transform, revoke) cannot occur before the handoff is FULFILLED.
+    if doc["acceptance_state"] != "FULFILLED" and (delta["discharged"] or delta["transformed"] or delta["revoked"]):
+        errors.append("an obligation cannot be discharged, transformed, or revoked before the handoff is FULFILLED")
     return errors
 
 
@@ -689,6 +693,10 @@ def _transformation_record(doc: dict[str, Any]) -> list[str]:
 def _fork_join_record(doc: dict[str, Any]) -> list[str]:
     # §8.7: a JOIN phase must carry the join authority's evaluation.
     errors = []
+    # §8.7: a FORK declares only branch dispositions — join-time closure fields belong to a JOIN
+    # record; a FORK carrying a `join` object (e.g. parent_closed) is a contradictory record.
+    if doc["phase"] == "FORK" and "join" in doc:
+        errors.append("a FORK record must not carry join-closure fields")
     if doc["phase"] == "JOIN" and "join" not in doc:
         errors.append("a JOIN record requires the join authority's evaluation")
         return errors

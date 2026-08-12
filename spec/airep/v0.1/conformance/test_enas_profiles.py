@@ -75,8 +75,8 @@ def test_enas_obligation_protocol_fixture_outcomes():
     fixture = json.loads(OBLIGATION_FIXTURE.read_text(encoding="utf-8"))
     expected = {case["name"]: case["expected"] for case in fixture["cases"]}
     outcomes = run_fixture(OBLIGATION_FIXTURE)
-    assert len(outcomes) == 36
+    assert len(outcomes) == 38
     assert sum(value == "PASS" for value in expected.values()) == 11
-    assert sum(value == "REJECT" for value in expected.values()) == 25
+    assert sum(value == "REJECT" for value in expected.values()) == 27
     for name, actual, errors in outcomes:
         assert actual == expected[name], (name, errors)
