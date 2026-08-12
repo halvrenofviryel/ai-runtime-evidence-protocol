@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/obligation_handoff.schema.json",
+  "title": "ENAS obligation handoff and semantic delta (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "handoff_id", "obligation_ids", "sender", "receiver", "assignment_mode", "acceptance_state", "semantic_delta"],
+  "properties": {
+    "profile_type": {"const": "obligation_handoff"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "handoff_id": {"$ref": "#/$defs/id"},
+    "obligation_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "sender": {"$ref": "#/$defs/id"},
+    "receiver": {"$ref": "#/$defs/id"},
+    "assignment_mode": {"enum": ["TRANSFER", "SUBTASK", "REPLICATE", "PARTITION", "COLLABORATE", "OBSERVE"]},
+    "acceptance_state": {"enum": ["SENT", "ACCEPTED", "EXECUTING", "FULFILLED", "REJECTED"]},
+    "semantic_delta": {"type": "object", "additionalProperties": false, "required": ["preserved", "delegated", "discharged", "transformed", "created", "revoked", "unresolved"], "properties": {"preserved": {"$ref": "#/$defs/id_list"}, "delegated": {"$ref": "#/$defs/id_list"}, "discharged": {"$ref": "#/$defs/id_list"}, "transformed": {"$ref": "#/$defs/id_list"}, "created": {"$ref": "#/$defs/id_list"}, "revoked": {"$ref": "#/$defs/id_list"}, "unresolved": {"$ref": "#/$defs/id_list"}}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "id_list": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+  }
+}
