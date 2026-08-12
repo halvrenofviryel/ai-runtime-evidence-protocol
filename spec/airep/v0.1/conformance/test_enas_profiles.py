@@ -6,6 +6,7 @@ from enas_profiles import (
     CLAIM_COVERAGE_FIXTURE,
     FIXTURE,
     LIFECYCLE_PROFILE_FIXTURE,
+    OBLIGATION_FIXTURE,
     RECOVERY_CLOSURE_FIXTURE,
     run_fixture,
 )
@@ -58,5 +59,24 @@ def test_enas_claim_coverage_fixture_outcomes():
     assert len(outcomes) == 31
     assert sum(value == "PASS" for value in expected.values()) == 11
     assert sum(value == "REJECT" for value in expected.values()) == 20
+    for name, actual, errors in outcomes:
+        assert actual == expected[name], (name, errors)
+
+
+def test_enas_obligation_protocol_fixture_outcomes():
+    # WP-OP Echo Obligation Protocol record schemas: origin contract (stable
+    # obligation identity), obligation handoff (send != accept != fulfil),
+    # transformation (loss vector; NOT_MEASURED/INVALID cannot discharge),
+    # fork/join (weakest-link closure, no unauthorized last-writer-wins), the
+    # conservation accounting invariant (O_before ⊎ O_created =
+    # O_after ⊎ O_discharged ⊎ O_transformed ⊎ O_revoked ⊎ O_failed ⊎ O_unresolved),
+    # amendment/revocation (no retroactive authorization), and closure (closure is
+    # not success; global PASS only against a fully accounted contract).
+    fixture = json.loads(OBLIGATION_FIXTURE.read_text(encoding="utf-8"))
+    expected = {case["name"]: case["expected"] for case in fixture["cases"]}
+    outcomes = run_fixture(OBLIGATION_FIXTURE)
+    assert len(outcomes) == 38
+    assert sum(value == "PASS" for value in expected.values()) == 11
+    assert sum(value == "REJECT" for value in expected.values()) == 27
     for name, actual, errors in outcomes:
         assert actual == expected[name], (name, errors)

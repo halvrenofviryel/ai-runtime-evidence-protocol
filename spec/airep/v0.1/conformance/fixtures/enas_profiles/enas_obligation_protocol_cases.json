@@ -1,0 +1,157 @@
+{
+  "description": "WP-OP Echo Obligation Protocol record schemas: origin contract, handoff, transformation, fork/join, conservation accounting, amendment/revocation, and closure.",
+  "cases": [
+    {
+      "name": "valid origin contract", "profile": "origin_contract", "expected": "PASS",
+      "document": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-1", "contract_version": 1, "issuer": "founder-1", "authority_basis": "delegated project charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "produce the signed release", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-2", "kind": "PROHIBIT", "statement": "never bypass the ethics gate", "assignment_mode": "OBSERVE", "lifecycle_state": "OPEN"}], "authority_ceiling": "no production deploy without founder approval", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE", "SEMANTIC_BOUNDED"], "completion_rule": "all REQUIRE obligations discharged and no PROHIBIT violated"}
+    },
+    {
+      "name": "reject origin contract with duplicate obligation identity", "profile": "origin_contract", "expected": "REJECT",
+      "document": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-2", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "OPEN"}, {"obligation_id": "ob-1", "kind": "VERIFY", "statement": "b", "assignment_mode": "SUBTASK", "lifecycle_state": "OPEN"}], "authority_ceiling": "none", "allowed_transformations": ["EXACT_REPRESENTATION"], "completion_rule": "done"}
+    },
+    {
+      "name": "reject origin contract transformed obligation without lineage", "profile": "origin_contract", "expected": "REJECT",
+      "document": {"profile_type": "origin_contract", "schema_version": "enas-profile-0.1", "contract_id": "contract-3", "contract_version": 1, "issuer": "founder-1", "authority_basis": "charter", "capability_boundary": {"mediated_effects": ["file_write"], "evidence_channels": ["audit_log"]}, "obligations": [{"obligation_id": "ob-1", "kind": "REQUIRE", "statement": "a", "assignment_mode": "TRANSFER", "lifecycle_state": "TRANSFORMED"}], "authority_ceiling": "none", "allowed_transformations": ["STRUCTURAL_EQUIVALENCE"], "completion_rule": "done"}
+    },
+    {
+      "name": "valid obligation handoff", "profile": "obligation_handoff", "expected": "PASS",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-1", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "ACCEPTED", "semantic_delta": {"preserved": ["ob-1"], "delegated": ["ob-1"], "discharged": [], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "reject observe handoff that discharges", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-2", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "OBSERVE", "acceptance_state": "EXECUTING", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "reject fulfilled handoff accounting for no discharge", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-3", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": ["ob-1"], "delegated": [], "discharged": [], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "reject rejected handoff that discharges", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-4", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "REJECTED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "reject handoff discharging an obligation it never received", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-5", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-x"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "reject handoff placing an obligation in two terminal categories", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-6", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "FULFILLED", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": ["ob-1"], "unresolved": []}}
+    },
+    {
+      "name": "reject terminal disposition before the handoff is fulfilled", "profile": "obligation_handoff", "expected": "REJECT",
+      "document": {"profile_type": "obligation_handoff", "schema_version": "enas-profile-0.1", "handoff_id": "ho-7", "obligation_ids": ["ob-1"], "sender": "agent-a", "receiver": "agent-b", "assignment_mode": "TRANSFER", "acceptance_state": "SENT", "semantic_delta": {"preserved": [], "delegated": [], "discharged": ["ob-1"], "transformed": [], "created": [], "revoked": [], "unresolved": []}}
+    },
+    {
+      "name": "valid structural-equivalence transformation", "profile": "transformation_record", "expected": "PASS",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-1", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1b"], "transformation_class": "STRUCTURAL_EQUIVALENCE", "loss_vector": [{"property": "acceptance_criteria", "status": "PRESERVED"}, {"property": "authority", "status": "PRESERVED"}], "discharges_predecessor": true}
+    },
+    {
+      "name": "valid authorized-variation transformation", "profile": "transformation_record", "expected": "PASS",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-2", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1c"], "transformation_class": "AUTHORIZED_VARIATION", "loss_vector": [{"property": "scope", "status": "BOUNDED_LOSS", "uncertainty": "reduced to a named subset"}], "authorization": {"principal": "founder-1", "authority_basis": "exception rule EX-3"}, "discharges_predecessor": false}
+    },
+    {
+      "name": "reject not-measured transformation that discharges", "profile": "transformation_record", "expected": "REJECT",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-3", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1d"], "transformation_class": "NOT_MEASURED", "loss_vector": [], "discharges_predecessor": true}
+    },
+    {
+      "name": "reject authorized-variation without authorization", "profile": "transformation_record", "expected": "REJECT",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-4", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1e"], "transformation_class": "AUTHORIZED_VARIATION", "loss_vector": [{"property": "scope", "status": "BOUNDED_LOSS"}], "discharges_predecessor": false}
+    },
+    {
+      "name": "reject semantic-bounded transformation with no loss vector", "profile": "transformation_record", "expected": "REJECT",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-5", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1f"], "transformation_class": "SEMANTIC_BOUNDED", "loss_vector": [], "discharges_predecessor": false}
+    },
+    {
+      "name": "reject exact-representation declaring a lost property", "profile": "transformation_record", "expected": "REJECT",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-6", "predecessor_obligation": "ob-1", "successor_obligations": ["ob-1g"], "transformation_class": "EXACT_REPRESENTATION", "loss_vector": [{"property": "precision", "status": "LOST"}], "discharges_predecessor": true}
+    },
+    {
+      "name": "reject discharging transformation with no successor obligation", "profile": "transformation_record", "expected": "REJECT",
+      "document": {"profile_type": "transformation_record", "schema_version": "enas-profile-0.1", "transformation_id": "tr-7", "predecessor_obligation": "ob-1", "successor_obligations": [], "transformation_class": "EXACT_REPRESENTATION", "loss_vector": [{"property": "encoding", "status": "PRESERVED"}], "discharges_predecessor": true}
+    },
+    {
+      "name": "valid fork record", "profile": "fork_join_record", "expected": "PASS",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-1", "phase": "FORK", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}, {"branch_id": "br-b", "disposition": "PARTITIONED", "contract_version": 1}]}
+    },
+    {
+      "name": "reject fork record carrying join-closure fields", "profile": "fork_join_record", "expected": "REJECT",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-6", "phase": "FORK", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}], "join": {"join_authority": "agent-j", "coverage_complete": true, "conflicts_resolved": true, "invariants_preserved": true, "conflict_rule": "EXPLICIT", "last_writer_wins_authorized": false, "parent_closed": true}}
+    },
+    {
+      "name": "valid join closing the parent", "profile": "fork_join_record", "expected": "PASS",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-2", "phase": "JOIN", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}], "join": {"join_authority": "agent-j", "coverage_complete": true, "conflicts_resolved": true, "invariants_preserved": true, "conflict_rule": "EXPLICIT", "last_writer_wins_authorized": false, "parent_closed": true}}
+    },
+    {
+      "name": "reject join closing the parent with incomplete coverage", "profile": "fork_join_record", "expected": "REJECT",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-3", "phase": "JOIN", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}], "join": {"join_authority": "agent-j", "coverage_complete": false, "conflicts_resolved": true, "invariants_preserved": true, "conflict_rule": "EXPLICIT", "last_writer_wins_authorized": false, "parent_closed": true}}
+    },
+    {
+      "name": "reject join using unauthorized last-writer-wins", "profile": "fork_join_record", "expected": "REJECT",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-4", "phase": "JOIN", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "JOINTLY_OWNED", "contract_version": 1}], "join": {"join_authority": "agent-j", "coverage_complete": true, "conflicts_resolved": true, "invariants_preserved": true, "conflict_rule": "LAST_WRITER_WINS", "last_writer_wins_authorized": false, "parent_closed": false}}
+    },
+    {
+      "name": "reject join record missing the join evaluation", "profile": "fork_join_record", "expected": "REJECT",
+      "document": {"profile_type": "fork_join_record", "schema_version": "enas-profile-0.1", "record_id": "fj-5", "phase": "JOIN", "parent_obligation": "ob-1", "branches": [{"branch_id": "br-a", "disposition": "PARTITIONED", "contract_version": 1}]}
+    },
+    {
+      "name": "valid conservation accounting", "profile": "conservation_accounting", "expected": "PASS",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-1", "transition_ref": "ho-1", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": ["ob-2"], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": true}
+    },
+    {
+      "name": "valid conservation accounting with a transformation", "profile": "conservation_accounting", "expected": "PASS",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-2", "transition_ref": "tr-1", "before": ["ob-1"], "created": ["ob-1b"], "after": ["ob-1b"], "discharged": [], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-1b"}], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+    },
+    {
+      "name": "reject conservation accounting that drops an obligation", "profile": "conservation_accounting", "expected": "REJECT",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-3", "transition_ref": "ho-9", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-1"], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+    },
+    {
+      "name": "reject conservation accounting with an obligation in two categories", "profile": "conservation_accounting", "expected": "REJECT",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-4", "transition_ref": "ho-10", "before": ["ob-1", "ob-2"], "created": [], "after": ["ob-2"], "discharged": ["ob-1"], "transformed": [], "revoked": [], "failed": ["ob-1"], "unresolved": [], "global_pass_claimed": false}
+    },
+    {
+      "name": "reject conservation accounting with an unbound transformation successor", "profile": "conservation_accounting", "expected": "REJECT",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-5", "transition_ref": "tr-9", "before": ["ob-1"], "created": [], "after": [], "discharged": [], "transformed": [{"obligation_id": "ob-1", "successor_ref": "ob-9"}], "revoked": [], "failed": [], "unresolved": [], "global_pass_claimed": false}
+    },
+    {
+      "name": "reject global pass while an obligation is unresolved", "profile": "conservation_accounting", "expected": "REJECT",
+      "document": {"profile_type": "conservation_accounting", "schema_version": "enas-profile-0.1", "accounting_id": "ca-6", "transition_ref": "cl-9", "before": ["ob-1"], "created": [], "after": [], "discharged": [], "transformed": [], "revoked": [], "failed": [], "unresolved": ["ob-1"], "global_pass_claimed": true}
+    },
+    {
+      "name": "valid amendment event", "profile": "amendment_revocation_event", "expected": "PASS",
+      "document": {"profile_type": "amendment_revocation_event", "schema_version": "enas-profile-0.1", "event_id": "am-1", "event_type": "AMENDMENT", "authorizing_principal": "founder-1", "authority_basis": "exception rule EX-1", "affected_contract_version": 1, "affected_obligations": ["ob-1"], "semantic_change": "narrow the deadline to a named subset", "effective_time": "2026-08-12T09:00:00Z", "scope": "future closure only", "reason": "scope reduction agreed", "affected_branches": ["br-a"], "in_flight_disposition": "CONTINUE", "retroactive_authorization": false}
+    },
+    {
+      "name": "reject event that retroactively authorizes", "profile": "amendment_revocation_event", "expected": "REJECT",
+      "document": {"profile_type": "amendment_revocation_event", "schema_version": "enas-profile-0.1", "event_id": "am-2", "event_type": "AMENDMENT", "authorizing_principal": "founder-1", "authority_basis": "EX-1", "affected_contract_version": 1, "affected_obligations": ["ob-1"], "semantic_change": "bless the prior unauthorized deploy", "effective_time": "2026-08-12T09:00:00Z", "scope": "retroactive", "reason": "cover the gap", "in_flight_disposition": "CONTINUE", "retroactive_authorization": true}
+    },
+    {
+      "name": "reject revocation continuing with unestablished reachability", "profile": "amendment_revocation_event", "expected": "REJECT",
+      "document": {"profile_type": "amendment_revocation_event", "schema_version": "enas-profile-0.1", "event_id": "am-3", "event_type": "REVOCATION", "authorizing_principal": "founder-1", "authority_basis": "EX-2", "affected_contract_version": 1, "affected_obligations": ["ob-1"], "semantic_change": "revoke the delegated authority", "effective_time": "2026-08-12T09:00:00Z", "scope": "all branches", "reason": "authority withdrawn", "affected_branches": ["br-a", "br-b"], "revocation_reachable": false, "in_flight_disposition": "CONTINUE", "retroactive_authorization": false}
+    },
+    {
+      "name": "valid closure with global pass", "profile": "closure_accounting", "expected": "PASS",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-1", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "VALIDLY_REVOKED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+    },
+    {
+      "name": "valid non-success closure with complete accounting", "profile": "closure_accounting", "expected": "PASS",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-2", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "FAILED"}], "invariants_revalidated": true, "enforcement_confirmed": false, "terminal_outcome": "FAILED", "global_verdict": "FAIL"}
+    },
+    {
+      "name": "reject succeeded closure with a failed obligation", "profile": "closure_accounting", "expected": "REJECT",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-3", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-2", "disposition": "FAILED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+    },
+    {
+      "name": "reject global pass beside a non-success terminal outcome", "profile": "closure_accounting", "expected": "REJECT",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-4", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": true, "enforcement_confirmed": true, "terminal_outcome": "ESCALATED", "global_verdict": "PASS"}
+    },
+    {
+      "name": "reject closure with an obligation in two dispositions", "profile": "closure_accounting", "expected": "REJECT",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-6", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}, {"obligation_id": "ob-1", "disposition": "FAILED"}], "invariants_revalidated": true, "enforcement_confirmed": false, "terminal_outcome": "FAILED", "global_verdict": "FAIL"}
+    },
+    {
+      "name": "reject succeeded closure without revalidated invariants", "profile": "closure_accounting", "expected": "REJECT",
+      "document": {"profile_type": "closure_accounting", "schema_version": "enas-profile-0.1", "closure_id": "cl-5", "contract_ref": "contract-1", "obligation_dispositions": [{"obligation_id": "ob-1", "disposition": "DISCHARGED"}], "invariants_revalidated": false, "enforcement_confirmed": true, "terminal_outcome": "SUCCEEDED", "global_verdict": "PASS"}
+    }
+  ]
+}

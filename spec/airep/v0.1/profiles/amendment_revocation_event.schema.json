@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/amendment_revocation_event.schema.json",
+  "title": "ENAS amendment and revocation event (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "event_id", "event_type", "authorizing_principal", "authority_basis", "affected_contract_version", "affected_obligations", "semantic_change", "effective_time", "scope", "reason", "in_flight_disposition", "retroactive_authorization"],
+  "properties": {
+    "profile_type": {"const": "amendment_revocation_event"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "event_id": {"$ref": "#/$defs/id"},
+    "event_type": {"enum": ["AMENDMENT", "REVOCATION"]},
+    "authorizing_principal": {"$ref": "#/$defs/id"},
+    "authority_basis": {"type": "string", "minLength": 1},
+    "affected_contract_version": {"type": "integer", "minimum": 1},
+    "affected_obligations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "semantic_change": {"type": "string", "minLength": 1},
+    "effective_time": {"type": "string", "format": "date-time"},
+    "scope": {"type": "string", "minLength": 1},
+    "reason": {"type": "string", "minLength": 1},
+    "affected_branches": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "revocation_reachable": {"type": "boolean"},
+    "in_flight_disposition": {"enum": ["STOP", "ROLLBACK", "CONTINUE"]},
+    "retroactive_authorization": {"type": "boolean"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

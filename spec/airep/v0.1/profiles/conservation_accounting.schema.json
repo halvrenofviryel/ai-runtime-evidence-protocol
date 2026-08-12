@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/conservation_accounting.schema.json",
+  "title": "ENAS obligation conservation accounting (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "accounting_id", "transition_ref", "before", "created", "after", "discharged", "transformed", "revoked", "failed", "unresolved", "global_pass_claimed"],
+  "properties": {
+    "profile_type": {"const": "conservation_accounting"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "accounting_id": {"$ref": "#/$defs/id"},
+    "transition_ref": {"$ref": "#/$defs/id"},
+    "before": {"$ref": "#/$defs/id_list"},
+    "created": {"$ref": "#/$defs/id_list"},
+    "after": {"$ref": "#/$defs/id_list"},
+    "discharged": {"$ref": "#/$defs/id_list"},
+    "transformed": {"type": "array", "uniqueItems": true, "items": {"type": "object", "additionalProperties": false, "required": ["obligation_id", "successor_ref"], "properties": {"obligation_id": {"$ref": "#/$defs/id"}, "successor_ref": {"$ref": "#/$defs/id"}}}},
+    "revoked": {"$ref": "#/$defs/id_list"},
+    "failed": {"$ref": "#/$defs/id_list"},
+    "unresolved": {"$ref": "#/$defs/id_list"},
+    "global_pass_claimed": {"type": "boolean"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "id_list": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+  }
+}

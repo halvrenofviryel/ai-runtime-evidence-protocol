@@ -36,6 +36,12 @@ CLAIM_COVERAGE_FIXTURE = (
     / "enas_profiles"
     / "enas_claim_coverage_cases.json"
 )
+OBLIGATION_FIXTURE = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "enas_profiles"
+    / "enas_obligation_protocol_cases.json"
+)
 
 SCHEMAS = {
     name: PROFILE_DIR / f"{name}.schema.json"
@@ -70,6 +76,13 @@ SCHEMAS = {
         "reliance_claim",
         "observed_operating_path",
         "claim_coverage_registry",
+        "origin_contract",
+        "obligation_handoff",
+        "transformation_record",
+        "fork_join_record",
+        "conservation_accounting",
+        "amendment_revocation_event",
+        "closure_accounting",
     )
 }
 
@@ -604,6 +617,172 @@ def _claim_coverage_registry(doc: dict[str, Any]) -> list[str]:
     return errors
 
 
+def _origin_contract(doc: dict[str, Any]) -> list[str]:
+    # §7.2/P5: obligation identity MUST be stable and unique — a duplicated obligation_id
+    # destroys the lineage that conservation (A3) depends on.
+    errors = []
+    ids = [ob["obligation_id"] for ob in doc["obligations"]]
+    if _duplicates(ids):
+        errors.append("obligation_id values must be unique within an origin contract")
+    # §8.4/A3: a TRANSFORMED obligation exists only through explicit predecessor->successor
+    # lineage; without a successor_ref its meaning has silently disappeared from accounting.
+    for ob in doc["obligations"]:
+        if ob["lifecycle_state"] == "TRANSFORMED" and "successor_ref" not in ob:
+            errors.append("a TRANSFORMED obligation requires an explicit successor_ref (predecessor-successor lineage)")
+    return errors
+
+
+def _obligation_handoff(doc: dict[str, Any]) -> list[str]:
+    # §8.5: an OBSERVE receiver may inspect or propose but cannot discharge; ambiguous or
+    # non-discharging delegation MUST NOT transfer discharge authority.
+    errors = []
+    delta = doc["semantic_delta"]
+    # §4.9/A3: the delta accounts for the obligations actually handed off — every disposition
+    # except newly created work must name an id present in obligation_ids, or the record is
+    # discharging/transforming an obligation it never received.
+    handed = set(doc["obligation_ids"])
+    for key in ("preserved", "delegated", "discharged", "transformed", "revoked", "unresolved"):
+        if any(oid not in handed for oid in delta[key]):
+            errors.append(f"semantic_delta.{key} names an obligation absent from obligation_ids")
+    # §8.4: an obligation cannot land in two incompatible terminal categories of one handoff.
+    terminal = [oid for key in ("discharged", "transformed", "revoked", "unresolved") for oid in delta[key]]
+    if _duplicates(terminal):
+        errors.append("an obligation appears in more than one terminal disposition of the handoff")
+    if doc["assignment_mode"] == "OBSERVE" and delta["discharged"]:
+        errors.append("an OBSERVE handoff cannot discharge an obligation")
+    # §4.8: sending is not fulfilment — a FULFILLED handoff must actually account for a
+    # discharge (or a valid transformation/revocation), not merely assert the terminal label.
+    if doc["acceptance_state"] == "FULFILLED" and not (delta["discharged"] or delta["transformed"] or delta["revoked"]):
+        errors.append("a FULFILLED handoff must account for a discharged, transformed, or revoked obligation")
+    # §4.8: a REJECTED handoff transferred nothing — it cannot have discharged or created work.
+    if doc["acceptance_state"] == "REJECTED" and (delta["discharged"] or delta["created"]):
+        errors.append("a REJECTED handoff cannot discharge or create obligations")
+    # §4.8: send != accept != execution != fulfilment — a terminal disposition (discharge,
+    # transform, revoke) cannot occur before the handoff is FULFILLED.
+    if doc["acceptance_state"] != "FULFILLED" and (delta["discharged"] or delta["transformed"] or delta["revoked"]):
+        errors.append("an obligation cannot be discharged, transformed, or revoked before the handoff is FULFILLED")
+    return errors
+
+
+def _transformation_record(doc: dict[str, Any]) -> list[str]:
+    # §8.10: NOT_MEASURED and INVALID transformations cannot discharge a predecessor obligation.
+    errors = []
+    cls = doc["transformation_class"]
+    if cls in {"NOT_MEASURED", "INVALID"} and doc["discharges_predecessor"]:
+        errors.append("a NOT_MEASURED or INVALID transformation cannot discharge its predecessor obligation")
+    # §8.10: an AUTHORIZED_VARIATION needs an authorizing principal AND successor obligations;
+    # human approval authorizes a variation, it does not by itself demonstrate equivalence.
+    if cls == "AUTHORIZED_VARIATION" and ("authorization" not in doc or not doc["successor_obligations"]):
+        errors.append("an AUTHORIZED_VARIATION requires an authorizing principal and explicit successor obligations")
+    # §8.10/P7: a SEMANTIC_BOUNDED transformation must expose its loss as a vector over named
+    # properties; an absent loss vector means bounded loss was never established.
+    if cls == "SEMANTIC_BOUNDED" and not doc["loss_vector"]:
+        errors.append("a SEMANTIC_BOUNDED transformation must expose an explicit loss vector")
+    # §8.10: an EXACT_REPRESENTATION claiming discharge cannot also declare a LOST property —
+    # a bijective method that lost a property is not exact.
+    if cls == "EXACT_REPRESENTATION" and any(item["status"] == "LOST" for item in doc["loss_vector"]):
+        errors.append("an EXACT_REPRESENTATION cannot declare a LOST property")
+    # §8.4/A3: a preserving transformation, or any transformation that discharges its
+    # predecessor, replaces the obligation's active representation — it MUST name at least one
+    # successor obligation, or the obligation has silently vanished inside the record.
+    if (cls in {"EXACT_REPRESENTATION", "STRUCTURAL_EQUIVALENCE", "SEMANTIC_BOUNDED"} or doc["discharges_predecessor"]) and not doc["successor_obligations"]:
+        errors.append("a preserving or discharging transformation must name at least one successor obligation")
+    return errors
+
+
+def _fork_join_record(doc: dict[str, Any]) -> list[str]:
+    # §8.7: a JOIN phase must carry the join authority's evaluation.
+    errors = []
+    # §8.7: a FORK declares only branch dispositions — join-time closure fields belong to a JOIN
+    # record; a FORK carrying a `join` object (e.g. parent_closed) is a contradictory record.
+    if doc["phase"] == "FORK" and "join" in doc:
+        errors.append("a FORK record must not carry join-closure fields")
+    if doc["phase"] == "JOIN" and "join" not in doc:
+        errors.append("a JOIN record requires the join authority's evaluation")
+        return errors
+    if doc["phase"] == "JOIN":
+        join = doc["join"]
+        # §8.6/§8.7: the parent obligation cannot be closed while coverage is incomplete,
+        # conflicts are unresolved, or an invariant is not preserved across the merged state.
+        if join["parent_closed"] and not (join["coverage_complete"] and join["conflicts_resolved"] and join["invariants_preserved"]):
+            errors.append("a JOIN cannot close the parent obligation without complete coverage, resolved conflicts, and preserved invariants")
+        # §8.7: last-writer-wins is not a normative conflict rule unless the origin contract
+        # explicitly authorizes it for the affected obligation.
+        if join["conflict_rule"] == "LAST_WRITER_WINS" and not join["last_writer_wins_authorized"]:
+            errors.append("last-writer-wins conflict resolution requires explicit origin-contract authorization")
+    return errors
+
+
+def _conservation_accounting(doc: dict[str, Any]) -> list[str]:
+    # §8.4: the identity-preserving partition
+    #   O_before (+) O_created = O_after (+) O_discharged (+) O_transformed (+) O_revoked (+) O_failed (+) O_unresolved
+    # An obligation present in none, or in more than one incompatible terminal category, means
+    # conservation has NOT been established.
+    errors = []
+    lhs = list(doc["before"]) + list(doc["created"])
+    transformed_ids = [item["obligation_id"] for item in doc["transformed"]]
+    rhs = (
+        list(doc["after"])
+        + list(doc["discharged"])
+        + transformed_ids
+        + list(doc["revoked"])
+        + list(doc["failed"])
+        + list(doc["unresolved"])
+    )
+    if _duplicates(lhs):
+        errors.append("an obligation appears more than once on the entering side of the transition")
+    if _duplicates(rhs):
+        errors.append("an obligation appears in more than one terminal or after category")
+    if sorted(lhs) != sorted(rhs):
+        errors.append("the conservation invariant is violated: the entering and resulting obligation sets differ")
+    # §8.4: an O_transformed entry is valid only when its successor is present in O_created or
+    # O_after and carries explicit lineage.
+    successor_pool = set(doc["created"]) | set(doc["after"])
+    for item in doc["transformed"]:
+        if item["successor_ref"] not in successor_pool:
+            errors.append("a transformed obligation's successor must be present in the created or after set")
+    # A3/A7: global PASS is prohibited while any obligation is terminally failed or unresolved.
+    if doc["global_pass_claimed"] and (doc["failed"] or doc["unresolved"]):
+        errors.append("global PASS is prohibited while an obligation remains failed or unresolved")
+    return errors
+
+
+def _amendment_revocation_event(doc: dict[str, Any]) -> list[str]:
+    # §8.8: an amendment MUST NOT retroactively authorize an action that was unauthorized when
+    # performed — the historical authorization failure must remain visible.
+    errors = []
+    if doc["retroactive_authorization"]:
+        errors.append("an amendment or revocation cannot retroactively authorize a previously unauthorized action")
+    # §8.8: revocation MUST propagate to reachable branches; a branch whose revocation status
+    # cannot be established MUST NOT continue a now-questionable actualization.
+    if doc["event_type"] == "REVOCATION" and doc["in_flight_disposition"] == "CONTINUE" and not doc.get("revocation_reachable", False):
+        errors.append("a revocation with unestablished branch reachability cannot let in-flight work CONTINUE")
+    return errors
+
+
+def _closure_accounting(doc: dict[str, Any]) -> list[str]:
+    # §4.14/A7: closure is not success. A global PASS or SUCCEEDED terminal outcome is sound only
+    # when every obligation is discharged or validly revoked, no obligation is failed or
+    # unresolved, invariants are revalidated, and required enforcement is confirmed.
+    errors = []
+    # §4.14/A7: closure accounts for EACH obligation exactly once — a duplicated obligation_id
+    # (e.g. one both DISCHARGED and FAILED) is not a coherent terminal accounting.
+    oids = [item["obligation_id"] for item in doc["obligation_dispositions"]]
+    if _duplicates(oids):
+        errors.append("an obligation appears in more than one closure disposition")
+    dispositions = {item["disposition"] for item in doc["obligation_dispositions"]}
+    claims_success = doc["terminal_outcome"] == "SUCCEEDED" or doc["global_verdict"] == "PASS"
+    if claims_success and ({"FAILED", "UNRESOLVED"} & dispositions):
+        errors.append("a SUCCEEDED/PASS closure cannot contain a failed or unresolved obligation")
+    if claims_success and not (doc["invariants_revalidated"] and doc["enforcement_confirmed"]):
+        errors.append("a SUCCEEDED/PASS closure requires revalidated invariants and confirmed enforcement")
+    # A7: a global PASS is issued against the whole contract; it must agree with a SUCCEEDED
+    # terminal outcome rather than being promoted beside a non-success outcome.
+    if doc["global_verdict"] == "PASS" and doc["terminal_outcome"] != "SUCCEEDED":
+        errors.append("a global PASS must coincide with a SUCCEEDED terminal outcome")
+    return errors
+
+
 SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "decision_input_manifest": _decision_input_manifest,
     "evidence_use": _evidence_use,
@@ -635,6 +814,13 @@ SEMANTIC: dict[str, Callable[[dict[str, Any]], list[str]]] = {
     "reliance_claim": _reliance_claim,
     "observed_operating_path": _observed_operating_path,
     "claim_coverage_registry": _claim_coverage_registry,
+    "origin_contract": _origin_contract,
+    "obligation_handoff": _obligation_handoff,
+    "transformation_record": _transformation_record,
+    "fork_join_record": _fork_join_record,
+    "conservation_accounting": _conservation_accounting,
+    "amendment_revocation_event": _amendment_revocation_event,
+    "closure_accounting": _closure_accounting,
 }
 
 
@@ -936,7 +1122,7 @@ def run_fixture(path: Path = FIXTURE) -> list[tuple[str, str, list[str]]]:
 
 
 def main() -> int:
-    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE, RECOVERY_CLOSURE_FIXTURE, CLAIM_COVERAGE_FIXTURE)
+    fixture_paths = (FIXTURE, LIFECYCLE_PROFILE_FIXTURE, RECOVERY_CLOSURE_FIXTURE, CLAIM_COVERAGE_FIXTURE, OBLIGATION_FIXTURE)
     fixtures = [json.loads(path.read_text(encoding="utf-8")) for path in fixture_paths]
     outcomes = [outcome for path in fixture_paths for outcome in run_fixture(path)]
     expected = {
@@ -954,7 +1140,7 @@ def main() -> int:
         for name, errors in failures:
             print(f"  {name}: {errors}")
         return 1
-    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across four fixture corpora")
+    print(f"ENAS profiles: {len(outcomes)} matched expected outcomes across five fixture corpora")
     return 0
 
 

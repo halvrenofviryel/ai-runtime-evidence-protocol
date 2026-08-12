@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/transformation_record.schema.json",
+  "title": "ENAS transformation-equivalence and loss record (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "transformation_id", "predecessor_obligation", "successor_obligations", "transformation_class", "loss_vector", "discharges_predecessor"],
+  "properties": {
+    "profile_type": {"const": "transformation_record"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "transformation_id": {"$ref": "#/$defs/id"},
+    "predecessor_obligation": {"$ref": "#/$defs/id"},
+    "successor_obligations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "transformation_class": {"enum": ["EXACT_REPRESENTATION", "STRUCTURAL_EQUIVALENCE", "SEMANTIC_BOUNDED", "AUTHORIZED_VARIATION", "NOT_MEASURED", "INVALID"]},
+    "loss_vector": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["property", "status"], "properties": {"property": {"type": "string", "minLength": 1}, "status": {"enum": ["PRESERVED", "BOUNDED_LOSS", "LOST"]}, "uncertainty": {"type": "string", "minLength": 1}}}},
+    "authorization": {"type": "object", "additionalProperties": false, "required": ["principal", "authority_basis"], "properties": {"principal": {"$ref": "#/$defs/id"}, "authority_basis": {"type": "string", "minLength": 1}}},
+    "discharges_predecessor": {"type": "boolean"}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

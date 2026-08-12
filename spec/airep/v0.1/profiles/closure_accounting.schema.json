@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/closure_accounting.schema.json",
+  "title": "ENAS end-to-end closure accounting (WP-OP)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "closure_id", "contract_ref", "obligation_dispositions", "invariants_revalidated", "enforcement_confirmed", "terminal_outcome", "global_verdict"],
+  "properties": {
+    "profile_type": {"const": "closure_accounting"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "closure_id": {"$ref": "#/$defs/id"},
+    "contract_ref": {"$ref": "#/$defs/id"},
+    "obligation_dispositions": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["obligation_id", "disposition"], "properties": {"obligation_id": {"$ref": "#/$defs/id"}, "disposition": {"enum": ["DISCHARGED", "VALIDLY_REVOKED", "FAILED", "UNRESOLVED"]}}}},
+    "invariants_revalidated": {"type": "boolean"},
+    "enforcement_confirmed": {"type": "boolean"},
+    "terminal_outcome": {"enum": ["SUCCEEDED", "FAILED", "BLOCKED", "CANCELLED", "ESCALATED", "ERROR"]},
+    "global_verdict": {"enum": ["PASS", "FAIL", "NOT_MEASURED", "INCONCLUSIVE", "ERROR"]}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}
