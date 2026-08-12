@@ -37,7 +37,7 @@ jobs:
       - name: enas_obligation_reconciler.py — WP-OP end-to-end conservation reference (bundle verdicts)
         run: python3 conformance/enas_obligation_reconciler.py
       - name: pytest — ENAS profile fixtures + bundle validators + obligation reconciler + reference emitter (positive + negative + totality + round-trip)
-        run: python3 -m pytest conformance/test_enas_profiles.py conformance/test_enas_bundle_validators.py conformance/test_enas_obligation_reconciler.py conformance/test_enas_reference_orchestrator.py -q
+        run: python3 -m pytest conformance/test_enas_profiles.py conformance/test_enas_bundle_validators.py conformance/test_enas_obligation_reconciler.py conformance/test_enas_reference_orchestrator.py conformance/test_enas_gate_adapter.py -q
       - name: test_jcs.py — Python<->Node RFC 8785 canonicalization agree byte-for-byte
         run: python3 conformance/test_jcs.py
       - name: test_verifier_parity.py — verify.py and verify.mjs reach the same verdict
