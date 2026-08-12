@@ -131,8 +131,12 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   verdicts separate: `global_verdict` is the **gate outcome** (PASS all-discharged / FAIL any-failed
   / INCONCLUSIVE revision-pending) and `reconciled` is the reconciler's **structural integrity**
   (expected PASS). The temporal view closes the snapshot's gap — a revision-pending `UNRESOLVED`
-  claim is watched **resolving** to `DISCHARGED`/`FAILED` across polls. Boundary: the feed observes
-  whatever the source reports; live wiring to a production gate remains external-review-gated.
+  claim is watched **resolving** to `DISCHARGED`/`FAILED` across polls. Each poll also anchors to
+  the report's tamper-evident `mcp_envelope_chain` via `chain_integrity` (`INTACT` / `BROKEN` /
+  `NOT_MEASURED` / `ABSENT`); a `BROKEN` hash chain raises an evidence-not-tamper-evident error, and
+  signature state is reported as `VERIFIED`/`NOT_MEASURED` only — the feed never claims the chain is
+  "trusted" on hash-chain integrity alone. Boundary: the feed observes whatever the source reports;
+  live wiring to a production gate remains external-review-gated.
 - [`test_enas_gate_feed.py`](./test_enas_gate_feed.py) — a simulated evolving source: a pending
   claim is watched resolving over three polls (INCONCLUSIVE→PASS→FAIL) with `resolved` deltas;
   revisions dedup to the latest directive; empty/malformed polls stay INCONCLUSIVE without crashing;
