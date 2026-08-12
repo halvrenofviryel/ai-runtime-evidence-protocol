@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/claim_coverage_registry.schema.json",
+  "title": "ENAS claim coverage registry (WP-CC)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "registry_id", "claim_id", "config_id", "config_identity_basis", "bound_records", "claim_status", "config_change"],
+  "properties": {
+    "profile_type": {"const": "claim_coverage_registry"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "registry_id": {"$ref": "#/$defs/id"},
+    "claim_id": {"$ref": "#/$defs/id"},
+    "config_id": {"$ref": "#/$defs/id"},
+    "config_identity_basis": {"enum": ["CONTENT_ADDRESSED", "PRODUCT_NAME", "MUTABLE_VERSION_LABEL"]},
+    "bound_records": {"type": "object", "additionalProperties": false, "required": ["assurance_claim_ref", "coverage_ref", "observed_path_ref", "reliance_ref", "nondeterminism_ref"], "properties": {"assurance_claim_ref": {"$ref": "#/$defs/id"}, "coverage_ref": {"$ref": "#/$defs/id"}, "observed_path_ref": {"$ref": "#/$defs/id"}, "reliance_ref": {"$ref": "#/$defs/id"}, "nondeterminism_ref": {"$ref": "#/$defs/id"}}},
+    "claim_status": {"enum": ["ACTIVE", "UNDER_REVIEW", "REVOKED", "RETIRED", "SUPERSEDED"]},
+    "config_change": {"type": "object", "additionalProperties": false, "required": ["material_change_occurred", "disposition"], "properties": {"material_change_occurred": {"type": "boolean"}, "disposition": {"enum": ["NONE", "INVALIDATED", "SUSPENDED", "CARRY_FORWARD_JUSTIFIED"]}, "carry_forward": {"type": "object", "additionalProperties": false, "required": ["rule_or_profile_id", "unchanged_properties", "evidence_refs"], "properties": {"rule_or_profile_id": {"$ref": "#/$defs/id"}, "unchanged_properties": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "evidence_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}}}}},
+    "lifecycle": {"type": "object", "additionalProperties": false, "required": ["event_time"], "properties": {"event_time": {"type": "string", "format": "date-time"}, "review_ref": {"$ref": "#/$defs/id"}, "revocation_ref": {"$ref": "#/$defs/id"}, "successor_claim_ref": {"$ref": "#/$defs/id"}}}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

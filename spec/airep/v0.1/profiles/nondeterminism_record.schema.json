@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/nondeterminism_record.schema.json",
+  "title": "ENAS nondeterminism record and run design (WP-CC)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "nondeterminism_id", "config_id", "stochastic_inputs", "uncontrolled_dependencies", "variance_sources", "run_design", "reproduction_class", "claimed_as", "supports_unqualified_claim"],
+  "properties": {
+    "profile_type": {"const": "nondeterminism_record"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "nondeterminism_id": {"$ref": "#/$defs/id"},
+    "config_id": {"$ref": "#/$defs/id"},
+    "stochastic_inputs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "uncontrolled_dependencies": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "sampling_parameters": {"type": "object"},
+    "variance_sources": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "run_design": {"type": "object", "additionalProperties": false, "required": ["selection_rule", "repetition", "aggregation", "comparison", "reporting", "declared_before_evaluation"], "properties": {"selection_rule": {"type": "string", "minLength": 1}, "repetition": {"type": "string", "minLength": 1}, "aggregation": {"type": "string", "minLength": 1}, "comparison": {"type": "string", "minLength": 1}, "reporting": {"type": "string", "minLength": 1}, "declared_before_evaluation": {"type": "boolean"}}},
+    "reproduction_class": {"enum": ["DETERMINISTIC_REPRODUCTION", "PROBABILISTIC_REDISCOVERY"]},
+    "claimed_as": {"enum": ["DETERMINISTIC", "PROBABILISTIC"]},
+    "supports_unqualified_claim": {"type": "boolean"}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}

@@ -1,0 +1,129 @@
+{
+  "description": "WP-CC scratch v2",
+  "cases": [
+    {
+      "name": "valid claim configuration", "profile": "claim_configuration", "expected": "PASS",
+      "document": {"profile_type": "claim_configuration", "schema_version": "enas-profile-0.1", "config_id": "cfg-1", "config_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "identity_basis": "CONTENT_ADDRESSED", "components": {"runtime_version": "phionyx-core 0.9.1", "model_descriptors": ["claude-opus"], "policy_artifacts": [{"artifact_id": "pol-1", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}], "orchestration_logic": {"artifact_id": "orch-1", "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "tool_capabilities": ["read_file"], "trust_boundaries": ["t4-issuer"], "data_sources": ["evidence-store"], "profile_parameters": {"strict": true}}}
+    },
+    {
+      "name": "reject configuration identity by product name", "profile": "claim_configuration", "expected": "REJECT",
+      "document": {"profile_type": "claim_configuration", "schema_version": "enas-profile-0.1", "config_id": "cfg-2", "config_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "identity_basis": "PRODUCT_NAME", "components": {"runtime_version": "phionyx", "model_descriptors": ["claude-opus"], "policy_artifacts": [{"artifact_id": "pol-1", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}], "orchestration_logic": {"artifact_id": "orch-1", "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"}, "tool_capabilities": ["read_file"], "trust_boundaries": ["t4-issuer"], "data_sources": ["evidence-store"], "profile_parameters": {}}}
+    },
+    {
+      "name": "valid nondeterminism record", "profile": "nondeterminism_record", "expected": "PASS",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-1", "config_id": "cfg-1", "stochastic_inputs": ["model_sampling"], "uncontrolled_dependencies": ["external_search"], "variance_sources": ["temperature"], "run_design": {"selection_rule": "all runs reported", "repetition": "5 runs", "aggregation": "median", "comparison": "vs baseline", "reporting": "full distribution", "declared_before_evaluation": true}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "PROBABILISTIC", "supports_unqualified_claim": false}
+    },
+    {
+      "name": "reject post-hoc run design supporting an unqualified claim", "profile": "nondeterminism_record", "expected": "REJECT",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-2", "config_id": "cfg-1", "stochastic_inputs": ["model_sampling"], "uncontrolled_dependencies": [], "variance_sources": ["temperature"], "run_design": {"selection_rule": "best run kept", "repetition": "5 runs", "aggregation": "max", "comparison": "n/a", "reporting": "single run", "declared_before_evaluation": false}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "PROBABILISTIC", "supports_unqualified_claim": true}
+    },
+    {
+      "name": "reject probabilistic rediscovery claimed as deterministic", "profile": "nondeterminism_record", "expected": "REJECT",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-3", "config_id": "cfg-1", "stochastic_inputs": ["model_sampling"], "uncontrolled_dependencies": [], "variance_sources": ["temperature"], "run_design": {"selection_rule": "all runs", "repetition": "5", "aggregation": "median", "comparison": "vs baseline", "reporting": "full", "declared_before_evaluation": true}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "DETERMINISTIC", "supports_unqualified_claim": false}
+    },
+    {
+      "name": "reject probabilistic rediscovery without exposed variance", "profile": "nondeterminism_record", "expected": "REJECT",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-4", "config_id": "cfg-1", "stochastic_inputs": ["model_sampling"], "uncontrolled_dependencies": [], "variance_sources": [], "run_design": {"selection_rule": "all runs", "repetition": "5", "aggregation": "median", "comparison": "vs baseline", "reporting": "full", "declared_before_evaluation": true}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "PROBABILISTIC", "supports_unqualified_claim": false}
+    },
+    {
+      "name": "valid probabilistic rediscovery sourced from uncontrolled dependencies", "profile": "nondeterminism_record", "expected": "PASS",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-6", "config_id": "cfg-1", "stochastic_inputs": [], "uncontrolled_dependencies": ["external_search_ranking"], "variance_sources": ["result_ordering"], "run_design": {"selection_rule": "all runs", "repetition": "5", "aggregation": "median", "comparison": "vs baseline", "reporting": "full", "declared_before_evaluation": true}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "PROBABILISTIC", "supports_unqualified_claim": false}
+    },
+    {
+      "name": "reject probabilistic rediscovery with no named nondeterminism source", "profile": "nondeterminism_record", "expected": "REJECT",
+      "document": {"profile_type": "nondeterminism_record", "schema_version": "enas-profile-0.1", "nondeterminism_id": "nd-5", "config_id": "cfg-1", "stochastic_inputs": [], "uncontrolled_dependencies": [], "variance_sources": ["temperature"], "run_design": {"selection_rule": "all runs", "repetition": "5", "aggregation": "median", "comparison": "vs baseline", "reporting": "full", "declared_before_evaluation": true}, "reproduction_class": "PROBABILISTIC_REDISCOVERY", "claimed_as": "PROBABILISTIC", "supports_unqualified_claim": false}
+    },
+    {
+      "name": "valid reliance claim", "profile": "reliance_claim", "expected": "PASS",
+      "document": {"profile_type": "reliance_claim", "schema_version": "enas-profile-0.1", "reliance_id": "rel-1", "claim_id": "claim-1", "intended_use": "routing evidence to an auditor", "relying_role": "internal reviewer", "preconditions": ["config unchanged"], "exclusions": ["not a legal compliance basis"], "validity": {"from": "2026-08-11T00:00:00Z", "until": "2026-09-11T00:00:00Z"}, "residual_risk": "semantic validity unassessed", "asserted_meaning": "TECHNICAL_ASSURANCE", "external_acceptance_dependencies": [], "inherits_without_acceptance": false}
+    },
+    {
+      "name": "reject reliance inheriting legal meaning without acceptance", "profile": "reliance_claim", "expected": "REJECT",
+      "document": {"profile_type": "reliance_claim", "schema_version": "enas-profile-0.1", "reliance_id": "rel-2", "claim_id": "claim-1", "intended_use": "legal compliance basis", "relying_role": "regulator", "preconditions": [], "exclusions": [], "validity": {"from": "2026-08-11T00:00:00Z", "until": "2026-09-11T00:00:00Z"}, "residual_risk": "none stated", "asserted_meaning": "TECHNICAL_ASSURANCE", "external_acceptance_dependencies": [], "inherits_without_acceptance": true}
+    },
+    {
+      "name": "reject non-technical reliance without external acceptance", "profile": "reliance_claim", "expected": "REJECT",
+      "document": {"profile_type": "reliance_claim", "schema_version": "enas-profile-0.1", "reliance_id": "rel-3", "claim_id": "claim-1", "intended_use": "regulatory acceptance", "relying_role": "assessor", "preconditions": [], "exclusions": [], "validity": {"from": "2026-08-11T00:00:00Z", "until": "2026-09-11T00:00:00Z"}, "residual_risk": "assessor acceptance not obtained", "asserted_meaning": "LEGAL_COMPLIANCE", "external_acceptance_dependencies": [], "inherits_without_acceptance": false}
+    },
+    {
+      "name": "reject reliance validity window not positive", "profile": "reliance_claim", "expected": "REJECT",
+      "document": {"profile_type": "reliance_claim", "schema_version": "enas-profile-0.1", "reliance_id": "rel-4", "claim_id": "claim-1", "intended_use": "routing", "relying_role": "reviewer", "preconditions": [], "exclusions": [], "validity": {"from": "2026-09-11T00:00:00Z", "until": "2026-08-11T00:00:00Z"}, "residual_risk": "none", "asserted_meaning": "TECHNICAL_ASSURANCE", "external_acceptance_dependencies": [], "inherits_without_acceptance": false}
+    },
+    {
+      "name": "valid observed operating path", "profile": "observed_operating_path", "expected": "PASS",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-1", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["user"], "trust_boundary_transition": "none", "assurance_class": "PRODUCER_VALIDATED"}], "assistance_events": [{"actor_id": "operator-1", "authority": "founder", "role": "SAFETY", "time": "2026-08-11T12:00:00Z", "contribution": "AUTHORIZATION", "affected_object": {"kind": "DECISION", "target_id": "decision-1"}, "effect_on_claim": "authorized the run", "material": true, "disclosed": true}], "classification": {"claimed_assurance_class": "PRODUCER_VALIDATED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "valid multi-segment observed path claims the weakest link", "profile": "observed_operating_path", "expected": "PASS",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-6", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["user"], "trust_boundary_transition": "none", "assurance_class": "OBSERVED"}, {"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["auditor"], "trust_boundary_transition": "reviewed", "assurance_class": "INDEPENDENTLY_CONFIRMED"}], "assistance_events": [], "classification": {"claimed_assurance_class": "OBSERVED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "reject declared-capability-only path", "profile": "observed_operating_path", "expected": "REJECT",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-2", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "declared-autonomous", "context_sources": ["user"], "trust_boundary_transition": "none", "assurance_class": "OBSERVED"}], "assistance_events": [], "classification": {"claimed_assurance_class": "OBSERVED"}, "declared_capability_only": true}
+    },
+    {
+      "name": "reject undisclosed material assistance", "profile": "observed_operating_path", "expected": "REJECT",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-3", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["user"], "trust_boundary_transition": "none", "assurance_class": "PRODUCER_VALIDATED"}], "assistance_events": [{"actor_id": "operator-1", "authority": "founder", "role": "ANALYTICAL", "time": "2026-08-11T12:00:00Z", "contribution": "INTERPRETATION", "affected_object": {"kind": "DECISION", "target_id": "decision-1"}, "effect_on_claim": "shaped the result", "material": true, "disclosed": false}], "classification": {"claimed_assurance_class": "PRODUCER_VALIDATED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "reject claimed assurance class exceeding the least-assured segment", "profile": "observed_operating_path", "expected": "REJECT",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-4", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "autonomous", "context_sources": ["user"], "trust_boundary_transition": "crossed", "assurance_class": "OBSERVED"}, {"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["auditor"], "trust_boundary_transition": "reviewed", "assurance_class": "INDEPENDENTLY_CONFIRMED"}], "assistance_events": [], "classification": {"claimed_assurance_class": "INDEPENDENTLY_CONFIRMED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "reject claimed assurance class below the weakest-link segment", "profile": "observed_operating_path", "expected": "REJECT",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-7", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["auditor"], "trust_boundary_transition": "reviewed", "assurance_class": "RETESTED"}, {"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["auditor"], "trust_boundary_transition": "reviewed", "assurance_class": "RETESTED"}], "assistance_events": [], "classification": {"claimed_assurance_class": "OBSERVED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "reject assistance event with no bound affected object", "profile": "observed_operating_path", "expected": "REJECT",
+      "document": {"profile_type": "observed_operating_path", "schema_version": "enas-profile-0.1", "path_id": "path-5", "config_id": "cfg-1", "segments": [{"configuration": "cfg-1", "autonomy_state": "supervised", "context_sources": ["user"], "trust_boundary_transition": "none", "assurance_class": "PRODUCER_VALIDATED"}], "assistance_events": [{"actor_id": "operator-1", "authority": "founder", "role": "ANALYTICAL", "time": "2026-08-11T12:00:00Z", "contribution": "INTERPRETATION", "effect_on_claim": "shaped the result", "material": true, "disclosed": true}], "classification": {"claimed_assurance_class": "PRODUCER_VALIDATED"}, "declared_capability_only": false}
+    },
+    {
+      "name": "valid claim coverage registry", "profile": "claim_coverage_registry", "expected": "PASS",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-1", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": false, "disposition": "NONE"}}
+    },
+    {
+      "name": "valid registry carry-forward with structured evidence", "profile": "claim_coverage_registry", "expected": "PASS",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-4", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": true, "disposition": "CARRY_FORWARD_JUSTIFIED", "carry_forward": {"rule_or_profile_id": "carry-rule-1", "unchanged_properties": ["policy_artifacts", "trust_boundaries"], "evidence_refs": ["diff-report-1"]}}}
+    },
+    {
+      "name": "valid revoked registry with revocation reference", "profile": "claim_coverage_registry", "expected": "PASS",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-6", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "REVOKED", "config_change": {"material_change_occurred": true, "disposition": "INVALIDATED"}, "lifecycle": {"event_time": "2026-08-11T12:00:00Z", "revocation_ref": "revocation-event-1"}}
+    },
+    {
+      "name": "reject claim bound to non-content-addressed configuration", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-2", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "MUTABLE_VERSION_LABEL", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": false, "disposition": "NONE"}}
+    },
+    {
+      "name": "reject active claim after a material config change with no disposition", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-3", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": true, "disposition": "NONE"}}
+    },
+    {
+      "name": "reject active claim after a material change invalidated", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-5", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": true, "disposition": "INVALIDATED"}}
+    },
+    {
+      "name": "reject carry-forward with no structured justification", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-7", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "ACTIVE", "config_change": {"material_change_occurred": true, "disposition": "CARRY_FORWARD_JUSTIFIED"}}
+    },
+    {
+      "name": "reject revoked claim with no revocation reference", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-8", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "REVOKED", "config_change": {"material_change_occurred": true, "disposition": "INVALIDATED"}}
+    },
+    {
+      "name": "valid under-review registry with review reference", "profile": "claim_coverage_registry", "expected": "PASS",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-9", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "UNDER_REVIEW", "config_change": {"material_change_occurred": false, "disposition": "NONE"}, "lifecycle": {"event_time": "2026-08-11T12:00:00Z", "review_ref": "review-event-1"}}
+    },
+    {
+      "name": "reject under-review claim with no review reference", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-10", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "UNDER_REVIEW", "config_change": {"material_change_occurred": false, "disposition": "NONE"}}
+    },
+    {
+      "name": "valid superseded registry with successor reference", "profile": "claim_coverage_registry", "expected": "PASS",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-11", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "SUPERSEDED", "config_change": {"material_change_occurred": true, "disposition": "INVALIDATED"}, "lifecycle": {"event_time": "2026-08-11T12:00:00Z", "successor_claim_ref": "claim-2"}}
+    },
+    {
+      "name": "reject superseded claim with no successor reference", "profile": "claim_coverage_registry", "expected": "REJECT",
+      "document": {"profile_type": "claim_coverage_registry", "schema_version": "enas-profile-0.1", "registry_id": "reg-12", "claim_id": "claim-1", "config_id": "cfg-1", "config_identity_basis": "CONTENT_ADDRESSED", "bound_records": {"assurance_claim_ref": "claim-attest-1", "coverage_ref": "coverage-1", "observed_path_ref": "path-1", "reliance_ref": "rel-1", "nondeterminism_ref": "nd-1"}, "claim_status": "SUPERSEDED", "config_change": {"material_change_occurred": true, "disposition": "INVALIDATED"}}
+    }
+  ]
+}

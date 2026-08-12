@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/reliance_claim.schema.json",
+  "title": "ENAS reliance claim (WP-CC)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["profile_type", "schema_version", "reliance_id", "claim_id", "intended_use", "relying_role", "preconditions", "exclusions", "validity", "residual_risk", "asserted_meaning", "external_acceptance_dependencies", "inherits_without_acceptance"],
+  "properties": {
+    "profile_type": {"const": "reliance_claim"},
+    "schema_version": {"const": "enas-profile-0.1"},
+    "reliance_id": {"$ref": "#/$defs/id"},
+    "claim_id": {"$ref": "#/$defs/id"},
+    "intended_use": {"type": "string", "minLength": 1},
+    "relying_role": {"type": "string", "minLength": 1},
+    "preconditions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "exclusions": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "validity": {"type": "object", "additionalProperties": false, "required": ["from", "until"], "properties": {"from": {"type": "string", "format": "date-time"}, "until": {"type": "string", "format": "date-time"}}},
+    "residual_risk": {"type": "string", "minLength": 1},
+    "asserted_meaning": {"enum": ["TECHNICAL_ASSURANCE", "LEGAL_COMPLIANCE", "REGULATORY", "ASSESSOR_ACCEPTANCE", "HUMAN_EQUIVALENCE", "SUBSTITUTION_FITNESS"]},
+    "external_acceptance_dependencies": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "inherits_without_acceptance": {"type": "boolean"}
+  },
+  "$defs": {"id": {"type": "string", "minLength": 1}, "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+}
