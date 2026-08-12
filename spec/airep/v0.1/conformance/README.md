@@ -107,6 +107,21 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   emit→reconcile round-trip: a success run and an honest-failure run both reconcile to
   `PASS`, a corrupted emitted bundle (one closure disposition dropped) is caught as
   `FAIL` by the independent reconciler, and the orchestrator's step guards raise.
+- [`enas_gate_adapter.py`](./enas_gate_adapter.py) — binds the reconciler to a real
+  **external** boundary: the Phionyx pipeline governance gate. `phionyx_session_report`
+  exposes a per-claim governance lifecycle (claim_created → evidence → gate_decision →
+  signed_record → outcome); the adapter maps a real session report onto WP-OP records —
+  each governed claim an obligation, the gate directive its disposition (`pass` →
+  discharged, `block` → failed, revise directives → unresolved at the snapshot) — and
+  reconciles them. **Boundary:** this maps a *captured* report from one real trace; the
+  directive→disposition mapping is a modelling choice and "unresolved" is pending-revision.
+  A reconciled `PASS` means the mapped bundle is a conserved lineage, not that the gate is
+  itself ENAS-conformant; a live feed and gate-native record emission are external-review-gated.
+- [`test_enas_gate_adapter.py`](./test_enas_gate_adapter.py) — reconciles a **verbatim
+  captured** real `phionyx_session_report` ([`fixtures/enas_profiles/enas_gate_report_capture.json`](./fixtures/enas_profiles/enas_gate_report_capture.json),
+  trace-fcf66f8bb7364529: 8 governed claims, 1 passed / 7 sent for revision) into a conserved
+  non-success lineage; plus all-pass→SUCCEEDED, blocked→failed, a tampered closure caught
+  `FAIL`, and empty-report rejection.
 - [`test_jcs.py`](./test_jcs.py) — the **cross-runtime canonicalization test**. It proves
   [`jcs.py`](./jcs.py) (Python, RFC 8785) and the Node canonicalizer produce byte-identical output
   across a value battery — including the cases naive sorted-key `json.dumps` gets wrong

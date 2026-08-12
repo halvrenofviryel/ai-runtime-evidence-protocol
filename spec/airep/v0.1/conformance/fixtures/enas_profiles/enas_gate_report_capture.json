@@ -1,0 +1,21 @@
+{
+  "provenance": "Captured verbatim from a real phionyx-pipeline phionyx_session_report call (trace-fcf66f8bb7364529) during the WP-OP reference-implementation work on 2026-08-12. Only the fields the gate adapter consumes are retained (claims, directives, lifecycle, trace_id). This is a captured runtime sample, not a live feed and not independently reproduced.",
+  "report": {
+    "trace_id": "trace-fcf66f8bb7364529",
+    "directives": {"regenerate": 4, "rewrite": 3, "pass": 1},
+    "lifecycle": {
+      "n_governed_claims": 8,
+      "funnel": {"claim_created": 8, "evidence_declared": 8, "evidence_verified": 8, "gate_decision": 8, "signed_record_persisted": 8, "outcome_observed": 0}
+    },
+    "claims": [
+      {"claim": "updated tools/phionyx_compliance mirror to the public fa18f18 baseline; 75 tests", "directive": "regenerate"},
+      {"claim": "update applied: tools/phionyx_compliance mirror now matches public fa18f18; full", "directive": "regenerate"},
+      {"claim": "update applied: tools/phionyx_compliance mirror now matches public fa18f18 and t", "directive": "rewrite"},
+      {"claim": "update applied: tools/phionyx_compliance mirror now matches public fa18f18 and t", "directive": "rewrite"},
+      {"claim": "update applied: tools/phionyx_compliance mirror now matches public fa18f18 and t", "directive": "pass"},
+      {"claim": "fix applied: ENAS v0.7 chain_view overlay now preserves the released wheel's exp", "directive": "rewrite"},
+      {"claim": "fix applied: ENAS v0.7 chain_view overlay now preserves the released wheel's exp", "directive": "regenerate"},
+      {"claim": "fix applied: WP-07 _revalidate now pins the fixed expected base contract and ref", "directive": "regenerate"}
+    ]
+  }
+}
