@@ -1,7 +1,7 @@
 # `control_delivery` ↔ OWASP APTS-HO-008 — a mapping backed by a working construct
 
 **Anchor status: VERIFIED against the primary source.** The verification anchor is the
-merge itself, not a mutable fetch: `OWASP/APTS#67` ("APTS-HO-008: require and verify
+merge itself, not a mutable fetch: `OWASP/APTS` PR 67 ("APTS-HO-008: require and verify
 control-channel delivery") is **MERGED** into `OWASP:main` — confirmed via
 `gh pr view 67 --repo OWASP/APTS`: `state=MERGED`, `mergedAt=2026-07-30T20:18:28Z`,
 `mergeCommit=2b210945361bac207f37a21440d0f34c05c07ad9`. The quoted text is the
