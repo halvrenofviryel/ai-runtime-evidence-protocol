@@ -19,8 +19,8 @@ vendor-specific.
 > **Status.** Seven profiles ship **published schemas** with worked examples the conformance
 > checker validates — `key_trust`, `chain_witness`, `control_delivery`, `eu_ai_act_log`,
 > `nist_ai_rmf`, `owasp_threat`, and `observability_transport` (see below). `evaluator_signature`
-> ships a **published schema + a single-record check + an 8-record fixture corpus** (its signed
-> worked example is a follow-on). The rest of the catalogue is **proposed** — design
+> and `artifact_manifest` each ship a **published schema + a single-record check + a fixture
+> corpus** (their signed worked examples are a follow-on). The rest of the catalogue is **proposed** — design
 > sketches without a schema yet. Maturity and open items are tracked in
 > [`../STATUS.md`](../STATUS.md), not repeated here. Where a profile names a specific regulation
 > or standard, treat the citation as **indicative** until checked against the primary source.
@@ -146,6 +146,19 @@ research-bounded (§20.1) concerns respectively, above what one record attests.
   (→ INCONCLUSIVE). **An evaluator signature by the producer's own key is not independent** — the same
   honesty as the witness. It does not re-verify the signature value or prove a competent evaluation. A
   signed worked example (a third evaluator seed in `examples/regenerate.py`) is a follow-on.
+- **`artifact_manifest`** — the evidence ARTIFACTS a decision was built from, each with a hash
+  computed AT COLLECTION plus provenance: `digest`, `collected_at`, `source`, `collector` (+ optional
+  `media_type`/`size_bytes`/`collection_method`). The core hashes the decision record, not the
+  artifacts it cites; this profile lets an artifact be re-hashed against its recorded digest (content
+  integrity since recording) and an artifact whose `collected_at` postdates the decision be detected.
+  Schema: [`artifact_manifest.schema.json`](./artifact_manifest.schema.json). Ships a **single-record
+  check** ([`../conformance/artifact_manifest_check.py`](../conformance/artifact_manifest_check.py))
+  and an **8-record fixture corpus** ([`../conformance/fixtures/artifact_manifest_cases.json`](../conformance/fixtures/artifact_manifest_cases.json)):
+  the check enforces unique `artifact_id` within the manifest and, when the record has
+  `subject.timestamp_utc`, that no artifact was collected after the decision it supports. **The digest
+  proves the content is unchanged since it was recorded, NOT that it was computed at `collected_at`** —
+  that timestamp is producer-asserted unless externally anchored. Distinct from `decision_input_manifest`
+  (which hashes decision inputs but carries no per-artifact collection time/provenance).
 - **`eu_ai_act_log`** — EU AI Act record-keeping fields: the system's risk tier and Annex III point,
   the Article 12 use period / reference database / match, Article 14 human oversight (by pseudonymous
   role, no personal data), Article 19 log retention, and Article 72/73 post-market / serious-incident
