@@ -1,0 +1,122 @@
+{
+  "description": "control_delivery reconciliation cases. Each bundle is a set of control_delivery phase records; the reconciler decides a per-instruction status and a global verdict. The load-bearing case is 'issuer_only_delivered_is_unconfirmed': the reconciler MUST NOT return DELIVERED for an instruction with no independent enforcement-side observation (APTS-HO-008: 'An unacknowledged kill instruction MUST NOT be treated as delivered'). Boundary values exercise APTS-HO-008 item 9; the default-safe UNCONFIRMED path exercises item 10.",
+  "cases": [
+    {
+      "name": "delivered_and_enforced_both_sides",
+      "expected": "PASS",
+      "expected_status": {"kill-001": "DELIVERED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-001", "instruction_hash": "sha256:aa01", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "network", "channel": "operator-console", "authority": {"issuer_id": "ed25519:pinned", "writable_by_controlled_system": false}},
+          {"instruction_id": "kill-001", "instruction_hash": "sha256:aa01", "phase": "acknowledged", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:01Z", "boundary": "network", "resolved_path": "/run/governor/kill.sock"},
+          {"instruction_id": "kill-001", "instruction_hash": "sha256:aa01", "phase": "enforced", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:02Z", "result": "applied"}
+        ]
+      }
+    },
+    {
+      "name": "explicit_delivery_failure",
+      "expected": "PASS",
+      "expected_status": {"kill-002": "FAILED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-002", "instruction_hash": "sha256:bb02", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "mount"},
+          {"instruction_id": "kill-002", "instruction_hash": "sha256:bb02", "phase": "delivery_failed", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:03Z", "boundary": "mount", "resolved_path": "/var/lib/governor/kill.signed.json", "failure": {"reason": "absent at resolved_path", "hypothesis": "mount propagation gap", "root_cause_isolated": false}}
+        ]
+      }
+    },
+    {
+      "name": "issuer_only_delivered_is_unconfirmed",
+      "expected": "PASS",
+      "expected_status": {"kill-003": "UNCONFIRMED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-003", "instruction_hash": "sha256:cc03", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "namespace"},
+          {"instruction_id": "kill-003", "instruction_hash": "sha256:cc03", "phase": "delivered", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:01Z", "boundary": "namespace", "resolved_path": "/proc/1/root/run/governor/kill.sock"}
+        ]
+      }
+    },
+    {
+      "name": "enforced_no_effect_is_delivered_not_failed",
+      "expected": "PASS",
+      "expected_status": {"kill-004": "DELIVERED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-004", "instruction_hash": "sha256:dd04", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "container"},
+          {"instruction_id": "kill-004", "instruction_hash": "sha256:dd04", "phase": "enforced", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:02Z", "result": "no_effect"}
+        ]
+      }
+    },
+    {
+      "name": "boundary_coverage_privilege_separation",
+      "expected": "PASS",
+      "expected_status": {"kill-005": "DELIVERED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-005", "instruction_hash": "sha256:ee05", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "privilege_separation", "resolved_path": "/run/governor/ctl", "mount_identity": "dev=8:1,ino=44210"},
+          {"instruction_id": "kill-005", "instruction_hash": "sha256:ee05", "phase": "acknowledged", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:01Z", "boundary": "privilege_separation", "resolved_path": "/run/governor/ctl", "mount_identity": "dev=8:1,ino=44210", "latency_ms": 12}
+        ]
+      }
+    },
+    {
+      "name": "witness_confirmation_counts",
+      "expected": "PASS",
+      "expected_status": {"kill-006": "DELIVERED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-006", "instruction_hash": "sha256:ff06", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "ipc"},
+          {"instruction_id": "kill-006", "instruction_hash": "sha256:ff06", "phase": "observed", "observed_by": "witness", "observed_at": "2026-05-30T00:00:05Z", "boundary": "ipc"}
+        ]
+      }
+    },
+    {
+      "name": "substitution_same_id_different_hash",
+      "expected": "FAIL",
+      "expected_status": {"kill-007": "SUBSTITUTION"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-007", "instruction_hash": "sha256:1111", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "network"},
+          {"instruction_id": "kill-007", "instruction_hash": "sha256:2222", "phase": "acknowledged", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:01Z", "boundary": "network"}
+        ]
+      }
+    },
+    {
+      "name": "delivery_failed_without_reason",
+      "expected": "FAIL",
+      "expected_status": {"kill-008": "FAILED"},
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-008", "instruction_hash": "sha256:8888", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z", "boundary": "mount"},
+          {"instruction_id": "kill-008", "instruction_hash": "sha256:8888", "phase": "delivery_failed", "observed_by": "enforcement_point", "observed_at": "2026-05-30T00:00:03Z", "boundary": "mount", "failure": {"hypothesis": "unknown", "root_cause_isolated": false}}
+        ]
+      }
+    },
+    {
+      "name": "malformed_missing_instruction_hash",
+      "expected": "INCONCLUSIVE",
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-009", "phase": "issued", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z"}
+        ]
+      }
+    },
+    {
+      "name": "malformed_bad_phase_enum",
+      "expected": "INCONCLUSIVE",
+      "bundle": {
+        "records": [
+          {"instruction_id": "kill-010", "instruction_hash": "sha256:aaaa", "phase": "teleported", "observed_by": "issuer", "observed_at": "2026-05-30T00:00:00Z"}
+        ]
+      }
+    },
+    {
+      "name": "empty_records_list",
+      "expected": "INCONCLUSIVE",
+      "bundle": {"records": []}
+    },
+    {
+      "name": "record_not_an_object",
+      "expected": "INCONCLUSIVE",
+      "bundle": {"records": ["not-a-record"]}
+    }
+  ]
+}
