@@ -1,0 +1,94 @@
+{
+  "description": "sequence_integrity chains. The check confirms decision_index is 0..n-1 in order (gap/duplicate/reorder are FAIL), that previous-links form an unbroken chain from genesis, and that a presented chain is not shorter than a tail chain_witness head.length (truncation). Synthetic but consistently-linked sha256 values; the check compares link strings, it does not recompute content hashes.",
+  "cases": [
+    {
+      "name": "valid_three_record_chain",
+      "expected": "PASS",
+      "expected_truncation_checked": false,
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
+        {"subject": {"decision_index": 2}, "integrity": {"previous": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "current": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+      ]
+    },
+    {
+      "name": "valid_witnessed_chain_length_matches",
+      "expected": "PASS",
+      "expected_truncation_checked": true,
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, "profiles": {"chain_witness": {"chain_id": "c-1", "head": {"decision_index": 1, "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "length": 2}}}}
+      ]
+    },
+    {
+      "name": "index_gap",
+      "expected": "FAIL",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
+        {"subject": {"decision_index": 3}, "integrity": {"previous": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "current": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+      ]
+    },
+    {
+      "name": "duplicate_index",
+      "expected": "FAIL",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "current": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+      ]
+    },
+    {
+      "name": "out_of_order",
+      "expected": "FAIL",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 2}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "current": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}}
+      ]
+    },
+    {
+      "name": "broken_previous_link",
+      "expected": "FAIL",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}}
+      ]
+    },
+    {
+      "name": "genesis_previous_wrong",
+      "expected": "FAIL",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}}
+      ]
+    },
+    {
+      "name": "truncated_vs_witness",
+      "expected": "FAIL",
+      "expected_truncation_checked": true,
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},
+        {"subject": {"decision_index": 1}, "integrity": {"previous": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "current": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}, "profiles": {"chain_witness": {"chain_id": "c-1", "head": {"decision_index": 2, "current": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "length": 3}}}}
+      ]
+    },
+    {
+      "name": "empty_chain",
+      "expected": "INCONCLUSIVE",
+      "chain": []
+    },
+    {
+      "name": "malformed_missing_decision_index",
+      "expected": "INCONCLUSIVE",
+      "chain": [
+        {"integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}
+      ]
+    },
+    {
+      "name": "witness_present_but_no_length",
+      "expected": "INCONCLUSIVE",
+      "chain": [
+        {"subject": {"decision_index": 0}, "integrity": {"previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000", "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}, "profiles": {"chain_witness": {"chain_id": "c-1", "head": {"decision_index": 0, "current": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}}}
+      ]
+    }
+  ]
+}

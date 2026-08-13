@@ -1,0 +1,111 @@
+{
+  "description": "artifact_manifest single-record cases. The check confirms every artifact carries a collection-time hash + provenance, that artifact_ids are unique, and — when the record has subject.timestamp_utc — that no artifact was collected after the decision it supports. Load-bearing negatives: 'duplicate_artifact_id' and 'collected_after_decision' -> FAIL; a malformed digest/missing collected_at -> INCONCLUSIVE.",
+  "cases": [
+    {
+      "name": "valid_two_artifacts",
+      "expected": "PASS",
+      "expected_temporal_checked": true,
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-1",
+            "trace_id": "trace-abc",
+            "artifacts": [
+              {"artifact_id": "a-log", "digest": "sha256:aaaa", "collected_at": "2026-05-30T11:59:00Z", "source": "https://host/logs/run.txt", "collector": "collector-agent/1.0", "media_type": "text/plain", "size_bytes": 2048, "collection_method": "http_get"},
+              {"artifact_id": "a-shot", "digest": "sha256:bbbb", "collected_at": "2026-05-30T11:59:30Z", "source": "screen://session/42", "collector": "collector-agent/1.0", "media_type": "image/png"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "valid_no_decision_timestamp",
+      "expected": "PASS",
+      "expected_temporal_checked": false,
+      "record": {
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-2",
+            "artifacts": [
+              {"artifact_id": "only", "digest": "sha256:cccc", "collected_at": "2026-05-30T09:00:00Z", "source": "file:///data/evidence.bin", "collector": "human:analyst-7"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "duplicate_artifact_id",
+      "expected": "FAIL",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-3",
+            "artifacts": [
+              {"artifact_id": "dup", "digest": "sha256:1111", "collected_at": "2026-05-30T11:00:00Z", "source": "s1", "collector": "c1"},
+              {"artifact_id": "dup", "digest": "sha256:2222", "collected_at": "2026-05-30T11:30:00Z", "source": "s2", "collector": "c1"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "collected_after_decision",
+      "expected": "FAIL",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-4",
+            "artifacts": [
+              {"artifact_id": "late", "digest": "sha256:3333", "collected_at": "2026-05-30T13:00:00Z", "source": "s", "collector": "c"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "malformed_bad_digest",
+      "expected": "INCONCLUSIVE",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-5",
+            "artifacts": [
+              {"artifact_id": "x", "digest": "not-a-digest", "collected_at": "2026-05-30T11:00:00Z", "source": "s", "collector": "c"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "missing_collected_at",
+      "expected": "INCONCLUSIVE",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "profiles": {
+          "artifact_manifest": {
+            "manifest_id": "m-6",
+            "artifacts": [
+              {"artifact_id": "x", "digest": "sha256:4444", "source": "s", "collector": "c"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "empty_artifacts",
+      "expected": "INCONCLUSIVE",
+      "record": {
+        "profiles": {"artifact_manifest": {"manifest_id": "m-7", "artifacts": []}}
+      }
+    },
+    {
+      "name": "no_artifact_manifest_block",
+      "expected": "INCONCLUSIVE",
+      "record": {"subject": {"timestamp_utc": "2026-05-30T12:00:00Z"}, "profiles": {}}
+    }
+  ]
+}
