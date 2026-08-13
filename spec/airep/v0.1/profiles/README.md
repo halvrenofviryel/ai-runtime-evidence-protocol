@@ -16,9 +16,11 @@ test.
 So profiles let AIREP fit many industries without making the shared format bigger or
 vendor-specific.
 
-> **Status.** Six profiles ship **published schemas** with worked examples the conformance
+> **Status.** Seven profiles ship **published schemas** with worked examples the conformance
 > checker validates — `key_trust`, `chain_witness`, `control_delivery`, `eu_ai_act_log`,
-> `nist_ai_rmf`, `owasp_threat`, and `observability_transport` (see below). The rest of the catalogue is **proposed** — design
+> `nist_ai_rmf`, `owasp_threat`, and `observability_transport` (see below). `evaluator_signature`
+> ships a **published schema + a single-record check + an 8-record fixture corpus** (its signed
+> worked example is a follow-on). The rest of the catalogue is **proposed** — design
 > sketches without a schema yet. Maturity and open items are tracked in
 > [`../STATUS.md`](../STATUS.md), not repeated here. Where a profile names a specific regulation
 > or standard, treat the citation as **indicative** until checked against the primary source.
@@ -131,6 +133,19 @@ research-bounded (§20.1) concerns respectively, above what one record attests.
   [`../conformance/CONFORMANCE_CLASSES.md`](../conformance/CONFORMANCE_CLASSES.md)
   §TRUSTED_NOT_IMPLEMENTED. **A producer-signed witness provides no truncation defense** — the
   witness key MUST be independent, or the profile is theater.
+- **`evaluator_signature`** — the third signature role: an independent EVALUATOR's attestation,
+  distinct from the producer (`integrity.signature`) and the witness (`chain_witness`). Carries
+  `evaluator_id`, `evaluator_key_id`, `signed_over` (the record's `integrity.current`), a `verdict`
+  (concur / dissent / inconclusive), `evaluated_at`, optional `scope`/`public_key`, and the
+  `signature`. Schema: [`evaluator_signature.schema.json`](./evaluator_signature.schema.json). Ships
+  a **single-record check** ([`../conformance/evaluator_signature_check.py`](../conformance/evaluator_signature_check.py))
+  and an **8-record fixture corpus** ([`../conformance/fixtures/evaluator_signature_cases.json`](../conformance/fixtures/evaluator_signature_cases.json)):
+  the check binds the attestation to the record (`signed_over == integrity.current`) and ESTABLISHES
+  independence (`evaluator_key_id` != producer `key_trust.key_id`), never reporting PASS on an
+  attestation made with the producer's own key, nor when there is no producer key to compare against
+  (→ INCONCLUSIVE). **An evaluator signature by the producer's own key is not independent** — the same
+  honesty as the witness. It does not re-verify the signature value or prove a competent evaluation. A
+  signed worked example (a third evaluator seed in `examples/regenerate.py`) is a follow-on.
 - **`eu_ai_act_log`** — EU AI Act record-keeping fields: the system's risk tier and Annex III point,
   the Article 12 use period / reference database / match, Article 14 human oversight (by pseudonymous
   role, no personal data), Article 19 log retention, and Article 72/73 post-market / serious-incident
