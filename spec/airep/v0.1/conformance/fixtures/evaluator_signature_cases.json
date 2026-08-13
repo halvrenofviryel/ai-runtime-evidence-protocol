@@ -1,0 +1,137 @@
+{
+  "description": "evaluator_signature single-record cases. The check binds the attestation to the record (signed_over == integrity.current), establishes independence (evaluator_key_id != producer profiles.key_trust.key_id), and rejects an evaluation timestamped before the record it evaluates. The load-bearing negatives are 'same_key_as_producer' (not independent -> FAIL) and 'no_key_trust' (independence cannot be established -> INCONCLUSIVE, never PASS).",
+  "cases": [
+    {
+      "name": "independent_concur",
+      "expected": "PASS",
+      "expected_independence": "established",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "acme-audit", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+            "verdict": "concur", "evaluated_at": "2026-05-30T01:00:00Z",
+            "scope": {"covers": ["cited policy artifact resolves and matches its digest"], "does_not_cover": ["factual correctness of the model output"]},
+            "signature": {"alg": "Ed25519", "value": "deadbeef"}
+          }
+        }
+      }
+    },
+    {
+      "name": "independent_dissent",
+      "expected": "PASS",
+      "expected_independence": "established",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:2222222222222222222222222222222222222222222222222222222222222222"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "third-party-reviewer", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+            "verdict": "dissent", "evaluated_at": "2026-05-30T02:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "cafe"}
+          }
+        }
+      }
+    },
+    {
+      "name": "same_key_as_producer",
+      "expected": "FAIL",
+      "expected_independence": "established",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:3333333333333333333333333333333333333333333333333333333333333333"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "self-evaluation", "evaluator_key_id": "producer-key-1",
+            "signed_over": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+            "verdict": "concur", "evaluated_at": "2026-05-30T01:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "aa"}
+          }
+        }
+      }
+    },
+    {
+      "name": "signed_over_mismatch",
+      "expected": "FAIL",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:4444444444444444444444444444444444444444444444444444444444444444"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "acme-audit", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+            "verdict": "concur", "evaluated_at": "2026-05-30T01:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "bb"}
+          }
+        }
+      }
+    },
+    {
+      "name": "evaluated_before_produced",
+      "expected": "FAIL",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T12:00:00Z"},
+        "integrity": {"current": "sha256:5555555555555555555555555555555555555555555555555555555555555555"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "acme-audit", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+            "verdict": "concur", "evaluated_at": "2026-05-30T06:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "cc"}
+          }
+        }
+      }
+    },
+    {
+      "name": "no_key_trust_independence_unconfirmed",
+      "expected": "INCONCLUSIVE",
+      "expected_independence": "unconfirmed",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:6666666666666666666666666666666666666666666666666666666666666666"},
+        "profiles": {
+          "evaluator_signature": {
+            "evaluator_id": "acme-audit", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+            "verdict": "concur", "evaluated_at": "2026-05-30T01:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "dd"}
+          }
+        }
+      }
+    },
+    {
+      "name": "malformed_bad_verdict_enum",
+      "expected": "INCONCLUSIVE",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:7777777777777777777777777777777777777777777777777777777777777777"},
+        "profiles": {
+          "key_trust": {"key_id": "producer-key-1"},
+          "evaluator_signature": {
+            "evaluator_id": "acme-audit", "evaluator_key_id": "evaluator-key-9",
+            "signed_over": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+            "verdict": "maybe", "evaluated_at": "2026-05-30T01:00:00Z",
+            "signature": {"alg": "Ed25519", "value": "ee"}
+          }
+        }
+      }
+    },
+    {
+      "name": "no_evaluator_block",
+      "expected": "INCONCLUSIVE",
+      "record": {
+        "subject": {"timestamp_utc": "2026-05-30T00:00:00Z"},
+        "integrity": {"current": "sha256:8888888888888888888888888888888888888888888888888888888888888888"},
+        "profiles": {"key_trust": {"key_id": "producer-key-1"}}
+      }
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/profiles/evaluator_signature.schema.json",
+  "title": "AIREP profile: evaluator_signature (independent evaluator attestation) v0.1",
+  "description": "Validates a 'profiles.evaluator_signature' block: a THIRD signature role, distinct from the two the format already has. The core's integrity.signature is the PRODUCER's signature over the record content ('I made this record'); profiles.chain_witness carries a WITNESS signature over the chain head ('this is the current, untruncated head'). Neither says an independent party EVALUATED the decision. This profile carries an EVALUATOR's signed attestation: a party that re-checked the record's claim against its evidence and reached its own verdict, signing over the record's integrity.current with a key DISTINCT from the producer's. CRITICAL HONESTY: an evaluator signature made with the producer's own key is not an independent attestation — it only re-states the producer. A verifier MUST establish that evaluator_key_id differs from the producer's key (profiles.key_trust.key_id); a bare distinct evaluator_id string is not proof of a distinct key. This profile records the attestation and binds it to the exact record; it does NOT prove the evaluator performed a competent evaluation, only that a distinct key attested one. It attaches only under profiles.evaluator_signature and never changes the core: deleting the profiles block leaves a valid core record (the neutrality test).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["evaluator_id", "evaluator_key_id", "signed_over", "verdict", "evaluated_at", "signature"],
+  "properties": {
+    "evaluator_id": {
+      "type": "string",
+      "description": "Identifier of the evaluating party (an organization, team, or individual). Unauthenticated text unless corroborated by the evaluator's key trust; the load-bearing identity is evaluator_key_id, not this label.",
+      "minLength": 1
+    },
+    "evaluator_key_id": {
+      "type": "string",
+      "description": "Stable key id (kid) of the key that produced this attestation's signature. It MUST differ from the producer's signing key (profiles.key_trust.key_id) for the attestation to be independent — the whole point of a third signature. A verifier that cannot establish this distinctness cannot report the attestation as independent.",
+      "minLength": 1
+    },
+    "signed_over": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "The record's integrity.current that this attestation covers. Binding to integrity.current (not to a re-derived hash the evaluator computed for itself) is what ties the verdict to the exact content the producer signed. A verifier MUST check signed_over == the record's integrity.current; a mismatch means the evaluator signed a different record than the one presented."
+    },
+    "verdict": {
+      "type": "string",
+      "description": "The evaluator's own assessment of the record's claim against its evidence. 'concur' — the evaluator reached the same conclusion. 'dissent' — the evaluator disagrees with the producer's claim or decision. 'inconclusive' — the evaluator could not determine the claim from the evidence available to it. 'concur' is an independent second opinion, NOT a proof of correctness.",
+      "enum": ["concur", "dissent", "inconclusive"]
+    },
+    "evaluated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the evaluation was made (RFC 3339, UTC). An evaluation timestamp earlier than the record's own subject.timestamp_utc is a contradiction a reader should notice."
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "What the evaluator actually checked, and what it did not — kept separate so a reader does not read a bounded evaluation as a total one.",
+      "properties": {
+        "covers": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The specific propositions the evaluator assessed (e.g. 'the cited policy artifact resolves and matches its digest')."
+        },
+        "does_not_cover": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "What the evaluator explicitly did not assess (e.g. 'the factual correctness of the model output')."
+        }
+      }
+    },
+    "algorithm": {
+      "type": "string",
+      "description": "The signature algorithm (for example 'Ed25519'), so a verifier can select the right verification routine."
+    },
+    "public_key": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["format", "value"],
+      "description": "Optional: the evaluator's public key (or a pointer) a verifier uses to re-check 'signature'. When absent, the verifier must resolve evaluator_key_id through an out-of-band trust store.",
+      "properties": {
+        "format": {"enum": ["raw_hex", "pem", "jwk", "did", "ref"]},
+        "value": {"type": "string", "description": "Key material in the named format, or a pointer when format is 'ref'."}
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["alg", "value"],
+      "description": "The evaluator's signature over the canonical form of {evaluator_id, evaluator_key_id, signed_over, verdict, evaluated_at}. A verifier that does not re-check this value has confirmed only that an attestation is PRESENT, not that it is valid.",
+      "properties": {
+        "alg": {"type": "string", "description": "Signature algorithm, e.g. 'Ed25519'."},
+        "value": {"type": "string", "description": "The signature material."}
+      }
+    }
+  }
+}
