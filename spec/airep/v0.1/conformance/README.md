@@ -111,9 +111,10 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
   **external** boundary: the Phionyx pipeline governance gate. `phionyx_session_report`
   exposes a per-claim governance lifecycle (claim_created → evidence → gate_decision →
   signed_record → outcome); the adapter maps a real session report onto WP-OP records —
-  each governed claim an obligation, the gate directive its disposition (`pass` →
-  discharged, `block` → failed, revise directives → unresolved at the snapshot) — and
-  reconciles them. **Boundary:** this maps a *captured* report from one real trace; the
+  each governed claim an obligation **identified by its stable `claim_id`** (never by
+  claim text — P0-C; positional only when a unique id is absent), the gate directive its
+  disposition (`pass` → discharged, `block` → failed, revise directives → unresolved at
+  the snapshot) — and reconciles them. **Boundary:** this maps a *captured* report from one real trace; the
   directive→disposition mapping is a modelling choice and "unresolved" is pending-revision.
   A reconciled `PASS` means the mapped bundle is a conserved lineage, not that the gate is
   itself ENAS-conformant; a live feed and gate-native record emission are external-review-gated.
@@ -126,7 +127,9 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
 - [`enas_gate_feed.py`](./enas_gate_feed.py) — turns the one-shot adapter into a **live feed**.
   A `GateFeed` holds a dependency-injected `report_source` callable (a running Phionyx process
   wires the live `phionyx_session_report`; tests wire a simulated evolving source) and, on each
-  `poll()`, resamples the current report, deduplicates claims to their latest gate directive,
+  `poll()`, resamples the current report, deduplicates claims to their latest gate directive
+  **keyed by stable `claim_id`** (text only as a degraded fallback — so two same-text claims
+  stay distinct and a revised claim is tracked across edited text; P0-C),
   reconciles, and reports how each obligation's disposition changed since the previous poll
   (`resolved` / `regressed` / `new_pending` / `new_terminal` / `still_pending`). It keeps two
   verdicts separate: `global_verdict` is the **gate outcome** (PASS all-discharged **and**

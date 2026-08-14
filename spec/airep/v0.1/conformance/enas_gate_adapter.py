@@ -12,7 +12,8 @@ That lifecycle IS an obligation lifecycle. This adapter maps a real session repo
 onto WP-OP records and reconciles them, so the obligation bundle is derived from
 actual gate telemetry rather than authored by hand:
 
-- each governed claim becomes an obligation (the claim MUST be substantiated);
+- each governed claim becomes an obligation, identified by the claim's STABLE
+  ``claim_id`` when present (never by its text — P0-C) and positionally otherwise;
 - the gate directive is the disposition — ``pass`` discharges the obligation,
   ``block`` / ``reject`` fail it, and a revise directive (``regenerate`` /
   ``rewrite`` / ``hedge`` / ``require_tool``) leaves it unresolved at the snapshot;
@@ -91,13 +92,22 @@ def gate_report_to_bundle(report: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("gate report has no governed claims to map")
     trace_id = report.get("trace_id") or "gate-trace"
 
+    # Bind obligation identity to each claim's STABLE claim_id (P0-C) — never to the
+    # claim text, and only positionally as a last resort. Use claim_ids as obligation
+    # ids ONLY when every claim carries a distinct non-empty one (so two same-text
+    # claims stay distinct by id, and colliding/absent ids fall back to positional
+    # without risking a duplicate obligation id).
+    claim_ids = [c.get("claim_id") if isinstance(c, dict) else None for c in claims]
+    valid_ids = [i for i in claim_ids if isinstance(i, str) and i]
+    use_claim_ids = len(valid_ids) == len(claims) and len(set(valid_ids)) == len(claims)
+
     obligations = []
     dispositions = []
     discharged, failed, unresolved = [], [], []
     for index, claim in enumerate(claims):
         if not isinstance(claim, dict):
             raise ValueError(f"gate report claim[{index}] is not an object")
-        oid = f"claim-{index}"
+        oid = claim_ids[index] if use_claim_ids else f"claim-{index}"
         statement = claim.get("claim")
         obligations.append(
             {

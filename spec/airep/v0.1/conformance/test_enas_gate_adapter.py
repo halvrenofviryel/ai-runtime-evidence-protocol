@@ -117,3 +117,44 @@ def test_non_string_directive_is_treated_as_unresolved():
     bundle = gate_report_to_bundle(report)
     assert bundle["closure"]["obligation_dispositions"][0]["disposition"] == "UNRESOLVED"
     assert reconcile_gate_report(report)["global_verdict"] == "PASS"
+
+
+def test_claim_ids_bind_obligation_identity():
+    # When every claim carries a stable claim_id, obligation identity is the claim_id
+    # (P0-C) — NOT positional claim-0/claim-1 and NOT the claim text.
+    report = {"trace_id": "t", "claims": [
+        {"claim_id": "clm-9f", "claim": "a", "directive": "pass"},
+        {"claim_id": "clm-3b", "claim": "b", "directive": "pass"},
+    ]}
+    bundle = gate_report_to_bundle(report)
+    oids = [o["obligation_id"] for o in bundle["origin_contract"]["obligations"]]
+    assert oids == ["clm-9f", "clm-3b"]
+    disp_ids = [d["obligation_id"] for d in bundle["closure"]["obligation_dispositions"]]
+    assert disp_ids == ["clm-9f", "clm-3b"]
+    assert reconcile_gate_report(report)["global_verdict"] == "PASS"
+
+
+def test_same_text_distinct_claim_ids_stay_distinct_obligations():
+    # THE P0-C case at record level: two governed claims that happen to share text but
+    # carry distinct claim_ids are TWO obligations, identity-keyed by id — never merged.
+    report = {"trace_id": "t", "claims": [
+        {"claim_id": "clm-1", "claim": "fixed the test", "directive": "pass"},
+        {"claim_id": "clm-2", "claim": "fixed the test", "directive": "block"},
+    ]}
+    bundle = gate_report_to_bundle(report)
+    oids = [o["obligation_id"] for o in bundle["origin_contract"]["obligations"]]
+    assert oids == ["clm-1", "clm-2"]  # not collapsed by identical text
+    assert len(bundle["closure"]["obligation_dispositions"]) == 2
+    assert bundle["closure"]["global_verdict"] == "FAIL"  # clm-2 blocked
+
+
+def test_absent_or_colliding_ids_fall_back_to_positional_never_text():
+    # No ids -> positional. Colliding ids (would risk a duplicate obligation id) ->
+    # positional too. Either way text is never used as the identity.
+    no_ids = {"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}]}
+    assert [o["obligation_id"] for o in gate_report_to_bundle(no_ids)["origin_contract"]["obligations"]] == ["claim-0", "claim-1"]
+    colliding = {"trace_id": "t", "claims": [
+        {"claim_id": "dup", "claim": "a", "directive": "pass"},
+        {"claim_id": "dup", "claim": "b", "directive": "pass"},
+    ]}
+    assert [o["obligation_id"] for o in gate_report_to_bundle(colliding)["origin_contract"]["obligations"]] == ["claim-0", "claim-1"]
