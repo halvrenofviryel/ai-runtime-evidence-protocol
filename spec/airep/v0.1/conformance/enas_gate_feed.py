@@ -18,8 +18,11 @@ The source is dependency-injected: a running Phionyx process wires the live
 simulated evolving source. Boundary (honest): the feed observes whatever the source
 reports; the directive->disposition mapping is a modelling choice; a ``PASS`` poll
 means the current mapped bundle is a conserved lineage, not that the gate is itself
-ENAS-conformant. Live wiring to a production gate and gate-native record emission
-remain external-review-gated.
+ENAS-conformant. A gate directive is a DECISION, not an observed enforcement effect,
+so a directive-only feed reaches at most INCONCLUSIVE — a ``PASS`` poll additionally
+requires the source to attest observed enforcement (report-level ``outcome_observed``).
+Live wiring to a production gate and gate-native record emission remain
+external-review-gated.
 """
 
 from __future__ import annotations
@@ -113,12 +116,21 @@ class GateFeed:
             "trace_id": trace_id or f"gate-poll-{self._polls}",
             "claims": [{"claim": text, "directive": _DISPOSITION_DIRECTIVE[disposition]} for text, disposition in current.items()],
         }
+        # Enforcement is a MEASUREMENT, not a directive. Watching a claim's directive go
+        # pass->pass over polls is still watching DECISIONS, not observed enforcement — so a
+        # directive-only feed can no more reach PASS than the snapshot adapter can. Propagate
+        # the source's own enforcement attestation (report-level `outcome_observed`) into the
+        # deduped report; absent it, the adapter leaves the closure INCONCLUSIVE (never PASS).
+        report_observed = report.get("outcome_observed")
+        if isinstance(report_observed, bool):
+            deduped["outcome_observed"] = report_observed
         bundle = gate_report_to_bundle(deduped)
         result = reconcile_obligation_bundle(bundle)
         self._prev = current
         # Two distinct verdicts, kept separate:
-        #  - global_verdict: the GATE OUTCOME (closure) — did every obligation discharge?
-        #    PASS (all discharged) / FAIL (any failed) / INCONCLUSIVE (revision-pending).
+        #  - global_verdict: the GATE OUTCOME (closure) — did every obligation discharge AND
+        #    was enforcement observed? PASS (all discharged + enforcement observed) /
+        #    FAIL (any failed) / INCONCLUSIVE (revision-pending, OR enforcement not observed).
         #  - reconciled: the RECONCILER's structural integrity check on the mapped bundle;
         #    expected PASS for adapter output — anything else means a mapping/tamper defect.
         return {

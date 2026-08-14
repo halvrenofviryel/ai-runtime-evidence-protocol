@@ -120,16 +120,18 @@ semantics: [`CONFORMANCE_CLASSES.md`](./CONFORMANCE_CLASSES.md).
 - [`test_enas_gate_adapter.py`](./test_enas_gate_adapter.py) — reconciles a **verbatim
   captured** real `phionyx_session_report` ([`fixtures/enas_profiles/enas_gate_report_capture.json`](./fixtures/enas_profiles/enas_gate_report_capture.json),
   trace-fcf66f8bb7364529: 8 governed claims, 1 passed / 7 sent for revision) into a conserved
-  non-success lineage; plus all-pass→SUCCEEDED, blocked→failed, a tampered closure caught
-  `FAIL`, and malformed-report rejection.
+  non-success lineage; plus all-pass-with-observed-enforcement→SUCCEEDED (a gate directive is a
+  DECISION, not an observed effect, so a directive-only all-pass report is INCONCLUSIVE, never
+  PASS), blocked→failed, a tampered closure caught `FAIL`, and malformed-report rejection.
 - [`enas_gate_feed.py`](./enas_gate_feed.py) — turns the one-shot adapter into a **live feed**.
   A `GateFeed` holds a dependency-injected `report_source` callable (a running Phionyx process
   wires the live `phionyx_session_report`; tests wire a simulated evolving source) and, on each
   `poll()`, resamples the current report, deduplicates claims to their latest gate directive,
   reconciles, and reports how each obligation's disposition changed since the previous poll
   (`resolved` / `regressed` / `new_pending` / `new_terminal` / `still_pending`). It keeps two
-  verdicts separate: `global_verdict` is the **gate outcome** (PASS all-discharged / FAIL any-failed
-  / INCONCLUSIVE revision-pending) and `reconciled` is the reconciler's **structural integrity**
+  verdicts separate: `global_verdict` is the **gate outcome** (PASS all-discharged **and**
+  enforcement observed / FAIL any-failed / INCONCLUSIVE revision-pending **or** enforcement not
+  observed) and `reconciled` is the reconciler's **structural integrity**
   (expected PASS). The temporal view closes the snapshot's gap — a revision-pending `UNRESOLVED`
   claim is watched **resolving** to `DISCHARGED`/`FAILED` across polls. Boundary: the feed observes
   whatever the source reports; live wiring to a production gate remains external-review-gated.
