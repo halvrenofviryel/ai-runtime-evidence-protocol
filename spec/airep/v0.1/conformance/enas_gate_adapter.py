@@ -25,6 +25,15 @@ is pending-revision, not a permanent verdict. Binding the reconciler to a live f
 and having the gate itself emit conformant records are further, external-review-
 gated steps. A reconciled ``PASS`` means the mapped bundle is a conserved, closed
 lineage — not that the gate is itself ENAS-conformant.
+
+**Enforcement is measured, not assumed.** A gate *directive* is a DECISION, not an
+observed enforcement effect. ``enforcement_confirmed`` / ``invariants_revalidated``
+are therefore derived from whether the report actually attests an observed outcome
+(``_enforcement_observed``); a directive-only report leaves them False, and a closure
+with unconfirmed enforcement cannot reach a SUCCEEDED/PASS terminal — it is
+INCONCLUSIVE. Reporting enforcement as confirmed on the strength of a "pass" directive
+alone would serialize a proxy as the thing measured (Measurement Axioms) — this
+adapter must not.
 """
 
 from __future__ import annotations
@@ -46,6 +55,25 @@ def _disposition(directive: str) -> str:
     if directive in _FAIL:
         return "FAILED"
     return "UNRESOLVED"
+
+
+def _enforcement_observed(report: dict[str, Any], claims: list[dict[str, Any]]) -> bool:
+    """Whether the report carries a positive, OBSERVED enforcement outcome.
+
+    A gate *directive* is a DECISION, not an observed enforcement effect — the proxy
+    is not the thing measured (Measurement Axioms). ``enforcement_confirmed`` may be
+    True ONLY if the report actually attests that enforcement was observed for the
+    governed claims. A directive-only report carries no such observation, so this
+    returns False (NOT a hardcoded True): enforcement is then NOT_MEASURED, and the
+    closure cannot honestly reach a SUCCEEDED/PASS terminal — see gate_report_to_bundle.
+
+    Accepts an explicit signal when a report provides one: a report-level boolean
+    ``outcome_observed``, or a per-claim truthy ``outcome_observed`` on every claim.
+    """
+    report_level = report.get("outcome_observed")
+    if isinstance(report_level, bool):
+        return report_level
+    return bool(claims) and all(bool(c.get("outcome_observed")) for c in claims)
 
 
 def gate_report_to_bundle(report: dict[str, Any]) -> dict[str, Any]:
@@ -101,26 +129,33 @@ def gate_report_to_bundle(report: dict[str, Any]) -> dict[str, Any]:
         "unresolved": unresolved,
         "global_pass_claimed": False,
     }
-    # Honest terminal/verdict mapping (do NOT conflate pending-revision with failure):
-    #   all discharged        -> SUCCEEDED / PASS
-    #   any failed            -> FAILED / FAIL
-    #   only unresolved (pending revision, no failure) -> ESCALATED / INCONCLUSIVE
-    # (§9.1: ESCALATED = unresolved judgment transferred to an authorized principal;
-    #  INCONCLUSIVE = measured but not determined — not a failure.)
-    if not failed and not unresolved:
-        terminal_outcome, global_verdict = "SUCCEEDED", "PASS"
-    elif failed:
+    # enforcement_confirmed / invariants_revalidated are MEASUREMENTS, not constants.
+    # The adapter observes gate DIRECTIVES; enforcement is confirmed only when the
+    # report actually attests an observed outcome (a directive-only report -> False).
+    enforcement_confirmed = _enforcement_observed(report, claims)
+    # Honest terminal/verdict mapping (do NOT conflate pending-revision with failure,
+    # and do NOT read a gate directive as a confirmed enforced outcome):
+    #   any failed                                   -> FAILED / FAIL
+    #   pending revision, OR enforcement NOT observed -> ESCALATED / INCONCLUSIVE
+    #   all discharged AND enforcement observed       -> SUCCEEDED / PASS
+    # (§9.1: ESCALATED = unresolved/undetermined transferred to a principal;
+    #  INCONCLUSIVE = measured the decision but not the enforced effect — not a failure.
+    #  A SUCCEEDED/PASS closure REQUIRES confirmed enforcement — closure_accounting's own
+    #  semantic check enforces this — so directives alone can never reach PASS here.)
+    if failed:
         terminal_outcome, global_verdict = "FAILED", "FAIL"
-    else:
+    elif unresolved or not enforcement_confirmed:
         terminal_outcome, global_verdict = "ESCALATED", "INCONCLUSIVE"
+    else:
+        terminal_outcome, global_verdict = "SUCCEEDED", "PASS"
     closure = {
         "profile_type": "closure_accounting",
         "schema_version": "enas-profile-0.1",
         "closure_id": f"cl-{trace_id}",
         "contract_ref": trace_id,
         "obligation_dispositions": dispositions,
-        "invariants_revalidated": True,
-        "enforcement_confirmed": True,
+        "invariants_revalidated": enforcement_confirmed,
+        "enforcement_confirmed": enforcement_confirmed,
         "terminal_outcome": terminal_outcome,
         "global_verdict": global_verdict,
     }

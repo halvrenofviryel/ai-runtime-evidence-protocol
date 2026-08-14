@@ -36,12 +36,46 @@ def test_captured_real_gate_report_reconciles_to_a_conserved_lineage():
     assert reconcile_obligation_bundle(bundle)["global_verdict"] == "PASS"
 
 
-def test_all_pass_report_maps_to_a_successful_closure():
+def test_all_pass_directives_without_observed_enforcement_are_inconclusive():
+    # A gate directive is a DECISION, not an observed enforcement effect. All-"pass"
+    # directives with NO observed outcome must NOT reach SUCCEEDED/PASS — enforcement is
+    # NOT_MEASURED, so the honest closure is ESCALATED/INCONCLUSIVE with
+    # enforcement_confirmed=False. (Regression guard for the measurement-positivity fix:
+    # this closure used to hardcode enforcement_confirmed=True and claim PASS.)
     report = {"trace_id": "t-allpass", "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}]}
     bundle = gate_report_to_bundle(report)
+    assert bundle["closure"]["enforcement_confirmed"] is False
+    assert bundle["closure"]["invariants_revalidated"] is False
+    assert bundle["closure"]["terminal_outcome"] == "ESCALATED"
+    assert bundle["closure"]["global_verdict"] == "INCONCLUSIVE"
+    assert reconcile_gate_report(report)["global_verdict"] == "PASS"  # conserved lineage regardless
+
+
+def test_all_pass_with_observed_enforcement_reaches_a_successful_closure():
+    # The SUCCEEDED/PASS path IS reachable — but only when the report actually attests an
+    # observed enforcement outcome for every claim (outcome_observed truthy), which is what
+    # closure_accounting's own semantic check requires for a PASS.
+    report = {
+        "trace_id": "t-allpass-observed",
+        "claims": [
+            {"claim": "a", "directive": "pass", "outcome_observed": True},
+            {"claim": "b", "directive": "pass", "outcome_observed": True},
+        ],
+    }
+    bundle = gate_report_to_bundle(report)
+    assert bundle["closure"]["enforcement_confirmed"] is True
+    assert bundle["closure"]["invariants_revalidated"] is True
     assert bundle["closure"]["terminal_outcome"] == "SUCCEEDED"
     assert bundle["closure"]["global_verdict"] == "PASS"
     assert reconcile_gate_report(report)["global_verdict"] == "PASS"
+
+
+def test_captured_report_closure_does_not_claim_confirmed_enforcement():
+    # The captured directive-only report attests no enforcement outcome -> the closure must
+    # report enforcement_confirmed=False (the positivity the reviewer flagged, now fixed).
+    bundle = gate_report_to_bundle(_captured_report())
+    assert bundle["closure"]["enforcement_confirmed"] is False
+    assert bundle["closure"]["invariants_revalidated"] is False
 
 
 def test_blocked_claim_becomes_a_failed_obligation():
