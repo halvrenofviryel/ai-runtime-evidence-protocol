@@ -137,6 +137,38 @@ def test_a_wellformed_empty_report_reports_real_disappearance():
     assert p2["global_verdict"] == "INCONCLUSIVE"
 
 
+def _report_with_chain(hash_chain_valid, signatures_verified=False):
+    return {
+        "trace_id": "t",
+        "claims": [{"claim": "a", "directive": "pass"}],
+        "mcp_envelope_chain": {"count": 218, "head_hash": "sha256:abc", "hash_chain_valid": hash_chain_valid, "signatures_verified": signatures_verified},
+    }
+
+
+def test_feed_surfaces_intact_chain_and_never_claims_signature_trust():
+    # hash chain intact but signatures NOT verified -> INTACT + signature NOT_MEASURED (never "trusted").
+    result = GateFeed(_sequence_source([_report_with_chain(True, signatures_verified=False)])).poll()
+    assert result["chain_integrity"]["status"] == "INTACT"
+    assert result["chain_integrity"]["signature_status"] == "NOT_MEASURED"
+    assert not any("BROKEN" in e for e in result["reconciliation_errors"])
+
+
+def test_feed_flags_a_broken_chain_as_untrustworthy_evidence():
+    result = GateFeed(_sequence_source([_report_with_chain(False)])).poll()
+    assert result["chain_integrity"]["status"] == "BROKEN"
+    assert any("BROKEN" in e for e in result["reconciliation_errors"])
+
+
+def test_feed_chain_status_not_measured_and_absent():
+    not_measured = GateFeed(_sequence_source([_report_with_chain(None)])).poll()
+    assert not_measured["chain_integrity"]["status"] == "NOT_MEASURED"
+    absent = GateFeed(_sequence_source([{"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}]}])).poll()
+    assert absent["chain_integrity"]["status"] == "ABSENT"
+    # a malformed (non-dict) chain is treated as ABSENT, never a crash
+    malformed = GateFeed(_sequence_source([{"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}], "mcp_envelope_chain": "x"}])).poll()
+    assert malformed["chain_integrity"]["status"] == "ABSENT"
+
+
 def test_feed_over_the_captured_real_report():
     # A single poll of the verbatim captured real session report: 1 passed, 7 pending -> INCONCLUSIVE.
     report = json.loads(CAPTURE.read_text(encoding="utf-8"))["report"]

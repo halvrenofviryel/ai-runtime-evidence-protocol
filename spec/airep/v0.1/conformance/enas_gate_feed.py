@@ -83,6 +83,12 @@ class GateFeed:
         self._polls += 1
         report = self._source()
         current = _reduce_claims(report)  # claim text -> reduced disposition
+        chain = self._chain_integrity(report)
+        chain_errors = (
+            ["the underlying MCP envelope chain hash-chain is BROKEN — the obligation evidence is not tamper-evident"]
+            if chain["status"] == "BROKEN"
+            else []
+        )
 
         if not current:
             # Distinguish two zero-claim cases:
@@ -107,7 +113,8 @@ class GateFeed:
                 "reconciled": "INCONCLUSIVE",
                 "dispositions": {},
                 "delta": empty_delta,
-                "reconciliation_errors": [note],
+                "chain_integrity": chain,
+                "reconciliation_errors": [note, *chain_errors],
             }
 
         delta = self._delta(self._prev, current)
@@ -140,7 +147,31 @@ class GateFeed:
             "reconciled": result["global_verdict"],
             "dispositions": current,
             "delta": delta,
-            "reconciliation_errors": result["reconciliation_errors"],
+            "chain_integrity": chain,
+            "reconciliation_errors": [*result["reconciliation_errors"], *chain_errors],
+        }
+
+    @staticmethod
+    def _chain_integrity(report: dict[str, Any]) -> dict[str, Any]:
+        """Anchor the poll to the report's tamper-evident MCP envelope chain.
+
+        ``status`` is one of: ``INTACT`` (hash chain valid), ``BROKEN`` (hash chain invalid —
+        the obligation evidence cannot be trusted), ``NOT_MEASURED`` (hash chain not checked),
+        or ``ABSENT`` (no chain reported). Signature state is reported as ``VERIFIED`` /
+        ``NOT_MEASURED`` only — the feed never claims the chain is "trusted" on hash-chain
+        integrity alone (signatures and freshness are separate, unverified here).
+        """
+        chain = report.get("mcp_envelope_chain") if isinstance(report, dict) else None
+        if not isinstance(chain, dict):
+            return {"status": "ABSENT", "head_hash": None, "count": None, "signature_status": "NOT_MEASURED"}
+        hcv = chain.get("hash_chain_valid")
+        status = "INTACT" if hcv is True else ("BROKEN" if hcv is False else "NOT_MEASURED")
+        signatures_verified = chain.get("signatures_verified")
+        return {
+            "status": status,
+            "head_hash": chain.get("head_hash"),
+            "count": chain.get("count"),
+            "signature_status": "VERIFIED" if signatures_verified is True else "NOT_MEASURED",
         }
 
     @staticmethod
