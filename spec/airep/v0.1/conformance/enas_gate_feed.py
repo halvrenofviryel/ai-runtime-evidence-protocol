@@ -38,39 +38,69 @@ from enas_obligation_reconciler import reconcile_obligation_bundle
 _DISPOSITION_DIRECTIVE = {"DISCHARGED": "pass", "FAILED": "block", "UNRESOLVED": "rewrite"}
 
 
-def _reduce_claims(report: dict[str, Any]) -> dict[str, str]:
-    """Reduce a report's claim entries to one disposition per claim text.
+def _reduce_claims(report: dict[str, Any]) -> tuple[dict[str, str], dict[str, dict[str, str | None]]]:
+    """Reduce a report's claim entries to one disposition per stable claim IDENTITY.
 
-    A live gate report lists every gate call, including successive revisions of the
-    same claim. Reduction rule: a hard **FAILED** (block/reject) is STICKY — it can
-    never be masked by a later same-text pass (that would launder a real failure).
-    Otherwise the latest directive wins (a revise → pass is a legitimate resolution).
-    Total over malformed input (non-dict report, non-list claims, non-dict entry,
-    non-string text/directive are skipped).
+    Identity is a STABLE ``claim_id``, never the claim text (P0-C). Two claims that
+    share text but carry distinct ``claim_id``s are DISTINCT governed claims and must
+    not collapse; a claim revised across attempts keeps ONE ``claim_id`` and is tracked
+    as one lifecycle even if its text is edited. Text is the identity key only as a
+    DEGRADED fallback — a fragile proxy the source should replace with a real id (the
+    runtime already tracks one in ``contracts/v4/claim.py``).
+
+    Identity mode is **all-or-nothing per report** (like the record adapter): claim_id
+    is used only when EVERY dict claim carries a non-empty one, so id keys and
+    text-fallback keys never share a namespace (a claim_id must never collide with a
+    different claim's text). A report mixing id-bearing and id-less claims degrades to
+    text keys for all, and does not thread ids downstream.
+
+    Reduction rule: a hard **FAILED** (block/reject) is STICKY — it can never be masked
+    by a later same-identity pass (that would launder a real failure). Otherwise the
+    latest directive wins (a revise → pass is a legitimate resolution). Total over
+    malformed input (non-dict report, non-list claims, non-dict entry, entries with no
+    usable identity are skipped).
+
+    Returns ``(dispositions, meta)``: ``dispositions`` maps identity_key -> reduced
+    disposition; ``meta`` maps identity_key -> ``{"text", "claim_id"}`` (the latest
+    representative text/id for that identity, used to rebuild the deduped report).
     """
-    state: dict[str, str] = {}
     claims = report.get("claims") if isinstance(report, dict) else None
     if not isinstance(claims, list):
         claims = []
-    for claim in claims:
-        if not isinstance(claim, dict):
-            continue
+    dict_claims = [c for c in claims if isinstance(c, dict)]
+    # all-or-nothing: only key by claim_id when every claim carries a non-empty one.
+    use_ids = bool(dict_claims) and all(
+        isinstance(c.get("claim_id"), str) and c.get("claim_id") for c in dict_claims
+    )
+
+    state: dict[str, str] = {}
+    meta: dict[str, dict[str, str | None]] = {}
+    for claim in dict_claims:
+        cid = claim.get("claim_id")
+        cid = cid if isinstance(cid, str) and cid else None
         text = claim.get("claim")
-        if not isinstance(text, str) or not text:
-            continue
+        text = text if isinstance(text, str) and text else None
+        if use_ids and cid is not None:
+            key, rep_text, rep_cid = cid, (text if text is not None else cid), cid
+        elif not use_ids and text is not None:
+            key, rep_text, rep_cid = text, text, None  # degraded: text as identity, no id threaded
+        else:
+            continue  # no usable identity
         directive = claim.get("directive")
         fate = _disposition(directive if isinstance(directive, str) else "")
         if fate == "FAILED":
-            state[text] = "FAILED"  # sticky: a blocked claim stays failed
-        elif state.get(text) != "FAILED":
-            state[text] = fate  # latest non-failed disposition wins
-    return state
+            state[key] = "FAILED"  # sticky: a blocked claim stays failed
+        elif state.get(key) != "FAILED":
+            state[key] = fate  # latest non-failed disposition wins
+        meta[key] = {"text": rep_text, "claim_id": rep_cid}  # latest representative
+    return state, meta
 
 
 class GateFeed:
     def __init__(self, report_source: Callable[[], dict[str, Any]]) -> None:
         self._source = report_source
-        self._prev: dict[str, str] = {}  # claim text -> disposition, from the last poll
+        self._prev: dict[str, str] = {}  # claim IDENTITY (claim_id, else text) -> disposition, last poll
+        self._mode: str | None = None  # identity namespace of the last non-empty poll: "id" | "text"
         self._polls = 0
 
     def poll(self) -> dict[str, Any]:
@@ -82,7 +112,7 @@ class GateFeed:
         """
         self._polls += 1
         report = self._source()
-        current = _reduce_claims(report)  # claim text -> reduced disposition
+        current, meta = _reduce_claims(report)  # claim IDENTITY -> reduced disposition (+ meta)
 
         if not current:
             # Distinguish two zero-claim cases:
@@ -110,11 +140,33 @@ class GateFeed:
                 "reconciliation_errors": [note],
             }
 
-        delta = self._delta(self._prev, current)
+        # Identity namespace (P0-C): "id" when this poll carried claim_ids, else "text". _delta
+        # compares keys, so a poll whose namespace differs from the previous one cannot establish
+        # continuity across it — comparing would falsely match a claim_id "x" to a text "x".
+        # Reset instead: a mode switch honestly reads as the old identities disappearing and the
+        # new ones appearing (with a reconciliation note), never as a spurious resolution.
+        poll_mode = "id" if any(m["claim_id"] for m in meta.values()) else "text"
+        mode_switch = self._mode is not None and poll_mode != self._mode
+        if mode_switch:
+            delta = self._delta({}, current)
+            delta["disappeared"] = sorted(self._prev)
+        else:
+            delta = self._delta(self._prev, current)
         trace_id = report.get("trace_id") if isinstance(report, dict) else None
+        # Rebuild one representative claim per identity, carrying the stable claim_id
+        # through to the record-level adapter so obligation identity is id-bound (P0-C),
+        # not positional. Falls back to the identity key as the statement when a claim
+        # carried an id but no text.
         deduped = {
             "trace_id": trace_id or f"gate-poll-{self._polls}",
-            "claims": [{"claim": text, "directive": _DISPOSITION_DIRECTIVE[disposition]} for text, disposition in current.items()],
+            "claims": [
+                {
+                    "claim": meta[key]["text"] or key,
+                    "directive": _DISPOSITION_DIRECTIVE[disposition],
+                    **({"claim_id": meta[key]["claim_id"]} if meta[key]["claim_id"] else {}),
+                }
+                for key, disposition in current.items()
+            ],
         }
         # Enforcement is a MEASUREMENT, not a directive. Watching a claim's directive go
         # pass->pass over polls is still watching DECISIONS, not observed enforcement — so a
@@ -126,7 +178,12 @@ class GateFeed:
             deduped["outcome_observed"] = report_observed
         bundle = gate_report_to_bundle(deduped)
         result = reconcile_obligation_bundle(bundle)
+        prev_mode = self._mode
         self._prev = current
+        self._mode = poll_mode
+        errors = list(result["reconciliation_errors"])
+        if mode_switch:
+            errors.insert(0, f"identity namespace changed ({prev_mode}->{poll_mode}); continuity reset")
         # Two distinct verdicts, kept separate:
         #  - global_verdict: the GATE OUTCOME (closure) — did every obligation discharge AND
         #    was enforcement observed? PASS (all discharged + enforcement observed) /
@@ -140,7 +197,7 @@ class GateFeed:
             "reconciled": result["global_verdict"],
             "dispositions": current,
             "delta": delta,
-            "reconciliation_errors": result["reconciliation_errors"],
+            "reconciliation_errors": errors,
         }
 
     @staticmethod
