@@ -22,10 +22,12 @@ def test_feed_tracks_a_pending_claim_resolving_over_polls():
     # Poll 1: claim "a" is sent for revision (pending), "b" passes.
     # Poll 2: "a" is revised and passes -> the feed observes it RESOLVE.
     # Poll 3: a new claim "c" is blocked -> the run fails.
+    # Polls 2 & 3 attest observed enforcement (outcome_observed) — a directive alone is a
+    # DECISION, not an enforced effect, so PASS requires the source to observe the outcome.
     reports = [
         {"trace_id": "t", "claims": [{"claim": "a", "directive": "rewrite"}, {"claim": "b", "directive": "pass"}]},
-        {"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}]},
-        {"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}, {"claim": "c", "directive": "block"}]},
+        {"trace_id": "t", "outcome_observed": True, "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}]},
+        {"trace_id": "t", "outcome_observed": True, "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}, {"claim": "c", "directive": "block"}]},
     ]
     feed = GateFeed(_sequence_source(reports))
 
@@ -36,11 +38,11 @@ def test_feed_tracks_a_pending_claim_resolving_over_polls():
     assert p1["delta"]["new_terminal"] == ["b"]
 
     p2 = feed.poll()
-    assert p2["global_verdict"] == "PASS"  # all discharged now
+    assert p2["global_verdict"] == "PASS"  # all discharged AND enforcement observed
     assert p2["delta"]["resolved"] == ["a"]  # UNRESOLVED -> DISCHARGED observed live
 
     p3 = feed.poll()
-    assert p3["global_verdict"] == "FAIL"  # "c" blocked
+    assert p3["global_verdict"] == "FAIL"  # "c" blocked (a failure outranks observation)
     assert p3["delta"]["new_terminal"] == ["c"]
     assert p3["dispositions"]["c"] == "FAILED"
 
@@ -49,9 +51,22 @@ def test_feed_tracks_a_pending_claim_resolving_over_polls():
     assert p1["reconciled"] == p2["reconciled"] == p3["reconciled"] == "PASS"
 
 
+def test_all_discharged_directives_without_observed_enforcement_are_inconclusive():
+    # A feed watching directives go pass->pass is still watching DECISIONS, not observed
+    # enforcement. With no outcome_observed attestation, an all-discharged poll must NOT reach
+    # PASS — it is INCONCLUSIVE. (Regression guard: this poll used to report PASS on directives
+    # alone, the same measurement-positivity the snapshot adapter had.)
+    report = {"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}, {"claim": "b", "directive": "pass"}]}
+    result = GateFeed(_sequence_source([report])).poll()
+    assert result["dispositions"] == {"a": "DISCHARGED", "b": "DISCHARGED"}
+    assert result["global_verdict"] == "INCONCLUSIVE"  # discharged directives, enforcement NOT observed
+    assert result["reconciled"] == "PASS"  # the mapped bundle is still structurally conserved
+
+
 def test_feed_deduplicates_revisions_to_the_latest_directive():
     # The same claim revised regenerate -> regenerate -> pass is ONE obligation ending DISCHARGED.
-    report = {"trace_id": "t", "claims": [
+    # The source attests observed enforcement, so the resolved obligation reaches PASS.
+    report = {"trace_id": "t", "outcome_observed": True, "claims": [
         {"claim": "x", "directive": "regenerate"},
         {"claim": "x", "directive": "regenerate"},
         {"claim": "x", "directive": "pass"},
@@ -82,14 +97,14 @@ def test_a_transient_non_observation_preserves_delta_continuity():
     reports = [
         {"trace_id": "t", "claims": [{"claim": "a", "directive": "rewrite"}]},
         {"trace_id": "t"},  # no claims key -> non-observation
-        {"trace_id": "t", "claims": [{"claim": "a", "directive": "pass"}]},
+        {"trace_id": "t", "outcome_observed": True, "claims": [{"claim": "a", "directive": "pass"}]},
     ]
     feed = GateFeed(_sequence_source(reports))
     feed.poll()  # a pending
     feed.poll()  # non-observation, must not wipe state
     p3 = feed.poll()
     assert p3["delta"]["resolved"] == ["a"]  # continuity preserved across the missing sample
-    assert p3["global_verdict"] == "PASS"
+    assert p3["global_verdict"] == "PASS"  # resolved AND enforcement observed
 
 
 def test_a_malformed_entry_list_is_not_a_zero_claim_observation():
