@@ -46,7 +46,7 @@ It is an **Experimental** proposed open format with a reference implementation �
   graded honestly — `partial`/`none`, never "defended"). Then prove it yourself: `cd spec/airep/v0.1
   && pip install jsonschema cryptography` (Node 20+ also required), then `python3
   conformance/validate.py` and `python3 conformance/verify.py examples/chain.jsonl --pubkey
-  examples/test_public_key.txt --class` — two independent verifiers re-derive every hash byte-for-byte
+  examples/test_public_key.txt --class` — two cross-language first-party verifier implementations re-derive every hash byte-for-byte
   and you'll see `sig=ok`.
 - **Adopting it (writing your own records)?** Follow **"Write your own record in 5 minutes"** in
   [`EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md): copy
@@ -89,7 +89,7 @@ It is an **Experimental** proposed open format with a reference implementation �
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
 | [`spec/airep/v0.1/core.schema.json`](./spec/airep/v0.1/core.schema.json) | JSON Schema (draft 2020-12) for the core record. |
 | [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles — **`control_delivery`** (did a control instruction *arrive*?), key trust, chain-witness/freshness, EU AI Act, NIST AI RMF, OWASP/threat, observability. |
-| [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two independent verifiers (Python + Node) and a runnable validator. |
+| [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two cross-language verifier implementations (Python + Node) and a runnable validator. |
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
 | [`producers/python/`](./producers/python/) | Copy-paste producer — sign your own record with your own key. |
@@ -106,7 +106,7 @@ node      conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_pub
 
 Two implementations on different language and crypto stacks each validate structure, run the
 neutrality test, re-derive every hash and agree on it byte-for-byte, and re-verify the signatures.
-Two independent verifiers agreeing is what makes AIREP an interchange format rather than a
+Two cross-language implementations agreeing is what makes AIREP an interchange format rather than a
 single-tool artifact.
 
 ## Reference implementation
