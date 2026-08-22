@@ -229,17 +229,47 @@ The members are pinned:
 
 | Member | JSON type | Constraint |
 |---|---|---|
-| `chain_id` | string | as it appears in the head artifact, byte-identical |
+| `chain_id` | string | the same JSON string value as the referenced head artifact; no Unicode normalization (see below) |
 | `sequence` | number | non-negative integer, ≤ 2^53 − 1, no sign, no fraction, no exponent |
 | `current` | string | exactly `sha256:` + 64 lowercase hex characters |
 | `length` | number | positive integer, ≤ 2^53 − 1; **the total artifact count of the chain at witness time, the referenced head included** |
-| `witnessed_at` | string | exactly `YYYY-MM-DDTHH:MM:SSZ` — RFC 3339 UTC, second precision, literal `Z`, no fractional seconds, no numeric offset |
+| `witnessed_at` | string | exactly `YYYY-MM-DDTHH:MM:SSZ` — RFC 3339 UTC, second precision, literal `Z`; time semantics further constrained below |
 
 Integers stay within the IEEE-754 safe range so RFC 8785's ES6 number serialization is exact and
 identical across languages (the safe-integer model; at one artifact per millisecond the range
 lasts ~285,000 years). The witness key independence and revocation semantics are unchanged from
 the v0.1 strict-mode gates (AD-09 carries the fail-closed machinery forward); only the freshness
 evidence path is corrected as above.
+
+Two semantic constraints close the remaining cross-language corners:
+
+- **`witnessed_at` time semantics.** The value MUST be a valid Gregorian UTC datetime with hour
+  `00`–`23`, minute `00`–`59`, and second `00`–`59`. The leap-second value `60` is **not
+  permitted** in v0.2. An invalid calendar date (e.g. February 30) MUST be rejected. No
+  fractional seconds; no offset other than the literal `Z`. These rules are normative so that
+  divergent RFC 3339 library behaviour (leap-second acceptance, lenient date parsing) can never
+  reach the freshness assurance decision.
+- **`chain_id` value semantics.** The claim carries the **same JSON string value** as the
+  referenced head artifact; **no Unicode normalization is performed** at any point. RFC 8785
+  alone determines the canonical bytes of that value — an implementer neither preserves the
+  source document's escape spelling nor normalizes the string.
+
+### 6.3 Witness tag version, witness suite, and head reconciliation
+
+The record-signature rules of §5.1/§7 apply to the witness signature symmetrically, and are
+stated here explicitly so no selection source is left open:
+
+- **Version.** The head-witness tag `<version>` MUST equal the `airep_version` of the
+  **referenced head artifact**. There is no independent witness version.
+- **Suite.** The witness `suite-id` MUST be derived solely from the **verifier-accepted binding
+  for the witness key/identity** (trust store entry). Any wire-carried witness algorithm label
+  is informative only and MUST NOT select verification behaviour.
+- **No search.** The verifier MUST NOT try alternate versions, tags, suites, or v0.1-style
+  constructions when witness verification fails.
+- **Head reconciliation.** Witness verification is defined only relative to a resolvable head:
+  if the referenced head artifact is unavailable, or the claim's `chain_id`, `sequence`, or
+  `current` do not reconcile with that artifact's own members, witness verification MUST fail —
+  a witness signature over an unresolvable or mismatching claim confers nothing.
 
 ## 7. In-record binding: `airep_version` and `artifact_type`
 
@@ -290,8 +320,10 @@ reviewable surface, not commentary.
 
 ## 9. Adversarial cases the stage-4 tests MUST cover
 
-Each case MUST be a committed fixture run against **both** verifiers with identical verdicts
-(AD-14 parity), and every case MUST fail closed:
+Each case MUST be a committed fixture run against **both** verifiers. Every case MUST produce
+the required outcome under both verifiers with identical verdict/reason semantics (AD-14
+parity). Every case whose required outcome is rejection MUST fail closed — never a downgrade,
+never a fallback:
 
 | # | Case | Required outcome |
 |---|---|---|
@@ -305,7 +337,10 @@ Each case MUST be a committed fixture run against **both** verifiers with identi
 | A8 | Preimage assembled with CRLF or trailing LF instead of a single LF separator | Hash mismatch ⇒ reject |
 | A9 | Cross-version substitution: a body declaring `airep_version: "0.2"` hashed/signed under a `0.3` tag, and vice versa; also a body whose `airep_version` was rewritten after signing | Reject (tag derived only from the declared pair; version is inside the digest) |
 | A10 | Freshness replay: an old, valid witness signature over a stale claim, re-presented with any unsigned freshness field set to now | Reject/stale — recency MUST be evaluated against the **signed** `witnessed_at` only; the unsigned field changes nothing |
-| A11 | Suite substitution: a valid `ed25519` signature re-presented with wire `alg` naming a different suite, and a signature whose preimage embeds a suite-id different from the verifier's key-binding suite | Verify decision unchanged by wire `alg` (informative only); binding/suite-id mismatch ⇒ reject |
+| A11a | Wire-`alg` substitution: a valid `ed25519` signature re-presented with wire `alg` naming a different suite | Cryptographic verdict unchanged (wire `alg` is informative only); a caveat MAY be reported |
+| A11b | Signed-suite mismatch: a signature whose preimage embeds a suite-id different from the verifier's key-binding suite | Reject |
+| A12 | Witness cross-version substitution: a witness signature whose tag version differs from the referenced head artifact's `airep_version` | Reject (§6.3 — witness tag version equals the head's declared version; no search) |
+| A13 | Witness-suite substitution: a wire-carried witness algorithm label naming a different suite, and a witness preimage embedding a suite-id different from the trust-store binding for the witness key | Wire label changes nothing (informative only); binding/suite-id mismatch ⇒ reject |
 
 ## 10. What acceptance of this draft authorizes — and what it does not
 
