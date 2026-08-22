@@ -1,9 +1,11 @@
 # AIREP v0.2 — Architecture Decisions
 
-> Status: **Design.** Each decision below is marked `Adopted (process)`, `Proposed`, or `Open`.
-> `Proposed` means the design position is written down for review and is not yet binding on any
-> schema or implementation. Nothing here changes v0.1, which is frozen (see
-> [`README.md`](./README.md)).
+> Status: **Design.** Each decision below is marked `Adopted (process)` or
+> `Adopted (architecture)`. **`Adopted (architecture)`** (maintainer review round 2, 2026-08-22)
+> means the v0.2-alpha implementation may build on the decision as its architecture baseline; it
+> is **not** a normative v0.2 specification — normative status begins only with the v0.2-alpha
+> schema line, and per AD-04 no wire-format claim lands before the domain-tag byte construction
+> is frozen. Nothing here changes v0.1, which is frozen (see [`README.md`](./README.md)).
 >
 > External documents are cited with their verified status as of 2026-08-22. Internet-Drafts are
 > work in progress, may change or expire, and are not standards; they are cited as landscape
@@ -50,7 +52,7 @@ published v0.1 chains and citations stay stable.
 
 ## AD-02 — Thesis: composition, not reinvention
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 AIREP v0.2 is a vendor-neutral evidence interchange protocol for cryptographically binding AI
 runtime governance decisions to control delivery, execution, and observed effects, composing with
@@ -71,7 +73,7 @@ adds nothing that does. Growth of the profile catalogue is not a goal; precision
 
 ## AD-03 — Separate the record family: decision, control, execution, effect
 
-**Status: Proposed.** The central structural change of v0.2.
+**Status: Adopted (architecture) — 2026-08-22.** The central structural change of v0.2.
 
 v0.1 has one core record ("one AI runtime governance decision") and pushes the
 `issued → delivered → acknowledged → enforced → observed` lifecycle into the `control_delivery`
@@ -94,13 +96,27 @@ Correlation is by explicit keys, not by co-location in one record: `decision_id`
 Equality of the **authorized** parameter digest and the **executed** parameter digest is the
 TOCTOU check this structure exists to make mechanical.
 
-**Observer relationship is declared, never presupposed** (maintainer review, 2026-08-22). An
-independent observer is NOT a prerequisite for producing Effect Evidence: an observation by the
-executor itself is evidence too — it is just not independent corroboration, and the record must
-not let the two be confused. Effect Evidence therefore carries a required
-`observer_relationship` field — `same_executor` | `independent` | `unknown` (or a declared
-other) — so a consumer can weigh corroboration mechanically. Independence raises the assurance a
-consumer may assign; its absence never blocks the evidence from existing.
+**Observer relationship: declared at Core, verified at Authenticated and above** (maintainer
+review rounds 1–2, 2026-08-22). An independent observer is NOT a prerequisite for producing
+Effect Evidence: an observation by the executor itself is evidence too — it is just not
+independent corroboration, and the record must not let the two be confused. Effect Evidence
+therefore carries a required `observer_relationship` field with the **closed enum**
+`same_executor` | `independent` | `unknown` — no free-form values; finer-grained observer
+taxonomy, if a deployment needs one, lives in a namespaced profile (AD-07). The field's
+assurance semantics are class-scoped:
+
+- **At Core**, `observer_relationship` is producer-declared information — a statement by the
+  producer, not verified independence.
+- **At Authenticated and Witnessed**, a verifier accepts `independent` only when it can
+  establish, under its accepted trust policy, that the Effect Evidence producer identity/key is
+  genuinely distinct from the Execution Evidence producer identity/key. Where that separation
+  cannot be verified, the effective assessment is `unknown` (or an explicit withheld reason) —
+  never a silently accepted `independent`.
+
+This keeps the malicious-producer boundary intact (an executor writing `independent` into its
+own record gains nothing a verifier will honor) while making independent corroboration genuinely
+mechanical. Independence raises the corroboration a consumer may assign; its absence never
+blocks the evidence from existing.
 
 This separation now has independent convergent design elsewhere
 (draft-mcguinness-mission-runtime-evidence, cited above), which we read as evidence the cut is
@@ -115,7 +131,7 @@ out of `profiles` into first-class sibling artifacts. Wire-breaking; see `BREAKI
 
 ## AD-04 — One canonicalization, one hash domain
 
-**Status: Proposed.** Resolves v0.1 open items 1–2 (STATUS.md).
+**Status: Adopted (architecture) — 2026-08-22.** Resolves v0.1 open items 1–2 (STATUS.md).
 
 v0.2 admits exactly one byte-level rule: **RFC 8785 (JCS)** canonicalization, hash computed over
 the record **in place** (with `integrity.current` and `integrity.signature` removed,
@@ -131,14 +147,17 @@ domain is additionally separated by **protocol version + artifact type** — con
 `AIREP/0.2/decision`, `AIREP/0.2/control`, `AIREP/0.2/execution`, `AIREP/0.2/effect` — so the
 signed bytes of one artifact type can never verify as another type, at the protocol level rather
 than by schema accident. The exact byte construction of the domain tag (prefix vs. signed field)
-MUST be fixed normatively before v0.2-alpha; it is not an implementation choice.
+is not an implementation choice. **Process rule (maintainer, round 2):** the alpha line may be
+opened after design acceptance, but **no v0.2-alpha schema, canonical vector, producer output,
+verifier vector, or wire-format claim may land until the domain-tag byte construction is
+normatively frozen** — fixing it is alpha's first, pre-wire task.
 
 **Consequence:** every v0.2 hash differs from its v0.1 counterpart by construction. This is the
 single largest reason v0.2 is a version bump and not a patch.
 
 ## AD-05 — Chain identity: `chain_id` and `record_id`
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 v0.1 binds records to their predecessor (`previous`) but a chain has no signed name and a record
 has no stable identifier; the threat model acknowledges the resulting relative-binding limits.
@@ -160,7 +179,7 @@ cross-artifact reference.
 
 ## AD-06 — Mandatory digests: input, result, evidence
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 v0.1 requires `input.input_ref` and `output.result_ref` (references) but no digests, and
 `evidence[].content_hash` is required only for `resolvable: false` entries at the Verified class.
@@ -175,7 +194,7 @@ over a declared, named projection — and the projection rule itself is named in
 
 ## AD-07 — Close the core; extend only through namespaced profiles
 
-**Status: Proposed.** Resolves v0.1 open item 4.
+**Status: Adopted (architecture) — 2026-08-22.** Resolves v0.1 open item 4.
 
 v0.1 closes the top level (`additionalProperties: false`) but every core sub-object —
 `subject`, `input`, `claim`, `output`, `evidence[]`, `directive`, `scope`, `integrity`,
@@ -189,7 +208,7 @@ intentionally. Wire-breaking.
 
 ## AD-08 — Asymmetric signature baseline
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 v0.1 leaves `integrity.signature.alg` open and the Verified class explicitly admits
 `HMAC-SHA256`. A symmetric MAC cannot establish authorship to a third party — any holder of the
@@ -207,7 +226,8 @@ under v0.2 rules. Assurance-breaking (not hash-breaking).
 
 ## AD-09 — Assurance-class vocabulary: retire "Trusted"
 
-**Status: Proposed; ladder names DECIDED (maintainer review, 2026-08-22).**
+**Status: Adopted (architecture) — 2026-08-22** (ladder names decided in round 1, class-scope
+wording hardened in round 2).
 
 AIREP's own threat model states that even the top class cannot stop a malicious producer writing a
 false claim — the classes assure provenance, integrity, and freshness, never truth. The name
@@ -219,22 +239,39 @@ The v0.2 ladder is:
 | v0.1 name | v0.2 name | Establishes |
 |---|---|---|
 | AIREP-Core | **AIREP-Core** | Structurally valid and internally hash-consistent |
-| AIREP-Verified | **AIREP-Authenticated** | Authorship cryptographically established against a named/trusted key |
-| AIREP-Trusted | **AIREP-Witnessed** | Independently anchored head, freshness, and completeness evidence |
+| AIREP-Verified | **AIREP-Authenticated** | Authorship cryptographically established under a key binding / trust policy the verifier accepts |
+| AIREP-Trusted | **AIREP-Witnessed** | Head freshness and non-truncation relative to the independent witness or transparency anchor |
 
 Core deliberately does **not** claim "untampered": without signature verification, an adversary
 can fabricate an entirely new, self-consistent hash chain — internal hash consistency detects
 in-place edits of a given byte sequence, not substitution of the whole sequence. Tamper-evidence
 against a substituting adversary begins at Authenticated.
 
-The normative text binds **all three classes** to the sentence: *"provenance, integrity, and
-freshness assurance; not truth assurance."* The v0.1 fail-closed machinery (withheld top class,
-strict-mode gates, named unevaluated prerequisites, withheld-reason lists) carries over unchanged
-in substance — an unevaluated prerequisite is never a satisfied one.
+**Authenticated requires a verifier-accepted key binding.** A self-declared public key carried
+inside the record is not, by itself, sufficient: the signature must verify under a key binding /
+trust policy the **verifier** accepts (a supplied key, a trust store, or an equivalent
+out-of-record binding). Otherwise "Authenticated" would be a claim the producer can mint about
+itself.
+
+**Witnessed claims are scoped to the anchor.** The class does not establish that the evidence
+graph is complete or that any real-world action history is complete; it establishes head
+freshness and non-truncation **relative to** the independent witness or transparency anchor that
+vouched for the head — nothing beyond what that anchor saw.
+
+The normative boundary sentence, stated once and bound to the ladder as a whole:
+
+> *The assurance ladder concerns provenance, integrity, and freshness properties only; each
+> class establishes only the properties explicitly assigned to that class. No class provides
+> truth assurance.*
+
+In particular, Core provides neither provenance nor freshness — it must never be read as a
+weaker form of either. The v0.1 fail-closed machinery (withheld top class, strict-mode gates,
+named unevaluated prerequisites, withheld-reason lists) carries over unchanged in substance — an
+unevaluated prerequisite is never a satisfied one.
 
 ## AD-10 — Transparency via SCITT binding, not a homegrown stack
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 v0.1's `chain_witness` profile is a local, offline head-witness mechanism. It stays — it serves
 the network-free case. But AIREP does not grow it toward a transparency service: RFC 9943 defines
@@ -259,7 +296,7 @@ effect. Registration composes with, and does not replace, AD-03's evidence famil
 
 ## AD-11 — Authorization is referenced, never defined
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 AIREP v0.2 defines an **authorization reference profile**: a Decision Receipt can carry a
 reference to (and digest of) an external authorization decision — an AuthZEN Authorization API 1.0
@@ -270,7 +307,7 @@ block (with `established_by`) remains the identity-provenance anchor.
 
 ## AD-12 — MCP / A2A / OTel mappings are informative profiles
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 Mappings for MCP (tool-call context), A2A (inter-agent task context), and OpenTelemetry
 (`trace_id`/span correlation) are shipped as **informative profiles** with worked examples. None
@@ -280,7 +317,7 @@ re-checked, not assumed, when that spec revs.
 
 ## AD-13 — Regulatory crosswalk discipline
 
-**Status: Proposed** (already partially practiced in v0.1).
+**Status: Adopted (architecture) — 2026-08-22** (already partially practiced in v0.1).
 
 Every regulatory or framework crosswalk (`eu_ai_act_log`, `nist_ai_rmf`, `owasp_threat`, and any
 successor) carries three mandatory header fields: **source version/date**, **status**
@@ -291,7 +328,7 @@ used elsewhere in this repository, applied uniformly.
 
 ## AD-14 — Verifier parity is a release gate
 
-**Status: Proposed.**
+**Status: Adopted (architecture) — 2026-08-22.**
 
 v0.1's two verifiers agree on structure, hashes, signatures, and class/withheld-reason sets, but
 `verify.mjs` runs no profile-schema validation, so identical bytes can exit 0 under one verifier
@@ -319,17 +356,17 @@ failure is not capability evidence; the gate demands observed results.
 | AD | Title | Status | Wire-breaking |
 |---|---|---|---|
 | 01 | v0.1 freeze, staged release line | Adopted (process) | — |
-| 02 | Composition thesis, non-goals | Proposed | — |
-| 03 | Decision/control/execution/effect artifact family | Proposed | **Yes** |
-| 04 | Single JCS canonicalization + in-place hash domain | Proposed | **Yes** |
-| 05 | `chain_id` + `record_id` | Proposed | **Yes** |
-| 06 | Mandatory input/result/evidence digests | Proposed | **Yes** |
-| 07 | Core sub-object closure | Proposed | **Yes** |
-| 08 | Asymmetric signature baseline | Proposed | Assurance-breaking |
-| 09 | Retire "Trusted" naming (Core / Authenticated / Witnessed) | Proposed / names decided | Vocabulary |
-| 10 | SCITT binding profile | Proposed | Additive |
-| 11 | Authorization reference profile | Proposed | Additive |
-| 12 | MCP/A2A/OTel informative profiles | Proposed | Additive |
-| 13 | Crosswalk discipline | Proposed | — |
-| 14 | Verifier parity gate | Proposed | — |
+| 02 | Composition thesis, non-goals | Adopted (architecture) | — |
+| 03 | Decision/control/execution/effect artifact family | Adopted (architecture) | **Yes** |
+| 04 | Single JCS canonicalization + domain-separated in-place hash | Adopted (architecture) | **Yes** |
+| 05 | `chain_id` + `record_id` + `sequence` | Adopted (architecture) | **Yes** |
+| 06 | Mandatory input/result/evidence digests | Adopted (architecture) | **Yes** |
+| 07 | Core sub-object closure | Adopted (architecture) | **Yes** |
+| 08 | Asymmetric signature baseline | Adopted (architecture) | Assurance-breaking |
+| 09 | Retire "Trusted" (Core / Authenticated / Witnessed) | Adopted (architecture) | Vocabulary |
+| 10 | SCITT binding profile | Adopted (architecture) | Additive |
+| 11 | Authorization reference profile | Adopted (architecture) | Additive |
+| 12 | MCP/A2A/OTel informative profiles | Adopted (architecture) | Additive |
+| 13 | Crosswalk discipline | Adopted (architecture) | — |
+| 14 | Verifier parity gate | Adopted (architecture) | — |
 | 15 | Independence gate | Adopted (process) | — |

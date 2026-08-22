@@ -2,10 +2,17 @@
 
 **Status: Design. Nothing in this directory is normative.**
 
+**Architecture baseline: ACCEPTED** (maintainer review round 2, 2026-08-22). The decisions in
+[`ARCHITECTURE_DECISIONS.md`](./ARCHITECTURE_DECISIONS.md) are `Adopted (architecture)`: the
+v0.2-alpha implementation may build on them. Accepted architecture is **not** a normative v0.2
+specification — normative status begins only with the v0.2-alpha schema line, and per AD-04 no
+v0.2 schema, canonical vector, producer output, verifier vector, or wire-format claim lands
+before the domain-tag byte construction is normatively frozen.
+
 This directory holds the architecture decisions, breaking-change inventory, and migration model
 for AIREP v0.2. It is a working design record, published for review — the same discipline as the
-rest of this repository: proposals are labelled proposals, and no document here claims that v0.2
-exists, is implemented, or has been independently validated.
+rest of this repository: no document here claims that v0.2 exists, is implemented, or has been
+independently validated.
 
 ## Version policy for this line
 

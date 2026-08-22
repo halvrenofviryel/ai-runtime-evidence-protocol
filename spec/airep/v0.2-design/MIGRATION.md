@@ -10,22 +10,29 @@
    re-hashed, re-signed, or edited to "become" v0.2.
 
 2. **Migration is projection, not conversion.** A v0.1 record is *projected* into v0.2 artifacts
-   by a deterministic, documented mapping. The projection produces **new** artifacts with new
-   integrity material (v0.2 hash domain, AD-04) — it does not claim the new bytes are what the
-   original producer signed.
+   by a documented mapping. The projection produces **new** artifacts with new integrity material
+   (v0.2 hash domain, AD-04) — it does not claim the new bytes are what the original producer
+   signed. **Determinism is scoped** (maintainer, round 2): the *semantic field mapping* is
+   deterministic — the same source record always projects to the same field content; but
+   projection-assigned identifiers and the projector's signatures need not be byte-identical
+   across runs. Projection is not required to solve a deterministic-identifier cryptography
+   problem it does not have.
 
-3. **Provenance is explicit.** Every projected artifact carries a provenance reference to its
-   source: the v0.1 record's `integrity.current` hash and the chain context it came from. A
-   consumer can always walk back from a projected v0.2 artifact to the originally signed v0.1
-   bytes and re-verify them under v0.1 rules.
+3. **Provenance is explicit — and lives in a profile, not the core.** Migration metadata is
+   carried in the AIREP-owned namespaced profile **`profiles.airep.migration`**; per the closed
+   core (AD-07), migration adds **no** core fields. That profile holds: the source v0.1 record's
+   `integrity.current` hash and chain context, the source assurance (principle 4), the projection
+   version, the projector identity, which identifiers were projection-assigned, and any
+   projection limitations. A consumer can always walk back from a projected v0.2 artifact to the
+   originally signed v0.1 bytes and re-verify them under v0.1 rules.
 
 4. **Source assurance and projection-artifact assurance are distinct — and never conflated.**
    Two different assurance statements exist, and each is tracked in its own channel:
 
    - **Source assurance:** what the original v0.1 record earned under v0.1 verification. This
      never rises through projection. A projected artifact records the source's v0.1 class as an
-     inherited, clearly-labelled attribute (`source_assurance`, inherited-by-projection, not
-     earned by v0.2 checks).
+     inherited, clearly-labelled attribute (`source_assurance` in `profiles.airep.migration`,
+     inherited-by-projection, not earned by v0.2 checks).
    - **Projection-artifact assurance:** what the *new* v0.2 artifact earns under v0.2
      verification on its own merits. A projector that correctly signs its output produces an
      artifact that can legitimately reach v0.2 **Authenticated** — authenticated *as the
@@ -56,7 +63,8 @@
 | Other profiles (`key_trust`, regulatory crosswalks, `observability_transport`, …) | Carried as namespaced profiles on the appropriate artifact |
 
 Fields v0.1 does not have are handled per principles 4–5: identifiers (`chain_id`, `record_id`,
-`sequence`) are minted at projection time and marked projection-assigned; required digests
+`sequence`) are minted at projection time and recorded as projection-assigned in
+`profiles.airep.migration`; required digests
 (`result_digest`, universal `evidence[].content_hash`) are computed from source bytes where those
 bytes are available, and where they are not, **no v0.2 artifact is emitted** — the record goes to
 the migration/projection report instead.
