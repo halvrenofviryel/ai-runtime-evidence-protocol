@@ -112,12 +112,27 @@ jcs-bytes  = RFC 8785 (JCS) canonicalization of the artifact with
 integrity.current = "sha256:" || lowercase-hex( SHA-256( hash_preimage ) )
 ```
 
+The subtraction is defined mechanically; a conforming implementation performs exactly these
+steps and no others:
+
+```
+body = logical copy of the artifact          # the artifact itself is never mutated
+delete body.integrity.current
+delete body.integrity.signature
+jcs-bytes = JCS(body)
+```
+
+The `integrity` object itself remains (with `previous` and any other members intact), and every
+other member of the artifact remains byte-relevant exactly as written. No other normalization of
+any kind is performed — no member reordering beyond what RFC 8785 defines, no whitespace or
+Unicode handling beyond RFC 8785, no removal or defaulting of any other member.
+
 Rules:
 
 1. The hash is computed **in place** — no wrapper object, no re-serialization variants. The
    retained members explicitly include `integrity.previous`, `chain_id`, `record_id`,
-   `sequence`, and `artifact_type` (§7), so chain position, chain identity, record identity,
-   ordering, and declared type are all inside the digest.
+   `sequence`, `airep_version`, and `artifact_type` (§7), so chain position, chain identity,
+   record identity, ordering, declared version, and declared type are all inside the digest.
 2. `jcs-bytes` MUST be produced by RFC 8785 exactly; the v0.1 conformance kit's cross-language
    JCS battery carries forward as the reference behaviour.
 3. There is exactly **one** LF in the preimage before the JCS bytes begin, and JCS output for an
@@ -129,69 +144,143 @@ Rules:
 ## 5. Record-signature preimage
 
 ```
-sig_preimage = sig-tag-bytes  LF  current-bytes
+sig_preimage = sig-tag-bytes  LF  suite-id-bytes  LF  current-bytes
 
-sig-tag-bytes = the ASCII bytes of the applicable "AIREP/<version>/sig/<context>" tag
-LF            = the single byte 0x0A
-current-bytes = the ASCII bytes of the full integrity.current string
-                ("sha256:" || 64 lowercase hex characters)
+sig-tag-bytes  = the ASCII bytes of the applicable "AIREP/<version>/sig/<context>" tag
+LF             = the single byte 0x0A
+suite-id-bytes = the ASCII bytes of the canonical suite identifier (§5.1)
+current-bytes  = the ASCII bytes of the full integrity.current string
+                 ("sha256:" || 64 lowercase hex characters)
 ```
 
-`integrity.signature.value` is the signature over `sig_preimage` under the producer's key
-(asymmetric baseline per AD-08; Ed25519 mandatory-to-implement, no pre-hashing variant — the
-preimage is short and is signed directly).
+`integrity.signature.value` is the signature over `sig_preimage` under the producer's key, using
+the suite named by `suite-id`. No pre-hashing variant — the preimage is short and is signed
+directly.
 
-Rationale for tagging the signature separately even though `current` is already domain-tagged:
-the signature operation binds *key usage*, not just content. A bare signature over a short ASCII
+### 5.1 Suite registry, and why the suite is inside the preimage
+
+The **canonical suite identifier** comes from a closed registry owned by the specification. For
+v0.2 it contains exactly one entry:
+
+| suite-id | Meaning |
+|---|---|
+| `ed25519` | Ed25519 (RFC 8032), pure (no pre-hash), over the raw preimage bytes |
+
+Adding a suite is a specification change (registered identifier + fixed vectors before use), per
+the AD-08 crypto-agility model. Suite identifiers are lowercase ASCII, LF-free, from the same
+character class as tag `context` segments.
+
+**The wire field `integrity.signature.alg` is informative only and MUST NOT drive any
+verification decision.** It sits inside the signature object, which is excluded from the hash
+preimage (§4) — it is unauthenticated bytes, and an unauthenticated field must never select
+cryptographic behaviour. A verifier determines the suite from its **verifier-accepted key
+binding** (the trust store / key material it was given — the same binding AD-09 requires for
+Authenticated), constructs the preimage with **that** suite's canonical identifier, and
+verifies. The suite is thereby self-authenticating: a signature only verifies if the signer
+bound the same suite identifier into the signed bytes. A mismatch between the wire `alg` and
+the binding-derived suite SHOULD be reported as a caveat, but the verification decision comes
+from the binding and the signed suite-id alone. Algorithm-substitution / confusion attacks via
+the wire field are structurally inert.
+
+### 5.2 Rationale for tagging the signature at all
+
+The signature operation binds *key usage*, not just content. A bare signature over a short ASCII
 string is replayable into any other context in which the same key signs short ASCII strings —
-including non-AIREP systems outside this specification's control. The sig tag makes the signed
-bytes self-describing at the cost of one line of verifier code.
+including non-AIREP systems outside this specification's control. The sig tag plus signed
+suite-id make the signed bytes fully self-describing at the cost of two fields in the preimage.
 
 ## 6. Head-witness signature preimage
 
 ```
-witness_preimage = "AIREP/<version>/sig/head-witness"  LF  jcs-claim-bytes
+witness_preimage = "AIREP/<version>/sig/head-witness"  LF  suite-id-bytes  LF  jcs-claim-bytes
 
-jcs-claim-bytes = JCS of the head claim object:
-                  { "chain_id": <chain_id>,
-                    "sequence": <sequence of the head artifact>,
-                    "current":  <integrity.current of the head artifact>,
-                    "length":   <number of artifacts in the chain> }
+jcs-claim-bytes = JCS of the head claim object (closed; exactly these five members):
+                  { "chain_id":     <chain_id>,
+                    "sequence":     <sequence of the head artifact>,
+                    "current":      <integrity.current of the head artifact>,
+                    "length":       <number of artifacts in the chain>,
+                    "witnessed_at": <the witness's freshness timestamp> }
 ```
 
 This is the v0.2 successor of the v0.1 `chain_witness` claim, with `decision_index` replaced by
-`sequence` (AD-05). The claim object is closed: exactly these four members, no extension. The
-witness key independence, freshness, and revocation semantics are unchanged from the v0.1
-strict-mode gates (AD-09 carries the fail-closed machinery forward).
+`sequence` (AD-05) and — the substantive v0.2 change — **the freshness anchor moved inside the
+signed claim**.
 
-## 7. In-record binding: `artifact_type`
+### 6.1 Freshness is signed by the witness, or it is not freshness
 
-Every v0.2 artifact carries a required top-level member `artifact_type` whose value is exactly
-the `context` segment of the tag it was hashed under (`"decision"`, `"control"`, `"execution"`,
-`"effect"`), enforced per-artifact-type as a schema `const`.
+The v0.1 strict-mode verifier verifies the witness signature over the four-member head claim and
+then reads the freshness timestamp from a **separate, unsigned** field for the recency check. A
+malicious producer can therefore take an old, valid, independent witness signature, place it in
+a new checkpoint, and set the unsigned timestamp to now — the witness attested the head, but
+never the time. v0.2 does not carry this over:
 
-A verifier MUST recompute the hash under the tag selected by the **artifact's own
-`artifact_type` member**, and MUST reject the artifact if verification under that tag fails. A
-verifier MUST NOT try other tags on failure — tag search would reintroduce the confusion this
-construction removes.
+- `witnessed_at` is a member of the signed claim. The verifier's freshness recency check MUST
+  read `witnessed_at` **from the signed claim only**; any freshness-related field outside the
+  signed claim MUST NOT be consulted for the recency decision.
+- The local head-witness claim scope is exactly: **non-truncation + head anchoring + the
+  witness's own signed statement of when it witnessed** — one assurance claim, no mixing.
+  Challenge/nonce freshness protocols and transparency-log anchoring (SCITT, AD-10) are separate
+  mechanisms with their own authenticated timestamps; they are not folded into this claim.
 
-The binding is therefore dual and mutually checking: the tag is *outside* the JSON (no JSON
-document can accidentally equal a tagged preimage) and the type is *inside* the signed content
-(no tooling can hash a record under a tag its own bytes do not declare, without detection).
+### 6.2 Claim member types — pinned to the byte
+
+Two independent implementers MUST NOT be able to serialize the same semantic claim differently.
+The members are pinned:
+
+| Member | JSON type | Constraint |
+|---|---|---|
+| `chain_id` | string | as it appears in the head artifact, byte-identical |
+| `sequence` | number | non-negative integer, ≤ 2^53 − 1, no sign, no fraction, no exponent |
+| `current` | string | exactly `sha256:` + 64 lowercase hex characters |
+| `length` | number | positive integer, ≤ 2^53 − 1; **the total artifact count of the chain at witness time, the referenced head included** |
+| `witnessed_at` | string | exactly `YYYY-MM-DDTHH:MM:SSZ` — RFC 3339 UTC, second precision, literal `Z`, no fractional seconds, no numeric offset |
+
+Integers stay within the IEEE-754 safe range so RFC 8785's ES6 number serialization is exact and
+identical across languages (the safe-integer model; at one artifact per millisecond the range
+lasts ~285,000 years). The witness key independence and revocation semantics are unchanged from
+the v0.1 strict-mode gates (AD-09 carries the fail-closed machinery forward); only the freshness
+evidence path is corrected as above.
+
+## 7. In-record binding: `airep_version` and `artifact_type`
+
+Every v0.2 artifact carries two required top-level members, both inside the hash preimage (§4):
+
+- `airep_version` — exactly the `version` segment of its tags (`"0.2"`);
+- `artifact_type` — exactly the `context` segment of its tags (`"decision"`, `"control"`,
+  `"execution"`, `"effect"`), enforced per-artifact-type as a schema `const`.
+
+**Tag selection is a function, never a search.** A verifier MUST derive the one hash tag and the
+one sig tag from the pair **(`airep_version`, `artifact_type`) as declared by the artifact's own
+bytes**, and MUST reject the artifact if hash recomputation or signature verification under
+those tags fails. A verifier MUST NOT try any other tag — a different version, a different
+context, or a v0.1-style untagged preimage — on failure, for **either** the hash **or** the
+signature. Tag search in any verification step would reintroduce exactly the cross-type and
+cross-version reinterpretation surface this construction removes.
+
+The binding is therefore dual and mutually checking, for version and type alike: the tag is
+*outside* the JSON (no JSON document can accidentally equal a tagged preimage) and both
+selectors are *inside* the signed content (no tooling can hash a record under a tag its own
+bytes do not declare, without detection). Cross-version substitution — a 0.2 body presented
+under a 0.3 tag or vice versa — fails the same way cross-type substitution does, and is covered
+by the §9 battery.
 
 ## 8. Unambiguity argument
 
-The construction is injective — two distinct `(tag, content)` pairs cannot yield the same
-preimage bytes:
+The construction is injective — two distinct field tuples cannot yield the same preimage bytes:
 
-1. No tag contains 0x0A (§3.1), so the **first** 0x0A in a preimage is always the separator.
-   Splitting at it recovers exactly one `(tag-bytes, payload-bytes)` pair. Prefix-freedom of the
-   tag set is not even required — the separator position alone determines the split — but the
-   registry is prefix-free anyway (no registered tag is a prefix of another).
-2. Distinct tags ⇒ distinct preimages for any payloads (the recovered tag differs).
-3. Same tag, distinct canonical payloads ⇒ distinct preimages (the recovered payload differs);
-   RFC 8785 guarantees one canonical byte sequence per JSON value, and §5's `current-bytes` is a
-   fixed-format ASCII string.
+1. **No field can contain the separator.** Tags and suite identifiers are LF-free by their
+   grammars (§3.1, §5.1); `current-bytes` and `witnessed_at` are fixed-format ASCII with no
+   control characters; and **JCS output contains no raw 0x0A byte** — RFC 8259 requires control
+   characters in strings to be escaped, and RFC 8785 serializes U+000A as the two-character
+   escape `\n`, so a raw LF never appears in canonical JSON. Every 0x0A in a preimage is
+   therefore a separator, and splitting on 0x0A recovers the exact field list.
+2. **Field count is fixed per preimage kind:** the hash preimage has exactly 2 fields (1 LF),
+   the record-signature and head-witness preimages exactly 3 fields (2 LFs). Within a kind, the
+   split is unambiguous; across kinds, the first field (a `hash/…` tag vs a `sig/…` tag)
+   differs, so kinds can never collide with each other.
+3. Distinct recovered tuples ⇒ distinct preimages, componentwise: distinct tags or suite-ids
+   differ as ASCII; distinct canonical payloads differ because RFC 8785 guarantees one canonical
+   byte sequence per JSON value; `current-bytes` is a fixed-format ASCII string.
 4. A v0.2 preimage can never equal a v0.1 preimage: every v0.1 hash preimage begins with `{`
    (0x7B, JCS of an object) and every v0.1 signature preimage begins with `s` (0x73, of
    `"sha256:"`); every v0.2 preimage begins with `A` (0x41, of `"AIREP/"`).
@@ -214,6 +303,9 @@ Each case MUST be a committed fixture run against **both** verifiers with identi
 | A6 | An artifact hashed under a syntactically valid but unregistered tag context | Reject, fail closed, no nearest-match fallback |
 | A7 | A tag differing only in case (`AIREP/0.2/HASH/decision`) | Reject (case-sensitive, no folding) |
 | A8 | Preimage assembled with CRLF or trailing LF instead of a single LF separator | Hash mismatch ⇒ reject |
+| A9 | Cross-version substitution: a body declaring `airep_version: "0.2"` hashed/signed under a `0.3` tag, and vice versa; also a body whose `airep_version` was rewritten after signing | Reject (tag derived only from the declared pair; version is inside the digest) |
+| A10 | Freshness replay: an old, valid witness signature over a stale claim, re-presented with any unsigned freshness field set to now | Reject/stale — recency MUST be evaluated against the **signed** `witnessed_at` only; the unsigned field changes nothing |
+| A11 | Suite substitution: a valid `ed25519` signature re-presented with wire `alg` naming a different suite, and a signature whose preimage embeds a suite-id different from the verifier's key-binding suite | Verify decision unchanged by wire `alg` (informative only); binding/suite-id mismatch ⇒ reject |
 
 ## 10. What acceptance of this draft authorizes — and what it does not
 
