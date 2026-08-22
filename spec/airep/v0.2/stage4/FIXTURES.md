@@ -92,6 +92,9 @@ verifiers (STAGE4_CONTRACT §5).
 | S6-1 | Claim with a **sixth member** (`note`), witness signature genuinely produced over the six-member JCS | `REJECT` `["WITNESS_CLAIM_INVALID"]` — structure fails before signature; extra members neither ignored nor included |
 | S6-2 | Claim `current` with uppercase hex (violates exact `sha256:<64 lowhex>`), signed | `REJECT` `["WITNESS_CLAIM_INVALID"]` (structure precedes reconcile) |
 | S6-3 | Claim `sequence` = −1, signed | `REJECT` `["WITNESS_CLAIM_INVALID"]` |
+| S6-4a | Otherwise-valid, genuinely signed claim whose `sequence` is lexically `1.0` in the fixture source | `REJECT` `["WITNESS_CLAIM_INVALID"]` — from the claim-structure step (the signature over the JCS-canonical claim is valid; lexical form fails first) |
+| S6-4b | Otherwise-valid, genuinely signed claim whose `length` is lexically `1e0` | `REJECT` `["WITNESS_CLAIM_INVALID"]` |
+| S6-4c | Otherwise-valid, genuinely signed claim whose `sequence` is lexically `-0` | `REJECT` `["WITNESS_CLAIM_INVALID"]` |
 | S7-1 | Head declaring `airep_version: "0.3"`, sealed under `0.3` tags; witness genuinely signed under the `0.3` witness tag | `REJECT` `["UNSUPPORTED_VERSION"]` — the closed registry is enforced on the witness path; never a cryptographic accept |
 | S8-1 | Trust-store entry carrying `public_key_hex` + `suite` but **no `trusted` member** | `REJECT` `["KEY_BINDING_UNAVAILABLE"]` — verifier-accepted requires explicit `trusted: true`; no default-trust |
 | S9-1 | Valid witness whose `witnessed_at` = `0099-12-31T23:30:00Z` with fixture `now` = `0100-01-01T00:00:00Z`, window 3600 (30-minute real Gregorian distance across the 99→100 year boundary) | `PASS` `["OK"]` — catches legacy two-digit-year remapping in date arithmetic |

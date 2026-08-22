@@ -1,6 +1,6 @@
 {
  "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines '<sha256>  <relative-path>\\n' relative to stage4/corpus/",
- "aggregate_sha256": "325afde5ebfd355517bc17b4015c57de8eb14f14911afe0fb864f2bce32eddd2",
+ "aggregate_sha256": "52cc00a752df169029e00db5363cc62e1527ab12c6905f0e7ba5a6d8feb2c2c0",
  "files": {
   "A1-1.json": "31597b64c797065998504ec5edfc2ce347b067cee1c5eafcd832e377e42d9889",
   "A10-1.json": "397d46765c4503accb75e06a558da88aff5811ab53ef428cc4d1d9d13414621f",
@@ -35,11 +35,14 @@
   "S6-1.json": "9706aeadc9a5c6ae54444fae7bbd9d3b12395b5cb3ea01c8196a44f5e06309bc",
   "S6-2.json": "b5c398a063b5a9d4469bce8887222e04e6fb09ab58fc9f3709559883795770a6",
   "S6-3.json": "65eb236934d5dae8df8c3795f092f6dd7dd7ecab412e0686106251a33aebcf28",
+  "S6-4a.json": "1b3a8277c4646544e55303ac6b3d1fd2c66472e3548b8050b4bc5d1564e2d60a",
+  "S6-4b.json": "7bd97729550b637bf0f278d24d373c183dc1f04aa9b071bb32ba3bd0b86ebe9d",
+  "S6-4c.json": "6341e85ff5cde648a2f2374db8544ae2734b984d4528ebe1bd608d3ef0d64bf3",
   "S7-1.json": "45ef9354d6fa8cb8bd4f363ed3f4c79c0b4767667043693aef134d2228f83222",
   "S8-1.json": "42a76161162e62190dc6611bafeadf5c65e78e96544b4b0105e78a083479f34e",
   "S9-1.json": "ade05f66e1a8f85b09b6f3e44544afae26022125189030ef3ec55cd8bdc37560"
  },
- "fixture_count": 36,
+ "fixture_count": 39,
  "fixture_kind_rule": "inputs.witness present => witness-path fixture; otherwise artifact-path fixture; witness.head_ref names the key in inputs.head_artifacts",
  "harness_assertions": {
   "A1_tag_divergence": {
@@ -51,6 +54,20 @@
   "S1_probe": {
    "canonical_body_sha256": "de6d5cb58a7d316469213fa803bc24209ccc1838dd5e7ed423e2d7f434c3d2d3",
    "current": "sha256:7348c2851908933c6cd81e79ea372a9f79855736f228aa3172ff1b05dc29b223"
+  },
+  "numeric_lexemes": {
+   "S6-4a": {
+    "lexeme": "\"sequence\": 1.0",
+    "present_in_source": true
+   },
+   "S6-4b": {
+    "lexeme": "\"length\": 1e0",
+    "present_in_source": true
+   },
+   "S6-4c": {
+    "lexeme": "\"sequence\": -0",
+    "present_in_source": true
+   }
   }
  },
  "keys": {

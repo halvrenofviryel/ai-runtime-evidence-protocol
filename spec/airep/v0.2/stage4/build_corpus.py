@@ -321,6 +321,30 @@ def build() -> None:
                              wit_inputs({"H1": head}, witness_block("H1", cl_s10, sign_witness("0.2", cl_s10))),
                              "PASS", ["OK"]))
 
+    # ---- Numeric-lexeme fixtures (final fidelity blocker, 2026-08-22) ------------------
+    # Otherwise-valid, genuinely signed claims whose sequence/length carry a forbidden
+    # LEXICAL spelling in the fixture source. JCS canonicalizes 1.0/1e0/-0.0 to the same
+    # numeric bytes, so each signature is valid over the canonical claim; the claim-structure
+    # step must reject on the source spelling before signature is evaluated. json.dumps
+    # writes 1.0 natively; 1e0 and -0 are patched into the serialized text below
+    # (LEXEME_PATCHES), and the presence of each exact lexeme is asserted into the manifest.
+    head_n1 = seal(base_body("decision", "s4-chain-N", "s4-rec-n1", 1,
+                             "sha256:" + "3" * 64))
+    cl_64a = dict(claim_for(head_n1, 2, FRESH_AT), sequence=1.0)  # canonical 1 == head sequence
+    fixtures.append(envelope("S6-4a", "S", "otherwise-valid signed claim; sequence lexically 1.0 in source",
+                             wit_inputs({"H1": head_n1}, witness_block("H1", cl_64a, sign_witness("0.2", cl_64a))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
+    cl_64b = dict(claim_for(head, 1, FRESH_AT), length=1.0)  # canonical 1; patched to 1e0 in source
+    fixtures.append(envelope("S6-4b", "S", "otherwise-valid signed claim; length lexically 1e0 in source",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_64b, sign_witness("0.2", cl_64b))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
+    cl_64c = dict(claim_for(head, 1, FRESH_AT), sequence=-0.0)  # canonical 0 == head sequence; patched to -0
+    fixtures.append(envelope("S6-4c", "S", "otherwise-valid signed claim; sequence lexically -0 in source",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_64c, sign_witness("0.2", cl_64c))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
     # ---- A1 harness assertion ----------------------------------------------------------
     a1_body = base_body("decision", "s4-chain-B", "s4-rec-a1", 0, GENESIS)
     cur_dec = current_for(a1_body, tag("0.2", "hash", "decision"))
@@ -330,10 +354,29 @@ def build() -> None:
         sys.exit(3)
 
     # ---- Write fixtures + manifest -----------------------------------------------------
+    LEXEME_PATCHES = {
+        "S6-4b": ('"length": 1.0', '"length": 1e0'),
+        "S6-4c": ('"sequence": -0.0', '"sequence": -0'),
+    }
+    LEXEME_PROOF = {"S6-4a": '"sequence": 1.0', "S6-4b": '"length": 1e0',
+                    "S6-4c": '"sequence": -0'}
+    numeric_lexemes = {}
     files = {}
     for fx in fixtures:
         path = CORPUS / f"{fx['fixture_id']}.json"
         data = json.dumps(fx, sort_keys=True, ensure_ascii=False, indent=1) + "\n"
+        if fx["fixture_id"] in LEXEME_PATCHES:
+            old, new = LEXEME_PATCHES[fx["fixture_id"]]
+            if data.count(old) != 1:
+                print(f"STAGE1_REREVIEW_REQUIRED: lexeme patch target not unique in {fx['fixture_id']}")
+                sys.exit(3)
+            data = data.replace(old, new)
+        if fx["fixture_id"] in LEXEME_PROOF:
+            lex = LEXEME_PROOF[fx["fixture_id"]]
+            if lex not in data:
+                print(f"STAGE1_REREVIEW_REQUIRED: lexeme {lex!r} absent from {fx['fixture_id']}")
+                sys.exit(3)
+            numeric_lexemes[fx["fixture_id"]] = {"lexeme": lex, "present_in_source": True}
         path.write_text(data, encoding="utf-8")
         files[path.name] = hashlib.sha256(data.encode("utf-8")).hexdigest()
 
@@ -347,6 +390,7 @@ def build() -> None:
             "A1_tag_divergence": {"body": "s4-rec-a1 body", "current_under_decision_tag": cur_dec,
                                    "current_under_control_tag": cur_ctl, "distinct": cur_dec != cur_ctl},
             "S1_probe": s1_probe,
+            "numeric_lexemes": numeric_lexemes,
         },
         "keys": {"producer_pubkey_hex": PRODUCER_PUB, "witness_pubkey_hex": WITNESS_PUB,
                  "note": "published TEST-ONLY seeds (see vectors/VECTOR_PLAN.md); never production"},

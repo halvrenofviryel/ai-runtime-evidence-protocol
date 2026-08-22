@@ -87,7 +87,17 @@ fails, its code is the single `REJECT` reason and no downstream step contributes
   **claim structure** — the presented claim's member set is exactly the closed five of
   INTEGRITY §4, and the four non-time members satisfy their pinned §4.2 constraints
   (`WITNESS_CLAIM_INVALID` on violation). Extra members are never silently ignored and never
-  silently included in a rebuilt claim: structure fails first. After the structure step
+  silently included in a rebuilt claim: structure fails first. INTEGRITY §4.2's "no sign, no
+  fraction, no exponent" for `sequence`/`length` is a **lexical constraint on the source
+  spelling** of the numeric token (valid spellings: `0` or a nonzero digit followed by
+  digits). Standard JSON parsing erases the spelling (`1.0`, `1e0`, `-0` all parse to a
+  number), so each verifier MUST enforce this against the fixture's **source token**, by a
+  method of its own choosing (a parse hook that surfaces the lexeme, a source-text scan, or
+  equivalent); re-serializing the parsed value and comparing is NOT sufficient. Lexical
+  violations are `WITNESS_CLAIM_INVALID` from the claim-structure step — never a signature
+  failure (JCS canonicalizes those spellings to the same numeric bytes, so a genuinely signed
+  claim with a bad spelling still carries a canonically valid signature; the structure step
+  must reject before signature is ever evaluated). After the structure step
   passes, the witness signature is verified over **JCS of the presented claim object** —
   which at that point has exactly the five members. **witness binding** — a trust-store entry
   is verifier-accepted only when it explicitly carries `trusted: true`; a missing or
