@@ -1,11 +1,15 @@
 # WP-α01 — Domain-Tag Byte Construction (normative-candidate draft)
 
-> **Status: DRAFT for maintainer review — not frozen, not normative.** This document is the
-> first deliverable of WP-α01 under the v0.2 pre-wire lock (AD-04): no v0.2 schema, canonical
-> vector, producer output, verifier vector, or wire-format claim may land until this construction
-> is reviewed as ambiguity-free and normatively frozen. On acceptance, this text freezes and
-> becomes the normative §"Integrity" input for the v0.2 specification; until then every rule
-> below is a proposal.
+> **Status: FROZEN — WP-α01 STAGE-1 ACCEPTED (maintainer review, 2026-08-22, after three
+> rounds).** Freeze basis: PR #26, commit `9a30f972f28e4a0df6adb62d17f1b6e221216796`. The
+> construction semantics of §§3–9 at that commit are the frozen baseline: any byte-affecting
+> change to them requires a new WP-α01 Stage-1 review. This document is not itself the v0.2
+> normative text — Stage 2 integrates the frozen construction into the v0.2 specification
+> verbatim / semantically identical; Stage 3 produces cross-language fixed vectors from two
+> independent implementations; Stage 4 runs the §9 A1–A13 battery. The four artifact schemas
+> remain blocked until WP-α01 is accepted as a whole. The maintainer's freeze findings: with
+> the same semantic input, two conforming implementers cannot diverge on a single preimage
+> byte, and no verifier assurance decision rests on unauthenticated metadata.
 >
 > The key words MUST, MUST NOT, SHOULD, MAY are to be interpreted as in BCP 14 (RFC 2119,
 > RFC 8174) when, and only when, they appear in all capitals. Grammar fragments use ABNF
