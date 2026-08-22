@@ -23,6 +23,11 @@ result**:
 - `reasons` is a non-empty array of codes from the closed registry
   ([`REASON_CODES.md`](./REASON_CODES.md)), **deduplicated and sorted ascending by ASCII** —
   that is the deterministic ordering the comparator relies on.
+- **A `REJECT` carries exactly ONE reason: the first decisive failure** under the pinned
+  evaluation precedence of §2a. Two independent implementations finding the same cryptographic
+  outcome MUST emit the same single code; "legitimate alternative reason sets" are exactly the
+  parity leak this rule removes. (Multiple caveat codes on a `PASS_WITH_CAVEAT` remain
+  possible and are sorted per the rule above.)
 - No other fields. Debug, timing, environment, and library information MUST NOT appear in the
   result object (verifiers may log them elsewhere).
 
@@ -56,6 +61,27 @@ Both integrity verifiers MUST, per the frozen INTEGRITY text:
 7. never call, import, or shell out to the other verifier, and never read the other verifier's
    source or output.
 
+## 2a. Evaluation precedence (reference diagnostic pipeline)
+
+To make exact verdict/reason parity measurable, both integrity verifiers follow one pinned
+diagnostic order. A step is evaluated only if every earlier step succeeded; **when a step
+fails, its code is the single `REJECT` reason and no downstream step contributes a reason.**
+
+- **Artifact path:**
+  `version → tag registry → hash → producer binding → suite → signature → (optional wire-alg caveat)`
+  i.e. `UNSUPPORTED_VERSION` → `UNREGISTERED_TAG` → `HASH_MISMATCH` →
+  `KEY_BINDING_UNAVAILABLE` → `SUITE_UNSUPPORTED` → `SIGNATURE_INVALID` →
+  `WIRE_ALG_IGNORED` (caveat, only on an otherwise-passing result).
+- **Witness path:**
+  `head resolve → head reconcile → witnessed_at validity → witness binding → suite → witness signature → freshness → (optional wire-alg caveat)`
+  i.e. `WITNESS_HEAD_UNRESOLVED` → `WITNESS_HEAD_MISMATCH` → `WITNESS_TIME_INVALID` →
+  `KEY_BINDING_UNAVAILABLE` → `SUITE_UNSUPPORTED` → `WITNESS_SIGNATURE_INVALID` →
+  `WITNESS_STALE` → `WIRE_ALG_IGNORED` (caveat).
+
+This precedence is a **Stage-4 reference-reporting contract only**: it pins how the reference
+integrity verifiers report, so parity is exact; it adds no guarantee, ordering, or semantics to
+the AIREP wire format or to the frozen INTEGRITY text.
+
 ## 3. Independence mandate (authoring)
 
 The two verifiers are independently authored, in separate fresh contexts. Each author may read
@@ -70,12 +96,23 @@ verifier's source or output. Evidence claims about this discipline use the bound
 
 A third program, independent of both verifiers (it shares no code with either beyond stdlib),
 compares the two normalized results files **against each other and against the fixtures'
-expected outcomes**. It MUST exit non-zero on any of: a fixture missing from either results
-file; an extra fixture present in either; a verdict mismatch between the verifiers; a reason
-mismatch (missing reason, extra reason, or order violation after normalization); or any
-mismatch between the agreed result and the fixture's `expected` outcome. Its output is the
-parity manifest: per fixture, both verdicts, both reason lists, the expected outcome, and the
-per-field agreement.
+expected outcomes**. It MUST exit non-zero on any of:
+
+- a fixture missing from either results file, or an extra fixture present in either;
+- a verdict mismatch between the verifiers, a reason mismatch (missing reason, extra reason,
+  or order violation after normalization), or any mismatch between the agreed result and the
+  fixture's `expected` outcome;
+- **any normalized-result shape violation**, in either file: an enclosing map key that does
+  not equal the result's own `fixture_id`; a result object with any field beyond the three
+  contract fields, or with a missing field; a `verdict` outside the three allowed values; a
+  `reasons` array that is empty, contains duplicates, is not ASCII-ascending, or contains a
+  code not in the closed registry; a `PASS` whose reasons are not exactly `["OK"]`; a `REJECT`
+  with more than one reason (§1).
+
+Its output is the parity manifest: per fixture, both verdicts, both reason lists, the expected
+outcome, and the per-field agreement. The parity manifest additionally records the harness
+assertions of [`FIXTURES.md`](./FIXTURES.md) §2a (A1 tag-divergence, S1 subtraction-path
+equality) with their measured values.
 
 The Stage-3 vector comparator (`../vectors/compare_vectors.py`) is additionally hardened in
 this stage: an unexpected/extra field is a **failure** (non-zero exit), proven by a committed
@@ -97,7 +134,13 @@ deterministic negative invocation.
 Stage-4 completion evidence comprises: the corpus manifest (fixture list + SHA-256 per fixture
 file + corpus aggregate SHA-256); both results files and their SHA-256s; the parity manifest;
 and an exact command transcript or a deterministic reproduction script that regenerates
-results and parity from a clean checkout. The independence statement is bounded:
+results and parity from a clean checkout.
+
+**Corpus aggregate SHA-256 — pinned rule:** for every fixture file, form the UTF-8 line
+`"<lowercase-hex-sha256>  <relative-path>\n"` (two spaces; `<relative-path>` is the path
+relative to `stage4/corpus/`, `/`-separated); sort the lines ascending by ASCII over the
+relative path; the aggregate is the SHA-256 of the concatenation of the sorted lines. Any
+other aggregate construction is non-conformant. The independence statement is bounded:
 **separate-authoring process claim + repository-verifiable code separation + result parity** —
 the phrase "independence proved" MUST NOT appear.
 

@@ -24,9 +24,10 @@
 
 Notes:
 
-- `REJECT` results may carry multiple codes only when the verifier genuinely established each
-  named failure independently (e.g. a structurally invalid `witnessed_at` on a claim whose
-  head also fails reconciliation). A verifier MUST NOT pad reasons with downstream
-  consequences of one root failure.
-- Ordering in the array is ASCII-ascending after deduplication (STAGE4_CONTRACT §1); the
-  registry table order above carries no meaning.
+- **A `REJECT` carries exactly one code: the first decisive failure under the pinned
+  evaluation precedence (STAGE4_CONTRACT §2a).** Once a step fails, no downstream step is
+  evaluated for reporting purposes, so downstream codes never appear beside the decisive one.
+  This is what makes exact reason parity between two independent implementations measurable;
+  it is a Stage-4 reference-reporting rule, not AIREP wire semantics.
+- Multiple codes are possible only as caveats on a `PASS_WITH_CAVEAT`, ordered ASCII-ascending
+  after deduplication (STAGE4_CONTRACT §1); the registry table order above carries no meaning.
