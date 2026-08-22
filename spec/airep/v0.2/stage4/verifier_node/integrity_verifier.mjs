@@ -23,9 +23,10 @@
 // Behaviour (per the pinned evaluation precedence, STAGE4_CONTRACT.md §2a):
 //   artifact path: version -> tag registry -> hash -> producer binding -> suite
 //                  -> signature -> (optional wire-alg caveat)
-//   witness path:  head resolve -> head reconcile -> witnessed_at validity
-//                  -> witness binding -> suite -> witness signature -> freshness
-//                  -> (optional wire-alg caveat)
+//   witness path (fidelity-gate revision, 2026-08-22):
+//                  head resolve -> head version -> claim structure -> head reconcile
+//                  -> witnessed_at validity -> witness binding -> suite
+//                  -> witness signature -> freshness -> (optional wire-alg caveat)
 // A REJECT carries exactly ONE reason: the first decisive failure. Fail-closed
 // everywhere: no alternate-tag, alternate-version, alternate-suite, or v0.1-fallback
 // attempt of any kind (INTEGRITY §4.3, §5).
@@ -102,14 +103,27 @@ function ed25519Verify(pubKeyHex, preimage, sigHex) {
 // Timestamp validation per INTEGRITY §4.2: exactly YYYY-MM-DDTHH:MM:SSZ, real
 // Gregorian calendar date, hour 00-23 / minute 00-59 / second 00-59 (leap-second 60
 // forbidden), no fractional seconds, literal Z only. Never Date-parsing leniency:
-// every component is range-checked here; Date.UTC is used only AFTER validation, as
-// exact arithmetic on already-valid components.
-// Returns epoch seconds (number) or null if invalid.
+// every component is range-checked here, and the epoch value is computed by a pure
+// civil-date day-count (days-from-civil algorithm) — NOT Date.UTC, whose legacy
+// two-digit-year remapping silently maps years 0000-0099 to 1900-1999 and corrupts
+// distances across the 0099/0100 boundary (fixture S9-1 crosses exactly that).
+// Returns epoch seconds (number, proleptic Gregorian, may be negative) or null if invalid.
 // ---------------------------------------------------------------------------------
 const TS_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$/;
 
 function isLeapYear(y) {
   return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+
+// Days since 1970-01-01 for a valid proleptic-Gregorian civil date (Hinnant's
+// days_from_civil): pure integer arithmetic, no Date object, no year remapping.
+function daysFromCivil(y, m, d) {
+  y -= m <= 2 ? 1 : 0;
+  const era = Math.floor(y / 400);
+  const yoe = y - era * 400; // [0, 399]
+  const doy = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1; // [0, 365]
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy; // [0, 146096]
+  return era * 146097 + doe - 719468;
 }
 
 function validateTimestamp(s) {
@@ -121,7 +135,7 @@ function validateTimestamp(s) {
   const daysInMonth = [31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   if (day < 1 || day > daysInMonth[month - 1]) return null;
   if (hour > 23 || minute > 59 || second > 59) return null; // second 60 (leap) forbidden
-  return Date.UTC(year, month - 1, day, hour, minute, second) / 1000;
+  return daysFromCivil(year, month, day) * 86400 + hour * 3600 + minute * 60 + second;
 }
 
 // ---------------------------------------------------------------------------------
@@ -212,10 +226,31 @@ function evaluateArtifactPath(inputs) {
 }
 
 // ---------------------------------------------------------------------------------
-// Witness path (STAGE4_CONTRACT §2a):
-// head resolve -> head reconcile -> witnessed_at validity -> witness binding
-// -> suite -> witness signature -> freshness -> caveat
+// Witness path (STAGE4_CONTRACT §2a, fidelity-gate revision 2026-08-22):
+// head resolve -> head version -> claim structure -> head reconcile
+// -> witnessed_at validity -> witness binding -> suite -> witness signature
+// -> freshness -> caveat
 // ---------------------------------------------------------------------------------
+const CLAIM_MEMBERS = ["chain_id", "current", "length", "sequence", "witnessed_at"];
+const CURRENT_RE = /^sha256:[0-9a-f]{64}$/;
+
+// Closed five-member claim structure of INTEGRITY §4, with the pinned §4.2
+// constraints on the four non-time members (witnessed_at time semantics are the
+// separate WITNESS_TIME_INVALID step). Extra members are never silently ignored and
+// never silently included in a rebuilt claim — the member set must be EXACTLY the
+// closed five.
+function claimStructureValid(claim) {
+  if (!isObj(claim)) return false;
+  const keys = Object.keys(claim).sort();
+  if (keys.length !== CLAIM_MEMBERS.length ||
+      !keys.every((k, i) => k === CLAIM_MEMBERS[i])) return false;
+  if (typeof claim.chain_id !== "string") return false;
+  if (!Number.isSafeInteger(claim.sequence) || claim.sequence < 0) return false;
+  if (typeof claim.current !== "string" || !CURRENT_RE.test(claim.current)) return false;
+  if (!Number.isSafeInteger(claim.length) || claim.length < 1) return false;
+  return true;
+}
+
 function evaluateWitnessPath(inputs) {
   const w = isObj(inputs.witness) ? inputs.witness : {};
   const claim = isObj(w.claim) ? w.claim : {};
@@ -228,7 +263,17 @@ function evaluateWitnessPath(inputs) {
       ? heads[headRef] : undefined;
   if (!isObj(head)) return reject("WITNESS_HEAD_UNRESOLVED");
 
-  // 2. head reconcile — the claim's chain_id / sequence / current must equal the
+  // 2. head version — the resolved head's declared airep_version must be a version
+  //    this integrity verifier implements: the closed registry is enforced on the
+  //    witness path too. A head declaring 0.3 with a witness genuinely signed under
+  //    0.3 tags is UNSUPPORTED_VERSION, never a cryptographic accept.
+  if (head.airep_version !== SUPPORTED_VERSION) return reject("UNSUPPORTED_VERSION");
+
+  // 3. claim structure — exactly the closed five members with their pinned non-time
+  //    constraints (INTEGRITY §4/§4.2); structure fails before reconcile/signature.
+  if (!claimStructureValid(claim)) return reject("WITNESS_CLAIM_INVALID");
+
+  // 4. head reconcile — the claim's chain_id / sequence / current must equal the
   //    resolved head's own members (INTEGRITY §4.3). Strict identity, no coercion.
   const headCurrent = isObj(head.integrity) ? head.integrity.current : undefined;
   if (
@@ -239,13 +284,14 @@ function evaluateWitnessPath(inputs) {
     return reject("WITNESS_HEAD_MISMATCH");
   }
 
-  // 3. witnessed_at validity — INTEGRITY §4.2 time semantics (format regex AND real
+  // 5. witnessed_at validity — INTEGRITY §4.2 time semantics (format regex AND real
   //    calendar; leap-second 60 forbidden).
   const witnessedEpoch = validateTimestamp(claim.witnessed_at);
   if (witnessedEpoch === null) return reject("WITNESS_TIME_INVALID");
 
-  // 4. witness binding — the trust-store entry for this witness identity is the only
-  //    verifier-accepted binding; absent or untrusted => fail closed.
+  // 6. witness binding — the trust-store entry for this witness identity is the only
+  //    verifier-accepted binding; verifier-accepted requires explicit trusted: true
+  //    (a missing or non-true trusted member fails closed — no default-trust).
   const store = isObj(inputs.witness_trust_store) ? inputs.witness_trust_store : {};
   const entry =
     typeof w.witness_id === "string" &&
@@ -255,36 +301,30 @@ function evaluateWitnessPath(inputs) {
     return reject("KEY_BINDING_UNAVAILABLE");
   }
 
-  // 5. suite — from the trust-store binding only.
+  // 7. suite — from the trust-store binding only.
   if (!IMPLEMENTED_SUITES.has(entry.suite)) return reject("SUITE_UNSUPPORTED");
 
-  // 6. witness signature — tag version equals the referenced head's declared
-  //    airep_version (INTEGRITY §4.3; no independent witness version, no search).
-  //    The signed claim is closed: exactly the five members of INTEGRITY §4, taken
-  //    from the wire claim by name, so nothing else can enter the preimage.
-  if (typeof head.airep_version !== "string") return reject("WITNESS_SIGNATURE_INVALID");
+  // 8. witness signature — tag version equals the referenced head's declared
+  //    airep_version (INTEGRITY §4.3; no independent witness version, no search;
+  //    step 2 already pinned it to an implemented version). The signature is
+  //    verified over JCS of the PRESENTED claim object, which the structure step
+  //    guarantees has exactly the closed five members.
   const witnessTag = `AIREP/${head.airep_version}/sig/head-witness`;
-  const claimObj = {
-    chain_id: claim.chain_id,
-    sequence: claim.sequence,
-    current: claim.current,
-    length: claim.length,
-    witnessed_at: claim.witnessed_at,
-  };
   const witnessPreimage = Buffer.concat([
     Buffer.from(witnessTag, "ascii"), LF,
     Buffer.from(entry.suite, "ascii"), LF,
-    Buffer.from(jcs(claimObj), "utf8"),
+    Buffer.from(jcs(claim), "utf8"),
   ]);
   const sig = isObj(w.signature) ? w.signature : {};
   if (!ed25519Verify(entry.public_key_hex, witnessPreimage, sig.value)) {
     return reject("WITNESS_SIGNATURE_INVALID");
   }
 
-  // 7. freshness — ONLY the signed witnessed_at, against the fixture-supplied now and
+  // 9. freshness — ONLY the signed witnessed_at, against the fixture-supplied now and
   //    freshness_window_seconds (INTEGRITY §4.1; no system clock; unsigned freshness
   //    fields never enter this decision). A signed timestamp beyond the window in
-  //    either direction — stale past or future — is WITNESS_STALE.
+  //    either direction — stale past or future — is WITNESS_STALE; a distance exactly
+  //    equal to the window is fresh (boundary-equal, fixture S10-1).
   const nowEpoch = validateTimestamp(inputs.now);
   const windowSeconds = inputs.freshness_window_seconds;
   if (nowEpoch === null || typeof windowSeconds !== "number") {
@@ -292,7 +332,7 @@ function evaluateWitnessPath(inputs) {
   }
   if (Math.abs(nowEpoch - witnessedEpoch) > windowSeconds) return reject("WITNESS_STALE");
 
-  // 8. caveat — wire-carried witness algorithm label is informative only.
+  // 10. caveat — wire-carried witness algorithm label is informative only.
   return pass(wireAlgCaveats(sig.alg, entry.suite));
 }
 
