@@ -161,6 +161,13 @@
    ],
    "verdict": "PASS"
   },
+  "S10-1": {
+   "fixture_id": "S10-1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
   "S2-1": {
    "fixture_id": "S2-1",
    "reasons": [
@@ -202,6 +209,48 @@
     "SUITE_UNSUPPORTED"
    ],
    "verdict": "REJECT"
+  },
+  "S6-1": {
+   "fixture_id": "S6-1",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-2": {
+   "fixture_id": "S6-2",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-3": {
+   "fixture_id": "S6-3",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S7-1": {
+   "fixture_id": "S7-1",
+   "reasons": [
+    "UNSUPPORTED_VERSION"
+   ],
+   "verdict": "REJECT"
+  },
+  "S8-1": {
+   "fixture_id": "S8-1",
+   "reasons": [
+    "KEY_BINDING_UNAVAILABLE"
+   ],
+   "verdict": "REJECT"
+  },
+  "S9-1": {
+   "fixture_id": "S9-1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
   }
  }
 }

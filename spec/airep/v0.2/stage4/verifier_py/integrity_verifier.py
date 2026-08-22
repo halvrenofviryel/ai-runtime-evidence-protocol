@@ -215,9 +215,22 @@ def _eval_artifact_path(inputs: dict) -> dict:
     return {"caveats": caveats}
 
 
-# --- witness path (STAGE4_CONTRACT 2a) ----------------------------------------
-# head resolve -> head reconcile -> witnessed_at validity -> witness binding
-#   -> suite -> witness signature -> freshness -> optional wire-alg caveat
+# --- witness path (STAGE4_CONTRACT 2a, fidelity-gate revision 2026-08-22) -----
+# head resolve -> head version -> claim structure -> head reconcile
+#   -> witnessed_at validity -> witness binding -> suite -> witness signature
+#   -> freshness -> optional wire-alg caveat
+_CLAIM_MEMBERS = frozenset(("chain_id", "sequence", "current", "length", "witnessed_at"))
+_MAX_SAFE_INT = 2**53 - 1
+_CURRENT_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+def _is_safe_nonneg_integer(v) -> bool:
+    """A JSON number that is a non-negative integer within the IEEE-754 safe
+    range (INTEGRITY 4.2: no sign, no fraction, no exponent — json parses a
+    fraction/exponent spelling to float, which fails this check)."""
+    return isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= _MAX_SAFE_INT
+
+
 def _eval_witness_path(inputs: dict) -> dict:
     witness = inputs["witness"]
     if not isinstance(witness, dict):
@@ -235,56 +248,82 @@ def _eval_witness_path(inputs: dict) -> dict:
         raise _Reject("WITNESS_HEAD_UNRESOLVED")
     head = heads[head_ref]
 
-    # 2. head reconcile — claim chain_id/sequence/current against the resolved
-    #    head's own members (INTEGRITY 4.3).
+    # 2. head version — the resolved head's airep_version must be a version
+    #    this integrity verifier implements (v0.2: exactly "0.2"); the closed
+    #    tag registry is enforced on the witness path too — never a
+    #    cryptographic accept under another version's tag.
+    head_version = head.get("airep_version")
+    if not isinstance(head_version, str) or head_version != SUPPORTED_WIRE_VERSION:
+        raise _Reject("UNSUPPORTED_VERSION")
+
+    # 3. claim structure — the presented claim's member set is exactly the
+    #    closed five of INTEGRITY 4, and the four non-time members satisfy
+    #    their pinned 4.2 constraints. Extra members are never silently
+    #    ignored and never silently included in a rebuilt claim: structure
+    #    fails first. (witnessed_at time semantics are the dedicated step
+    #    below — WITNESS_TIME_INVALID, never this code.)
     claim = witness.get("claim")
-    if not isinstance(claim, dict):
-        raise _Reject("WITNESS_HEAD_MISMATCH")
+    if (
+        not isinstance(claim, dict)
+        or set(claim.keys()) != _CLAIM_MEMBERS
+        or not isinstance(claim["chain_id"], str)
+        or not _is_safe_nonneg_integer(claim["sequence"])     # non-negative safe integer
+        or not isinstance(claim["current"], str)
+        or _CURRENT_RE.match(claim["current"]) is None        # exactly sha256: + 64 lowercase hex
+        or not _is_safe_nonneg_integer(claim["length"])
+        or claim["length"] < 1                                # positive safe integer
+    ):
+        raise _Reject("WITNESS_CLAIM_INVALID")
+
+    # 4. head reconcile — claim chain_id/sequence/current against the resolved
+    #    head's own members (INTEGRITY 4.3).
     head_integrity = head.get("integrity")
     head_current = head_integrity.get("current") if isinstance(head_integrity, dict) else None
     if not (
-        _json_value_equal(claim.get("chain_id"), head.get("chain_id"))
-        and _json_value_equal(claim.get("sequence"), head.get("sequence"))
-        and _json_value_equal(claim.get("current"), head_current)
+        _json_value_equal(claim["chain_id"], head.get("chain_id"))
+        and _json_value_equal(claim["sequence"], head.get("sequence"))
+        and _json_value_equal(claim["current"], head_current)
     ):
         raise _Reject("WITNESS_HEAD_MISMATCH")
 
-    # 3. witnessed_at validity — INTEGRITY 4.2 time semantics.
-    witnessed_epoch = _parse_ts_strict(claim.get("witnessed_at"))
+    # 5. witnessed_at validity — INTEGRITY 4.2 time semantics.
+    witnessed_epoch = _parse_ts_strict(claim["witnessed_at"])
     if witnessed_epoch is None:
         raise _Reject("WITNESS_TIME_INVALID")
 
-    # 4. witness binding — verifier-accepted trust-store entry for the witness
-    #    key/identity; fail closed if absent or not trusted.
+    # 6. witness binding — a trust-store entry is verifier-accepted only when
+    #    it explicitly carries trusted: true; a missing or non-true trusted
+    #    member is fail-closed (no default-trust).
     store = inputs.get("witness_trust_store")
     witness_id = witness.get("witness_id")
     entry = store.get(witness_id) if isinstance(store, dict) and isinstance(witness_id, str) else None
     if (
         not isinstance(entry, dict)
         or not isinstance(entry.get("public_key_hex"), str)
-        or entry.get("trusted", True) is not True
+        or entry.get("trusted") is not True
     ):
         raise _Reject("KEY_BINDING_UNAVAILABLE")
 
-    # 5. suite — solely from the trust-store binding (INTEGRITY 4.3).
+    # 7. suite — solely from the trust-store binding (INTEGRITY 4.3).
     suite = entry.get("suite")
     if suite not in SUPPORTED_SUITES:
         raise _Reject("SUITE_UNSUPPORTED")
 
-    # 6. witness signature — tag version equals the referenced head's declared
-    #    airep_version (INTEGRITY 4.3); preimage per INTEGRITY 4; no search of
-    #    alternate versions, tags, suites, or v0.1 constructions.
-    head_version = head.get("airep_version")
+    # 8. witness signature — tag version equals the referenced head's declared
+    #    airep_version (INTEGRITY 4.3; pinned to "0.2" by step 2); preimage per
+    #    INTEGRITY 4 over JCS of the presented claim (exactly five members
+    #    after step 3); no search of alternate versions, tags, suites, or v0.1
+    #    constructions.
     signature = witness.get("signature")
     sig_value = signature.get("value") if isinstance(signature, dict) else None
-    if not isinstance(head_version, str) or not isinstance(sig_value, str):
+    if not isinstance(sig_value, str):
         raise _Reject("WITNESS_SIGNATURE_INVALID")
     witness_tag = f"AIREP/{head_version}/sig/head-witness"
-    preimage = witness_tag.encode("utf-8") + LF + suite.encode("ascii") + LF + jcs(claim)
+    preimage = witness_tag.encode("ascii") + LF + suite.encode("ascii") + LF + jcs(claim)
     if not _verify_ed25519(entry["public_key_hex"], sig_value, preimage):
         raise _Reject("WITNESS_SIGNATURE_INVALID")
 
-    # 7. freshness — ONLY the signed witnessed_at, against the fixture-supplied
+    # 9. freshness — ONLY the signed witnessed_at, against the fixture-supplied
     #    deterministic clock and window (INTEGRITY 4.1; unsigned freshness
     #    fields never enter this decision). A signed timestamp in the future
     #    beyond the window is also stale (REASON_CODES).
@@ -295,8 +334,8 @@ def _eval_witness_path(inputs: dict) -> dict:
     if abs(now_epoch - witnessed_epoch) > window:
         raise _Reject("WITNESS_STALE")
 
-    # 8. optional wire-alg caveat — the wire-carried witness algorithm label is
-    #    informative only.
+    # 10. optional wire-alg caveat — the wire-carried witness algorithm label
+    #     is informative only.
     caveats = []
     wire_alg = signature.get("alg") if isinstance(signature, dict) else None
     if _wire_label_disagrees(wire_alg, suite):
