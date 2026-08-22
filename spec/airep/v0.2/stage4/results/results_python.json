@@ -231,6 +231,27 @@
    ],
    "verdict": "REJECT"
   },
+  "S6-4a": {
+   "fixture_id": "S6-4a",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-4b": {
+   "fixture_id": "S6-4b",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-4c": {
+   "fixture_id": "S6-4c",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
   "S7-1": {
    "fixture_id": "S7-1",
    "reasons": [

@@ -102,6 +102,43 @@ def _parse_ts_strict(value):
     return ((days * 24 + h) * 60 + mi) * 60 + s
 
 
+# --- lexeme-preserving JSON numbers -------------------------------------------
+# INTEGRITY 4.2's "no sign, no fraction, no exponent" for the claim's
+# sequence/length is a LEXICAL constraint on the SOURCE SPELLING of the numeric
+# token (STAGE4_CONTRACT 2a claim-structure step, numeric-lexeme hardening).
+# Standard JSON parsing erases the spelling (1.0, 1e0, -0 all parse to a plain
+# number), so fixtures are loaded with parse hooks that carry each numeric
+# token's exact source lexeme alongside its value. The wrappers subclass
+# int/float, so value semantics (equality, arithmetic, JCS canonicalization)
+# are unchanged everywhere else in this program.
+class _LexInt(int):
+    """int whose JSON source token is retained (json.loads parse_int hook)."""
+
+    lexeme: str
+
+    def __new__(cls, lexeme: str):
+        obj = super().__new__(cls, lexeme)
+        obj.lexeme = lexeme
+        return obj
+
+
+class _LexFloat(float):
+    """float whose JSON source token is retained (json.loads parse_float hook)."""
+
+    lexeme: str
+
+    def __new__(cls, lexeme: str):
+        obj = super().__new__(cls, lexeme)
+        obj.lexeme = lexeme
+        return obj
+
+
+# Valid source spellings for the claim's sequence/length members: "0" or a
+# nonzero digit followed by digits. Anything else — sign, fraction, exponent —
+# is a lexical violation.
+_UINT_LEXEME_RE = re.compile(r"^(0|[1-9][0-9]*)$")
+
+
 # --- helpers ------------------------------------------------------------------
 def _json_value_equal(a, b) -> bool:
     """Equality of two JSON values as JSON values (bools are not numbers)."""
@@ -224,11 +261,19 @@ _MAX_SAFE_INT = 2**53 - 1
 _CURRENT_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
-def _is_safe_nonneg_integer(v) -> bool:
-    """A JSON number that is a non-negative integer within the IEEE-754 safe
-    range (INTEGRITY 4.2: no sign, no fraction, no exponent — json parses a
-    fraction/exponent spelling to float, which fails this check)."""
-    return isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= _MAX_SAFE_INT
+def _is_lexical_uint(v) -> bool:
+    """INTEGRITY 4.2 numeric constraint for the claim's sequence/length,
+    enforced against the SOURCE TOKEN: the value must have been parsed from a
+    lexeme spelled `0` or nonzero-digit-then-digits (no sign, no fraction, no
+    exponent — a lexical constraint json value semantics cannot express), and
+    must sit within the IEEE-754 safe integer range. Fail closed: a value
+    without a captured lexeme never passes."""
+    if isinstance(v, bool) or not isinstance(v, int):
+        return False  # bools and fraction/exponent spellings (floats) fail
+    lexeme = getattr(v, "lexeme", None)
+    if not isinstance(lexeme, str) or _UINT_LEXEME_RE.match(lexeme) is None:
+        return False
+    return 0 <= v <= _MAX_SAFE_INT
 
 
 def _eval_witness_path(inputs: dict) -> dict:
@@ -267,10 +312,10 @@ def _eval_witness_path(inputs: dict) -> dict:
         not isinstance(claim, dict)
         or set(claim.keys()) != _CLAIM_MEMBERS
         or not isinstance(claim["chain_id"], str)
-        or not _is_safe_nonneg_integer(claim["sequence"])     # non-negative safe integer
+        or not _is_lexical_uint(claim["sequence"])            # non-negative safe integer, lexically unsigned-plain
         or not isinstance(claim["current"], str)
         or _CURRENT_RE.match(claim["current"]) is None        # exactly sha256: + 64 lowercase hex
-        or not _is_safe_nonneg_integer(claim["length"])
+        or not _is_lexical_uint(claim["length"])
         or claim["length"] < 1                                # positive safe integer
     ):
         raise _Reject("WITNESS_CLAIM_INVALID")
@@ -374,7 +419,9 @@ def main() -> int:
     for path in fixture_files:
         try:
             with path.open("r", encoding="utf-8") as fh:
-                fixture = json.load(fh)
+                # parse hooks surface each numeric token's exact source lexeme
+                # (required for the claim-structure lexical constraint).
+                fixture = json.load(fh, parse_int=_LexInt, parse_float=_LexFloat)
             # Non-consultation guarantee: drop the expected member before any
             # evaluation. Verdicts derive from "inputs" only.
             fixture.pop("expected", None)
