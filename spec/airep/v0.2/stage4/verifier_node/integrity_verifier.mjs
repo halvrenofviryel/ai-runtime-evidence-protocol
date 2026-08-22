@@ -18,7 +18,11 @@
 //                             `canonical()` (the only element reused from v0.1)
 //   The other Stage-4 verifier (Python) — its source and its output — was not read,
 //   imported, called, or shelled out to. Fixture `expected` members are never accessed:
-//   they are deleted immediately after JSON.parse, before any evaluation.
+//   they are deleted immediately after parsing, before any evaluation.
+//
+// Fixtures are parsed by a built-in lexeme-recording strict JSON parser (see below)
+// so INTEGRITY §4.2's lexical number-spelling constraint on the claim's sequence /
+// length can be enforced against the SOURCE token, which JSON.parse erases.
 //
 // Behaviour (per the pinned evaluation precedence, STAGE4_CONTRACT.md §2a):
 //   artifact path: version -> tag registry -> hash -> producer binding -> suite
@@ -75,6 +79,142 @@ function jcs(v) {
 
 function sha256Hex(buf) {
   return crypto.createHash("sha256").update(buf).digest("hex");
+}
+
+// ---------------------------------------------------------------------------------
+// Lexeme-recording JSON parser (fidelity-gate revision 2, 2026-08-22: lexical number
+// spelling).
+//
+// INTEGRITY §4.2's "no sign, no fraction, no exponent" for the claim's sequence /
+// length is a LEXICAL constraint on the source spelling of the numeric token.
+// JSON.parse erases that spelling ("1.0", "1e0" both parse to the number 1; lexical
+// "-0" becomes negative zero), and this Node version (v20) has no reviver
+// source-text access, so fixtures are parsed by this minimal strict RFC 8259
+// recursive-descent parser instead. It produces exactly the values JSON.parse
+// produces — the harness asserts that per fixture via a jcs() comparison against
+// JSON.parse — and additionally records, per object, the raw source lexeme of every
+// numeric member in a symbol-keyed non-enumerable side table. Symbol-keyed and
+// non-enumerable means it is invisible to Object.keys, jcs(), JSON.stringify, and
+// structuredClone, so the recorded lexemes can never leak into a preimage or a
+// normalized result.
+// ---------------------------------------------------------------------------------
+const NUM_LEXEMES = Symbol("airep.numberLexemes");
+const JSON_NUM_RE = /-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/y;
+
+function parseJsonRecordingNumberLexemes(text) {
+  let i = 0;
+  const err = (msg) => { throw new Error(`harness: fixture JSON ${msg} at offset ${i}`); };
+  const ws = () => { while (i < text.length && " \t\n\r".includes(text[i])) i++; };
+
+  function parseString() {
+    i++; // opening quote (caller checked)
+    let out = "";
+    for (;;) {
+      if (i >= text.length) err("unterminated string");
+      const c = text[i];
+      if (c === '"') { i++; return out; }
+      if (c === "\\") {
+        const e = text[i + 1];
+        i += 2;
+        if (e === '"' || e === "\\" || e === "/") out += e;
+        else if (e === "b") out += "\b";
+        else if (e === "f") out += "\f";
+        else if (e === "n") out += "\n";
+        else if (e === "r") out += "\r";
+        else if (e === "t") out += "\t";
+        else if (e === "u") {
+          const hex = text.slice(i, i + 4);
+          if (!/^[0-9a-fA-F]{4}$/.test(hex)) err("bad \\u escape");
+          out += String.fromCharCode(parseInt(hex, 16));
+          i += 4;
+        } else err("bad escape");
+      } else if (c.charCodeAt(0) < 0x20) {
+        err("raw control character in string");
+      } else {
+        out += c;
+        i++;
+      }
+    }
+  }
+
+  function parseNumber() {
+    JSON_NUM_RE.lastIndex = i;
+    const m = JSON_NUM_RE.exec(text);
+    if (!m) err("malformed number");
+    i += m[0].length;
+    return { value: Number(m[0]), lexeme: m[0] };
+  }
+
+  // Returns [value, numberLexemeOrNull].
+  function parseValue() {
+    ws();
+    const c = text[i];
+    if (c === "{") return [parseObject(), null];
+    if (c === "[") return [parseArray(), null];
+    if (c === '"') return [parseString(), null];
+    if (c === "-" || (c >= "0" && c <= "9")) {
+      const n = parseNumber();
+      return [n.value, n.lexeme];
+    }
+    if (text.startsWith("true", i)) { i += 4; return [true, null]; }
+    if (text.startsWith("false", i)) { i += 5; return [false, null]; }
+    if (text.startsWith("null", i)) { i += 4; return [null, null]; }
+    return err("unexpected token");
+  }
+
+  function parseObject() {
+    i++; // "{" (caller checked)
+    const obj = {};
+    const lexemes = {};
+    Object.defineProperty(obj, NUM_LEXEMES, { value: lexemes, enumerable: false });
+    ws();
+    if (text[i] === "}") { i++; return obj; }
+    for (;;) {
+      ws();
+      if (text[i] !== '"') err("expected string key");
+      const key = parseString();
+      ws();
+      if (text[i] !== ":") err("expected colon");
+      i++;
+      const [value, lexeme] = parseValue();
+      // defineProperty, not assignment: a "__proto__" key must become a plain member.
+      Object.defineProperty(obj, key,
+        { value, enumerable: true, writable: true, configurable: true });
+      if (lexeme !== null) lexemes[key] = lexeme;
+      else delete lexemes[key]; // duplicate key: last occurrence wins, like JSON.parse
+      ws();
+      if (text[i] === ",") { i++; continue; }
+      if (text[i] === "}") { i++; return obj; }
+      err("expected , or } in object");
+    }
+  }
+
+  function parseArray() {
+    i++; // "[" (caller checked)
+    const arr = [];
+    ws();
+    if (text[i] === "]") { i++; return arr; }
+    for (;;) {
+      arr.push(parseValue()[0]);
+      ws();
+      if (text[i] === ",") { i++; continue; }
+      if (text[i] === "]") { i++; return arr; }
+      err("expected , or ] in array");
+    }
+  }
+
+  const [root] = parseValue();
+  ws();
+  if (i !== text.length) err("trailing content");
+  return root;
+}
+
+// Raw source lexeme of a numeric object member, recorded by the parser above.
+// undefined when the member was not a number token or the object did not come from
+// that parser.
+function numberLexeme(obj, key) {
+  const table = obj[NUM_LEXEMES];
+  return isObj(table) ? table[key] : undefined;
 }
 
 // Import a raw 32-byte Ed25519 public key (hex) by prefixing the fixed SPKI DER header.
@@ -233,12 +373,19 @@ function evaluateArtifactPath(inputs) {
 // ---------------------------------------------------------------------------------
 const CLAIM_MEMBERS = ["chain_id", "current", "length", "sequence", "witnessed_at"];
 const CURRENT_RE = /^sha256:[0-9a-f]{64}$/;
+// INTEGRITY §4.2 "no sign, no fraction, no exponent" — the LEXICAL grammar of the
+// claim's sequence / length source tokens: "0" or a nonzero digit followed by digits.
+const LEXICAL_INT_RE = /^(?:0|[1-9][0-9]*)$/;
 
 // Closed five-member claim structure of INTEGRITY §4, with the pinned §4.2
 // constraints on the four non-time members (witnessed_at time semantics are the
 // separate WITNESS_TIME_INVALID step). Extra members are never silently ignored and
 // never silently included in a rebuilt claim — the member set must be EXACTLY the
-// closed five.
+// closed five. sequence / length are checked BOTH as values (safe-integer range,
+// sign) AND lexically against the fixture's source token (recorded at parse time):
+// "1.0", "1e0", "-0" canonicalize to valid JCS number bytes, so a genuinely signed
+// claim with a forbidden spelling still carries a canonically valid signature —
+// structure must reject it here, before the signature step is ever evaluated.
 function claimStructureValid(claim) {
   if (!isObj(claim)) return false;
   const keys = Object.keys(claim).sort();
@@ -248,6 +395,12 @@ function claimStructureValid(claim) {
   if (!Number.isSafeInteger(claim.sequence) || claim.sequence < 0) return false;
   if (typeof claim.current !== "string" || !CURRENT_RE.test(claim.current)) return false;
   if (!Number.isSafeInteger(claim.length) || claim.length < 1) return false;
+  for (const key of ["sequence", "length"]) {
+    const lexeme = numberLexeme(claim, key);
+    // Fail closed when no lexeme was recorded: the value did not come from a source
+    // number token this parser saw.
+    if (typeof lexeme !== "string" || !LEXICAL_INT_RE.test(lexeme)) return false;
+  }
   return true;
 }
 
@@ -360,7 +513,14 @@ function main() {
 
   const results = {};
   for (const file of files) {
-    const fixture = JSON.parse(fs.readFileSync(path.join(CORPUS_DIR, file), "utf8"));
+    const text = fs.readFileSync(path.join(CORPUS_DIR, file), "utf8");
+    // Lexeme-recording parse (INTEGRITY §4.2 lexical constraint needs the source
+    // spelling of number tokens), with a harness self-check that its VALUES are
+    // exactly what JSON.parse produces for the same bytes.
+    const fixture = parseJsonRecordingNumberLexemes(text);
+    if (jcs(fixture) !== jcs(JSON.parse(text))) {
+      throw new Error(`harness: lexeme-recording parser diverged from JSON.parse: ${file}`);
+    }
     // Independence hygiene: the fixture's expected outcome is removed before any
     // evaluation — this program never reads it.
     delete fixture.expected;
