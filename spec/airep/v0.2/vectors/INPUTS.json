@@ -1,0 +1,58 @@
+{
+  "comment": "WP-a01 Stage-3 shared semantic inputs. Construction-test bodies only — NOT schema-conformant artifacts (the four artifact schemas are blocked until WP-a01 completes). Bodies deliberately omit integrity.current and integrity.signature; generators add nothing to them before JCS.",
+  "artifacts": {
+    "V1": {
+      "airep_version": "0.2",
+      "artifact_type": "decision",
+      "chain_id": "chain-alpha-0001",
+      "record_id": "rec-9f2c4d6e8a0b4c1d",
+      "sequence": 0,
+      "integrity": { "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000" },
+      "subject": { "producer": "vector-producer/1.0", "timestamp_utc": "2026-08-22T10:00:00Z" },
+      "claim": { "assertion": "release", "basis": "policy-7" }
+    },
+    "V2": {
+      "airep_version": "0.2",
+      "artifact_type": "control",
+      "chain_id": "chain-alpha-0001",
+      "record_id": "rec-1a2b3c4d5e6f7a8b",
+      "sequence": 1,
+      "integrity": { "previous": "sha256:1111111111111111111111111111111111111111111111111111111111111111" },
+      "instruction_id": "instr-42",
+      "profiles": { "test.jcs-numbers": { "n1": 1e-7, "n2": 1.5, "n3": 10, "n4": 1e21, "n5": 0.1 } }
+    },
+    "V3": {
+      "airep_version": "0.2",
+      "artifact_type": "execution",
+      "chain_id": "zincir-üç-☃",
+      "record_id": "rec-00ff11ee22dd33cc",
+      "sequence": 0,
+      "integrity": { "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000" },
+      "note": "line1\nline2 — café 🔒 tab:\t end"
+    },
+    "V4": {
+      "airep_version": "0.2",
+      "artifact_type": "effect",
+      "chain_id": "chain-alpha-0002",
+      "record_id": "rec-aa11bb22cc33dd44",
+      "sequence": 5,
+      "integrity": { "previous": "sha256:2222222222222222222222222222222222222222222222222222222222222222" },
+      "observer_relationship": "independent",
+      "observed_state": { "target": "valve-7", "state": "closed" }
+    }
+  },
+  "witness_claims": {
+    "W1": {
+      "head": "V1",
+      "sequence": 0,
+      "length": 1,
+      "witnessed_at": "2026-08-22T12:00:00Z"
+    },
+    "W2": {
+      "head": "V3",
+      "sequence": 0,
+      "length": 1,
+      "witnessed_at": "2026-08-22T23:59:59Z"
+    }
+  }
+}
