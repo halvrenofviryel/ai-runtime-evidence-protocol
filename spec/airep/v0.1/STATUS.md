@@ -78,18 +78,24 @@ These are normative-adjacent gaps recorded honestly; each is a v0.2 work item:
    against the primary texts.
 7. **Freshness / head witness** — the **`chain_witness` profile now ships** (schema + worked
    independently-witnessed vector). `validate.py` verifies that vector's witness signature under a key
-   **distinct from the producer's**, and demonstrates that a dropped tail is detected. **AIREP-Trusted
-   is nevertheless NOT reportable**: the general-purpose classifiers (`verify.py --class` /
-   `verify.mjs --class`) check witness *presence* only — they do not re-verify the witness signature,
-   cannot prove witness-key independence, do not evaluate freshness recency, and consult no revocation
-   source. Four prerequisites are unenforced, so both verifiers **withhold the top class** and report
-   `TRUSTED_NOT_IMPLEMENTED`, naming each unevaluated gate. No input reaches `Trusted` under either
-   verifier — including the shipped witness vector. Implementing those four checks at classification
-   time is the remaining **v0.2-proper** Trusted-tier work. Semantics of the withheld class:
+   **distinct from the producer's**, and demonstrates that a dropped tail is detected.
+   **AIREP-Trusted is withheld in default mode and reachable only in opt-in strict mode (WP-10).**
+   In default mode the general-purpose classifiers (`verify.py --class` / `verify.mjs --class`)
+   check witness *presence* only — they do not re-verify the witness signature, cannot prove
+   witness-key independence, do not evaluate freshness recency, and consult no revocation source —
+   so both verifiers **withhold the top class** and report `TRUSTED_NOT_IMPLEMENTED`, naming each
+   unevaluated gate. In **strict mode** (operator supplies `--trust-store` + `--freshness-window` +
+   `--revocation-source`), the four gates run for real and a record earns `Trusted` iff every one
+   passes; any missing input keeps the tier withheld. Strict-mode v1 scope is deliberately narrow:
+   one independent trusted witness (no N-of-M quorum), local JSON inputs (no transparency-log or
+   online revocation lookup), timestamp freshness only. Semantics of both modes:
    [`conformance/CONFORMANCE_CLASSES.md`](./conformance/CONFORMANCE_CLASSES.md)
-   §TRUSTED_NOT_IMPLEMENTED; the fail-closed behaviour is held by
-   [`conformance/test_trusted_gates.py`](./conformance/test_trusted_gates.py) over a committed shared
-   corpus (`conformance/fixtures/trusted_gates/`) run against both verifiers.
+   §TRUSTED_NOT_IMPLEMENTED and §AIREP-Trusted (strict mode); the fail-closed behaviour is held by
+   [`conformance/test_trusted_gates.py`](./conformance/test_trusted_gates.py) and
+   [`conformance/test_strict_trusted.py`](./conformance/test_strict_trusted.py) over committed
+   corpora run against both verifiers. Widening strict-mode v1 scope (quorum, transparency-log
+   proofs, online revocation, nonce/challenge freshness) is the remaining **v0.2-proper**
+   Trusted-tier work.
 
 ### 5. `subject.principal` — added, and deliberately optional
 
@@ -221,3 +227,18 @@ completeness.
   equivalent while `verify.mjs` runs no profile-schema validation. The core wire format is unchanged
   and the `chain_witness` schema changed only in two `description` strings — this is a verifier and
   documentation correction only.
+
+- **v0.1 strict-Trusted, WP-10 (2026-08-08, no wire-format change):** `Trusted` became reachable in
+  an **opt-in strict mode**: with `--trust-store` + `--freshness-window` + `--revocation-source`
+  supplied by the operator, both verifiers run the four previously-unevaluated gates (witness
+  signature, witness-key independence against resolved public keys, freshness recency against a
+  deterministic `--now`, revocation for both producer and witness keys) and grant `Trusted` iff all
+  four pass; any gate failure drops the ceiling to `Verified` with the reason named, and any missing
+  operator input keeps the tier withheld as `TRUSTED_NOT_IMPLEMENTED`. Default-mode behaviour is
+  unchanged. Held by `conformance/test_strict_trusted.py` against both verifiers.
+
+- **v0.1 STATUS correction (2026-08-22, documentation only):** open item 7 previously still said
+  "AIREP-Trusted is NOT reportable" with no mention of strict mode — stale since WP-10 (2026-08-08)
+  and inconsistent with `conformance/CONFORMANCE_CLASSES.md` and both verifiers' actual behaviour.
+  Item 7 now states the single normative truth: withheld in default mode, reachable in strict mode,
+  with strict-mode v1 scope named. No schema, verifier, or wire change.
