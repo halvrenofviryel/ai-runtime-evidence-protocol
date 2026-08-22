@@ -31,6 +31,7 @@ independently validated.
 | [`ARCHITECTURE_DECISIONS.md`](./ARCHITECTURE_DECISIONS.md) | The v0.2 architecture decisions (AD-01 … AD-15), each with context, decision, and status |
 | [`BREAKING_CHANGES.md`](./BREAKING_CHANGES.md) | Field- and behaviour-level inventory of what v0.2 changes against v0.1, with wire impact |
 | [`MIGRATION.md`](./MIGRATION.md) | The v0.1 → v0.2 migration model: what stays valid, what is projected, what is never re-signed |
+| [`WP-A01_DOMAIN_TAG_CONSTRUCTION.md`](./WP-A01_DOMAIN_TAG_CONSTRUCTION.md) | WP-α01 stage 1: the domain-tag byte construction — **FROZEN / ACCEPTED 2026-08-22** (freeze basis `9a30f97`); byte-affecting changes need Stage-1 re-review. Stages 2–3 authorized; artifact schemas stay blocked until WP-α01 completes |
 
 ## The one-sentence thesis under design
 
