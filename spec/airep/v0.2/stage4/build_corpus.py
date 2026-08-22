@@ -248,6 +248,7 @@ def build() -> None:
                              art_inputs(s1), "PASS", ["OK"]))
     probe_canonical = jcs(s1_body)
     s1_probe = {"canonical_body_sha256": hashlib.sha256(probe_canonical).hexdigest(),
+                "canonical_body_hex": probe_canonical.hex(),
                 "current": current_for(s1_body, tag("0.2", "hash", "decision"))}
     if s1_probe["current"] != s1["integrity"]["current"]:
         print("STAGE1_REREVIEW_REQUIRED: S1 probe and sealed current diverge")
