@@ -1,0 +1,37 @@
+{
+ "description": "artifact_type rewritten to execution after sealing",
+ "expected": {
+  "reasons": [
+   "HASH_MISMATCH"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A2-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "execution",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:5524b03e88d9ff310097d618d2b560350d1c74c1d0fe9190d5b194bf99b3b121",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "39b642e34377c736d6b8b8074dc64726097a86635ad2b762ca2426d46393bd4f5feed6880b8d275a5f718a9628001518954f0df0f05ddde2354c6dc5090c1405"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a2",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A2"
+}

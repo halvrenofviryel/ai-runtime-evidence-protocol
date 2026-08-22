@@ -1,0 +1,37 @@
+{
+ "description": "valid signature; wire alg label rewritten to another suite name",
+ "expected": {
+  "reasons": [
+   "WIRE_ALG_IGNORED"
+  ],
+  "verdict": "PASS_WITH_CAVEAT"
+ },
+ "fixture_id": "A11a-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:b49fd4f27b5e8c113b8a7984a3997918258525abb6b838a24a45641e30c98173",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "ECDSA-P256",
+     "value": "5947eb2260d792adecea2570bf502653a1961a116e9159ec6ee9bac904cebe930fce3c35e81fc7d661c0e24f53d14f8c4ee8f72982af403f6fa57e0189272e0d"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a11a",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A11"
+}

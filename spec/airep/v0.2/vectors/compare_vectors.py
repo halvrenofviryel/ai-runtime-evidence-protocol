@@ -7,17 +7,21 @@ input -> canonical bytes -> preimage -> digest -> signature chain and the per-fi
 agreement result. The comparator is deliberately separate from both generators: the
 generators never read each other; agreement is measured here, not inherited.
 
-Exit codes: 0 = every field of every vector byte-identical; 1 = any mismatch or
-missing vector/field; 2 = an output file is missing/unreadable.
+Exit codes: 0 = every field of every vector byte-identical and no unexpected fields;
+1 = any mismatch, missing vector/field, or unexpected/extra field; 2 = an output file is
+missing/unreadable.
+
+Optional argv override (used by the committed negative proof):
+  compare_vectors.py [py_file node_file [manifest_out]]
 """
 import json
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-PY_OUT = HERE / "out" / "python_vectors.json"
-NODE_OUT = HERE / "out" / "node_vectors.json"
-MANIFEST = HERE / "AGREEMENT_MANIFEST.md"
+PY_OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "out" / "python_vectors.json"
+NODE_OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE / "out" / "node_vectors.json"
+MANIFEST = Path(sys.argv[3]) if len(sys.argv) > 3 else HERE / "AGREEMENT_MANIFEST.md"
 
 ARTIFACT_FIELDS = [
     "hash_tag_hex", "sig_tag_hex", "jcs_body_hex", "hash_preimage_hex",
@@ -81,7 +85,10 @@ def main() -> int:
         extra_a = sorted(set(a) - set(fields))
         extra_b = sorted(set(b) - set(fields))
         if extra_a or extra_b:
-            lines.append(f"- extra fields — python: {extra_a} node: {extra_b}")
+            # An unexpected field is a gate FAILURE, not a report line (maintainer review of
+            # PR #27: extra fields must fail once this comparator is used as a gate).
+            lines.append(f"- **EXTRA FIELD(S)** — python: {extra_a} node: {extra_b}")
+            mismatches += len(extra_a) + len(extra_b)
         lines.append("")
     verdict = "ALL FIELDS BYTE-IDENTICAL" if mismatches == 0 else f"{mismatches} MISMATCH/MISSING FIELD(S)"
     lines.insert(6, f"**Result: {verdict}** across {len(ids)} vectors.")

@@ -1,0 +1,37 @@
+{
+ "description": "present-member subtraction: sealed artifact containing current+signature",
+ "expected": {
+  "reasons": [
+   "OK"
+  ],
+  "verdict": "PASS"
+ },
+ "fixture_id": "S1-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-S",
+   "integrity": {
+    "current": "sha256:7348c2851908933c6cd81e79ea372a9f79855736f228aa3172ff1b05dc29b223",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "0ba8f3a7e436514823e8a32de709bece38d38938b2cabc7ac0e286e3ce597436cf905a9fd525be156e9d4c143021fc52005380c11f47ae930859a0e70c260304"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-s1",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "S1"
+}

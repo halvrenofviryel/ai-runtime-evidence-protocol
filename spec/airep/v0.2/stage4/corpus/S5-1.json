@@ -1,0 +1,33 @@
+{
+ "description": "no producer binding supplied; wire alg present",
+ "expected": {
+  "reasons": [
+   "KEY_BINDING_UNAVAILABLE"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "S5-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-S",
+   "integrity": {
+    "current": "sha256:0a1be23d3ac7d54b1ac9b3c2aac46ad0fa9e7b86d78dc4b1ab9487b63422e2f9",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "34ec3dd1ba127184f5403dda48942d5ad8a5f317023496cd20872334c6a62b4fb8605bb63046bfd8e0fab6bc4f33c225e8028ae462ae448d6eaffe99dd92f80a"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-s5",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z"
+ },
+ "normative_case": "S"
+}

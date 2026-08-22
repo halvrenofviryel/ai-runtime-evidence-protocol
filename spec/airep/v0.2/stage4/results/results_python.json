@@ -1,0 +1,277 @@
+{
+ "results": {
+  "A1-1": {
+   "fixture_id": "A1-1",
+   "reasons": [
+    "HASH_MISMATCH"
+   ],
+   "verdict": "REJECT"
+  },
+  "A10-1": {
+   "fixture_id": "A10-1",
+   "reasons": [
+    "WITNESS_STALE"
+   ],
+   "verdict": "REJECT"
+  },
+  "A11a-1": {
+   "fixture_id": "A11a-1",
+   "reasons": [
+    "WIRE_ALG_IGNORED"
+   ],
+   "verdict": "PASS_WITH_CAVEAT"
+  },
+  "A11b-1": {
+   "fixture_id": "A11b-1",
+   "reasons": [
+    "SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A12-1": {
+   "fixture_id": "A12-1",
+   "reasons": [
+    "WITNESS_SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A13a-1": {
+   "fixture_id": "A13a-1",
+   "reasons": [
+    "WIRE_ALG_IGNORED"
+   ],
+   "verdict": "PASS_WITH_CAVEAT"
+  },
+  "A13b-1": {
+   "fixture_id": "A13b-1",
+   "reasons": [
+    "WITNESS_SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A2-1": {
+   "fixture_id": "A2-1",
+   "reasons": [
+    "HASH_MISMATCH"
+   ],
+   "verdict": "REJECT"
+  },
+  "A3-1": {
+   "fixture_id": "A3-1",
+   "reasons": [
+    "SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A4-1": {
+   "fixture_id": "A4-1",
+   "reasons": [
+    "SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A4-2": {
+   "fixture_id": "A4-2",
+   "reasons": [
+    "WITNESS_SIGNATURE_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "A5-1": {
+   "fixture_id": "A5-1",
+   "reasons": [
+    "UNSUPPORTED_VERSION"
+   ],
+   "verdict": "REJECT"
+  },
+  "A6-1": {
+   "fixture_id": "A6-1",
+   "reasons": [
+    "UNREGISTERED_TAG"
+   ],
+   "verdict": "REJECT"
+  },
+  "A7-1": {
+   "fixture_id": "A7-1",
+   "reasons": [
+    "UNREGISTERED_TAG"
+   ],
+   "verdict": "REJECT"
+  },
+  "A8-1": {
+   "fixture_id": "A8-1",
+   "reasons": [
+    "HASH_MISMATCH"
+   ],
+   "verdict": "REJECT"
+  },
+  "A9-1": {
+   "fixture_id": "A9-1",
+   "reasons": [
+    "HASH_MISMATCH"
+   ],
+   "verdict": "REJECT"
+  },
+  "A9-2": {
+   "fixture_id": "A9-2",
+   "reasons": [
+    "UNSUPPORTED_VERSION"
+   ],
+   "verdict": "REJECT"
+  },
+  "P1": {
+   "fixture_id": "P1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "P2": {
+   "fixture_id": "P2",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "P3": {
+   "fixture_id": "P3",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "P4": {
+   "fixture_id": "P4",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "P5": {
+   "fixture_id": "P5",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "S1-1": {
+   "fixture_id": "S1-1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "S10-1": {
+   "fixture_id": "S10-1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  },
+  "S2-1": {
+   "fixture_id": "S2-1",
+   "reasons": [
+    "WITNESS_HEAD_UNRESOLVED"
+   ],
+   "verdict": "REJECT"
+  },
+  "S3-1": {
+   "fixture_id": "S3-1",
+   "reasons": [
+    "WITNESS_HEAD_MISMATCH"
+   ],
+   "verdict": "REJECT"
+  },
+  "S4-1": {
+   "fixture_id": "S4-1",
+   "reasons": [
+    "WITNESS_TIME_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S4-2": {
+   "fixture_id": "S4-2",
+   "reasons": [
+    "WITNESS_TIME_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S5-1": {
+   "fixture_id": "S5-1",
+   "reasons": [
+    "KEY_BINDING_UNAVAILABLE"
+   ],
+   "verdict": "REJECT"
+  },
+  "S5-2": {
+   "fixture_id": "S5-2",
+   "reasons": [
+    "SUITE_UNSUPPORTED"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-1": {
+   "fixture_id": "S6-1",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-2": {
+   "fixture_id": "S6-2",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-3": {
+   "fixture_id": "S6-3",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-4a": {
+   "fixture_id": "S6-4a",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-4b": {
+   "fixture_id": "S6-4b",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S6-4c": {
+   "fixture_id": "S6-4c",
+   "reasons": [
+    "WITNESS_CLAIM_INVALID"
+   ],
+   "verdict": "REJECT"
+  },
+  "S7-1": {
+   "fixture_id": "S7-1",
+   "reasons": [
+    "UNSUPPORTED_VERSION"
+   ],
+   "verdict": "REJECT"
+  },
+  "S8-1": {
+   "fixture_id": "S8-1",
+   "reasons": [
+    "KEY_BINDING_UNAVAILABLE"
+   ],
+   "verdict": "REJECT"
+  },
+  "S9-1": {
+   "fixture_id": "S9-1",
+   "reasons": [
+    "OK"
+   ],
+   "verdict": "PASS"
+  }
+ }
+}
