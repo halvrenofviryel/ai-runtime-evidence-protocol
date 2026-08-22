@@ -85,6 +85,18 @@ verifiers (STAGE4_CONTRACT §5).
 | S5-1 | No `producer_binding` supplied; wire `alg` present and syntactically valid | `REJECT` `["KEY_BINDING_UNAVAILABLE"]` — the wire label is never a substitute |
 | S5-2 | Binding names a suite the verifier does not implement | `REJECT` `["SUITE_UNSUPPORTED"]` |
 
+### Fidelity-gate additions (2026-08-22 — claim closure, witness registry, trust binding, time arithmetic)
+
+| id | Case | Expected |
+|---|---|---|
+| S6-1 | Claim with a **sixth member** (`note`), witness signature genuinely produced over the six-member JCS | `REJECT` `["WITNESS_CLAIM_INVALID"]` — structure fails before signature; extra members neither ignored nor included |
+| S6-2 | Claim `current` with uppercase hex (violates exact `sha256:<64 lowhex>`), signed | `REJECT` `["WITNESS_CLAIM_INVALID"]` (structure precedes reconcile) |
+| S6-3 | Claim `sequence` = −1, signed | `REJECT` `["WITNESS_CLAIM_INVALID"]` |
+| S7-1 | Head declaring `airep_version: "0.3"`, sealed under `0.3` tags; witness genuinely signed under the `0.3` witness tag | `REJECT` `["UNSUPPORTED_VERSION"]` — the closed registry is enforced on the witness path; never a cryptographic accept |
+| S8-1 | Trust-store entry carrying `public_key_hex` + `suite` but **no `trusted` member** | `REJECT` `["KEY_BINDING_UNAVAILABLE"]` — verifier-accepted requires explicit `trusted: true`; no default-trust |
+| S9-1 | Valid witness whose `witnessed_at` = `0099-12-31T23:30:00Z` with fixture `now` = `0100-01-01T00:00:00Z`, window 3600 (30-minute real Gregorian distance across the 99→100 year boundary) | `PASS` `["OK"]` — catches legacy two-digit-year remapping in date arithmetic |
+| S10-1 | Valid witness with `\|now − witnessed_at\|` exactly equal to the window (`witnessed_at` `11:00:00Z`, `now` `12:00:00Z`, window 3600) | `PASS` `["OK"]` — boundary-equal is fresh |
+
 ## 2a. Harness assertions (builder/comparator level — not verifier verdicts)
 
 Two obligations are measured by the corpus builder and the parity comparator directly, because

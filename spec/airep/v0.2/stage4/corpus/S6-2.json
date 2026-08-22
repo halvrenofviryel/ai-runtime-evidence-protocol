@@ -1,0 +1,61 @@
+{
+ "description": "claim current with uppercase hex (violates exact lowercase form)",
+ "expected": {
+  "reasons": [
+   "WITNESS_CLAIM_INVALID"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "S6-2",
+ "inputs": {
+  "freshness_window_seconds": 3600,
+  "head_artifacts": {
+   "H1": {
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "s4-chain-A",
+    "integrity": {
+     "current": "sha256:e869614674bce8b538d41f6df53e728c9add3cd6f9ad4acb6cdeb90dda1a69f9",
+     "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+     "signature": {
+      "alg": "Ed25519",
+      "value": "a0b0e673a5fb4e4065ed5ce00ec64ba48ea83399a3f0ed1b2a613023804449c2f2a7f62b0e4c598fdadd3433e46c0229054c762b97b1a5c5af306c8726c3d003"
+     }
+    },
+    "payload": {
+     "note": "stage4 construction-test body (decision)"
+    },
+    "record_id": "s4-rec-p1",
+    "sequence": 0
+   }
+  },
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  },
+  "witness": {
+   "claim": {
+    "chain_id": "s4-chain-A",
+    "current": "sha256:E869614674BCE8B538D41F6DF53E728C9ADD3CD6F9AD4ACB6CDEB90DDA1A69F9",
+    "length": 1,
+    "sequence": 0,
+    "witnessed_at": "2026-08-22T11:30:00Z"
+   },
+   "head_ref": "H1",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "a7335c554329b5c8c6bf550b2d0a2b3f012b30e1bb8f0aab77d2466738a5845e0c2c53f8628b2ac7524b2609bd1b79d49a67a0c9b663e143ad8b5741b4b5300f"
+   },
+   "witness_id": "stage4-witness-1"
+  },
+  "witness_trust_store": {
+   "stage4-witness-1": {
+    "public_key_hex": "2e4e83fdb2d88f88c5f03e663c39ea3f9c7536312b62a2b09a95712dccf11a40",
+    "suite": "ed25519",
+    "trusted": true
+   }
+  }
+ },
+ "normative_case": "S"
+}

@@ -76,9 +76,10 @@ def sign_witness(version: str, claim: dict, sk=_wsk, suite: bytes = SUITE) -> st
     return sk.sign(tag(version, "sig", "head-witness") + LF + suite + LF + jcs(claim)).hex()
 
 
-def base_body(ctx: str, chain_id: str, record_id: str, sequence: int, previous: str) -> dict:
+def base_body(ctx: str, chain_id: str, record_id: str, sequence: int, previous: str,
+              version: str = "0.2") -> dict:
     return {
-        "airep_version": "0.2",
+        "airep_version": version,
         "artifact_type": ctx,
         "chain_id": chain_id,
         "record_id": record_id,
@@ -279,6 +280,46 @@ def build() -> None:
     s52 = seal(base_body("decision", "s4-chain-S", "s4-rec-s5b", 0, GENESIS))
     fixtures.append(envelope("S5-2", "S", "binding names unsupported suite ed448",
                              art_inputs(s52, suite="ed448"), "REJECT", ["SUITE_UNSUPPORTED"]))
+
+    # ---- Fidelity-gate additions (2026-08-22) ------------------------------------------
+    cl_s61 = dict(claim_for(head, 1, FRESH_AT), note="extra")  # sixth member, genuinely signed
+    fixtures.append(envelope("S6-1", "S", "claim with a sixth member; signature over the six-member JCS",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_s61, sign_witness("0.2", cl_s61))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
+    cl_s62 = claim_for(head, 1, FRESH_AT)
+    cl_s62["current"] = "sha256:" + cl_s62["current"][7:].upper()
+    fixtures.append(envelope("S6-2", "S", "claim current with uppercase hex (violates exact lowercase form)",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_s62, sign_witness("0.2", cl_s62))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
+    cl_s63 = dict(claim_for(head, 1, FRESH_AT), sequence=-1)
+    fixtures.append(envelope("S6-3", "S", "claim sequence negative (violates non-negative safe integer)",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_s63, sign_witness("0.2", cl_s63))),
+                             "REJECT", ["WITNESS_CLAIM_INVALID"]))
+
+    head03 = seal(base_body("decision", "s4-chain-V3", "s4-rec-s7", 0, GENESIS, version="0.3"))
+    cl_s7 = claim_for(head03, 1, FRESH_AT)
+    fixtures.append(envelope("S7-1", "S", "head declares 0.3, sealed under 0.3 tags; witness genuinely signed under the 0.3 witness tag",
+                             wit_inputs({"H1": head03}, witness_block("H1", cl_s7, sign_witness("0.3", cl_s7))),
+                             "REJECT", ["UNSUPPORTED_VERSION"]))
+
+    cl_s8 = claim_for(head, 1, FRESH_AT)
+    s8_inputs = wit_inputs({"H1": head}, witness_block("H1", cl_s8, sign_witness("0.2", cl_s8)))
+    del s8_inputs["witness_trust_store"]["stage4-witness-1"]["trusted"]  # no default-trust
+    fixtures.append(envelope("S8-1", "S", "trust-store entry without the trusted member",
+                             s8_inputs, "REJECT", ["KEY_BINDING_UNAVAILABLE"]))
+
+    cl_s9 = claim_for(head, 1, "0099-12-31T23:30:00Z")
+    s9_inputs = wit_inputs({"H1": head}, witness_block("H1", cl_s9, sign_witness("0.2", cl_s9)))
+    s9_inputs["now"] = "0100-01-01T00:00:00Z"  # 30 real Gregorian minutes later
+    fixtures.append(envelope("S9-1", "S", "valid witness across the 99->100 year boundary, 30 minutes inside the window",
+                             s9_inputs, "PASS", ["OK"]))
+
+    cl_s10 = claim_for(head, 1, "2026-08-22T11:00:00Z")  # exactly window seconds before now
+    fixtures.append(envelope("S10-1", "S", "freshness distance exactly equal to the window (boundary-equal is fresh)",
+                             wit_inputs({"H1": head}, witness_block("H1", cl_s10, sign_witness("0.2", cl_s10))),
+                             "PASS", ["OK"]))
 
     # ---- A1 harness assertion ----------------------------------------------------------
     a1_body = base_body("decision", "s4-chain-B", "s4-rec-a1", 0, GENESIS)

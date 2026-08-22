@@ -72,11 +72,26 @@ fails, its code is the single `REJECT` reason and no downstream step contributes
   i.e. `UNSUPPORTED_VERSION` → `UNREGISTERED_TAG` → `HASH_MISMATCH` →
   `KEY_BINDING_UNAVAILABLE` → `SUITE_UNSUPPORTED` → `SIGNATURE_INVALID` →
   `WIRE_ALG_IGNORED` (caveat, only on an otherwise-passing result).
-- **Witness path:**
-  `head resolve → head reconcile → witnessed_at validity → witness binding → suite → witness signature → freshness → (optional wire-alg caveat)`
-  i.e. `WITNESS_HEAD_UNRESOLVED` → `WITNESS_HEAD_MISMATCH` → `WITNESS_TIME_INVALID` →
-  `KEY_BINDING_UNAVAILABLE` → `SUITE_UNSUPPORTED` → `WITNESS_SIGNATURE_INVALID` →
-  `WITNESS_STALE` → `WIRE_ALG_IGNORED` (caveat).
+- **Witness path** (fidelity-gate revision, 2026-08-22):
+  `head resolve → head version → claim structure → head reconcile → witnessed_at validity → witness binding → suite → witness signature → freshness → (optional wire-alg caveat)`
+  i.e. `WITNESS_HEAD_UNRESOLVED` → `UNSUPPORTED_VERSION` → `WITNESS_CLAIM_INVALID` →
+  `WITNESS_HEAD_MISMATCH` → `WITNESS_TIME_INVALID` → `KEY_BINDING_UNAVAILABLE` →
+  `SUITE_UNSUPPORTED` → `WITNESS_SIGNATURE_INVALID` → `WITNESS_STALE` →
+  `WIRE_ALG_IGNORED` (caveat).
+
+  Step semantics: **head version** — the resolved head's `airep_version` MUST be a version
+  this integrity verifier implements (v0.2: exactly `"0.2"`); the closed tag registry is
+  thereby enforced on the witness path too — a head declaring `0.3` with a witness genuinely
+  signed under `0.3` tags is `UNSUPPORTED_VERSION`, never a cryptographic accept (A12 is
+  unchanged: head `0.2` + signature under `0.3` tag → `WITNESS_SIGNATURE_INVALID`).
+  **claim structure** — the presented claim's member set is exactly the closed five of
+  INTEGRITY §4, and the four non-time members satisfy their pinned §4.2 constraints
+  (`WITNESS_CLAIM_INVALID` on violation). Extra members are never silently ignored and never
+  silently included in a rebuilt claim: structure fails first. After the structure step
+  passes, the witness signature is verified over **JCS of the presented claim object** —
+  which at that point has exactly the five members. **witness binding** — a trust-store entry
+  is verifier-accepted only when it explicitly carries `trusted: true`; a missing or
+  non-`true` `trusted` member is `KEY_BINDING_UNAVAILABLE` (fail closed, no default-trust).
 
 This precedence is a **Stage-4 reference-reporting contract only**: it pins how the reference
 integrity verifiers report, so parity is exact; it adds no guarantee, ordering, or semantics to
