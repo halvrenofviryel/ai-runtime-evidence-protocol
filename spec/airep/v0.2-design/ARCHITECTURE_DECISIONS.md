@@ -87,12 +87,20 @@ v0.2 defines a small **family of evidence artifacts**:
 | **Decision Receipt** (core) | Who decided what, under which authority, on which input and policy? | The governing runtime |
 | **Control Evidence** | Was the control instruction dispatched, and did the enforcement point receive it? | Both sides of the boundary |
 | **Execution Evidence** | Was the authorized action actually executed, with which parameters? | The executing component |
-| **Effect Evidence** | Was the intended material/system effect independently observed? | An observer distinct from the executor |
+| **Effect Evidence** | Was the intended material/system effect observed — and by whom, relative to the executor? | Any observer: the executor itself or an independent party |
 
 Correlation is by explicit keys, not by co-location in one record: `decision_id`,
 `instruction_id`, `action_digest`, `principal` reference, `trace_id`, and `chain_id` (AD-05).
 Equality of the **authorized** parameter digest and the **executed** parameter digest is the
 TOCTOU check this structure exists to make mechanical.
+
+**Observer relationship is declared, never presupposed** (maintainer review, 2026-08-22). An
+independent observer is NOT a prerequisite for producing Effect Evidence: an observation by the
+executor itself is evidence too — it is just not independent corroboration, and the record must
+not let the two be confused. Effect Evidence therefore carries a required
+`observer_relationship` field — `same_executor` | `independent` | `unknown` (or a declared
+other) — so a consumer can weigh corroboration mechanically. Independence raises the assurance a
+consumer may assign; its absence never blocks the evidence from existing.
 
 This separation now has independent convergent design elsewhere
 (draft-mcguinness-mission-runtime-evidence, cited above), which we read as evidence the cut is
@@ -117,6 +125,14 @@ cannot claim v0.2 conformance. Reference producers are aligned in the alpha stag
 conformance kit's existing cross-language JCS battery (`jcs.py` ↔ `verify.mjs`) becomes the
 normative fixture set.
 
+**Cryptographic domain separation** (maintainer review, 2026-08-22): sharing one canonicalization
+rule across the AD-03 artifact family is necessary but not sufficient. The hash (and signature)
+domain is additionally separated by **protocol version + artifact type** — conceptually
+`AIREP/0.2/decision`, `AIREP/0.2/control`, `AIREP/0.2/execution`, `AIREP/0.2/effect` — so the
+signed bytes of one artifact type can never verify as another type, at the protocol level rather
+than by schema accident. The exact byte construction of the domain tag (prefix vs. signed field)
+MUST be fixed normatively before v0.2-alpha; it is not an implementation choice.
+
 **Consequence:** every v0.2 hash differs from its v0.1 counterpart by construction. This is the
 single largest reason v0.2 is a version bump and not a patch.
 
@@ -126,13 +142,19 @@ single largest reason v0.2 is a version bump and not a patch.
 
 v0.1 binds records to their predecessor (`previous`) but a chain has no signed name and a record
 has no stable identifier; the threat model acknowledges the resulting relative-binding limits.
-v0.2 requires on every artifact:
+v0.2 requires on every artifact (semantics fixed by maintainer review, 2026-08-22):
 
-- `chain_id` — globally unique, chosen at chain genesis, **inside the signed/hashed content**;
-- `record_id` — unique within the chain (chain_id + monotonic index, or UUID), also signed.
+- `chain_id` — **globally collision-resistant**, chosen at chain genesis, **inside the
+  signed/hashed content**;
+- `record_id` — **globally collision-resistant**, also signed; NOT derived from chain position;
+- `sequence` — a separate monotonic ordering field within the chain.
 
-Cross-artifact correlation keys (AD-03) reference `record_id`s, so "the execution evidence for
-decision X" is a resolvable link, not a text convention.
+Identity and ordering are distinct fields on purpose: the four AD-03 artifact types may be
+produced by **different organisations in their own chains** — Execution Evidence cannot be
+assumed to live in the same chain as the Decision Receipt it answers. Cross-artifact correlation
+therefore uses the globally unique `record_id`, or, where a resolver is chain-scoped, the
+explicit qualified pair `{chain_id, record_id}`. A bare within-chain index is never a
+cross-artifact reference.
 
 **Consequence:** required-field addition inside the hash domain — wire-breaking.
 
@@ -185,25 +207,30 @@ under v0.2 rules. Assurance-breaking (not hash-breaking).
 
 ## AD-09 — Assurance-class vocabulary: retire "Trusted"
 
-**Status: Proposed; final names Open (maintainer decision).**
+**Status: Proposed; ladder names DECIDED (maintainer review, 2026-08-22).**
 
 AIREP's own threat model states that even the top class cannot stop a malicious producer writing a
 false claim — the classes assure provenance, integrity, and freshness, never truth. The name
 "Trusted" invites exactly the over-reading the threat model warns against, and a regulator or
 procurement document citing "AIREP-Trusted" would likely read it as more than it is.
 
-v0.2 renames the ladder to say what is actually established. Working candidate:
+The v0.2 ladder is:
 
-| v0.1 name | v0.2 candidate | Establishes |
+| v0.1 name | v0.2 name | Establishes |
 |---|---|---|
-| AIREP-Core | **Core** | Well-formed, hash-chained, untampered |
-| AIREP-Verified | **Authenticated** | Authorship cryptographically established against a named key |
-| AIREP-Trusted | **Witnessed** (alt: Externally Anchored) | Current, untruncated head, vouched by an independent witness / transparency log |
+| AIREP-Core | **AIREP-Core** | Structurally valid and internally hash-consistent |
+| AIREP-Verified | **AIREP-Authenticated** | Authorship cryptographically established against a named/trusted key |
+| AIREP-Trusted | **AIREP-Witnessed** | Independently anchored head, freshness, and completeness evidence |
 
-Whatever names are chosen, the normative text binds each to the sentence: *"provenance, integrity,
-and freshness assurance only; not truth assurance."* The v0.1 fail-closed machinery
-(`TRUSTED_NOT_IMPLEMENTED`, strict-mode gates, withheld-reason lists) carries over unchanged in
-substance — an unevaluated prerequisite is never a satisfied one.
+Core deliberately does **not** claim "untampered": without signature verification, an adversary
+can fabricate an entirely new, self-consistent hash chain — internal hash consistency detects
+in-place edits of a given byte sequence, not substitution of the whole sequence. Tamper-evidence
+against a substituting adversary begins at Authenticated.
+
+The normative text binds **all three classes** to the sentence: *"provenance, integrity, and
+freshness assurance; not truth assurance."* The v0.1 fail-closed machinery (withheld top class,
+strict-mode gates, named unevaluated prerequisites, withheld-reason lists) carries over unchanged
+in substance — an unevaluated prerequisite is never a satisfied one.
 
 ## AD-10 — Transparency via SCITT binding, not a homegrown stack
 
@@ -213,7 +240,15 @@ v0.1's `chain_witness` profile is a local, offline head-witness mechanism. It st
 the network-free case. But AIREP does not grow it toward a transparency service: RFC 9943 defines
 that layer. v0.2 adds a **SCITT binding profile**: an AIREP artifact (or chain head) is projected
 to a signed statement, registered with a transparency service, and the returned receipt is
-recorded as evidence in the AIREP chain. The alpha stage includes a proof-of-concept registration
+recorded as evidence in the AIREP chain.
+
+**No mutation of sealed material** (maintainer review, 2026-08-22). The normative order is:
+**seal → register → receive SCITT receipt → subsequent anchor evidence.** A receipt returned by
+the transparency service is never written back into the already-sealed (hashed/signed) object it
+attests — that would either break the seal or demand a second signing pass over mutated bytes.
+The receipt is carried in a **subsequent** artifact: a checkpoint/anchoring record, or the next
+chain record, referencing the sealed head it anchors by its `record_id`/hash. The alpha stage
+includes a proof-of-concept registration
 and receipt verification against at least one SCITT implementation. Adjacent work
 (draft-noa-scitt-ai-agent-receipt) suggests AIREP artifacts should be registrable with at most a
 thin mapping; the PoC tests that.
@@ -291,7 +326,7 @@ failure is not capability evidence; the gate demands observed results.
 | 06 | Mandatory input/result/evidence digests | Proposed | **Yes** |
 | 07 | Core sub-object closure | Proposed | **Yes** |
 | 08 | Asymmetric signature baseline | Proposed | Assurance-breaking |
-| 09 | Retire "Trusted" naming | Proposed / names Open | Vocabulary |
+| 09 | Retire "Trusted" naming (Core / Authenticated / Witnessed) | Proposed / names decided | Vocabulary |
 | 10 | SCITT binding profile | Proposed | Additive |
 | 11 | Authorization reference profile | Proposed | Additive |
 | 12 | MCP/A2A/OTel informative profiles | Proposed | Additive |

@@ -19,15 +19,30 @@
    consumer can always walk back from a projected v0.2 artifact to the originally signed v0.1
    bytes and re-verify them under v0.1 rules.
 
-4. **Assurance never rises through projection.** A projected artifact's conformance class is
-   capped at the class the source record earned under v0.1 verification, and the projection notes
-   that the class was inherited-by-projection, not earned by v0.2 checks. Projection is a
-   convenience for uniform consumption, not an assurance upgrade.
+4. **Source assurance and projection-artifact assurance are distinct — and never conflated.**
+   Two different assurance statements exist, and each is tracked in its own channel:
 
-5. **Projection is total or refused.** If a v0.1 record cannot be projected without inventing
-   information (e.g. a required v0.2 digest whose source bytes no longer exist), the projector
-   refuses that field-level claim and emits the artifact with the gap named — it never fabricates
-   a digest. "Not migratable" is an honest, recorded outcome.
+   - **Source assurance:** what the original v0.1 record earned under v0.1 verification. This
+     never rises through projection. A projected artifact records the source's v0.1 class as an
+     inherited, clearly-labelled attribute (`source_assurance`, inherited-by-projection, not
+     earned by v0.2 checks).
+   - **Projection-artifact assurance:** what the *new* v0.2 artifact earns under v0.2
+     verification on its own merits. A projector that correctly signs its output produces an
+     artifact that can legitimately reach v0.2 **Authenticated** — authenticated *as the
+     projector's statement about the source*, which is what its signature actually covers.
+
+   The one forbidden inference is cross-channel: the projector being Authenticated says nothing
+   about the source v0.1 record's authorship, and the source's v0.1 class says nothing about the
+   projection's v0.2 class. A consumer reads both channels; neither substitutes for the other.
+
+5. **No conformant artifact without its required content.** If required v0.2 information is not
+   derivable from the source (e.g. a required digest whose source bytes no longer exist), the
+   projector does **not** emit a v0.2 artifact for that record — an object missing a required
+   field is not a conformant v0.2 artifact and is never presented as one. Instead the projector
+   emits a **migration/projection report**: a separate, non-artifact output that identifies the
+   source record (by its v0.1 `integrity.current`), states which required v0.2 fields were not
+   derivable, and why. "Not projectable" is an honest, recorded outcome; a half-populated
+   "artifact" is not.
 
 ## Sketch of the mapping (to be fixed in v0.2-alpha)
 
@@ -40,9 +55,11 @@
 | `profiles.chain_witness` | Unchanged in role; optionally supplemented by a SCITT registration of the projected head (AD-10) |
 | Other profiles (`key_trust`, regulatory crosswalks, `observability_transport`, …) | Carried as namespaced profiles on the appropriate artifact |
 
-Fields v0.1 does not have (`chain_id`, `record_id`, `result_digest`, universal
-`evidence[].content_hash`) are either minted-and-marked (identifiers) or gap-named (digests),
-per principle 5.
+Fields v0.1 does not have are handled per principles 4–5: identifiers (`chain_id`, `record_id`,
+`sequence`) are minted at projection time and marked projection-assigned; required digests
+(`result_digest`, universal `evidence[].content_hash`) are computed from source bytes where those
+bytes are available, and where they are not, **no v0.2 artifact is emitted** — the record goes to
+the migration/projection report instead.
 
 ## What the frozen v0.1 line still receives
 
