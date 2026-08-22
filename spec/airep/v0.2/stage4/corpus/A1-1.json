@@ -1,0 +1,37 @@
+{
+ "description": "current computed under control hash tag, presented as decision",
+ "expected": {
+  "reasons": [
+   "HASH_MISMATCH"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A1-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:65bb2e5704e239317ec28aa71fb3e3d6c095705cf1a0ba87e98de41d00cd7104",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "8912f34a508ab4073f5a714d7663007011ee01e4ed13b8b9693f3fa4f0a6224a07c8b5804911fd83179f1c4c2d98acedb27c8f67a9d3bacfcbe03d6334352506"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a1",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A1"
+}

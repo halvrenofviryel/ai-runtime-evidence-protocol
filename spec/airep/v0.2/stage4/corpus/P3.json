@@ -1,0 +1,37 @@
+{
+ "description": "valid execution artifact",
+ "expected": {
+  "reasons": [
+   "OK"
+  ],
+  "verdict": "PASS"
+ },
+ "fixture_id": "P3",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "execution",
+   "chain_id": "s4-chain-A",
+   "integrity": {
+    "current": "sha256:ad1932c1c8ab292891dd8639f5d00bda8f3a678230437f8237c5538078736691",
+    "previous": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "6937aece7610262f71c8ebf75c1b146f12b1f032c699f57d02a4ea6484fb49361ebf98e844cfa8b9774a5c826afd59e8d5bc55b93be231cd91714d46c7b75b0f"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (execution)"
+   },
+   "record_id": "s4-rec-p3",
+   "sequence": 2
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "P"
+}

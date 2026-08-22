@@ -1,0 +1,54 @@
+{
+ "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines '<sha256>  <relative-path>\\n' relative to stage4/corpus/",
+ "aggregate_sha256": "85476ba7729b23728c83aef0a835e13c0a7b5ec82a850817ddf28f975097252c",
+ "files": {
+  "A1-1.json": "31597b64c797065998504ec5edfc2ce347b067cee1c5eafcd832e377e42d9889",
+  "A10-1.json": "397d46765c4503accb75e06a558da88aff5811ab53ef428cc4d1d9d13414621f",
+  "A11a-1.json": "49cb195a5215a9d9a51adcd2429116731b012c3c72e0fb2dfe932270f05b473d",
+  "A11b-1.json": "896681c8c8601537711ea174ec4673308e3ab3382c2609e45009a84571a4aae2",
+  "A12-1.json": "46aa5aeabd2c5c7bcb7b519abd3fa4565c50fb448c2f97d6fbed190b58fd03de",
+  "A13a-1.json": "4243e1caa6d72bb822b99fc0fc0635c6be06886a478410302d30b7174c678b36",
+  "A13b-1.json": "a9416b80594ec7522f117932fe18e8102d3313d52f1a18ac4f354ea756e1dd88",
+  "A2-1.json": "75ab37216ca75c1c510ed168f9966206f2f38617f0e4849a59b773b56f9bbc27",
+  "A3-1.json": "1bb513ea9b0bf774c8a32da03d86faf1b2ebdd8f6ee1ea514fd8c5545ca571b0",
+  "A4-1.json": "210d992b18f330df29caf1d590c2d42a74094ffb38ac9f481d20a3373a5a5868",
+  "A4-2.json": "d6f77dce2aefbd230d695083826570cb1e65bedf282f809fb805995647732447",
+  "A5-1.json": "d81fe06b97f5e8c982d95d9a564f07a489f169dc0c38bd00ef3f75addbc9f830",
+  "A6-1.json": "f3a48deccc5a0bc34b8c49d11c35fc35100551669a60927315225fd57c6170a6",
+  "A7-1.json": "468de33c312603d22b13dbba5837ce037dc8e59cdd4a6b9199d409b89f838222",
+  "A8-1.json": "228dbda04072d786cfd960842f36ad7a80e97e63afb7c01883bcab9b88ce7f48",
+  "A9-1.json": "d47a3f4bb4bf7b01a3f2660ce322dae55db7522fafd7175e17f52e4802cae131",
+  "A9-2.json": "58e20c359f5e7c87e0d84a17661234eeacffa14c0b68bb19466c5d258549c6ad",
+  "P1.json": "1fd82d5348f82140f447ff45faf3e90205cb02b25cd6160d6dd323c8f4ec4445",
+  "P2.json": "9e05e1d4e59d4e9d89d365772d5568cd98c5c52265eb5e6de42110483d68db31",
+  "P3.json": "cd9616937e304a3fafdec5c2ae3c552a1c8456a2c3f634ebc22e32e0aa4dc4be",
+  "P4.json": "ea7b91e57a60cf91bedb0e34e3bf55f5beeb410b8782a6b1a3f4a499a81a7096",
+  "P5.json": "f098aebe32bb80e82f24e6fdd0207526a72fa1c8fe5e019acfb74d419ff2c544",
+  "S1-1.json": "12893402cb8219adf06279f4c0db5ec8a2575e3daab98943ac7390e083b7099e",
+  "S2-1.json": "c19cbd1302e839a98774209efbc8d2f9187379577040e3d758eff08dd8b844bf",
+  "S3-1.json": "94927d7b3f9231fe7ecdc58c719d5c58d0829a6a7c573a7ea71cbbd377a815cf",
+  "S4-1.json": "3fe85b0dcada30ccaa29e1f6351055fa60d5fe2a817d59502642fa0a8dbc49ff",
+  "S4-2.json": "b1ec83aa957ee10c1e59e3e04a722ab8753471dc319769f112a857619fb92dce",
+  "S5-1.json": "a902f9df8a9d4b8eed5491f8604c4bb6c3fcc526c98f69ff5a9f9736a2f807cd",
+  "S5-2.json": "9f3fa36fcc3753a6e1716150b84653a527e858bacd7fb5a8d3ad16d61dbeaca2"
+ },
+ "fixture_count": 29,
+ "fixture_kind_rule": "inputs.witness present => witness-path fixture; otherwise artifact-path fixture; witness.head_ref names the key in inputs.head_artifacts",
+ "harness_assertions": {
+  "A1_tag_divergence": {
+   "body": "s4-rec-a1 body",
+   "current_under_control_tag": "sha256:65bb2e5704e239317ec28aa71fb3e3d6c095705cf1a0ba87e98de41d00cd7104",
+   "current_under_decision_tag": "sha256:c0e91f479925c991bdd0fbee6b8b4e2d5fa87c0920ac695928ace4056c529f13",
+   "distinct": true
+  },
+  "S1_probe": {
+   "canonical_body_sha256": "de6d5cb58a7d316469213fa803bc24209ccc1838dd5e7ed423e2d7f434c3d2d3",
+   "current": "sha256:7348c2851908933c6cd81e79ea372a9f79855736f228aa3172ff1b05dc29b223"
+  }
+ },
+ "keys": {
+  "note": "published TEST-ONLY seeds (see vectors/VECTOR_PLAN.md); never production",
+  "producer_pubkey_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+  "witness_pubkey_hex": "2e4e83fdb2d88f88c5f03e663c39ea3f9c7536312b62a2b09a95712dccf11a40"
+ }
+}

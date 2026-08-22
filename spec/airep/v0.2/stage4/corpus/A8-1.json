@@ -1,0 +1,37 @@
+{
+ "description": "current computed with CRLF separator at production time",
+ "expected": {
+  "reasons": [
+   "HASH_MISMATCH"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A8-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:56154efff05509c629e66ab1f3164678cba98d66ce9d3d441df055a180312d85",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "0615f818d1d8cec9bd2ed284000e7fb45dd77091b705aaefc96c41ccdb704854dbd70a579e4fd03a874f66efb2b44b712d4ac601fdde7356c47b1aa7e3b1c309"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a8",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A8"
+}
