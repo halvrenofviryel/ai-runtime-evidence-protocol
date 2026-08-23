@@ -8,10 +8,11 @@
 >
 > **Authoritative inputs:** adopted AD-09 (round-2 scoped wording), the frozen
 > [`../INTEGRITY.md`](../INTEGRITY.md) (esp. §3.2, §4.1–4.3, §5), the accepted Stage-4 trust
-> semantics (verifier-accepted binding; explicit `trusted: true`; suites from bindings; inert
-> wire labels), the v0.1 `CONFORMANCE_CLASSES.md` + WP-10 strict mode as **lineage** (its
-> fail-closed machinery carries forward in substance), and AD-03's class-scoped
-> `observer_relationship` rule. This contract closes the standing carry-forward: **witness-key
+> semantics **stated precisely** (a *supplied* producer binding; explicit `trusted: true` on
+> the *witness trust-store* entry; suites derived from bindings; inert wire labels — see §2
+> for what this contract newly decides on top), the v0.1 `CONFORMANCE_CLASSES.md` + WP-10
+> strict mode as **lineage** (its fail-closed machinery carries forward in substance), and
+> AD-03's class-scoped `observer_relationship` rule. This contract closes the standing carry-forward: **witness-key
 > independence + revocation assurance semantics**.
 
 ## 1. The ladder (adopted names, adopted scoping)
