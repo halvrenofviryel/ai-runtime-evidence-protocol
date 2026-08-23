@@ -1,0 +1,11 @@
+{
+ "authenticated_caveats": [],
+ "authenticated_failures": [],
+ "authenticated_withheld": [],
+ "class": "AIREP-Authenticated",
+ "observer_assessment": "unknown",
+ "witnessed_failures": [],
+ "witnessed_withheld": [
+  "no-witness-supplied"
+ ]
+}

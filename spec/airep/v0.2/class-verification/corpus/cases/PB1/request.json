@@ -1,0 +1,58 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "decision",
+  "chain_id": "cv-chain-pb1",
+  "claim": {
+   "assertion": "released after gates passed",
+   "basis": [
+    "gate-1"
+   ]
+  },
+  "directive": {
+   "policy_basis": [
+    "policy-1"
+   ],
+   "verb": "release"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "input": {
+   "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "input_ref": "ref:input-1"
+  },
+  "integrity": {
+   "current": "sha256:e4784c50e98c749802809239394bbf3c2575d40b0f72d98b2dcb5221d6944821",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "66678dc94aeecbe4fce0f78f60cbc6b258c179fd3695e4209c0986acd8ac1dae0f913dc5a54388c9670a2f1d3bbc04e88670773509c19ad4afee613951bec405"
+   }
+  },
+  "output": {
+   "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "result_ref": "ref:result-1"
+  },
+  "record_id": "cv-rec-pb1",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 0,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "related_artifacts": []
+}

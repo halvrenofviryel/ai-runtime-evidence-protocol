@@ -1,0 +1,9 @@
+{
+ "independent_pairs": [
+  {
+   "a": "airep.witness-a",
+   "b": "airep.executor-a"
+  }
+ ],
+ "non_independent_pairs": []
+}

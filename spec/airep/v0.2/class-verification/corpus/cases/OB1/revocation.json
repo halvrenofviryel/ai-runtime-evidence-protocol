@@ -1,0 +1,14 @@
+{
+ "bindings": {
+  "airep.executor-a": {
+   "state": "active"
+  },
+  "airep.producer-a": {
+   "state": "active"
+  },
+  "airep.witness-a": {
+   "state": "active"
+  }
+ },
+ "snapshot_id": "airep.snapshot-1"
+}

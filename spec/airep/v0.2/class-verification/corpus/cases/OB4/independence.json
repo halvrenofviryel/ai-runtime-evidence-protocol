@@ -1,0 +1,9 @@
+{
+ "independent_pairs": [
+  {
+   "a": "airep.producer-a",
+   "b": "airep.executor-a"
+  }
+ ],
+ "non_independent_pairs": []
+}

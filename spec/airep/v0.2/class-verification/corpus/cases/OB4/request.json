@@ -1,0 +1,134 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "effect",
+  "chain_id": "cv-chain-ob4",
+  "decision_ref": {
+   "chain_id": "cv-chain-ob4",
+   "record_id": "cv-rec-decision-1"
+  },
+  "execution_ref": {
+   "chain_id": "cv-chain-ob4",
+   "record_id": "cv-rec-execution-1"
+  },
+  "integrity": {
+   "current": "sha256:e29deb53b19d29b847ca8e3111936d16b949b6b8bbfdd6b7722cd245c332eaba",
+   "previous": "sha256:6c7239e23cfc4befb4e55a44f5f5281026d892ef0cd473ecf3f2104d602e6838",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "e49aabda2012241ef09c8cfd295bcae8a5afb4f639fcb8bda8eaafef21666326b4c00091d6fad8dc36bc8872752b14bfd3fa765f8e6e34fdcd2e12a2a20ddc0a"
+   }
+  },
+  "observed_state": {
+   "description": "valve closed",
+   "state_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "observer_relationship": "independent",
+  "record_id": "cv-rec-ob4",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 2,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "related_artifacts": [
+  {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "cv-chain-ob4",
+   "claim": {
+    "assertion": "released after gates passed",
+    "basis": [
+     "gate-1"
+    ]
+   },
+   "directive": {
+    "policy_basis": [
+     "policy-1"
+    ],
+    "verb": "release"
+   },
+   "evidence": [
+    {
+     "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "ref": "ref:policy-1",
+     "resolvable": false,
+     "type": "policy"
+    }
+   ],
+   "input": {
+    "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "input_ref": "ref:input-1"
+   },
+   "integrity": {
+    "current": "sha256:bc1c0c9fbc9a028d2e1a60bea23c3eb2ae9bbfe083f701b0576ea129adc3f692",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "02828aaebf7479a52672855f1229d0f7dadf55396b72c4f9c6ad1573b52a17573442688206875bce725ba07d5503c16b72d271f4c01c48e4cc2ecdd760f1e701"
+    }
+   },
+   "output": {
+    "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "result_ref": "ref:result-1"
+   },
+   "record_id": "cv-rec-decision-1",
+   "scope": {
+    "covers": [
+     "this record's own contents"
+    ],
+    "does_not_cover": [
+     "truth of the recorded content"
+    ]
+   },
+   "sequence": 0,
+   "subject": {
+    "producer": "acme-runtime/1.4",
+    "timestamp_utc": "2026-08-23T09:00:00Z"
+   }
+  },
+  {
+   "airep_version": "0.2",
+   "artifact_type": "execution",
+   "chain_id": "cv-chain-ob4",
+   "decision_ref": {
+    "chain_id": "cv-chain-ob4",
+    "record_id": "cv-rec-decision-1"
+   },
+   "executed_action_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "execution_event": "executed",
+   "instruction_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "instruction_id": "instr-1",
+   "integrity": {
+    "current": "sha256:6c7239e23cfc4befb4e55a44f5f5281026d892ef0cd473ecf3f2104d602e6838",
+    "previous": "sha256:bc1c0c9fbc9a028d2e1a60bea23c3eb2ae9bbfe083f701b0576ea129adc3f692",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "702c2e5fbf213fde056297c481e9179225308afac80b84e6daf5afb94ae9f990eb8566ddab25388a1d9a71372984d3269641501e371ee43dcbd9324379e5360b"
+    }
+   },
+   "record_id": "cv-rec-execution-1",
+   "scope": {
+    "covers": [
+     "this record's own contents"
+    ],
+    "does_not_cover": [
+     "truth of the recorded content"
+    ]
+   },
+   "sequence": 1,
+   "subject": {
+    "producer": "orbit-executor/2.0",
+    "timestamp_utc": "2026-08-23T09:00:00Z"
+   }
+  }
+ ]
+}

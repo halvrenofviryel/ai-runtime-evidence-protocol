@@ -1,0 +1,132 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "decision",
+  "chain_id": "cv-chain-wm5",
+  "claim": {
+   "assertion": "released after gates passed",
+   "basis": [
+    "gate-1"
+   ]
+  },
+  "directive": {
+   "policy_basis": [
+    "policy-1"
+   ],
+   "verb": "release"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "input": {
+   "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "input_ref": "ref:input-1"
+  },
+  "integrity": {
+   "current": "sha256:8cfa6467b88d282ec9e3e856d20f37475c350d92961c753aa49a241fb70f7228",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "e1bbf397f8d19d7d5ec7660211d37a79a6843293585cee78921d9c00b008bc0cd1230ba5b5d0df489bb95a4aac9906d068b1fb950e979980aeaa29064a70ea0a"
+   }
+  },
+  "output": {
+   "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "result_ref": "ref:result-1"
+  },
+  "record_id": "cv-rec-wm5",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 0,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "head_witness": {
+  "claim": {
+   "chain_id": "cv-chain-wm5",
+   "current": "sha256:ae9de72d4ecd670a0a483ce6c26123c19e9122a0fb14fbb3014bb597242f7e7f",
+   "length": 2,
+   "sequence": 1,
+   "witnessed_at": "2026-08-23T11:30:00Z"
+  },
+  "head_ref": {
+   "chain_id": "cv-chain-wm5",
+   "record_id": "cv-rec-wm5-other"
+  },
+  "signature": {
+   "alg": "Ed25519",
+   "value": "d570f5c409fb31efa92854f43890f8c6977a1cf3c35a5450e15253e7bd37ed390a5c61b2b8b6e8c3703a40981d1a3b05287f505bdf86f5084b0663a2c7886d03"
+  },
+  "witness_id": "NOTARY-WITNESS #1"
+ },
+ "related_artifacts": [
+  {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "cv-chain-wm5",
+   "claim": {
+    "assertion": "released after gates passed",
+    "basis": [
+     "gate-1"
+    ]
+   },
+   "directive": {
+    "policy_basis": [
+     "policy-1"
+    ],
+    "verb": "release"
+   },
+   "evidence": [
+    {
+     "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "ref": "ref:policy-1",
+     "resolvable": false,
+     "type": "policy"
+    }
+   ],
+   "input": {
+    "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "input_ref": "ref:input-1"
+   },
+   "integrity": {
+    "current": "sha256:ae9de72d4ecd670a0a483ce6c26123c19e9122a0fb14fbb3014bb597242f7e7f",
+    "previous": "sha256:8cfa6467b88d282ec9e3e856d20f37475c350d92961c753aa49a241fb70f7228",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "a9c8e8abe9c022c27f668bcac114d83edb83cb84d6929dc3ace15519d52295bbbbd0c9d5b5bc66a3bcebf8affe2a54ebca36782256473d703f60b13305fcb408"
+    }
+   },
+   "output": {
+    "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "result_ref": "ref:result-1"
+   },
+   "record_id": "cv-rec-wm5-other",
+   "scope": {
+    "covers": [
+     "this record's own contents"
+    ],
+    "does_not_cover": [
+     "truth of the recorded content"
+    ]
+   },
+   "sequence": 1,
+   "subject": {
+    "producer": "acme-runtime/1.4",
+    "timestamp_utc": "2026-08-23T09:00:00Z"
+   }
+  }
+ ]
+}

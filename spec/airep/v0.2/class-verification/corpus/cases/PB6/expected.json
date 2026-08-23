@@ -1,0 +1,13 @@
+{
+ "authenticated_caveats": [],
+ "authenticated_failures": [],
+ "authenticated_withheld": [
+  "producer-revocation-state-missing"
+ ],
+ "class": "AIREP-Core",
+ "observer_assessment": "not_applicable",
+ "witnessed_failures": [],
+ "witnessed_withheld": [
+  "no-witness-supplied"
+ ]
+}

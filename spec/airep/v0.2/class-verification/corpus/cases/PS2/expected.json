@@ -1,0 +1,13 @@
+{
+ "authenticated_caveats": [
+  "wire-alg-mismatch"
+ ],
+ "authenticated_failures": [],
+ "authenticated_withheld": [],
+ "class": "AIREP-Authenticated",
+ "observer_assessment": "not_applicable",
+ "witnessed_failures": [],
+ "witnessed_withheld": [
+  "no-witness-supplied"
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "independent_pairs": [
+  {
+   "a": "airep.producer-a",
+   "b": "airep.witness-same-key"
+  }
+ ],
+ "non_independent_pairs": []
+}

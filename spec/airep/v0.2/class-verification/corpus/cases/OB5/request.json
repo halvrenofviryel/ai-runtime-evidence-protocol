@@ -1,0 +1,99 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "effect",
+  "chain_id": "cv-chain-ob5",
+  "decision_ref": {
+   "chain_id": "cv-chain-ob5",
+   "record_id": "cv-rec-decision-1"
+  },
+  "execution_ref": {
+   "chain_id": "cv-chain-ob5",
+   "record_id": "cv-rec-execution-absent"
+  },
+  "integrity": {
+   "current": "sha256:662221e49f28b2c8b4600c83736b98fcc1e49420efe4725e7f33827bc75083e9",
+   "previous": "sha256:beadc7eab92604a19f2b59131f5bfdfc168f091833141571eb8189fc96eb6d67",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "f501f382572ecc263bb7314d552b7e04ae8957c33c1d7388969a7105cf9f164901ddaf9ca0b2186703f7fef08f696325c2e12e28e352cee02df5b89102a7f906"
+   }
+  },
+  "observed_state": {
+   "description": "valve closed",
+   "state_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+  },
+  "observer_relationship": "independent",
+  "record_id": "cv-rec-ob5",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 2,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "related_artifacts": [
+  {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "cv-chain-ob5",
+   "claim": {
+    "assertion": "released after gates passed",
+    "basis": [
+     "gate-1"
+    ]
+   },
+   "directive": {
+    "policy_basis": [
+     "policy-1"
+    ],
+    "verb": "release"
+   },
+   "evidence": [
+    {
+     "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+     "ref": "ref:policy-1",
+     "resolvable": false,
+     "type": "policy"
+    }
+   ],
+   "input": {
+    "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+    "input_ref": "ref:input-1"
+   },
+   "integrity": {
+    "current": "sha256:beadc7eab92604a19f2b59131f5bfdfc168f091833141571eb8189fc96eb6d67",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "ed9bdc18d7c652d915996632accad44c0230afd9d28172748a3a79e2e530acd41eba3103891f193edb2fab4a5e544411b6e88f415fecca228027675d815a2104"
+    }
+   },
+   "output": {
+    "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "result_ref": "ref:result-1"
+   },
+   "record_id": "cv-rec-decision-1",
+   "scope": {
+    "covers": [
+     "this record's own contents"
+    ],
+    "does_not_cover": [
+     "truth of the recorded content"
+    ]
+   },
+   "sequence": 0,
+   "subject": {
+    "producer": "acme-runtime/1.4",
+    "timestamp_utc": "2026-08-23T09:00:00Z"
+   }
+  }
+ ]
+}
