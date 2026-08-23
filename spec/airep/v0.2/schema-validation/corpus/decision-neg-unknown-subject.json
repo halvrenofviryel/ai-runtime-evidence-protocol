@@ -1,0 +1,80 @@
+{
+ "description": "unknown member inside /subject on decision",
+ "expected": "INVALID",
+ "expected_error_keywords": [
+  "additionalProperties"
+ ],
+ "expected_error_scope": "/subject",
+ "fixture_id": "decision-neg-unknown-subject",
+ "instance": {
+  "airep_version": "0.2",
+  "artifact_type": "decision",
+  "chain_id": "sv-chain-1",
+  "claim": {
+   "assertion": "released after gates passed",
+   "basis": [
+    "gate-1"
+   ]
+  },
+  "directive": {
+   "policy_basis": [
+    "gate-1"
+   ],
+   "verb": "release"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "input": {
+   "digest_projection": "airep.projection-a",
+   "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "input_ref": "ref:input-1"
+  },
+  "integrity": {
+   "current": "sha256:abababababababababababababababababababababababababababababababab",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+   }
+  },
+  "output": {
+   "redacted": true,
+   "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "result_ref": "ref:result-1"
+  },
+  "profiles": {
+   "airep.migration": {
+    "note": "harness placeholder"
+   }
+  },
+  "record_id": "sv-rec-decision-1",
+  "scope": {
+   "covers": [
+    "schema shape"
+   ],
+   "does_not_cover": [
+    "cryptographic validity"
+   ]
+  },
+  "sequence": 1,
+  "subject": {
+   "extra_member": "x",
+   "principal": {
+    "established_by": "verified_credential",
+    "scope": [
+     "read"
+    ],
+    "service": "svc-1"
+   },
+   "producer": "schema-harness/1.0",
+   "timestamp_utc": "2026-08-23T10:00:00Z"
+  }
+ },
+ "target_schema": "decision"
+}

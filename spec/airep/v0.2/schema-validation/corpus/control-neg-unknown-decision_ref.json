@@ -1,0 +1,59 @@
+{
+ "description": "unknown member inside /decision_ref on control",
+ "expected": "INVALID",
+ "expected_error_keywords": [
+  "additionalProperties"
+ ],
+ "expected_error_scope": "/decision_ref",
+ "fixture_id": "control-neg-unknown-decision_ref",
+ "instance": {
+  "airep_version": "0.2",
+  "artifact_type": "control",
+  "authority": {
+   "issuer_id": "issuer-1",
+   "writable_by_controlled_system": false
+  },
+  "authorized_action_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "boundary_side": "issuer",
+  "chain_id": "sv-chain-1",
+  "control_event": "dispatched",
+  "decision_ref": {
+   "chain_id": "sv-chain-1",
+   "extra_member": "x",
+   "record_id": "sv-rec-decision-1"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:abababababababababababababababababababababababababababababababab",
+    "ref": "ref:dispatch-log",
+    "resolvable": true,
+    "type": "tool_call"
+   }
+  ],
+  "instruction_digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "instruction_id": "instr-1",
+  "integrity": {
+   "current": "sha256:abababababababababababababababababababababababababababababababab",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+   }
+  },
+  "record_id": "sv-rec-control-1",
+  "scope": {
+   "covers": [
+    "schema shape"
+   ],
+   "does_not_cover": [
+    "cryptographic validity"
+   ]
+  },
+  "sequence": 1,
+  "subject": {
+   "producer": "schema-harness/1.0",
+   "timestamp_utc": "2026-08-23T10:00:00Z"
+  }
+ },
+ "target_schema": "control"
+}
