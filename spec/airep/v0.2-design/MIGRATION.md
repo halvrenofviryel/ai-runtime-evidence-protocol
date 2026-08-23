@@ -55,7 +55,7 @@
 
 | v0.1 source | v0.2 target |
 |---|---|
-| Core record (decision semantics) | **Decision Receipt**: `subject`, `input`, `claim`, `directive`, `scope` map ≈1:1; new required `chain_id`/`record_id` minted at projection time and marked as projection-assigned |
+| Core record (decision semantics) | **Decision Receipt**: `subject`, `input`, `claim`, `directive`, `scope` map ≈1:1; new required `chain_id`/`record_id` minted at projection time and marked as projection-assigned. **`input.governance_state` has no v0.2 core home** (removed by the 2026-08-23 schema-phase decision): projection carries its content in a namespaced profile, never in core |
 | `profiles.control_delivery` issued/delivered/acknowledged events | **Control Evidence** artifacts, one per lifecycle event, correlated by the original `instruction_id` / `instruction_hash` |
 | `profiles.control_delivery` enforced events, execution-side profile content (`execution_observation`, `enforcement_result`) | **Execution Evidence** artifacts |
 | Effect-side profile content (`effect_observation`, `effect_assurance`) | **Effect Evidence** artifacts |

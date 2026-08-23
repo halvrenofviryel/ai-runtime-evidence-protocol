@@ -3,8 +3,9 @@
 > **Status: DESIGN CONTRACT for maintainer review — no JSON Schema exists yet.** This document
 > fixes the common wire shape of the four v0.2 artifact families before any `.schema.json` is
 > written, so the four schemas cannot drift from each other and every field has one traceable
-> justification. Nothing here is normative until accepted; every open choice is an explicit
-> OPEN DESIGN QUESTION (§9), not a silent implementation decision.
+> justification. Nothing here is normative until accepted. Every formerly open choice is now
+> an **explicit maintainer decision** (§9, decided 2026-08-23) — none was made silently by
+> implementation.
 >
 > **Authoritative inputs (only these):** the adopted architecture decisions AD-02..AD-14
 > (esp. AD-03..AD-07), the frozen [`../INTEGRITY.md`](../INTEGRITY.md), the accepted migration
@@ -56,39 +57,54 @@ top (§3). All objects below are **closed** (§6).
   "integrity": {
     "previous":  "sha256:<64 lowhex>",            // genesis = sha256: + 64 zeros
     "current":   "sha256:<64 lowhex>",
-    "signature": { "alg": <string>, "value": <hex string> }   // alg = informative label only
+    "signature": { "alg": <string>, "value": <128 lowercase hex> }  // alg = informative label only
   },
   "profiles": { "<namespaced-id>": { ... }, ... } // optional; the ONLY extension surface
 }
 ```
 
 Notes: `sequence` is ordering, `record_id` is identity — never conflated (AD-05).
-`subject.principal` keeps the v0.1 design verbatim (identity provenance via `established_by`;
-`asserted_by_caller` … `not_established`) — it was praised at architecture review and nothing
-in v0.2 changes it. The v0.1 members `decision_index` (superseded by `sequence`) and
-`integrity.canonical_json` (superseded by the domain tag, which encodes the canonicalization
-in the signed bytes) are proposed **dropped** — ODQ-5.
+`subject.principal` — member vocabulary and `established_by` semantics retained from v0.1
+(`asserted_by_caller` … `not_established`); **v0.2 closure applied**, and when `principal` is
+present `established_by` is required (ODQ-4). **Signature wire encoding is an explicit
+maintainer decision (2026-08-23), not an implementation default:** `integrity.signature.value`
+is exactly the 64-byte Ed25519 signature as **128 lowercase hex characters**, pattern
+`^[0-9a-f]{128}$` — the frozen text defines what is signed, this decision pins how the bytes
+ride the wire; the v0.2 suite registry contains only `ed25519`, and a future suite is a
+spec/version change. The v0.1 members `decision_index` (superseded by `sequence`) and
+`integrity.canonical_json` (redundant — the v0.2 normative construction mandates JCS) are
+**dropped** — ODQ-5.
 
 ## 3. Per-family members and the field-difference matrix
 
 | Member | decision | control | execution | effect | Rationale (source) |
 |---|:---:|:---:|:---:|:---:|---|
-| `input {input_ref, input_digest, governance_state?}` | **req** | — | — | — | AD-06: required input digest; v0.1 lineage |
+| `input {input_ref, input_digest}` | **req** | — | — | — | AD-06: required input digest; v0.1 lineage. `governance_state` REMOVED from neutral core (maintainer, 2026-08-23): it was the one open object AD-07 could not close; policy basis lives in `claim.basis`/`directive.policy_basis`/evidence refs, deployment state goes to profiles |
 | `claim {assertion, basis}` | **req** | — | — | — | governance decision semantics (v0.1 lineage) |
 | `directive {verb, policy_basis}` | **req** | — | — | — | v0.1 lineage; closed verb enum carried (ODQ-8) |
-| `output {result_ref, result_digest}` | **req** | — | — | — | AD-06: required `result_digest` |
-| `evidence[] {type, ref, resolvable, content_hash}` | **req** | opt | opt | opt | AD-06; `content_hash` universality → ODQ-9 |
-| `decision_ref` (cross-artifact reference) | — | **req** | **req** | **req** | AD-03/AD-05: every evidence artifact answers a decision; shape → ODQ-10 |
-| `instruction_id` / `instruction_digest` | — | **req** | **req** | opt | AD-03 correlation keys; v0.1 `control_delivery` lineage (`instruction_hash` renamed for digest-vocabulary consistency — §7) |
+| `output {result_ref, result_digest, redacted?}` | **req** | — | — | — | AD-06: required `result_digest`; v0.1 `output.redacted` RETAINED as optional boolean — **no JSON Schema `default`** (default materialization invites hash-preimage-divergent tooling behavior) |
+| `evidence[] {type, ref, resolvable, content_hash}` | **req** | opt | opt | opt | AD-06; `content_hash` required on every item wherever the array appears (ODQ-9) |
+| `decision_ref` (cross-artifact reference) | — | **req** | **req** | **req** | AD-03/AD-05: every evidence artifact answers a decision; shape per ODQ-10 |
+| `instruction_id` / `instruction_digest` | — | **req** | **req** | — | AD-03 correlation keys; v0.1 `control_delivery` lineage (`instruction_hash` renamed for digest-vocabulary consistency — §7). Effect's duplicate correlation members REMOVED — `execution_ref` is the explicit join |
 | `control_event` (`dispatched` \| `received` \| `delivery_failed`) | — | **req** | — | — | AD-03: two-sided boundary evidence; `delivery_failed` stays a positive fact |
 | `boundary_side` (`issuer` \| `receiver`) | — | **req** | — | — | two-sided lifecycle needs the reporting side explicit |
-| `authority { writable_by_controlled_system, ... }` | — | **req** | opt | — | retained invariant (adopted baseline: "does not weaken") |
-| `execution_event` (`completed` \| `failed` \| `suppressed`) | — | — | **req** | — | AD-03: execution outcome is evidence either way |
-| `executed_action_digest` | — | — | **req** | — | AD-03 TOCTOU: authorized vs executed digest equality is the mechanical check |
-| `authorized_action_digest` | — | opt | **req** | — | the other half of the TOCTOU pair (from the decision/control side) |
+| `authority { issuer_id?, writable_by_controlled_system }` | — | **req** | — | — | retained invariant; **Control Evidence ONLY** (maintainer, 2026-08-23) — exact closed shape; not a core member of any other family |
+| `execution_event` (`executed` \| `failed` \| `suppressed`) | — | — | **req** | — | AD-03; `executed` replaces `completed` (maintainer): Execution answers whether the action ran — material success is Effect Evidence's question, and `completed` invited that confusion |
+| `authorized_action_digest` | — | **req** | — | — | **TOCTOU placement (maintainer, 2026-08-23):** what was authorized is the CONTROL side's statement |
+| `executed_action_digest` | — | — | **req** | — | what actually ran is the EXECUTOR's statement; the AD-03 mechanical TOCTOU check is the cross-artifact reconciliation of these two digests from two different evidence producers — never co-located in one artifact |
 | `observer_relationship` (`same_executor` \| `independent` \| `unknown`) | — | — | — | **req** | AD-03 (rounds 1–2): closed enum, exactly these three; producer-declared at Core, verified-independence at Authenticated+ (semantic verifier, not schema) |
 | `execution_ref` (cross-artifact reference) | — | — | — | **req** | effect answers an execution |
 | `observed_state { description, state_digest? }` | — | — | — | **req** | what was observed, bindable to bytes |
+
+**Decided family spine** (maintainer, 2026-08-23):
+
+- **Decision:** `input` + `claim` + `directive` + `output` + required `evidence[]` with hashes.
+- **Control:** `decision_ref` + `instruction_id` + `instruction_digest` + `authorized_action_digest` + `control_event` + `boundary_side` + `authority`.
+- **Execution:** `decision_ref` + `instruction_id` + `instruction_digest` + `executed_action_digest` + `execution_event`.
+- **Effect:** `decision_ref` + `execution_ref` + `observer_relationship` + `observed_state`.
+
+`evidence[]` is required on Decision, optional on the other three families; wherever an
+evidence item appears it carries `content_hash` (ODQ-9).
 
 Everything else is common core (§2). No family adds free-form members: anything not in this
 matrix or §2 lives under `profiles` with a namespaced id (§6). The AD-11 authorization
@@ -103,10 +119,13 @@ patterns (e.g. `^sha256:[0-9a-f]{64}$`), JSON types, safe-integer bounds **as pa
 NOT schema-enforceable (semantic verifier obligations, already implemented by the WP-α01
 integrity verifiers or deferred to class semantics): hash recomputation under the domain tag;
 signature validity under binding-derived suites; the **lexical** no-sign/no-fraction/no-exponent
-constraint on integers (JSON Schema sees parsed values — WP-α01's lexeme lesson); `witnessed_at`
-Gregorian calendar validity; cross-artifact reference resolution and digest reconciliation
-(TOCTOU equality); observer-independence verification; witness key independence/revocation
-(conformance-class carry-forward, §8).
+constraint on **witness-claim integers** (JSON Schema sees parsed values — WP-α01's lexeme
+lesson; per ODQ-13 this lexical rule stays witness-claim-specific and is not carried to
+artifact-level `sequence`); `witnessed_at` and `timestamp_utc` Gregorian calendar validity;
+cross-artifact reference resolution and digest reconciliation (the TOCTOU equality of
+Control's `authorized_action_digest` against Execution's `executed_action_digest` — two
+artifacts, two producers); observer-independence verification; witness key
+independence/revocation (conformance-class carry-forward, §8).
 
 ## 5. Decision matrix (per field)
 
@@ -119,34 +138,38 @@ schema-enforceable? | semantic verifier required?`
 | `artifact_type` | all | req | string const per family | closed | frozen §5 | yes | tag derivation uses it (frozen) |
 | `chain_id` | all | req | string | closed | AD-05 | type only | collision-resistance not provable |
 | `record_id` | all | req | string | closed | AD-05 | type only | global uniqueness not provable |
-| `sequence` | all | req | integer 0..2^53−1 | closed | AD-05; frozen §2 | value bounds only | **lexical spelling: verifier** |
+| `sequence` | all | req | integer 0..2^53−1 | closed | AD-05; frozen §2; ODQ-13 | value bounds (parsed value) | — (lexical rule NOT carried to artifact level, ODQ-13) |
 | `subject.producer` | all | req | string | closed | v0.1 lineage | yes | identity truth: no |
-| `subject.timestamp_utc` | all | req | string (ODQ-6 format) | closed | v0.1 lineage | pattern | calendar validity: verifier |
+| `subject.timestamp_utc` | all | req | string, `YYYY-MM-DDTHH:MM:SS(.1-9 digits)?Z` (ODQ-6) | closed | v0.1 lineage; ODQ-6 | pattern | calendar validity: verifier |
 | `subject.principal.*` | all | opt | object (v0.1 shape) | closed | v0.1 STATUS §5, carried | yes | `established_by` truth: no |
 | `scope.covers` / `scope.does_not_cover` | all | req | array of string | closed | adopted baseline | yes | content truth: no |
 | `integrity.previous` / `current` | all | req | `sha256:` pattern | closed | frozen §2 | pattern | recomputation: verifier |
-| `integrity.signature.alg` | all | ODQ-7 | string | closed | frozen §3.2 | presence only | MUST NOT drive verification |
-| `integrity.signature.value` | all | req | hex string | closed | frozen §3 | pattern | validity: verifier |
+| `integrity.signature.alg` | all | req | non-empty string, NO enum | closed | frozen §3.2; ODQ-7 | presence only | MUST NOT drive verification |
+| `integrity.signature.value` | all | req | `^[0-9a-f]{128}$` (Ed25519, maintainer decision) | closed | frozen §3 + wire-encoding decision | pattern | validity: verifier |
 | `profiles.*` | all | opt | object, namespaced keys | keys patterned; values profile-owned | AD-07 | key pattern | profile semantics: per profile |
 | `input.input_digest` | decision | req | `sha256:` pattern (ODQ-11) | closed | AD-06 | pattern | digest-of-what: verifier/projection rule |
 | `output.result_digest` | decision | req | `sha256:` pattern (ODQ-11) | closed | AD-06 | pattern | idem |
-| `evidence[].content_hash` | decision (+opt others) | ODQ-9 | `sha256:` pattern | closed | AD-06 | pattern | byte binding: verifier |
+| `evidence[].content_hash` | all (item-level, wherever `evidence[]` appears) | req | `sha256:` pattern | closed | AD-06; ODQ-9 | pattern | byte binding: verifier |
+| `output.redacted` | decision | opt | boolean, **no schema default** | closed | v0.1 retained (maintainer) | yes | — |
 | `decision_ref` | ctrl/exec/effect | req | reference object (ODQ-10) | closed | AD-03/05 | shape | resolution: verifier |
 | `instruction_id` / `instruction_digest` | ctrl/exec | req | string / pattern | closed | AD-03 | yes/pattern | correlation: verifier |
 | `control_event`, `boundary_side` | control | req | closed enums | closed | AD-03 | yes | event truth: no |
-| `authority.writable_by_controlled_system` | control | req | boolean | closed | adopted baseline | yes | authority truth: no |
-| `execution_event` | execution | req | closed enum | closed | AD-03 | yes | outcome truth: no |
-| `authorized_action_digest` / `executed_action_digest` | execution | req | `sha256:` pattern | closed | AD-03 TOCTOU | pattern | **equality check: verifier** |
+| `authority {issuer_id?, writable_by_controlled_system}` | control ONLY | req | closed object; boolean req | closed | adopted baseline (maintainer: exact shape) | yes | authority truth: no |
+| `execution_event` | execution | req | enum `executed\|failed\|suppressed` | closed | AD-03 (maintainer: `executed` not `completed`) | yes | outcome truth: no |
+| `authorized_action_digest` | control | req | `sha256:` pattern | closed | AD-03 TOCTOU (maintainer placement) | pattern | **cross-artifact equality: verifier** |
+| `executed_action_digest` | execution | req | `sha256:` pattern | closed | AD-03 TOCTOU (maintainer placement) | pattern | **cross-artifact equality: verifier** |
 | `observer_relationship` | effect | req | enum `same_executor\|independent\|unknown` | closed | AD-03 r1–2 | yes | **independence: verifier at Auth+** |
 | `execution_ref` | effect | req | reference object (ODQ-10) | closed | AD-03 | shape | resolution: verifier |
 | `observed_state.state_digest` | effect | opt | `sha256:` pattern | closed | design | pattern | binding: verifier |
 
 ## 6. Closure discipline (AD-07 made concrete)
 
-- **Closed** (`additionalProperties: false` or dialect equivalent): the artifact top level,
-  `subject`, `subject.principal`, `scope`, `integrity`, `integrity.signature`, `input`,
-  `claim`, `output`, `directive`, each `evidence[]` item, every family-specific object above,
-  and every cross-artifact reference object.
+- **Closed** (`additionalProperties: false` or the 2020-12 equivalent, per ODQ-1/ODQ-3): the
+  artifact top level, `subject`, `subject.principal`, `scope`, `integrity`,
+  `integrity.signature`, `input`, `claim`, `output`, `directive`, `authority`,
+  `observed_state`, each `evidence[]` item, every family-specific object above, and every
+  cross-artifact reference object. There is no open object left in core — `governance_state`,
+  the one v0.1 object that could not be closed, is removed (§3, §7).
 - **The single extension surface** is `profiles`: an object whose keys match a namespaced
   identifier pattern (representation → ODQ-12) and whose values are profile-owned objects.
   Core neutrality is mechanical: strip `profiles` and the artifact still validates.
@@ -155,18 +178,23 @@ schema-enforceable? | semantic verifier required?`
 
 ## 7. v0.1 compatibility: deliberate breaks and retained points
 
-**Deliberate breaks** (all previously adopted as BREAKING; restated for traceability):
-one-record-does-everything → four families; `decision_index` → `sequence` + new
+**Deliberate breaks** (restated for traceability; all adopted or decided at maintainer
+review): one-record-does-everything → four families; `decision_index` → `sequence` + new
 `chain_id`/`record_id`; open sub-objects → closed everywhere; optional digests → required
-`input_digest`/`result_digest` (+ `content_hash` per ODQ-9); untagged hash/signature → WP-α01
-construction; `control_delivery` profile events → first-class Control/Execution/Effect
-artifacts; `instruction_hash` → `instruction_digest` (vocabulary consistency; same value
-semantics); `canonical_json` member proposed dropped (ODQ-5).
+`input_digest`/`result_digest` + universal `evidence[].content_hash` (ODQ-9); untagged
+hash/signature → WP-α01 construction; `control_delivery` profile events → first-class
+Control/Execution/Effect artifacts; `instruction_hash` → `instruction_digest` (vocabulary
+consistency; same value semantics); `canonical_json` dropped (ODQ-5);
+**`input.governance_state` REMOVED from neutral core** (maintainer, 2026-08-23 — the only
+uncloseable v0.1 object; deployment-specific state moves to profiles; recorded in
+BREAKING_CHANGES and the migration mapping).
 
-**Retained:** `scope.does_not_cover` mandatory; `subject.principal`+`established_by` verbatim;
-`authority.writable_by_controlled_system`; `delivery_failed` as a positive fact; the
-`profiles` single-extension-point pattern; genesis `previous` value; `sha256:<64 lowhex>`
-string form.
+**Retained:** `scope.does_not_cover` mandatory; `subject.principal` member vocabulary and
+`established_by` semantics (v0.2 closure applied); `authority.writable_by_controlled_system`
+(now in its exact closed Control-only shape); `delivery_failed` as a positive fact;
+`output.redacted` optional boolean (no schema default); the `profiles`
+single-extension-point pattern; genesis `previous` value; `sha256:<64 lowhex>` string form;
+the v0.1 directive verb enum (ODQ-8).
 
 ## 8. Assurance boundary (unchanged)
 
@@ -176,29 +204,35 @@ carry-forward stands: **witness key independence + revocation assurance semantic
 when the conformance-class text opens; neither leaks into schema language as an assurance
 claim.
 
-## 9. OPEN DESIGN QUESTIONS (reviewer decisions — none embedded in code)
+## 9. DESIGN DECISIONS (ODQ-1..15 — decided by maintainer review, 2026-08-23)
 
-| # | Question | Proposed answer + rationale |
-|---|---|---|
-| ODQ-1 | JSON Schema dialect / `$schema` | Propose draft 2020-12 (v0.1 used a modern draft; best `unevaluatedProperties` support for closure) — decision deferred |
-| ODQ-2 | `$id` URI strategy | Propose canonical raw-repo URLs mirroring v0.1's working practice — deferred |
-| ODQ-3 | File organization: shared `$defs` core + 4 family schemas vs 4 self-contained schemas | Propose one `common.schema.json` (`$defs`) + 4 family schemas referencing it — single source for the common core prevents drift; costs `$ref` resolution in consumers |
-| ODQ-4 | `subject` exact member set (keep `runtime`? make `principal` recommended?) | Propose keep `runtime` optional, `principal` optional-but-SHOULD — v0.1 continuity, no new invention |
-| ODQ-5 | Drop `integrity.canonical_json` and `decision_index`? | Propose drop both: the domain tag now attests canonicalization inside the signed bytes; `sequence` supersedes the index. Migration projection maps them per MIGRATION §sketch |
-| ODQ-6 | `subject.timestamp_utc` format | Propose the frozen `witnessed_at` grammar (`YYYY-MM-DDTHH:MM:SSZ`, no leap second, valid Gregorian) for uniformity — but this extends a witness-claim rule to core; needs an explicit decision |
-| ODQ-7 | `integrity.signature.alg` required or optional? | Propose required-as-label (v0.1 continuity, aids audit) while semantics stay informative-only (frozen) |
-| ODQ-8 | Decision `directive.verb` enum contents | Propose carry the v0.1 closed verb enum unchanged (incl. `escalate_to_human`) — any rename was already classed BREAKING in v0.1's change control; not this phase's fight |
-| ODQ-9 | `evidence[].content_hash`: schema-required always, or optional-with-class-gating (AD-06 says required *to earn the authenticated class*) | Propose schema-required always — simpler, drift-proof, no class logic in schemas; costs: producers of never-to-be-authenticated records still must hash |
-| ODQ-10 | Cross-artifact reference exact wire shape | Propose closed object `{"record_id": <string>, "chain_id": <string, optional>}` — global `record_id` suffices; `chain_id` qualifies where resolvers are chain-scoped (AD-05) |
-| ODQ-11 | Digest string form for `input_digest`/`result_digest`/`content_hash`/action digests | Propose reuse `sha256:<64 lowhex>` (uniform with `integrity.current`; agility arrives with future suites via version bump, mirroring frozen §2 rule 4) |
-| ODQ-12 | Profile namespace representation | Propose flat dotted keys (`"org.airep.migration"`-style, pattern-constrained) matching the accepted `profiles.airep.migration` naming from MIGRATION — nested-namespace objects rejected as needless depth |
-| ODQ-13 | Numeric maxima/minima not pinned by frozen text (e.g. artifact-level `sequence` upper bound) | Propose the same 0..2^53−1 safe-integer band as the frozen claim members, for uniformity — extension of a witness rule to core; needs decision |
-| ODQ-14 | Nullable vs absent | Propose: `null` is never valid anywhere in core; optionality is expressed by absence only — one representation per state |
-| ODQ-15 | Unknown top-level members | AD-07 closure already decides rejection; recorded here only to confirm NO forward-compatibility escape hatch is being added silently |
+Every former open question is now closed by an explicit maintainer decision; none was decided
+by implementation default:
+
+| # | Decision |
+|---|---|
+| ODQ-1 | **ADOPT: JSON Schema 2020-12** (`$schema` accordingly); compatible with the v0.1 surface. |
+| ODQ-2 | **ADOPT:** repo-style canonical raw URLs for `$id`; `$ref`s relative wherever possible; content reproducibility is pinned by release tag/SHA, never by `$id`. |
+| ODQ-3 | **ADOPT WITH CONSTRAINT:** `common.schema.json` + 4 family entry schemas. The common file is NOT a standalone artifact validator — it carries `$defs`/base constraints only; each family entry schema owns its top-level closure, and composition MUST NOT let the common base accidentally reject family-specific members. |
+| ODQ-4 | **MODIFIED:** `producer` + `timestamp_utc` required; `runtime` optional; `principal` optional — **but when `principal` is present, `established_by` is required**. Principal member vocabulary and `established_by` semantics retained from v0.1; **v0.2 closure applied** (the object is closed). `trace_id` is NOT a core member — OTel correlation stays in the AD-12 profile. |
+| ODQ-5 | **ADOPT DROP** of `integrity.canonical_json` and `decision_index`. Corrected rationale: the domain tag does not "attest" JCS — `canonical_json` is redundant **because the v0.2 normative construction mandates JCS**; `sequence` supersedes the index. Migration projection maps both per MIGRATION. |
+| ODQ-6 | **REJECT the witness grammar for core timestamps.** Adopted format: `YYYY-MM-DDTHH:MM:SS` + **optional 1–9 fractional digits** + literal `Z`; no leap second; no offsets. Gregorian calendar validity is semantic validation, not schema. Rationale: fast runtime events must not lose sub-second information; the second-only rule is witness-claim-specific (frozen §4.2) and is not generalized. |
+| ODQ-7 | **ADOPT:** `integrity.signature.alg` required, non-empty string, **no enum** — the wire label is informative-only (frozen §3.2) and the schema must not turn it into a crypto selector. |
+| ODQ-8 | **ADOPT:** v0.1 closed verb enum unchanged: `release` / `block` / `defer` / `redact` / `escalate_to_human` / `kill`. |
+| ODQ-9 | **ADOPT: schema-required always.** Every `evidence[]` item, wherever it appears, carries `content_hash`. Presence is a Core wire requirement; hash correctness / authenticated assurance remain verifier/class matters. Consistent with MIGRATION's universal `evidence[].content_hash`; BREAKING_CHANGES row 6 updated to record the schema-phase decision (SCHEMA as well as CLASS). |
+| ODQ-10 | **ADOPT:** closed reference object `{"record_id": <string, required>, "chain_id": <string, optional>}`. No bare-sequence references, ever (AD-05). |
+| ODQ-11 | **ADOPT:** every v0.2 digest field matches `^sha256:[0-9a-f]{64}$`. Algorithm agility is a future wire-version change. |
+| ODQ-12 | **ADOPT: flat dotted keys** with **at least two namespace segments** (pattern-constrained). The AIREP-owned migration profile's real key is `airep.migration` (`profiles.airep.migration` is the prose path). The registered short-name registry starts EMPTY; adding a short name is a schema/spec change (AD-07). |
+| ODQ-13 | **ADOPT:** artifact-level `sequence` = integer in 0..2^53−1 as a **parsed-value constraint only**. The WP-α01 lexical-token rule (`no sign/fraction/exponent` on the source spelling) is **witness-claim-specific** (frozen §4.2) and is NOT carried to the artifact-level member. |
+| ODQ-14 | **ADOPT:** `null` is never valid anywhere in core; optionality = absence. |
+| ODQ-15 | **ADOPT:** unknown top-level members rejected; no forward-compatibility escape hatch; extension only via `profiles`. |
 
 ## 10. Deliverable gate
 
 This document is the whole Stage-1 deliverable. No `.schema.json`, no validators, no
 producers exist or will be written before the maintainer verdict
-(`ARTIFACT_SCHEMA_DESIGN_ACCEPTED — SCHEMA IMPLEMENTATION AUTHORIZED`). OPEN DESIGN QUESTIONS
-are answered by the reviewer, not by implementation defaults.
+(`ARTIFACT_SCHEMA_DESIGN_ACCEPTED — SCHEMA IMPLEMENTATION AUTHORIZED`). All fifteen design
+questions and the six wire-level placements (TOCTOU digest split, Control-only `authority`,
+`governance_state` removal, signature wire encoding, `output.redacted` retention, execution
+enum) are maintainer decisions recorded in §3/§9 — implementation expresses them, it does not
+revisit them.
