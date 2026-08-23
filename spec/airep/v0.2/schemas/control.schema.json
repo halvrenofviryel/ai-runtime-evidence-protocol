@@ -17,7 +17,8 @@
    "$ref": "common.schema.json#/$defs/artifact_ref"
   },
   "instruction_id": {
-   "type": "string"
+   "type": "string",
+   "minLength": 1
   },
   "instruction_digest": {
    "$ref": "common.schema.json#/$defs/sha256_digest"
