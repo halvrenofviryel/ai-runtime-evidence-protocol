@@ -413,9 +413,10 @@
  },
  {
   "case_id": "PI3",
-  "description": "bindings, revocation and independence policy supplied; no clock inputs",
+  "description": "bindings, revocation and independence policy supplied; clock input present but carrying only the freshness window, no `now`",
   "files": {
    "bindings": "cases/PI3/bindings.json",
+   "clock": "cases/PI3/clock.json",
    "independence": "cases/PI3/independence.json",
    "request": "cases/PI3/request.json",
    "revocation": "cases/PI3/revocation.json"

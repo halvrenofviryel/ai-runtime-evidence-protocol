@@ -1,6 +1,6 @@
 {
  "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines '<sha256>  <relative-path>\\n' relative to class-verification/corpus/",
- "aggregate_sha256": "6a69203efbc6a6110492c458baf55f9e7928e2d9f7c84207e4f33e28235bb19e",
+ "aggregate_sha256": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
  "builder": "build_class_corpus.py (third-context harness; NOT a class verifier)",
  "builder_assertions": {
   "count": 976,
@@ -147,9 +147,9 @@
  "case_count": 45,
  "corpus": "AIREP v0.2 class-verification adversarial corpus (CLASS_VERIFIER_CONTRACT s7)",
  "expected_values_note": "cases/<CASE_ID>/expected.json is a verbatim transcription of the CLASS_VERIFIER_CONTRACT s7 appendix row; case_index.json deliberately carries no expected values.",
- "file_count": 264,
+ "file_count": 265,
  "files": {
-  "case_index.json": "476bd415e45311d4da039defa2a19f4224da49f3032507fafa7c4a248c53c977",
+  "case_index.json": "3bcb88c310ae56f7a534a9e052cd3c2ddedfabfda1874c9be4414db38f0bcc86",
   "cases/FR1/bindings.json": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
   "cases/FR1/clock.json": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014",
   "cases/FR1/expected.json": "f1822ec1241d44ab9628f580845608aaf681904ba5bd0a725d7856321eb12242",
@@ -307,6 +307,7 @@
   "cases/PI2/request.json": "b8d50ca5b62f63ec9cf56e7c6f6c42a0d570c3d91941045b58bf6c615f0d209b",
   "cases/PI2/revocation.json": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c",
   "cases/PI3/bindings.json": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+  "cases/PI3/clock.json": "97297308321639978ba181f113fc4cd14e92b29257f6cbd9e584c1808ecd25c0",
   "cases/PI3/expected.json": "91fd359ad03721f66a7e2672fde294cf609167c8495bc34b4d139eba5b329aa9",
   "cases/PI3/independence.json": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
   "cases/PI3/request.json": "a6c2efe0d3d99902db15b51d0bfba4eadc37f30ece09a00270652ae6bcfbeca5",

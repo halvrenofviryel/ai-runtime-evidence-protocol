@@ -711,8 +711,12 @@ def build_cases() -> None:
 
     witness_case("PI2", "bindings and revocation supplied; no independence policy",
                  independence=_OMIT)
-    witness_case("PI3", "bindings, revocation and independence policy supplied; no clock "
-                        "inputs", clock=_OMIT)
+    # PI3 is the contract's "everything except --now": the clock input IS supplied but
+    # carries only the window, so the case tests its own named tamper rather than
+    # degenerating into FR4's "clock inputs absent" shape (maintainer, 2026-08-23).
+    witness_case("PI3", "bindings, revocation and independence policy supplied; clock input "
+                        "present but carrying only the freshness window, no `now`",
+                 clock={"freshness_window_seconds": WINDOW})
 
     # ---------------- OB series: Effect observer assessment ----------------
     def effect_case(cid: str, desc: str, *, observer_wire: str, execution_producer: str,
