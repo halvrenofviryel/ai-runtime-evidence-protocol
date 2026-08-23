@@ -1,0 +1,37 @@
+{
+ "description": "declares 0.2 but sealed under 0.3 tags",
+ "expected": {
+  "reasons": [
+   "HASH_MISMATCH"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A9-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:02fdfc9043a800559a882e414247087e606476a114650e64718452d0217c398c",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "7aca1d729c2f0a944040cde0e183fa6017b643009e282f356c38b2db0b7309397209a071e737789821afed8ef71b5cd362e91837e644c39f618632ccc1616803"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a9",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A9"
+}

@@ -1,0 +1,37 @@
+{
+ "description": "case-variant tag/context (registry is case-sensitive)",
+ "expected": {
+  "reasons": [
+   "UNREGISTERED_TAG"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A7-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "Decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:9033a8c021a67e68121be5cbd4475d03db6a36bb51d9060dd5ffe20671c43438",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "1dee7068ff03f20a3ea20132f223f4bd1de1eb2d4f9ffc22e02f694920a382d89ef41545763fcc0de3411fb3d8d68a6fafe359c0ffd832bf22062728aa40590f"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a7",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A7"
+}

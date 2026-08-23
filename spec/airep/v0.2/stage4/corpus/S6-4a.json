@@ -1,0 +1,61 @@
+{
+ "description": "otherwise-valid signed claim; sequence lexically 1.0 in source",
+ "expected": {
+  "reasons": [
+   "WITNESS_CLAIM_INVALID"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "S6-4a",
+ "inputs": {
+  "freshness_window_seconds": 3600,
+  "head_artifacts": {
+   "H1": {
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "s4-chain-N",
+    "integrity": {
+     "current": "sha256:01dd4ab2f3b69e196c9da6ac01add6c3724c7ba6fd8aa6f765d383e3e2327a01",
+     "previous": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+     "signature": {
+      "alg": "Ed25519",
+      "value": "fe70ca02ccf32db8ba70e01fd379719abd1f592e2ecbb9d347e00857fe4906ec18d8bae88f6e4a46ffc2bed4dec736c4990706c667412b87e093de576c37b409"
+     }
+    },
+    "payload": {
+     "note": "stage4 construction-test body (decision)"
+    },
+    "record_id": "s4-rec-n1",
+    "sequence": 1
+   }
+  },
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  },
+  "witness": {
+   "claim": {
+    "chain_id": "s4-chain-N",
+    "current": "sha256:01dd4ab2f3b69e196c9da6ac01add6c3724c7ba6fd8aa6f765d383e3e2327a01",
+    "length": 2,
+    "sequence": 1.0,
+    "witnessed_at": "2026-08-22T11:30:00Z"
+   },
+   "head_ref": "H1",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "496fb372cf6a55c25bbd68071268fe1faa4a1c114bb930867175d98867282a400718fc43ad847b0ed1bd35bf76eb6fbb1d1c323b0bbc57f7f316204c23d35a01"
+   },
+   "witness_id": "stage4-witness-1"
+  },
+  "witness_trust_store": {
+   "stage4-witness-1": {
+    "public_key_hex": "2e4e83fdb2d88f88c5f03e663c39ea3f9c7536312b62a2b09a95712dccf11a40",
+    "suite": "ed25519",
+    "trusted": true
+   }
+  }
+ },
+ "normative_case": "S"
+}

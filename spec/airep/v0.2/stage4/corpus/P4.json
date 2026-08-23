@@ -1,0 +1,37 @@
+{
+ "description": "valid effect artifact",
+ "expected": {
+  "reasons": [
+   "OK"
+  ],
+  "verdict": "PASS"
+ },
+ "fixture_id": "P4",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "effect",
+   "chain_id": "s4-chain-A",
+   "integrity": {
+    "current": "sha256:ee6687ecfd92920eb57b0c8ab33af933e2f9380a625279de3d6d00acc2047afb",
+    "previous": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "13631a2177070ce9e7c108a01023c3f0af58013216adb709048ccadcbd570a50a11345d88c11fed69125785e9147592dd62c39fcc225d2d8848f11016c81050c"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (effect)"
+   },
+   "record_id": "s4-rec-p4",
+   "sequence": 3
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "P"
+}

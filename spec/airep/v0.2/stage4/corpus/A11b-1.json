@@ -1,0 +1,37 @@
+{
+ "description": "signature preimage embeds suite-id ed448; binding suite is ed25519",
+ "expected": {
+  "reasons": [
+   "SIGNATURE_INVALID"
+  ],
+  "verdict": "REJECT"
+ },
+ "fixture_id": "A11b-1",
+ "inputs": {
+  "artifact": {
+   "airep_version": "0.2",
+   "artifact_type": "decision",
+   "chain_id": "s4-chain-B",
+   "integrity": {
+    "current": "sha256:ab5bf6d5bf392431a40ba1ddd7f13ec3c2a4deb83f1ac3dc930b0611275ebccd",
+    "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "signature": {
+     "alg": "Ed25519",
+     "value": "500a2e1e05e818f89dd49fa2fd34843139a58bbc849985bd769b9e8ab8990cf784a291f6af537c61fcd4e1fb7ff578a4d5ddbb250591a88efc9335a82284fb06"
+    }
+   },
+   "payload": {
+    "note": "stage4 construction-test body (decision)"
+   },
+   "record_id": "s4-rec-a11b",
+   "sequence": 0
+  },
+  "freshness_window_seconds": 3600,
+  "now": "2026-08-22T12:00:00Z",
+  "producer_binding": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "suite": "ed25519"
+  }
+ },
+ "normative_case": "A11"
+}
