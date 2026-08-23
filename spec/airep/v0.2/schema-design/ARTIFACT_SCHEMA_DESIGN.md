@@ -79,7 +79,7 @@ spec/version change. The v0.1 members `decision_index` (superseded by `sequence`
 
 | Member | decision | control | execution | effect | Rationale (source) |
 |---|:---:|:---:|:---:|:---:|---|
-| `input {input_ref, input_digest}` | **req** | — | — | — | AD-06: required input digest; v0.1 lineage. `governance_state` REMOVED from neutral core (maintainer, 2026-08-23): it was the one open object AD-07 could not close; policy basis lives in `claim.basis`/`directive.policy_basis`/evidence refs, deployment state goes to profiles |
+| `input {input_ref, input_digest, digest_projection?}` | **req** | — | — | — | AD-06: required input digest **with named-projection semantics carried on the wire** (final hardening, 2026-08-23): `digest_projection` is an optional **namespaced identifier string** (grammar below). Absent ⇒ `input_digest` binds the full governed-input bytes; present ⇒ it binds the output of the named projection rule. Schema validates the name/pattern only; that the rule exists and the digest was produced by it is semantic verifier / projection tooling work. AD-06's "named projection" thereby never depends on profiles for core-digest interpretation. `governance_state` REMOVED from neutral core (maintainer, 2026-08-23): it was the one open object AD-07 could not close; policy basis lives in `claim.basis`/`directive.policy_basis`/evidence refs, deployment state goes to profiles |
 | `claim {assertion, basis}` | **req** | — | — | — | governance decision semantics (v0.1 lineage) |
 | `directive {verb, policy_basis}` | **req** | — | — | — | v0.1 lineage; closed verb enum carried (ODQ-8) |
 | `output {result_ref, result_digest, redacted?}` | **req** | — | — | — | AD-06: required `result_digest`; v0.1 `output.redacted` RETAINED as optional boolean — **no JSON Schema `default`** (default materialization invites hash-preimage-divergent tooling behavior) |
@@ -148,6 +148,7 @@ schema-enforceable? | semantic verifier required?`
 | `integrity.signature.value` | all | req | `^[0-9a-f]{128}$` (Ed25519, maintainer decision) | closed | frozen §3 + wire-encoding decision | pattern | validity: verifier |
 | `profiles.*` | all | opt | object, namespaced keys | keys patterned; values profile-owned | AD-07 | key pattern | profile semantics: per profile |
 | `input.input_digest` | decision | req | `sha256:` pattern (ODQ-11) | closed | AD-06 | pattern | digest-of-what: verifier/projection rule |
+| `input.digest_projection` | decision | opt | namespaced-id string (exact grammar below) | closed | AD-06 (final hardening) | pattern | projection-rule existence + digest provenance: verifier/tooling |
 | `output.result_digest` | decision | req | `sha256:` pattern (ODQ-11) | closed | AD-06 | pattern | idem |
 | `evidence[].content_hash` | all (item-level, wherever `evidence[]` appears) | req | `sha256:` pattern | closed | AD-06; ODQ-9 | pattern | byte binding: verifier |
 | `output.redacted` | decision | opt | boolean, **no schema default** | closed | v0.1 retained (maintainer) | yes | — |
@@ -196,6 +197,17 @@ BREAKING_CHANGES and the migration mapping).
 single-extension-point pattern; genesis `previous` value; `sha256:<64 lowhex>` string form;
 the v0.1 directive verb enum (ODQ-8).
 
+**v0.1 lineage preservation rule (final hardening, 2026-08-23 — binding on the schema
+author):** *v0.1-lineage member type/enum/cardinality constraints that this design contract
+does not explicitly change are preserved in v0.2; AD-07 closure and this contract's explicit
+decisions apply on top of them.* Verified examples of what this carries: `claim.basis` array
+of string with `minItems: 1`; the closed `evidence[].type` enum (`retrieval` / `tool_call` /
+`memory` / `policy` / `human_approval` / `external_url` / `eval` / `other`); the
+`scope.covers`/`does_not_cover` array-of-string shapes. An explicitly decided change (e.g.
+dropping `output.redacted`'s v0.1 `default: false`) wins over the carried constraint. The
+schema author makes no new constraint decisions under this rule — anything neither carried
+nor explicitly decided is a question back to the maintainer, not an implementation choice.
+
 ## 8. Assurance boundary (unchanged)
 
 Schema validation confers **no** assurance class, no signature validity, no provenance, no
@@ -216,13 +228,13 @@ by implementation default:
 | ODQ-3 | **ADOPT WITH CONSTRAINT:** `common.schema.json` + 4 family entry schemas. The common file is NOT a standalone artifact validator — it carries `$defs`/base constraints only; each family entry schema owns its top-level closure, and composition MUST NOT let the common base accidentally reject family-specific members. |
 | ODQ-4 | **MODIFIED:** `producer` + `timestamp_utc` required; `runtime` optional; `principal` optional — **but when `principal` is present, `established_by` is required**. Principal member vocabulary and `established_by` semantics retained from v0.1; **v0.2 closure applied** (the object is closed). `trace_id` is NOT a core member — OTel correlation stays in the AD-12 profile. |
 | ODQ-5 | **ADOPT DROP** of `integrity.canonical_json` and `decision_index`. Corrected rationale: the domain tag does not "attest" JCS — `canonical_json` is redundant **because the v0.2 normative construction mandates JCS**; `sequence` supersedes the index. Migration projection maps both per MIGRATION. |
-| ODQ-6 | **REJECT the witness grammar for core timestamps.** Adopted format: `YYYY-MM-DDTHH:MM:SS` + **optional 1–9 fractional digits** + literal `Z`; no leap second; no offsets. Gregorian calendar validity is semantic validation, not schema. Rationale: fast runtime events must not lose sub-second information; the second-only rule is witness-claim-specific (frozen §4.2) and is not generalized. |
+| ODQ-6 | **REJECT the witness grammar for core timestamps.** Adopted format: `YYYY-MM-DDTHH:MM:SS` + **optional 1–9 fractional digits** + literal `Z`; no leap second; no offsets. **Exact structural pattern (final hardening, 2026-08-23 — implementers invent no regex):** `^[0-9]{4}-(?:0[1-9]\|1[0-2])-(?:0[1-9]\|[12][0-9]\|3[01])T(?:[01][0-9]\|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]{1,9})?Z$` — structural only; Gregorian-invalid combinations (e.g. `2026-02-30`) are rejected by semantic validation, not schema. Rationale: fast runtime events must not lose sub-second information; the second-only rule is witness-claim-specific (frozen §4.2) and is not generalized. |
 | ODQ-7 | **ADOPT:** `integrity.signature.alg` required, non-empty string, **no enum** — the wire label is informative-only (frozen §3.2) and the schema must not turn it into a crypto selector. |
 | ODQ-8 | **ADOPT:** v0.1 closed verb enum unchanged: `release` / `block` / `defer` / `redact` / `escalate_to_human` / `kill`. |
 | ODQ-9 | **ADOPT: schema-required always.** Every `evidence[]` item, wherever it appears, carries `content_hash`. Presence is a Core wire requirement; hash correctness / authenticated assurance remain verifier/class matters. Consistent with MIGRATION's universal `evidence[].content_hash`; BREAKING_CHANGES row 6 updated to record the schema-phase decision (SCHEMA as well as CLASS). |
 | ODQ-10 | **ADOPT:** closed reference object `{"record_id": <string, required>, "chain_id": <string, optional>}`. No bare-sequence references, ever (AD-05). |
 | ODQ-11 | **ADOPT:** every v0.2 digest field matches `^sha256:[0-9a-f]{64}$`. Algorithm agility is a future wire-version change. |
-| ODQ-12 | **ADOPT: flat dotted keys** with **at least two namespace segments** (pattern-constrained). The AIREP-owned migration profile's real key is `airep.migration` (`profiles.airep.migration` is the prose path). The registered short-name registry starts EMPTY; adding a short name is a schema/spec change (AD-07). |
+| ODQ-12 | **ADOPT: flat dotted keys** with **at least two namespace segments**. **Exact namespaced-id grammar (final hardening, 2026-08-23; also governs `input.digest_projection`):** `^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$` — lowercase ASCII; each segment starts with a letter and continues with lowercase letters/digits/hyphens; `airep.migration` passes, a single segment does not. The AIREP-owned migration profile's real key is `airep.migration` (`profiles.airep.migration` is the prose path). The registered short-name registry starts EMPTY; adding a short name is a schema/spec change (AD-07). |
 | ODQ-13 | **ADOPT:** artifact-level `sequence` = integer in 0..2^53−1 as a **parsed-value constraint only**. The WP-α01 lexical-token rule (`no sign/fraction/exponent` on the source spelling) is **witness-claim-specific** (frozen §4.2) and is NOT carried to the artifact-level member. |
 | ODQ-14 | **ADOPT:** `null` is never valid anywhere in core; optionality = absence. |
 | ODQ-15 | **ADOPT:** unknown top-level members rejected; no forward-compatibility escape hatch; extension only via `profiles`. |
