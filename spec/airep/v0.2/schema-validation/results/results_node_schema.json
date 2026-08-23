@@ -1,0 +1,1364 @@
+{
+ "results": {
+  "control-neg-authority-missing-writable": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/authority",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-airep-version": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-artifact-type": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-authority": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-authorized-action-digest": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-boundary-side": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-chain-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-control-event": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-decision-ref": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-instruction-digest": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-instruction-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-integrity": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-scope": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-sequence": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-del-subject": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-empty-instruction-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/instruction_id",
+     "keyword": "minLength"
+    }
+   ]
+  },
+  "control-neg-invalid-boundary-side": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/boundary_side",
+     "keyword": "enum"
+    }
+   ]
+  },
+  "control-neg-invalid-control-event": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/control_event",
+     "keyword": "enum"
+    }
+   ]
+  },
+  "control-neg-ref-missing-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/decision_ref",
+     "keyword": "required"
+    }
+   ]
+  },
+  "control-neg-unknown-authority": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/authority",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "control-neg-unknown-decision_ref": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "/decision_ref",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "control-neg-unknown-top-level": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    }
+   ]
+  },
+  "control-pos-canonical": {
+   "actual": "VALID",
+   "expected": "VALID",
+   "schema": "control",
+   "violations": []
+  },
+  "cross-neg-control-as-decision": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-control-as-effect": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-control-as-execution": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-decision-as-control": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-decision-as-effect": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-decision-as-execution": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-effect-as-control": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-effect-as-decision": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-effect-as-execution": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-execution-as-control": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "control",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-execution-as-decision": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "cross-neg-execution-as-effect": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    },
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "decision-neg-del-airep-version": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-artifact-type": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-chain-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-claim": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-directive": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-evidence": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-input": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-integrity": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-output": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-scope": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-sequence": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-del-subject": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-digest-projection-single-segment": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/input/digest_projection",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-digest-short-hex": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/input/input_digest",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-digest-uppercase": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/input/input_digest",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-digest-wrong-prefix": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/input/input_digest",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-empty-basis": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/claim/basis",
+     "keyword": "minItems"
+    }
+   ]
+  },
+  "decision-neg-evidence-missing-content-hash": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/evidence/0",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-invalid-verb": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/directive/verb",
+     "keyword": "enum"
+    }
+   ]
+  },
+  "decision-neg-principal-without-established-by": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/principal",
+     "keyword": "required"
+    }
+   ]
+  },
+  "decision-neg-profile-key-single-segment": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/profiles",
+     "keyword": "pattern"
+    },
+    {
+     "instance_path": "/profiles",
+     "keyword": "propertyNames"
+    }
+   ]
+  },
+  "decision-neg-profile-key-uppercase": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/profiles",
+     "keyword": "pattern"
+    },
+    {
+     "instance_path": "/profiles",
+     "keyword": "propertyNames"
+    }
+   ]
+  },
+  "decision-neg-sequence-negative": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/sequence",
+     "keyword": "minimum"
+    }
+   ]
+  },
+  "decision-neg-sequence-overflow": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/sequence",
+     "keyword": "maximum"
+    }
+   ]
+  },
+  "decision-neg-sig-short": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/integrity/signature/value",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-sig-uppercase": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/integrity/signature/value",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-ts-10-digit-fraction": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/timestamp_utc",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-ts-missing-seconds": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/timestamp_utc",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-ts-month-13": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/timestamp_utc",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-ts-offset": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/timestamp_utc",
+     "keyword": "pattern"
+    }
+   ]
+  },
+  "decision-neg-unknown-claim": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/claim",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-directive": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/directive",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-evidence-0": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/evidence/0",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-input": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/input",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-integrity": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/integrity",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-integrity-signature": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/integrity/signature",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-output": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/output",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-scope": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/scope",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-subject": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-subject-principal": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/subject/principal",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "decision-neg-unknown-top-level": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    }
+   ]
+  },
+  "decision-neg-wrong-artifact-type": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/artifact_type",
+     "keyword": "const"
+    }
+   ]
+  },
+  "decision-neg-wrong-version": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "/airep_version",
+     "keyword": "const"
+    }
+   ]
+  },
+  "decision-pos-canonical": {
+   "actual": "VALID",
+   "expected": "VALID",
+   "schema": "decision",
+   "violations": []
+  },
+  "effect-neg-del-airep-version": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-artifact-type": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-chain-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-decision-ref": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-execution-ref": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-integrity": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-observed-state": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-observer-relationship": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-scope": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-sequence": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-del-subject": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-execution-ref-missing-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "/execution_ref",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-invalid-observer-relationship": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "/observer_relationship",
+     "keyword": "enum"
+    }
+   ]
+  },
+  "effect-neg-observed-state-missing-description": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "/observed_state",
+     "keyword": "required"
+    }
+   ]
+  },
+  "effect-neg-unknown-observed_state": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "/observed_state",
+     "keyword": "additionalProperties"
+    }
+   ]
+  },
+  "effect-neg-unknown-top-level": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "effect",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    }
+   ]
+  },
+  "effect-pos-canonical": {
+   "actual": "VALID",
+   "expected": "VALID",
+   "schema": "effect",
+   "violations": []
+  },
+  "execution-neg-del-airep-version": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-artifact-type": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-chain-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-decision-ref": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-executed-action-digest": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-execution-event": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-instruction-digest": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-instruction-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-integrity": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-record-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-scope": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-sequence": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-del-subject": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "required"
+    }
+   ]
+  },
+  "execution-neg-empty-instruction-id": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "/instruction_id",
+     "keyword": "minLength"
+    }
+   ]
+  },
+  "execution-neg-retired-completed": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "/execution_event",
+     "keyword": "enum"
+    }
+   ]
+  },
+  "execution-neg-unknown-top-level": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "execution",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    }
+   ]
+  },
+  "execution-pos-canonical": {
+   "actual": "VALID",
+   "expected": "VALID",
+   "schema": "execution",
+   "violations": []
+  }
+ }
+}

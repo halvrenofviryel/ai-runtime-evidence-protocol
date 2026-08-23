@@ -1,0 +1,47 @@
+{
+ "description": "effect with required top-level member airep_version deleted",
+ "expected": "INVALID",
+ "expected_error_keywords": [
+  "required"
+ ],
+ "expected_error_scope": "",
+ "fixture_id": "effect-neg-del-airep-version",
+ "instance": {
+  "artifact_type": "effect",
+  "chain_id": "sv-chain-1",
+  "decision_ref": {
+   "record_id": "sv-rec-decision-1"
+  },
+  "execution_ref": {
+   "record_id": "sv-rec-execution-1"
+  },
+  "integrity": {
+   "current": "sha256:abababababababababababababababababababababababababababababababab",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+   }
+  },
+  "observed_state": {
+   "description": "valve closed",
+   "state_digest": "sha256:abababababababababababababababababababababababababababababababab"
+  },
+  "observer_relationship": "independent",
+  "record_id": "sv-rec-effect-1",
+  "scope": {
+   "covers": [
+    "schema shape"
+   ],
+   "does_not_cover": [
+    "cryptographic validity"
+   ]
+  },
+  "sequence": 1,
+  "subject": {
+   "producer": "schema-harness/1.0",
+   "timestamp_utc": "2026-08-23T10:00:00Z"
+  }
+ },
+ "target_schema": "effect"
+}

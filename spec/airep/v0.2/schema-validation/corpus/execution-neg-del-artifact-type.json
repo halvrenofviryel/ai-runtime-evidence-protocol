@@ -1,0 +1,44 @@
+{
+ "description": "execution with required top-level member artifact_type deleted",
+ "expected": "INVALID",
+ "expected_error_keywords": [
+  "required"
+ ],
+ "expected_error_scope": "",
+ "fixture_id": "execution-neg-del-artifact-type",
+ "instance": {
+  "airep_version": "0.2",
+  "chain_id": "sv-chain-1",
+  "decision_ref": {
+   "record_id": "sv-rec-decision-1"
+  },
+  "executed_action_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "execution_event": "executed",
+  "instruction_digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "instruction_id": "instr-1",
+  "integrity": {
+   "current": "sha256:abababababababababababababababababababababababababababababababab",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+   }
+  },
+  "record_id": "sv-rec-execution-1",
+  "scope": {
+   "covers": [
+    "schema shape"
+   ],
+   "does_not_cover": [
+    "cryptographic validity"
+   ]
+  },
+  "sequence": 1,
+  "subject": {
+   "producer": "schema-harness/1.0",
+   "runtime": "harness-runtime",
+   "timestamp_utc": "2026-08-23T10:00:00.123456789Z"
+  }
+ },
+ "target_schema": "execution"
+}
