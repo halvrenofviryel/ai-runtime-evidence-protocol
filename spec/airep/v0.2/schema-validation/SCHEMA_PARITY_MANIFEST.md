@@ -5,11 +5,11 @@
 > matching on {instance_path, keyword} tuples. Cross-engine violation-set
 > equality is deliberately not required.
 
-**Result: ALL GATES PASSED** across 116 fixtures.
+**Result: ALL GATES PASSED** across 117 fixtures.
 
-- corpus aggregate (recomputed, pinned rule): `5dbf36891d0fdc9b3600fd9a1e1fa128f6f30ddaa9eaaf362a3ed1039dafaa3a`
-- sha256(results_python_schema.json): `f279f68320577d49a274b51e61fe9d18e76d29c5bf3e93f128b99c222f087196`
-- sha256(results_node_schema.json): `267bcedf28d825276c20808bc025cf686dc2b13b41e556e12c2b356fb9a433f1`
+- corpus aggregate (recomputed, pinned rule): `99e8c4a5a333479a0bac8579fc8ec5aaa4a5365133b1e40548cb7e8027623d3a`
+- sha256(results_python_schema.json): `2c1ca751404b28b01216c7104ddc105e2dfb16dd40c830c9a1e638dd46b2d68e`
+- sha256(results_node_schema.json): `d88864f71b47102dfd963c8107456b19ff7dbe4a5ef8215ffe0d725a46bf0c87`
 
 ## Per-fixture
 
@@ -72,6 +72,7 @@
 | decision-neg-evidence-missing-content-hash | INVALID | INVALID | INVALID | /evidence/0·required | /evidence/0·required | OK |
 | decision-neg-invalid-verb | INVALID | INVALID | INVALID | /directive/verb·enum | /directive/verb·enum | OK |
 | decision-neg-principal-without-established-by | INVALID | INVALID | INVALID | /·unevaluatedProperties; /subject/principal·required | /subject/principal·required | OK |
+| decision-neg-profile-key-leading-digit-segment | INVALID | INVALID | INVALID | /·unevaluatedProperties; /profiles·pattern | /profiles·pattern; /profiles·propertyNames | OK |
 | decision-neg-profile-key-single-segment | INVALID | INVALID | INVALID | /·unevaluatedProperties; /profiles·pattern | /profiles·pattern; /profiles·propertyNames | OK |
 | decision-neg-profile-key-uppercase | INVALID | INVALID | INVALID | /·unevaluatedProperties; /profiles·pattern | /profiles·pattern; /profiles·propertyNames | OK |
 | decision-neg-sequence-negative | INVALID | INVALID | INVALID | /·unevaluatedProperties; /sequence·minimum | /sequence·minimum | OK |

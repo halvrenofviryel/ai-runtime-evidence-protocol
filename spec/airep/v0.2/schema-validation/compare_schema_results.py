@@ -63,20 +63,34 @@ def load_results(name, path, failures):
     return results
 
 
-def check_record(name, fid, rec, failures):
+def check_record(name, fid, rec, fixture, failures):
     if not isinstance(rec, dict) or set(rec.keys()) != RECORD_FIELDS:
         failures.append(f"{name}/{fid}: record fields != contract fields")
+        return False
+    if rec["schema"] not in ("decision", "control", "execution", "effect"):
+        failures.append(f"{name}/{fid}: invalid schema value {rec['schema']!r}")
+        return False
+    if rec["expected"] not in ("VALID", "INVALID"):
+        failures.append(f"{name}/{fid}: invalid expected value {rec['expected']!r}")
         return False
     if rec["actual"] not in ("VALID", "INVALID"):
         failures.append(f"{name}/{fid}: invalid actual verdict")
         return False
+    # Fixture binding (final hardening): the result's metadata must equal the fixture
+    # envelope — a record cannot claim a different target schema or expectation than the
+    # corpus it is evidence about.
+    if rec["schema"] != fixture["target_schema"]:
+        failures.append(f"{name}/{fid}: schema {rec['schema']!r} != fixture target {fixture['target_schema']!r}")
+    if rec["expected"] != fixture["expected"]:
+        failures.append(f"{name}/{fid}: expected {rec['expected']!r} != fixture expected {fixture['expected']!r}")
     vs = rec["violations"]
     if not isinstance(vs, list):
         failures.append(f"{name}/{fid}: violations not a list")
         return False
     tuples = []
     for v in vs:
-        if not isinstance(v, dict) or set(v.keys()) != {"instance_path", "keyword"}:
+        if (not isinstance(v, dict) or set(v.keys()) != {"instance_path", "keyword"}
+                or not isinstance(v["instance_path"], str) or not isinstance(v["keyword"], str)):
             failures.append(f"{name}/{fid}: malformed violation tuple")
             return False
         tuples.append((v["instance_path"], v["keyword"]))
@@ -124,8 +138,8 @@ def main() -> int:
     for fid in sorted(ids_c & ids_p & ids_n):
         fx, a, b = fixtures[fid], res_py[fid], res_node[fid]
         errs = []
-        ok_a = check_record("python", fid, a, failures)
-        ok_b = check_record("node", fid, b, failures)
+        ok_a = check_record("python", fid, a, fx, failures)
+        ok_b = check_record("node", fid, b, fx, failures)
         if ok_a and ok_b:
             if a["actual"] != b["actual"]:
                 errs.append(f"verdict parity: python {a['actual']} != node {b['actual']}")

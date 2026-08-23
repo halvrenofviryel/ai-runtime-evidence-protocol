@@ -204,6 +204,10 @@ def main() -> int:
     inst["profiles"] = {"Airep.Migration": {}}
     add("decision-neg-profile-key-uppercase", "decision", "INVALID", inst,
         "profiles key with uppercase characters", "/profiles", ["propertyNames", "pattern"])
+    inst = deep(positives["decision"])
+    inst["profiles"] = {"airep.1migration": {}}
+    add("decision-neg-profile-key-leading-digit-segment", "decision", "INVALID", inst,
+        "profiles key with a segment starting with a digit", "/profiles", ["propertyNames", "pattern"])
     add("decision-neg-digest-projection-single-segment", "decision", "INVALID",
         set_path(deep(positives["decision"]), ["input", "digest_projection"], "projection"),
         "digest_projection with a single segment", "/input/digest_projection", ["pattern"])

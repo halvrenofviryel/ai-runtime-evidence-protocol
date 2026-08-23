@@ -786,6 +786,21 @@
     }
    ]
   },
+  "decision-neg-profile-key-leading-digit-segment": {
+   "actual": "INVALID",
+   "expected": "INVALID",
+   "schema": "decision",
+   "violations": [
+    {
+     "instance_path": "",
+     "keyword": "unevaluatedProperties"
+    },
+    {
+     "instance_path": "/profiles",
+     "keyword": "pattern"
+    }
+   ]
+  },
   "decision-neg-profile-key-single-segment": {
    "actual": "INVALID",
    "expected": "INVALID",

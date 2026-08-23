@@ -1,6 +1,6 @@
 {
  "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines '<sha256>  <relative-path>\\n' relative to schema-validation/corpus/",
- "aggregate_sha256": "5dbf36891d0fdc9b3600fd9a1e1fa128f6f30ddaa9eaaf362a3ed1039dafaa3a",
+ "aggregate_sha256": "99e8c4a5a333479a0bac8579fc8ec5aaa4a5365133b1e40548cb7e8027623d3a",
  "files": {
   "control-neg-authority-missing-writable.json": "8e5a41754f7f45bb09f162b02a9a4dbb0bf870ac1e32dc15a800915f1a11fd0d",
   "control-neg-del-airep-version.json": "0276efc4008a463eeec590f9ab505e6785d7f1fb2026b226800ae85abd0fb579",
@@ -59,6 +59,7 @@
   "decision-neg-evidence-missing-content-hash.json": "365fa90f4a3df54c500c395d1f0b2fda829996261c8a6fe0f9c5645801db93d2",
   "decision-neg-invalid-verb.json": "55ce9658d70ca8ad8699e589f1345c495469763ea7f0c07559adfb6afa1868c2",
   "decision-neg-principal-without-established-by.json": "dc7046622f94c3bb627fbf70e7c2aade216ad75e64f9b16b024b801adad02879",
+  "decision-neg-profile-key-leading-digit-segment.json": "854010200a72ca75ad842c257cbcf5159c5cb32e04fbdea6a5c7cc16de7ed19b",
   "decision-neg-profile-key-single-segment.json": "c120172eb89b15e9d49481ac870a085e65a7d35c5e2ade02b4add213f0d1ec48",
   "decision-neg-profile-key-uppercase.json": "a5e4655ada110d66b9fd82c4219848d8928d92d72e52dcebfc0fb1068469e9a8",
   "decision-neg-sequence-negative.json": "ba611da29a373c1dcac9f29879f0288c248204830768c2d2eaf9e4dfb836e8fe",
@@ -119,5 +120,5 @@
   "execution-neg-unknown-top-level.json": "943d46a9c805dafe5b6d10ebf44dbb0a4135d8029463f702a94a5cfec6769089",
   "execution-pos-canonical.json": "49a09e21169b1b30aa41ae997947f3dae04de7c6a0c53eb35cb8530860d0c6ad"
  },
- "fixture_count": 116
+ "fixture_count": 117
 }
