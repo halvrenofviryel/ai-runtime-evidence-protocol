@@ -19,8 +19,11 @@
 
 ## 2. Parity result
 
-`parity_compare.py` (independent of both verifiers; stdlib + the pre-existing v0.1 RFC 8785
-implementation only) — **exit 0: FULL PARITY + EXPECTATION EQUALITY across 39 fixtures**:
+`parity_compare.py` (independent of both verifiers and **stdlib-only** per STAGE4_CONTRACT §4
+— it imports nothing beyond the Python standard library; the A1/S1 re-measurements use its
+own minimal, fail-closed canonicalizer for the restricted evidence-body value domain, so the
+comparator is a genuinely third implementation surface: verifier A → verifier B → separate
+comparator) — **exit 0: FULL PARITY + EXPECTATION EQUALITY across 39 fixtures**:
 
 - Python ↔ Node exact normalized `verdict`/`reasons` equality per fixture;
 - agreed results equal each fixture's `expected` outcome (compared here only — the verifiers
@@ -30,6 +33,9 @@ implementation only) — **exit 0: FULL PARITY + EXPECTATION EQUALITY across 39 
   **verdict-class enforcement** per REASON_CODES);
 - missing/extra fixture, missing/extra/unsorted/duplicate/unregistered reason, and extra
   result fields are gate failures;
+- the **results-file envelope** is gated strictly: root object with exactly the key
+  `results`, no metadata, results map keys ASCII-sorted in the serialized file, no duplicate
+  keys anywhere, trailing newline;
 - **A1 tag divergence** recomputed from primitives (both currents re-derived from the A1-1
   body; distinct; equal to the manifest record);
 - **S1 subtraction** re-performed by the comparator on the sealed artifact: canonical bytes
@@ -42,9 +48,12 @@ implementation only) — **exit 0: FULL PARITY + EXPECTATION EQUALITY across 39 
 
 - Stage-3 vector comparator: committed proof `../vectors/prove_extra_field_gate.py` — exit 0
   on committed outputs, exit 1 on an injected extra field (run: PROOF OK).
-- Stage-4 parity comparator: session-run tamper control — flipping one fixture's verdict in a
-  copy of `results_python.json` produced exit 1 with the mismatch named; restoring the file
-  (byte-identical, sha256 re-checked) returned exit 0.
+- Stage-4 parity comparator (verdict tamper): session-run control — flipping one fixture's
+  verdict in a copy of `results_python.json` produced exit 1 with the mismatch named;
+  restoring the file (byte-identical, sha256 re-checked) returned exit 0.
+- Stage-4 parity comparator (envelope): committed proof [`prove_envelope_gate.py`](./prove_envelope_gate.py)
+  — exit 0 on the committed envelopes; exit 1 on an injected top-level `metadata` member,
+  with the violation named in the emitted manifest (run: PROOF OK).
 
 ## 4. A5 auxiliary check (freeze intact)
 
@@ -66,7 +75,9 @@ What is claimed, and its evidence class:
   different lexeme-capture techniques (Python: `parse_int`/`parse_float` lexeme-carrying
   subclasses; Node: a strict RFC 8259 recursive-descent parser with a symbol-keyed side
   table), and neither imports, calls, or shells out to the other.
-- **Result parity:** measured by the third-party comparator, §2.
+- **Result parity:** measured by the separate, independently implemented parity comparator
+  (§2). It is not a third *party* — it was written within this project; AD-15 third-party
+  independence remains future work, per §6.
 
 **Process disclosure (recorded verbatim):** the Python authoring session had limited direct
 expected-field visibility for five fixtures (whole-file reads during input-shape inspection);

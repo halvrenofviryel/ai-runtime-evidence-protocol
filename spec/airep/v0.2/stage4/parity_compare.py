@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """WP-a01 Stage-4 parity/evidence comparator.
 
-Independent of both integrity verifiers: shares no code with either beyond the Python
-stdlib and the pre-existing v0.1 RFC 8785 implementation (jcs.py), which predates Stage 4
-and is not verifier code. Never invokes, imports, or reads the verifiers.
+Independent of both integrity verifiers and STDLIB-ONLY per STAGE4_CONTRACT s4 ("shares no
+code with either beyond stdlib"): it imports nothing outside the Python standard library —
+in particular it does NOT use the shared v0.1 jcs.py. The A1/S1 re-measurements use a
+minimal, fail-closed canonicalizer implemented HERE for the restricted JSON value domain of
+the evidence bodies (objects with ASCII keys, strings, non-negative safe integers); any
+value outside that domain fails the evidence gate rather than being guessed at. Never
+invokes, imports, or reads the verifiers.
 
 Checks (any failure => exit 1; PARITY_MANIFEST.md always written):
  1. Fixture-set equality: corpus ids == python results ids == node results ids
@@ -27,11 +31,18 @@ Checks (any failure => exit 1; PARITY_MANIFEST.md always written):
       present in the on-disk fixture bytes.
  6. Corpus aggregate SHA-256 recomputed per the pinned rule and compared to the manifest.
 
+Additional envelope gate (per final evidence review): each results FILE must be exactly the
+contract envelope — a root object with exactly the key "results", results an object, result
+map keys ASCII-sorted in the serialized file, no duplicate keys anywhere, and a trailing
+newline. A top-level metadata member (or any envelope violation) is a gate failure.
+
 Exit codes: 0 = full parity + expectation equality + all assertions; 1 = any failure;
 2 = missing/unreadable input file.
+
+Optional argv override (used by the committed envelope negative proof):
+  parity_compare.py [py_file node_file [manifest_out]]
 """
 import hashlib
-import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -39,14 +50,53 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 CORPUS = HERE / "corpus"
 MANIFEST_IN = HERE / "corpus_manifest.json"
-RES_PY = HERE / "results" / "results_python.json"
-RES_NODE = HERE / "results" / "results_node.json"
-OUT = HERE / "PARITY_MANIFEST.md"
+RES_PY = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "results" / "results_python.json"
+RES_NODE = Path(sys.argv[2]) if len(sys.argv) > 2 else HERE / "results" / "results_node.json"
+OUT = Path(sys.argv[3]) if len(sys.argv) > 3 else HERE / "PARITY_MANIFEST.md"
 
-_spec = importlib.util.spec_from_file_location(
-    "jcs", HERE.parent.parent / "v0.1" / "conformance" / "jcs.py")
-_jcs = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_jcs)
+_ESC = {0x8: "\\b", 0x9: "\\t", 0xA: "\\n", 0xC: "\\f", 0xD: "\\r"}
+
+
+def _jstr(s: str) -> bytes:
+    out = ['"']
+    for ch in s:
+        o = ord(ch)
+        if ch == '"':
+            out.append('\\"')
+        elif ch == "\\":
+            out.append("\\\\")
+        elif o < 0x20:
+            out.append(_ESC.get(o, f"\\u{o:04x}"))
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out).encode("utf-8")
+
+
+def c14n(v) -> bytes:
+    """Minimal fail-closed RFC 8785 subset for the A1/S1 evidence bodies.
+
+    Supports: objects with ASCII string keys, strings, integers in [0, 2^53-1].
+    Anything else (bool, null, float, array, negative/unsafe int, non-ASCII key)
+    raises — the evidence gate fails closed instead of guessing canonical bytes.
+    ASCII-only keys make plain sort identical to RFC 8785's UTF-16 code-unit order.
+    """
+    if isinstance(v, bool) or v is None or isinstance(v, (float, list, tuple)):
+        raise ValueError(f"unsupported JSON value for evidence canonicalizer: {v!r}")
+    if isinstance(v, int):
+        if not (0 <= v <= 2**53 - 1):
+            raise ValueError(f"integer outside supported range: {v}")
+        return str(v).encode("ascii")
+    if isinstance(v, str):
+        return _jstr(v)
+    if isinstance(v, dict):
+        for k in v:
+            if not (isinstance(k, str) and k.isascii()):
+                raise ValueError(f"unsupported object key: {k!r}")
+        return (b"{"
+                + b",".join(_jstr(k) + b":" + c14n(v[k]) for k in sorted(v))
+                + b"}")
+    raise ValueError(f"unsupported JSON type: {type(v).__name__}")
 
 VERDICTS = {"PASS", "PASS_WITH_CAVEAT", "REJECT"}
 REASON_CLASS = {
@@ -105,19 +155,56 @@ def shape_errors(name: str, key: str, res) -> list:
     return errs
 
 
+def load_results_with_envelope(name: str, path: Path, failures: list):
+    """Load a results file enforcing the STAGE4_CONTRACT s1 envelope strictly."""
+    try:
+        raw = path.read_bytes()
+    except Exception as e:  # noqa: BLE001
+        die2(f"cannot read {path}: {e}")
+    text = raw.decode("utf-8")
+    if not text.endswith("\n"):
+        failures.append(f"{name}: results file does not end with a trailing newline")
+    orders = []
+
+    def hook(pairs):
+        keys = [k for k, _ in pairs]
+        if len(keys) != len(set(keys)):
+            failures.append(f"{name}: duplicate keys inside an object")
+        orders.append(keys)
+        return dict(pairs)
+
+    try:
+        doc = json.loads(text, object_pairs_hook=hook)
+    except Exception as e:  # noqa: BLE001
+        die2(f"cannot parse {path}: {e}")
+    if not isinstance(doc, dict):
+        failures.append(f"{name}: root is not a JSON object")
+        return {}
+    root_keys = orders[-1] if orders else []
+    if root_keys != ["results"]:
+        failures.append(f"{name}: root keys {root_keys} != ['results'] (no metadata allowed)")
+    results = doc.get("results")
+    if not isinstance(results, dict) or not results:
+        failures.append(f"{name}: 'results' missing, not an object, or empty")
+        return {}
+    cand = [o for o in orders if set(o) == set(results.keys()) and len(o) == len(results)]
+    if len(cand) != 1:
+        failures.append(f"{name}: could not uniquely locate the results map key order")
+    elif cand[0] != sorted(cand[0]):
+        failures.append(f"{name}: results map keys are not ASCII-sorted in the serialized file")
+    return results
+
+
 def main() -> int:
     manifest = load_json(MANIFEST_IN)
-    res_py = load_json(RES_PY).get("results")
-    res_node = load_json(RES_NODE).get("results")
-    if res_py is None or res_node is None:
-        die2("results file missing top-level 'results'")
+    failures: list = []
+    res_py = load_results_with_envelope("python", RES_PY, failures)
+    res_node = load_results_with_envelope("node", RES_NODE, failures)
 
     fixtures = {}
     for p in sorted(CORPUS.glob("*.json")):
         fx = load_json(p)
         fixtures[fx["fixture_id"]] = fx
-
-    failures: list = []
 
     # 1. fixture-set equality
     ids_c, ids_p, ids_n = set(fixtures), set(res_py), set(res_node)
@@ -158,14 +245,19 @@ def main() -> int:
         body = json.loads(json.dumps(a1["inputs"]["artifact"]))
         body["integrity"] = {k: v for k, v in body["integrity"].items()
                              if k not in ("current", "signature")}
-        cb = _jcs.canonicalize(body)
-        cur_d = "sha256:" + hashlib.sha256(b"AIREP/0.2/hash/decision\n" + cb).hexdigest()
-        cur_c = "sha256:" + hashlib.sha256(b"AIREP/0.2/hash/control\n" + cb).hexdigest()
-        rec = ha["A1_tag_divergence"]
-        if cur_d == cur_c:
-            failures.append("A1: currents identical under two tags")
-        if (cur_d, cur_c) != (rec["current_under_decision_tag"], rec["current_under_control_tag"]):
-            failures.append("A1: recomputed currents differ from manifest record")
+        try:
+            cb = c14n(body)
+        except ValueError as e:
+            failures.append(f"A1: evidence canonicalizer failed closed: {e}")
+            cb = None
+        if cb is not None:
+            cur_d = "sha256:" + hashlib.sha256(b"AIREP/0.2/hash/decision\n" + cb).hexdigest()
+            cur_c = "sha256:" + hashlib.sha256(b"AIREP/0.2/hash/control\n" + cb).hexdigest()
+            rec = ha["A1_tag_divergence"]
+            if cur_d == cur_c:
+                failures.append("A1: currents identical under two tags")
+            if (cur_d, cur_c) != (rec["current_under_decision_tag"], rec["current_under_control_tag"]):
+                failures.append("A1: recomputed currents differ from manifest record")
     else:
         failures.append("A1-1 fixture missing")
 
@@ -178,9 +270,13 @@ def main() -> int:
         sealed_current = art["integrity"].get("current")
         art["integrity"] = {k: v for k, v in art["integrity"].items()
                             if k not in ("current", "signature")}
-        cb = _jcs.canonicalize(art)
+        try:
+            cb = c14n(art)
+        except ValueError as e:
+            failures.append(f"S1: evidence canonicalizer failed closed: {e}")
+            cb = b""
         probe = ha["S1_probe"]
-        s1_ok = True
+        s1_ok = bool(cb)
         if cb.hex() != probe["canonical_body_hex"]:
             failures.append("S1: canonical bytes differ from probe (exact-byte comparison)")
             s1_ok = False
