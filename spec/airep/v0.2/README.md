@@ -11,7 +11,8 @@ freeze; nothing exists here before its gate passes.
 | [`schema-design/`](./schema-design/) | Artifact-schema phase Stage 1: the **schema design contract** for the four artifact families — ACCEPTED 2026-08-23 as the frozen implementation basis. |
 | [`schemas/`](./schemas/) | The five JSON Schema (2020-12) files mechanically expressing the accepted design contract — ACCEPTED 2026-08-23 as the implementation basis. Schema validation confers no assurance class, signature validity, or evidence truth. |
 | [`schema-validation/`](./schema-validation/) | Schema fixture/validation phase — **COMPLETE 2026-08-23**: 117-fixture corpus + two-engine harness, ALL GATES PASSED. Measured claim only: the five schemas discriminate the measured corpus as expected under two independent engines. |
-| [`conformance-design/`](./conformance-design/) | Conformance-class phase Stage 1: the **class design contract** (Core → Authenticated → Witnessed; verifier-accepted binding; witness-key independence; revocation semantics — the standing carry-forward, closed here). CONTRACT — no class-verifier code exists yet. |
+| [`conformance-design/`](./conformance-design/) | Conformance-class phase Stage 1: the **class design contract** (Core → Authenticated → Witnessed; verifier-accepted binding; witness-key independence; snapshot revocation) — ACCEPTED 2026-08-23. |
+| [`class-verification/`](./class-verification/) | Class-verifier **implementation contract**: operator-input formats, normalized verdict envelope, closed reason registry, evaluation order, two-implementation parity contract, adversarial matrix. CONTRACT — no verifier code exists yet. |
 
 **Absent by design (blocked):** the four artifact schemas (decision / control / execution /
 effect), the profile schemas, the conformance classes text, and the verifiers. They open only
