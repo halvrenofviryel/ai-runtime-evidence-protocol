@@ -1,0 +1,4 @@
+node_modules/
+out_run*.json
+__pycache__/
+*.pyc
