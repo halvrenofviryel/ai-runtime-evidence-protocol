@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """AIREP v0.2 class verifier (Python reference implementation).
 
-Implements CLASS_VERIFIER_CONTRACT.md sections 0-6 over the FROZEN INTEGRITY.md
+Implements CLASS_VERIFIER_CONTRACT.md sections 0-6, section 8 and the normative
+section 9 source-review errata (E-1..E-6) over the FROZEN INTEGRITY.md
 constructions and the accepted CONFORMANCE_CLASS_DESIGN.md semantics.
 
 The frozen byte constructions are consumed exactly as written; nothing here
@@ -101,6 +102,9 @@ RE_WITNESSED_AT = re.compile(r"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-
 RE_NOW = re.compile(
     r"^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]{1,9}))?Z$"
 )
+# Errata E-1: INTEGRITY 4.2's "no sign, no fraction, no exponent" constrains the
+# SOURCE SPELLING of the claim's numeric tokens, not merely the parsed value.
+RE_JSON_UINT_LEXEME = re.compile(r"^(0|[1-9][0-9]*)$")
 
 MAX_SAFE_INT = 9007199254740991
 
@@ -258,6 +262,11 @@ def _read_json_file(path: str, what: str) -> Tuple[Any, bytes]:
         raise RunInvalid("cannot parse %s file %s: %s" % (what, path, exc))
 
 
+# Contract 1.1 shape, closed and required (errata E-4).
+BINDING_STORE_MEMBERS = {"bindings", "producer_bindings", "witness_bindings"}
+BINDING_ENTRY_MEMBERS = {"subject_identity", "role", "public_key_hex", "suite", "trusted"}
+
+
 def _digest_of(raw: Optional[bytes]) -> Optional[str]:
     """(h) evidence digests: SHA-256 of the exact operator input FILE BYTES."""
     if raw is None:
@@ -278,17 +287,24 @@ class OperatorInputs:
 
     # ---- binding store -------------------------------------------------
     def _binding_maps(self) -> Tuple[Optional[dict], Optional[dict], Optional[dict]]:
+        """Errata E-4: the store's container members are REQUIRED and its
+        members are CLOSED. A missing container, an unknown member at the top
+        level, or an unknown member in any `bindings` entry makes the whole
+        document malformed -- fail closed, never silently tolerated."""
         doc = self.bindings_doc
         if not isinstance(doc, dict):
+            return None, None, None
+        if set(doc.keys()) != BINDING_STORE_MEMBERS:
             return None, None, None
         b = doc.get("bindings")
         p = doc.get("producer_bindings")
         w = doc.get("witness_bindings")
-        return (
-            b if isinstance(b, dict) else None,
-            p if isinstance(p, dict) else None,
-            w if isinstance(w, dict) else None,
-        )
+        if not (isinstance(b, dict) and isinstance(p, dict) and isinstance(w, dict)):
+            return None, None, None
+        for entry in b.values():
+            if not isinstance(entry, dict) or set(entry.keys()) - BINDING_ENTRY_MEMBERS:
+                return None, None, None
+        return b, p, w
 
     def lookup_binding(self, role: str, wire_id: Any) -> Tuple[Optional[str], Optional[dict], Optional[str]]:
         """Resolve a wire-carried id to an accepted binding.
@@ -309,8 +325,8 @@ class OperatorInputs:
         if not isinstance(binding_id, str) or binding_id not in bindings:
             return None, None, "binding-malformed"
         entry = bindings[binding_id]
-        if not isinstance(entry, dict):
-            return binding_id, None, "binding-malformed"
+        # Entry type and member closure were already established document-wide
+        # by _binding_maps (errata E-4); a malformed store never reaches here.
 
         # Contract 1.1 priority order: not-trusted (definitive negative) before
         # the structural malformed bucket, then the suite registry.
@@ -318,9 +334,6 @@ class OperatorInputs:
             return binding_id, entry, "binding-not-trusted"
 
         if not RE_NAMESPACED.match(binding_id):
-            return binding_id, entry, "binding-malformed"
-        allowed = {"subject_identity", "role", "public_key_hex", "suite", "trusted"}
-        if set(entry.keys()) - allowed:
             return binding_id, entry, "binding-malformed"
         if "trusted" not in entry:
             return binding_id, entry, "binding-malformed"
@@ -423,12 +436,74 @@ def resolve_reference(ref: Any, candidates: List[dict]) -> Tuple[Optional[dict],
 
 CLAIM_MEMBERS = {"chain_id", "sequence", "current", "length", "witnessed_at"}
 
+CLAIM_NUMERIC_MEMBERS = ("sequence", "length")
+
 
 def _is_json_int(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
-def claim_structurally_valid(claim: Any) -> bool:
+class _LexemeInt(int):
+    """int carrying the exact source token it was parsed from (errata E-1)."""
+
+    lexeme: str
+
+    def __new__(cls, token: str) -> "_LexemeInt":
+        obj = super().__new__(cls, int(token))
+        obj.lexeme = token
+        return obj
+
+
+class _LexemeFloat(float):
+    """float carrying the exact source token it was parsed from (errata E-1)."""
+
+    lexeme: str
+
+    def __new__(cls, token: str) -> "_LexemeFloat":
+        obj = super().__new__(cls, float(token))
+        obj.lexeme = token
+        return obj
+
+
+def claim_numeric_lexemes(raw: bytes) -> Dict[str, Optional[str]]:
+    """Re-derive the SOURCE SPELLING of the claim's numeric tokens (errata E-1).
+
+    Ordinary ``json.loads`` erases the spelling (``1e0``, ``1.0``, ``-0`` all
+    parse to a number), so the request bytes are re-parsed once with
+    ``parse_int``/``parse_float`` hooks that keep each number's exact source
+    token. Only the head-witness claim's numeric members are read back; the
+    lexeme-bearing document is never used anywhere else, so JCS canonical bytes
+    and every other code path stay untouched.
+
+    A member whose lexeme cannot be recovered (absent, or not a JSON number)
+    maps to ``None``, which the structural gate treats as a lexical violation.
+    """
+    lexemes: Dict[str, Optional[str]] = {name: None for name in CLAIM_NUMERIC_MEMBERS}
+    try:
+        doc = json.loads(raw.decode("utf-8"), parse_int=_LexemeInt, parse_float=_LexemeFloat)
+    except (ValueError, UnicodeDecodeError):
+        return lexemes
+    if not isinstance(doc, dict):
+        return lexemes
+    head_witness = doc.get("head_witness")
+    if not isinstance(head_witness, dict):
+        return lexemes
+    claim = head_witness.get("claim")
+    if not isinstance(claim, dict):
+        return lexemes
+    for name in CLAIM_NUMERIC_MEMBERS:
+        value = claim.get(name)
+        if isinstance(value, (_LexemeInt, _LexemeFloat)):
+            lexemes[name] = value.lexeme
+    return lexemes
+
+
+def claim_structurally_valid(claim: Any, lexemes: Optional[Dict[str, Optional[str]]]) -> bool:
+    """Intrinsic claim defects only -> `witness-claim-invalid` (errata E-1/E-5).
+
+    `witnessed_at` is type-checked here; its format and Gregorian validity are a
+    separate stage-6 gate reported as `witness-time-invalid` (errata E-2).
+    """
     if not isinstance(claim, dict) or set(claim.keys()) != CLAIM_MEMBERS:
         return False
     if not isinstance(claim["chain_id"], str):
@@ -444,7 +519,27 @@ def claim_structurally_valid(claim: Any) -> bool:
         return False
     if not isinstance(claim["witnessed_at"], str):
         return False
+    # E-1: the parsed value passing is not sufficient -- the source spelling of
+    # each numeric token MUST itself match ^(0|[1-9][0-9]*)$. No source bytes
+    # available means the lexical rule could not be applied: fail closed.
+    if lexemes is None:
+        return False
+    for name in CLAIM_NUMERIC_MEMBERS:
+        lexeme = lexemes.get(name)
+        if not isinstance(lexeme, str) or not RE_JSON_UINT_LEXEME.match(lexeme):
+            return False
     return True
+
+
+def claim_time_structurally_valid(claim: Any) -> bool:
+    """E-2: `witnessed_at` format + Gregorian validity, evaluated at stage 6
+    independently of whether clock inputs were supplied."""
+    if not isinstance(claim, dict):
+        return False
+    value = claim.get("witnessed_at")
+    if not isinstance(value, str):
+        return False
+    return parse_witnessed_at_ns(value) is not None
 
 
 _DAYS_IN_MONTH = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
@@ -594,7 +689,10 @@ def independence_conditions(
 # (d) STAGE ORDER + REASON DEPENDENCY DAG (contract 3 + 4)
 # --------------------------------------------------------------------------
 
-def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str) -> dict:
+def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str,
+             claim_lexemes: Optional[Dict[str, Optional[str]]] = None) -> dict:
+    """`claim_lexemes` carries the head-witness claim's numeric SOURCE tokens
+    (errata E-1); omitting it fails the lexical rule closed."""
     artifact, related, head_witness = parse_request(request_doc)
 
     # ---- Stage 0: accepted family schema validation --------------------
@@ -693,10 +791,21 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str) -> dict:
         emit("no-witness-supplied")
     else:
         claim = head_witness.get("claim")
-        # 6a. frozen five-member claim shape (INTEGRITY 4.2)
-        if not claim_structurally_valid(claim):
+        # 6a. frozen five-member claim shape + numeric SOURCE LEXEMES (E-1).
+        claim_ok = claim_structurally_valid(claim, claim_lexemes)
+        if not claim_ok:
             emit("witness-claim-invalid")
-        else:
+        # 6b. witnessed_at format + Gregorian validity (E-2). Its only
+        # prerequisite is that the member is present and a string, so it is
+        # reported alongside 6a rather than suppressed by it, and it runs
+        # whether or not clock inputs were supplied.
+        time_ok = False
+        if isinstance(claim, dict) and isinstance(claim.get("witnessed_at"), str):
+            time_ok = claim_time_structurally_valid(claim)
+            if not time_ok:
+                emit("witness-time-invalid")
+        # 6c. resolution + reconciliation, gated on a structurally valid claim.
+        if claim_ok and time_ok:
             candidates = [artifact] + related
             resolved, status = resolve_reference(head_witness["head_ref"], candidates)
             if status != "ok":
@@ -767,19 +876,18 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str) -> dict:
         if not wsig_ok:
             emit("witness-signature-invalid")
 
-    # Stage 10: freshness. Prerequisites: stage 6 clean AND clock inputs present.
+    # Stage 10: RECENCY ONLY (errata E-2 -- witnessed_at's format and Gregorian
+    # validity are settled at stage 6). Prerequisites: stage 6 clean AND clock
+    # inputs present; stage-6 cleanliness already guarantees a parseable value.
     if stage6_clean:
         if ops.now is None or ops.window is None:
             emit("freshness-inputs-missing")
         else:
             witnessed_ns = parse_witnessed_at_ns(claim["witnessed_at"])
-            if witnessed_ns is None:
-                emit("witness-time-invalid")
-            else:
-                now_ns = parse_now_ns(ops.now)
-                # abs(now - witnessed_at) <= window; boundary-equal is fresh.
-                if abs(now_ns - witnessed_ns) > ops.window * 1_000_000_000:
-                    emit("witness-freshness-outside-window")
+            now_ns = parse_now_ns(ops.now)
+            # abs(now - witnessed_at) <= window; boundary-equal is fresh.
+            if abs(now_ns - witnessed_ns) > ops.window * 1_000_000_000:
+                emit("witness-freshness-outside-window")
 
     # Stage 11: Witnessed iff 6-10 clean AND Authenticated earned.
     if authenticated and not wit_failures and not wit_withheld:
@@ -798,7 +906,11 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str) -> dict:
                 exec_ok, x_binding_id, x_entry = authenticate_artifact(
                     exec_artifact, ops, schema_dir
                 )
-                if exec_ok and producer_binding_accepted and x_entry is not None:
+                # Errata E-3: authenticating the referenced Execution artifact
+                # is NECESSARY BUT NOT SUFFICIENT -- the primary Effect artifact
+                # must itself have earned Authenticated before a wire
+                # `independent` can be the effective assessment.
+                if exec_ok and authenticated and x_entry is not None:
                     _, positive, negative = ops.independence_policy()
                     ident_ok, keys_ok, relation = independence_conditions(
                         p_entry, p_binding_id, x_entry, x_binding_id, positive, negative
@@ -928,8 +1040,8 @@ def build_ops(bindings: Optional[str], independence: Optional[str], revocation: 
 def run_single(args, schema_dir: str) -> int:
     ops = build_ops(args.bindings, args.independence_policy, args.revocation,
                     args.now, args.freshness_window)
-    doc, _ = _read_json_file(args.request, "evaluation request")
-    verdict = evaluate(doc, ops, schema_dir)
+    doc, raw = _read_json_file(args.request, "evaluation request")
+    verdict = evaluate(doc, ops, schema_dir, claim_numeric_lexemes(raw))
     sys.stdout.write(dump_json(verdict))
     return 0
 
@@ -967,8 +1079,8 @@ def run_corpus(corpus_dir: str, out_path: str, schema_dir: str) -> int:
         request_path = path_for("request")
         if request_path is None:
             raise RunInvalid("case %r has no request file" % case.get("case_id"))
-        doc, _ = _read_json_file(request_path, "evaluation request")
-        verdicts.append(evaluate(doc, ops, schema_dir))
+        doc, raw = _read_json_file(request_path, "evaluation request")
+        verdicts.append(evaluate(doc, ops, schema_dir, claim_numeric_lexemes(raw)))
 
     verdicts.sort(key=verdict_sort_key)
     seen = set()
@@ -1000,8 +1112,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--schema-dir", dest="schema_dir")
     args = parser.parse_args(argv)   # argparse exits 2 on usage errors, 0 on --help
 
-    schema_dir = args.schema_dir or os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "spec", "schemas"
+    # Portability (errata S9 note): the default must resolve in the COMMITTED
+    # repository layout -- this file at <v0.2>/class-verification/verifier_py/
+    # and the accepted schemas at <v0.2>/schemas/. Inside an authoring snapshot
+    # that places them elsewhere, pass --schema-dir explicitly.
+    schema_dir = args.schema_dir or os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, os.pardir, "schemas")
     )
 
     try:
