@@ -1,5 +1,5 @@
 // Source-review ruling self-check (CLASS_VERIFIER_CONTRACT.md section 9,
-// rulings R-1 / R-2 / R-3 / R-4). Every input is constructed here from a corpus
+// rulings R-1 / R-2 / R-3 / R-4 / R-7 / R-8). Every input is constructed here from a corpus
 // case's bytes and written under the working directory; the frozen corpus is
 // never added to or altered, and no fixture expected value is read. Each probe
 // states the exact reason set it demands and fails loudly on mismatch.
@@ -412,6 +412,134 @@ for (const [name, mutate] of [
   expect("R-7 divergence2: witness_id absent still leaves stage 10 running (no clock => freshness withheld)",
     ["--request", writeJson("r7_prec_witid_noclock.json", r), ...OPS],
     { wf: [], ww: ["freshness-inputs-missing", "witness-binding-missing"] });
+}
+
+// ---------------------------------------------------------------------------
+// R-8 - stage 7 is three dependent sub-steps: 7a witness identifier usability
+// -> 7b binding-store resolution -> 7c revocation. 7a runs BEFORE the store is
+// consulted, so an absent or non-string witness_id reports
+// witness-binding-missing alone even when the store is malformed. The store is
+// not excused: the producer path resolves its own wire id, reaches the gate,
+// and still reports producer-binding-malformed for the same store.
+// ---------------------------------------------------------------------------
+
+// A store-level malformation: the required witness_bindings container is absent,
+// so the whole operator document is malformed. Under the pre-R-8 order this was
+// exactly the input that made an absent witness_id report -binding-malformed.
+const malformedStore = (name) => {
+  const b = bindings();
+  delete b.witness_bindings;
+  return writeJson(name, b);
+};
+// A second, independent store-level malformation: an unknown top-level member.
+const malformedStore2 = (name) => {
+  const b = bindings();
+  b.note = "extra";
+  return writeJson(name, b);
+};
+const withStore = (file) => ["--bindings", file,
+  "--independence-policy", `${P2}/independence.json`,
+  "--revocation", `${P2}/revocation.json`];
+
+{ // The governing combination, stated verbatim by R-8.
+  const r = req(); delete r.head_witness.witness_id;
+  expect("R-8 governing: witness_id ABSENT + malformed store => witness-binding-missing ALONE",
+    ["--request", writeJson("r8_absent_witid_malformed_store.json", r),
+     ...withStore(malformedStore("r8_store_no_witness_container.json")), ...CLOCK],
+    { class: "AIREP-Core", af: [], aw: ["producer-binding-malformed"], ac: [],
+      wf: [], ww: ["witness-binding-missing"] });
+}
+{ // Same governing combination against the second malformation shape.
+  const r = req(); delete r.head_witness.witness_id;
+  expect("R-8 governing: witness_id ABSENT + store with unknown top member => witness-binding-missing ALONE",
+    ["--request", writeJson("r8_absent_witid_malformed_store2.json", r),
+     ...withStore(malformedStore2("r8_store_unknown_member.json")), ...CLOCK],
+    { class: "AIREP-Core", af: [], aw: ["producer-binding-malformed"], ac: [],
+      wf: [], ww: ["witness-binding-missing"] });
+}
+// 7a covers every non-string form of the wire id, not just absence.
+for (const [name, v] of [["number", 7], ["null", null], ["object", { a: 1 }],
+                         ["array", ["x"]], ["boolean", true], ["float", 1.5]]) {
+  const r = req(); r.head_witness.witness_id = v;
+  expect(`R-8 7a: witness_id as ${name} + malformed store => witness-binding-missing ALONE`,
+    ["--request", writeJson(`r8_witid_${name}_malformed_store.json`, r),
+     ...withStore(malformedStore(`r8_store_for_${name}.json`)), ...CLOCK],
+    { af: [], aw: ["producer-binding-malformed"], ac: [], wf: [], ww: ["witness-binding-missing"] });
+}
+{ // DISCRIMINATION: the same malformed store, with a valid PRESENT witness_id,
+  // must still reach 7b and report witness-binding-malformed. This proves the
+  // R-8 fix reordered the gate rather than disabling the malformed path.
+  expect("R-8 discrimination: malformed store + present valid witness_id => witness-binding-MALFORMED",
+    ["--request", `${P2}/request.json`,
+     ...withStore(malformedStore("r8_store_discrim.json")), ...CLOCK],
+    { class: "AIREP-Core", af: [], aw: ["producer-binding-malformed"], ac: [],
+      wf: [], ww: ["witness-binding-malformed"] });
+}
+{ // Same, second malformation shape.
+  expect("R-8 discrimination: store with unknown top member + present witness_id => witness-binding-MALFORMED",
+    ["--request", `${P2}/request.json`,
+     ...withStore(malformedStore2("r8_store_discrim2.json")), ...CLOCK],
+    { wf: [], ww: ["witness-binding-malformed"] });
+}
+{ // PRODUCER PATH: the producer resolves its own wire id and does reach the
+  // gate, so the same malformed store still yields producer-binding-malformed
+  // whether or not the witness id is usable. Asserted here on its own channel.
+  const file = malformedStore("r8_store_producer_path.json");
+  const v1 = expect("R-8 producer path: malformed store => producer-binding-malformed (witness_id present)",
+    ["--request", `${P2}/request.json`, ...withStore(file), ...CLOCK],
+    { class: "AIREP-Core", af: [], aw: ["producer-binding-malformed"], ac: [] });
+  const r = req(); delete r.head_witness.witness_id;
+  const v2 = expect("R-8 producer path: malformed store => producer-binding-malformed (witness_id absent)",
+    ["--request", writeJson("r8_producer_path_no_witid.json", r), ...withStore(file), ...CLOCK],
+    { class: "AIREP-Core", af: [], aw: ["producer-binding-malformed"], ac: [] });
+  if (v1 && v2 && !eq(v1.authenticated_withheld, v2.authenticated_withheld)) {
+    say("R-8 producer path: the witness wire id changed the producer channel");
+  } else if (v1 && v2) {
+    ok("R-8 producer path: identical producer channel with and without a usable witness_id");
+  }
+}
+{ // 7b INTACT, branch 1: a WELL-FORMED store with no map entry for a present,
+  // usable id is witness-binding-missing at 7b - a distinct path from 7a.
+  const r = req(); r.head_witness.witness_id = "wire:no-such-witness";
+  expect("R-8 7b: well-formed store, present id absent from the map => witness-binding-missing",
+    ["--request", writeJson("r8_7b_unknown_wire_id.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: [], ww: ["witness-binding-missing"] });
+}
+{ // 7b INTACT, branch 2: same outcome by deleting the map entry instead, with
+  // the request's own witness_id left untouched.
+  const b = bindings();
+  const wireId = Object.keys(b.witness_bindings)[0];
+  delete b.witness_bindings[wireId];
+  expect("R-8 7b: well-formed store with the map entry removed => witness-binding-missing",
+    ["--request", `${P2}/request.json`,
+     ...withStore(writeJson("r8_7b_entry_removed.json", b)), ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: [], ww: ["witness-binding-missing"] });
+}
+{ // 7b INTACT, branch 3: R-3 still governs inside 7b - a malformed referenced
+  // ENTRY (well-formed store) with trusted:false is malformed alone.
+  const b = bindings();
+  const id = b.witness_bindings[Object.keys(b.witness_bindings)[0]];
+  b.bindings[id].note = "extra";
+  b.bindings[id].trusted = false;
+  expect("R-8 7b: R-3 unchanged inside 7b (malformed entry + trusted:false) => malformed alone",
+    ["--request", `${P2}/request.json`,
+     ...withStore(writeJson("r8_7b_r3_entry.json", b)), ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: [], ww: ["witness-binding-malformed"] });
+}
+{ // 7c UNREACHED under 7a: an absent witness_id with a malformed revocation
+  // snapshot emits no revocation reason at all (7c runs only after an accepted
+  // binding), while stage 10 - which does not depend on stage 7 - still runs.
+  const r = req(); delete r.head_witness.witness_id;
+  expect("R-8 7c: absent witness_id + malformed store, no clock => binding-missing + freshness only",
+    ["--request", writeJson("r8_7c_unreached.json", r),
+     ...withStore(malformedStore("r8_store_7c.json"))],
+    { wf: [], ww: ["freshness-inputs-missing", "witness-binding-missing"] });
+}
+{ // Regression guard: with a usable id and a well-formed store the untouched
+  // case is still cleanly Witnessed - 7a admits the normal path unchanged.
+  expect("R-8 regression: untouched P2 still clean AIREP-Witnessed after the 7a gate",
+    ["--request", `${P2}/request.json`, ...OPS, ...CLOCK],
+    { class: "AIREP-Witnessed", af: [], aw: [], ac: [], wf: [], ww: [] });
 }
 
 fs.rmSync(TMP, { recursive: true, force: true });

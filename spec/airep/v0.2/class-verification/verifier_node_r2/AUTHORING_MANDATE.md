@@ -451,3 +451,167 @@ No other finding. No frozen input appeared defective this round.
   `corpus_compare.mjs`, this file, and the run outputs `out_run1.json` / `out_run2.json`.
 - I am the sole author of this implementation and this round; nothing here was independently
   reviewed, and this record is implementer evidence, not acceptance.
+
+## Remediation round 4 (R-8)
+
+Fourth and final semantic remediation round on my own prior work, following maintainer ruling
+**R-8** in `CLASS_VERIFIER_CONTRACT.md` §9. R-1..R-7 are unchanged and still bind. Scope was
+R-8 only: no rename, restructure, taste refactor, new feature, reason-string change, envelope
+change, or edit to any stage outside Stage 7.
+
+**What R-8 rules.** Stage 7 is three dependent sub-steps — **7a** witness identifier usability
+→ **7b** binding-store resolution → **7c** witness revocation. When stage 6 is clean, an absent
+or non-string `witness_id` emits `witness-binding-missing` (WITHHELD) and stage 7 **stops
+there**, even when the binding store is itself malformed, because with no `witness_id` the
+verifier has not determined *which* binding it would evaluate and the store-resolution gate is
+never reached. R-8 explicitly notes this **inverts** the order both implementations had, and
+that the same malformed store may still produce `producer-binding-malformed` on the producer
+path, which resolves its own wire id and does reach the gate.
+
+### Stage 7 order — before and after
+
+| | Order actually executed |
+|---|---|
+| **Before (pre-R-8)** | `resolveBinding()` was called immediately on entering stage 7, and inside it the tests ran: (1) store absent ⇒ `missing`; (2) **store not well-formed ⇒ `malformed`**; (3) **`typeof wireId !== "string"` ⇒ `missing`**; (4) map lookup; (5) entry structure; (6) trust; (7) suite. So the store gate (2) preceded the wire-id gate (3): an absent `witness_id` with a malformed store reported `witness-binding-malformed`. |
+| **After (R-8)** | **7a** `typeof hw.witness_id !== "string"` is tested *in the stage-7 caller, before the store is consulted at all* ⇒ `witness-binding-missing`, stage 7 stops. **7b** only otherwise: `resolveBinding()` unchanged (store → map → entry → trust → suite, R-3 intact). **7c** revocation only after an accepted binding. |
+
+`resolveBinding()` itself was **not** modified — that is what keeps the producer path's store
+gate reachable and `producer-binding-malformed` alive. Its internal `typeof wireId !== "string"`
+test is now unreachable from the witness caller and still live for the producer caller; leaving
+it in place was the smaller edit than threading a role-conditional through the function.
+
+### Edits
+
+**1. `class_verifier.mjs` lines 727–763** (`evaluateWitnessTier`, the Stage 7 block) — the sole
+behavioural edit. The former body
+
+```
+  if (stage6Clean) {
+    witRes = resolveBinding(policy.bindings, "witness", hw.witness_id);
+    switch (witRes.status) { ... }
+    if (witBindingAccepted) { ...revocation... }
+  }
+```
+
+is wrapped in a 7a guard: `if (typeof hw.witness_id !== "string") { witWithheld.push("witness-binding-missing"); } else { ...the former body, unchanged... }`, with the
+existing revocation branch labelled `7c` and the two sub-steps commented against R-8. The
+switch arms, the reason strings, the revocation branch, and every channel push are byte-for-byte
+the previous ones; only the guard, the comments and the indentation of the moved block changed.
+No other stage was touched.
+
+**2. `class_verifier.mjs` line 519** — comment only, no behaviour: the R-7 member map now reads
+`witness_id absent/non-string => witness-binding-missing (stage 7a)` instead of `(stage 7)`.
+
+**3. `rulings_check.mjs` lines 418–545** — an R-8 probe section appended before the teardown,
+plus line 2 of the header comment updated to name R-7 and R-8 alongside R-1..R-4. Probes build
+every input themselves from case P2's bytes into `tmp_rulingscheck/`, which is deleted at the
+end. No corpus file was added to or altered, and no `expected.json` is read by this script.
+
+### R-8 probes and results — 18 new probes, all passing
+
+All probes run with the P2 clock and P2 operator inputs unless stated. "Malformed store" means
+one of two **store-level** malformations built from P2's `bindings.json`: (A) the required
+`witness_bindings` container deleted, (B) an unknown top-level member added. (A) is exactly the
+input that produced the pre-R-8 behaviour R-8 overrules.
+
+| # | Probe | Demanded | Result |
+|---|---|---|---|
+| 1 | **governing:** `witness_id` absent + malformed store (A) | `ww = ["witness-binding-missing"]` **alone**, `wf = []`, `aw = ["producer-binding-malformed"]`, class `AIREP-Core` | **pass** |
+| 2 | governing, malformation (B) | same | **pass** |
+| 3–8 | `witness_id` non-string in six forms — number, `null`, object, array, boolean, float — each + malformed store | `ww = ["witness-binding-missing"]` alone | **pass** (6/6) |
+| 9 | **discrimination:** malformed store (A) + present valid `witness_id` | `ww = ["witness-binding-malformed"]` | **pass** |
+| 10 | discrimination, malformation (B) | `ww = ["witness-binding-malformed"]` | **pass** |
+| 11 | **producer path:** malformed store, `witness_id` present | `aw = ["producer-binding-malformed"]`, class `AIREP-Core` | **pass** |
+| 12 | **producer path:** same store, `witness_id` absent | `aw = ["producer-binding-malformed"]`, class `AIREP-Core` | **pass** |
+| 13 | producer channel identical across 11 and 12 (asserted by comparing the two verdicts) | identical | **pass** |
+| 14 | **7b intact:** well-formed store, wire id `"wire:no-such-witness"` not in the map | `ww = ["witness-binding-missing"]`, class `AIREP-Authenticated` | **pass** |
+| 15 | **7b intact:** well-formed store with the map entry deleted, request's own id untouched | `ww = ["witness-binding-missing"]` | **pass** |
+| 16 | **R-3 intact inside 7b:** malformed referenced entry + `trusted: false` | `ww = ["witness-binding-malformed"]` alone (no `not-trusted`) | **pass** |
+| 17 | **7c unreached under 7a:** `witness_id` absent + malformed store, no clock | `ww = ["freshness-inputs-missing", "witness-binding-missing"]` — no revocation reason, and stage 10 still runs because it does not depend on stage 7 | **pass** |
+| 18 | regression: untouched P2 after the 7a gate | clean `AIREP-Witnessed`, all five channels empty | **pass** |
+
+Probes 9–13 are the load-bearing ones: they show the fix **reordered** the gate rather than
+disabling the malformed path, on both the witness and the producer side.
+
+**Negative control (the probes are discriminating).** A scratch copy of `class_verifier.mjs`
+with only the 7a guard's condition forced false — i.e. the pre-R-8 order — was run inside
+`verifier_node_r2/` on the governing input and produced `witnessed_withheld =
+["witness-binding-malformed"]`, while the current source produced `witnessed_withheld =
+["witness-binding-missing"]` on the identical bytes; `authenticated_withheld =
+["producer-binding-malformed"]` in **both**. So probe 1 fails against the old order and passes
+against the new one, and the producer path is provably unaffected by the edit. The scratch copy
+and its inputs were deleted immediately afterwards; the directory listing was re-checked to
+confirm only the tracked files remain.
+
+### Every check script re-run
+
+Batch first, so `selfcheck.mjs` has fresh input (see the standing note: `selfcheck.mjs` is
+**not** self-contained — it reads `out_run1.json` from the working directory, the output of a
+*prior* batch run, and never invokes the verifier itself; run alone against a stale or absent
+`out_run1.json` it checks the wrong bytes or throws `ENOENT`).
+
+| Command | Result | Exit |
+|---|---|---|
+| `node class_verifier.mjs --schema-dir ../../schemas --corpus ../corpus --out out_run1.json` | 45 verdicts written | `0` |
+| `node class_verifier.mjs --schema-dir ../../schemas --corpus ../corpus --out out_run2.json` | 45 verdicts written | `0` |
+| `cmp out_run1.json out_run2.json` | **byte-identical**, both sha256 `556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735` | `0` |
+| `node selfcheck.mjs` | `ENVELOPE SELF-CHECK: clean (45 verdicts, 31 registry reasons)` | `0` |
+| `node corpus_compare.mjs` | `cases=45 aborted=0 mismatching=0 clean=45` | `0` |
+| `node rulings_check.mjs` | `RULINGS SELF-CHECK: clean` — **81 probes ok**, 18 of them the new R-8 block | `0` |
+| `node errata_check.mjs` | `ERRATA SELF-CHECK: clean` | `0` |
+| `node exitcode_check.mjs` | `EXIT-CODE SELF-CHECK: clean` (19 probes) | `0` |
+| `node preimage_check.mjs` | `CONSTRUCTION SELF-CHECK: clean` | `0` |
+| `node --check class_verifier.mjs`, `node --check rulings_check.mjs` | parse clean | `0` |
+
+**Corpus: 45/45.** `corpus_compare.mjs` compared all seven expected members for every case
+against its `expected.json`: 45 clean, 0 mismatching, 0 aborted.
+
+**Determinism: confirmed.** Two consecutive batch runs are byte-identical.
+
+**R-8 changed no §7 expected value — measured, not assumed.** `out_run1.json` this round hashes
+to `556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735`, the **same** sha256
+recorded for the post-R-7 batch earlier in this file. The 45 corpus verdicts are byte-identical
+before and after the edit, which is the strongest available form of the check the round
+required. This matches R-8's own statement that no corpus case combines an absent `witness_id`
+with a malformed store. No blocking finding arose on this point.
+
+**Frozen-input integrity re-measured.** All 265 corpus files were hashed and compared against
+`corpus_manifest.json`: 265/265 digests match, and the manifest's `aggregate_sha256`
+recomputes to `55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4` exactly. (My
+first aggregate attempt mis-ordered the digest lines and disagreed; the ordering rule in the
+manifest is path-sorted, and with that ordering it matches. Recorded because the first,
+incorrect computation is part of the honest record.)
+
+### Findings
+
+No new finding. No frozen input appeared defective this round. Nothing was observed and left
+unfixed.
+
+One deliberate non-change, recorded so it is not "tidied" later: the now-unreachable
+`typeof wireId !== "string"` test inside `resolveBinding()` is retained. It is live for the
+producer caller, and removing or role-conditioning it would have been a larger edit than R-8
+requires.
+
+### Attestation
+
+- Every read, write, and command in this round stayed inside `/tmp/wk_vj6/task`. No path
+  outside the work root was read, listed, `stat`ed, globbed, or written — scratch and redirect
+  targets included; the negative-control scratch copy and its inputs were created under
+  `verifier_node_r2/` and deleted there. No filesystem-wide search of any kind was run. The two
+  earlier slips (a `find /` in round 2, a redirect outside the root in round 3) were not
+  repeated.
+- I did not access the network in any form — no `npm install`, no fetch, no web search. `ajv`
+  8.20.0 was used exactly as already installed in `./node_modules`, matching the pinned lock.
+- I did not seek, read, infer about, or reason about any other implementation of this contract
+  in any language. I wrote, ran, and designed no cross-implementation comparator and no
+  artifact intended for comparison against another implementation; parity remains on hold.
+- I ran no `git` command.
+- No frozen input was modified. `CLASS_VERIFIER_CONTRACT.md`, `corpus/` (every `expected.json`
+  included), `corpus_manifest.json`, `build_class_corpus.py`, `KEYS.md`, the schemas,
+  `INTEGRITY.md`, `CONFORMANCE_CLASS_DESIGN.md`, `package.json`, and `package-lock.json` were
+  read only — and the corpus is additionally proven unchanged by the 265/265 manifest hash
+  check above. Files written this round, all inside `verifier_node_r2/`: `class_verifier.mjs`
+  (edits 1 and 2), `rulings_check.mjs` (R-8 probe section plus the header line), this file, and
+  the run outputs `out_run1.json` / `out_run2.json`.
+- I am the sole author of this implementation and of this round; nothing here was independently
+  reviewed. This record is implementer evidence, not acceptance.

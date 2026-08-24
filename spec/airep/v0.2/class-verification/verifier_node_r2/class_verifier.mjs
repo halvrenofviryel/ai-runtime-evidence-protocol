@@ -516,7 +516,7 @@ function loadRequest(value, text) {
     // The requiredness loop that stood here is deleted for exactly that reason.
     //   claim      absent/non-object => witness-claim-invalid      (stage 6a)
     //   head_ref   absent/non-object => witness-head-unresolved    (stage 6b)
-    //   witness_id absent/non-string => witness-binding-missing    (stage 7)
+    //   witness_id absent/non-string => witness-binding-missing    (stage 7a)
     //   signature  absent/non-object => witness-signature-invalid  (stage 9)
     // R-2's dependency precedence still decides which of those is REACHABLE.
     //
@@ -725,24 +725,41 @@ function evaluate(request, policy) {
   }
 
   // ---- Stage 7: witness binding resolution + revocation --------------------
+  // R-8 pins stage 7 as three dependent sub-steps, in this order:
+  //   7a witness identifier usability -> 7b binding-store resolution -> 7c revocation.
   let witRes = { status: "missing" };
   let witBindingAccepted = false;
   let stage7Clean = false;
   if (stage6Clean) {
-    witRes = resolveBinding(policy.bindings, "witness", hw.witness_id);
-    switch (witRes.status) {
-      case "ok": witBindingAccepted = true; break;
-      case "missing": witWithheld.push("witness-binding-missing"); break;
-      case "malformed": witWithheld.push("witness-binding-malformed"); break;
-      case "suite_unsupported": witWithheld.push("witness-suite-unsupported"); break;
-      case "not_trusted": witFailures.push("witness-binding-not-trusted"); break;
-    }
-    if (witBindingAccepted) {
-      const st = revocationState(policy.revocation, witRes.binding_id);
-      if (st === "missing") witWithheld.push("witness-revocation-state-missing");
-      else if (st === "malformed") witWithheld.push("witness-revocation-state-malformed");
-      else if (st === "revoked") witFailures.push("witness-binding-revoked");
-      else stage7Clean = true;
+    if (typeof hw.witness_id !== "string") {
+      // 7a - an absent or non-string witness_id is not a usable identifier, so
+      // the verifier has not yet determined WHICH witness binding it would
+      // evaluate; the 7b store-resolution gate is never reached and stage 7
+      // stops here. Reported alone even when the binding store is itself
+      // malformed. This does not excuse the store: the producer path resolves
+      // its own wire id, does reach the gate, and still reports
+      // producer-binding-malformed for the same store.
+      witWithheld.push("witness-binding-missing");
+    } else {
+      // 7b - store, witness_bindings map and referenced entry, evaluated under
+      // R-3. A well-formed store with no map entry for a present, usable id is
+      // witness-binding-missing HERE (7b), a distinct path from 7a.
+      witRes = resolveBinding(policy.bindings, "witness", hw.witness_id);
+      switch (witRes.status) {
+        case "ok": witBindingAccepted = true; break;
+        case "missing": witWithheld.push("witness-binding-missing"); break;
+        case "malformed": witWithheld.push("witness-binding-malformed"); break;
+        case "suite_unsupported": witWithheld.push("witness-suite-unsupported"); break;
+        case "not_trusted": witFailures.push("witness-binding-not-trusted"); break;
+      }
+      // 7c - witness revocation, only after an accepted witness binding.
+      if (witBindingAccepted) {
+        const st = revocationState(policy.revocation, witRes.binding_id);
+        if (st === "missing") witWithheld.push("witness-revocation-state-missing");
+        else if (st === "malformed") witWithheld.push("witness-revocation-state-malformed");
+        else if (st === "revoked") witFailures.push("witness-binding-revoked");
+        else stage7Clean = true;
+      }
     }
   }
 
