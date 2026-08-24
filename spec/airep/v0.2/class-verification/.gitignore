@@ -1,5 +1,12 @@
+# generated / materialized artifacts -- never committed
 node_modules/
+offline-python-deps/.venv/
 out_run*.json
+out_baseline.json
+tmp_*/
 __pycache__/
 *.pyc
-offline-python-deps/.venv/
+
+# ...but comparator evidence IS committed: official run outputs are immutable
+# audit artifacts and must never be swept by the out_run*.json rule above.
+!comparator/evidence/**
