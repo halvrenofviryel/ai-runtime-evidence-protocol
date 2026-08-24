@@ -3,7 +3,7 @@
 
 Builds the 45-case adversarial corpus pinned in CLASS_VERIFIER_CONTRACT.md s7, from the
 frozen construction in ../INTEGRITY.md and the accepted schemas in ../schemas/, plus the
-strictly additive C1 adversarial coverage extension (15 further verdict cases, 12 CLI /
+strictly additive C1 adversarial coverage extension (15 further verdict cases, 15 CLI /
 process-exit probes and the s2 batch-ordering expectation). C0 bytes are unchanged and the
 build proves it: see C0_AGGREGATE_SHA256_PRE_C1 and the c0-preservation assertions.
 
@@ -1713,15 +1713,11 @@ def write_corpus() -> dict:
     # case_index.json stays the C0 index, byte-for-byte. C1 cases are discoverable through
     # their own index, so no pre-existing corpus file changes.
     put("case_index.json", dump(index))
-    put("c1_case_index.json", dump({
-        "note": "C1 adversarial coverage extension. These case directories live alongside "
-                "the C0 45 under cases/ and are scored exactly the same way; they are "
-                "indexed separately only so that case_index.json stays byte-identical to "
-                "its pre-C1 bytes. Expected values here are MANUALLY DERIVED FROM CITED "
-                "NORMATIVE CLAUSES, WITHOUT EXECUTING EVALUATION LOGIC (see "
-                "../C1_COVERAGE.md); the C0 45 are verbatim transcriptions of "
-                "CLASS_VERIFIER_CONTRACT.md s7.",
-        "cases": c1_index}))
+    # SAME root-array shape as case_index.json, so a runner can simply concatenate the two
+    # arrays with no interpretation: combined = C0 array + C1 array. The explanatory prose
+    # that previously sat in a "note" member lives in C1_COVERAGE.md -- an index carrying a
+    # different root shape than the index it extends is a harness defect, not documentation.
+    put("c1_case_index.json", dump(c1_index))
 
     _write_ordering(put, by_id)
     probe_entries = _write_probes(put)

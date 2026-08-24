@@ -1,6 +1,6 @@
 {
  "aggregate_rule": "sha256 of the concatenation, in ASCII-ascending order of corpus-relative path strings, of UTF-8 lines '<sha256>  <relative-path>\\n', where <sha256> is the recorded digest for that path. The sort key is the relative path, NOT the assembled line and NOT the hash prefix; each line is built AFTER the sort. Paths are relative to class-verification/corpus/.",
- "aggregate_sha256": "5b05318396002fee1adcf95aeeedfbe0d6e5f5ebf8759d0737276f7eba7b9b95",
+ "aggregate_sha256": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
  "builder": "build_class_corpus.py (third-context harness; NOT a class verifier)",
  "builder_assertions": {
   "count": 1327,
@@ -252,7 +252,7 @@
  },
  "file_count": 416,
  "files": {
-  "c1_case_index.json": "ebac6990e0b54274719b94721b351b4efc749aab5d95dd2a2f8acd30252a6388",
+  "c1_case_index.json": "6e7e0a82f6a63b24d5d6ab90bb706308b6cb8b7fde8b3fd67e5a6f077a5257ac",
   "case_index.json": "3bcb88c310ae56f7a534a9e052cd3c2ddedfabfda1874c9be4414db38f0bcc86",
   "cases/CTL1/bindings.json": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
   "cases/CTL1/clock.json": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014",

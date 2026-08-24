@@ -562,8 +562,26 @@ preserves it unchanged rather than inventing a rule.
 **F-6 — `case_index.json` does not reference `expected.json`.**
 The C0 index lists only `request`/`bindings`/`independence`/`revocation`/`clock`, by design
 (*"case_index.json deliberately carries no expected values"*), so the index alone does not tell a
-harness where expected values live. Inherited convention; `c1_case_index.json` matches it exactly
-rather than diverging.
+harness where expected values live. Inherited convention; `c1_case_index.json` follows the same
+convention.
+
+> **Corrected at maintainer review.** An earlier draft of this document claimed
+> `c1_case_index.json` "matches it exactly rather than diverging". That was **false**:
+> `case_index.json` has a **root array**, while `c1_case_index.json` was emitted as an object
+> `{"cases": [...], "note": "..."}`. A differing root shape in an index that extends another
+> index is a harness defect, not documentation — it forces any runner to special-case the
+> extension, which is the opposite of what an additive extension should cost. The builder now
+> emits `c1_case_index.json` as a **root array with the same member shape as C0's**, so a runner
+> concatenates without interpretation:
+>
+> ```text
+> combined_index = C0 case_index array + C1 case_index array   # 45 + 15 = 60 unique case_id
+> ```
+>
+> The explanatory prose that lived in the removed `note` member is retained here rather than
+> inside a machine-read index. `probe_index.json` remains object-rooted; it extends nothing and
+> has no C0 counterpart to concatenate with, so no shape constraint applies to it — recorded so
+> the difference is a stated choice rather than an oversight.
 
 **No defect was found in `CLASS_VERIFIER_CONTRACT.md`, `INTEGRITY.md`, the accepted schemas or the
 C0 corpus construction.** The builder reproduced all 265 C0 files byte-for-byte before any C1 code
