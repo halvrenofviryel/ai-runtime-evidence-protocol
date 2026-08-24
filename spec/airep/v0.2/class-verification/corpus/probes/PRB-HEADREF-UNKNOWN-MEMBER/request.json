@@ -1,0 +1,77 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "decision",
+  "chain_id": "cv-chain-prb-hrunk",
+  "claim": {
+   "assertion": "released after gates passed",
+   "basis": [
+    "gate-1"
+   ]
+  },
+  "directive": {
+   "policy_basis": [
+    "policy-1"
+   ],
+   "verb": "release"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "input": {
+   "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "input_ref": "ref:input-1"
+  },
+  "integrity": {
+   "current": "sha256:15eeceab565f8e2d413433dc0967ef695766a7b58899888e35e33909ce08cb3d",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "13d98ba87b156b7131e803ef36f34ee6fbe1341eda48fee803485f5d301ffd88ab1fea6e55050a2dd0dc31727856bbd048f589b1a6a9d791ebae860eba755505"
+   }
+  },
+  "output": {
+   "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "result_ref": "ref:result-1"
+  },
+  "record_id": "cv-rec-prb-hrunk",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 0,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "head_witness": {
+  "claim": {
+   "chain_id": "cv-chain-prb-hrunk",
+   "current": "sha256:15eeceab565f8e2d413433dc0967ef695766a7b58899888e35e33909ce08cb3d",
+   "length": 1,
+   "sequence": 0,
+   "witnessed_at": "2026-08-23T11:30:00Z"
+  },
+  "head_ref": {
+   "chain_id": "cv-chain-prb-hrunk",
+   "hint": "member foreign to the s0 head_ref object",
+   "record_id": "cv-rec-prb-hrunk"
+  },
+  "signature": {
+   "alg": "Ed25519",
+   "value": "c608a132ed7083f01a376eeec08bad36b3d5431d6aa871d44d8d9cc768ed66441f13dbf78bc255ac40a7002a2239fdcb78053b2a63b4faef8cd93b5d0a486904"
+  },
+  "witness_id": "NOTARY-WITNESS #1"
+ },
+ "related_artifacts": []
+}

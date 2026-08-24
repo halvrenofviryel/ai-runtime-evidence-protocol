@@ -1,0 +1,169 @@
+{
+ "cases": [
+  {
+   "case_id": "ORD1",
+   "description": "clean Decision whose record_id ends U+10000 (UTF-8 f0 90 80 80); the batch results file must order it AFTER ORD2 under the s2 UTF-8 byte rule",
+   "files": {
+    "bindings": "cases/ORD1/bindings.json",
+    "clock": "cases/ORD1/clock.json",
+    "independence": "cases/ORD1/independence.json",
+    "request": "cases/ORD1/request.json",
+    "revocation": "cases/ORD1/revocation.json"
+   }
+  },
+  {
+   "case_id": "ORD2",
+   "description": "clean Decision in the SAME chain whose record_id ends U+FF00 (UTF-8 ef bc 80); the batch results file must order it BEFORE ORD1",
+   "files": {
+    "bindings": "cases/ORD2/bindings.json",
+    "clock": "cases/ORD2/clock.json",
+    "independence": "cases/ORD2/independence.json",
+    "request": "cases/ORD2/request.json",
+    "revocation": "cases/ORD2/revocation.json"
+   }
+  },
+  {
+   "case_id": "CTL1",
+   "description": "clean Control Evidence artifact, all operator inputs supplied, no head_witness in the request (the corpus's first control-family case)",
+   "files": {
+    "bindings": "cases/CTL1/bindings.json",
+    "clock": "cases/CTL1/clock.json",
+    "independence": "cases/CTL1/independence.json",
+    "request": "cases/CTL1/request.json",
+    "revocation": "cases/CTL1/revocation.json"
+   }
+  },
+  {
+   "case_id": "NG1",
+   "description": "clean witness over a NON-GENESIS chain head: claim.sequence=1 and claim.length=2 (the referenced head included), the predecessor supplied as a related artifact",
+   "files": {
+    "bindings": "cases/NG1/bindings.json",
+    "clock": "cases/NG1/clock.json",
+    "independence": "cases/NG1/independence.json",
+    "request": "cases/NG1/request.json",
+    "revocation": "cases/NG1/revocation.json"
+   }
+  },
+  {
+   "case_id": "LEX1",
+   "description": "witness claim whose length is written 1e0 - semantically 1, but the source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+   "files": {
+    "bindings": "cases/LEX1/bindings.json",
+    "clock": "cases/LEX1/clock.json",
+    "independence": "cases/LEX1/independence.json",
+    "request": "cases/LEX1/request.json",
+    "revocation": "cases/LEX1/revocation.json"
+   }
+  },
+  {
+   "case_id": "LEX2",
+   "description": "witness claim whose length is written 1.0 - semantically 1, but the source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+   "files": {
+    "bindings": "cases/LEX2/bindings.json",
+    "clock": "cases/LEX2/clock.json",
+    "independence": "cases/LEX2/independence.json",
+    "request": "cases/LEX2/request.json",
+    "revocation": "cases/LEX2/revocation.json"
+   }
+  },
+  {
+   "case_id": "LEX3",
+   "description": "witness claim whose sequence is written -0 - semantically 0, but the source token carries a sign and fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+   "files": {
+    "bindings": "cases/LEX3/bindings.json",
+    "clock": "cases/LEX3/clock.json",
+    "independence": "cases/LEX3/independence.json",
+    "request": "cases/LEX3/request.json",
+    "revocation": "cases/LEX3/revocation.json"
+   }
+  },
+  {
+   "case_id": "TI1",
+   "description": "claim.witnessed_at is 2026-02-30T12:00:00Z (format-conformant, February 30 is not a Gregorian date); NO clock input supplied",
+   "files": {
+    "bindings": "cases/TI1/bindings.json",
+    "independence": "cases/TI1/independence.json",
+    "request": "cases/TI1/request.json",
+    "revocation": "cases/TI1/revocation.json"
+   }
+  },
+  {
+   "case_id": "TI2",
+   "description": "identical Gregorian-invalid claim.witnessed_at 2026-02-30T12:00:00Z with the clock input fully supplied - the paired control that makes 6c's clock-independence measurable",
+   "files": {
+    "bindings": "cases/TI2/bindings.json",
+    "clock": "cases/TI2/clock.json",
+    "independence": "cases/TI2/independence.json",
+    "request": "cases/TI2/request.json",
+    "revocation": "cases/TI2/revocation.json"
+   }
+  },
+  {
+   "case_id": "OBX1",
+   "description": "Effect declares independent; the referenced Execution is hash-consistent and correctly signed under its own binding, but the revocation snapshot marks that executor binding revoked, so it cannot reach Authenticated",
+   "files": {
+    "bindings": "cases/OBX1/bindings.json",
+    "clock": "cases/OBX1/clock.json",
+    "independence": "cases/OBX1/independence.json",
+    "request": "cases/OBX1/request.json",
+    "revocation": "cases/OBX1/revocation.json"
+   }
+  },
+  {
+   "case_id": "OBX2",
+   "description": "Effect declares independent; the referenced Execution is hash-consistent and correctly signed, but producer_bindings carries no entry for its wire producer id, so its Authenticated tier is not evaluable",
+   "files": {
+    "bindings": "cases/OBX2/bindings.json",
+    "clock": "cases/OBX2/clock.json",
+    "independence": "cases/OBX2/independence.json",
+    "request": "cases/OBX2/request.json",
+    "revocation": "cases/OBX2/revocation.json"
+   }
+  },
+  {
+   "case_id": "MC1",
+   "description": "binding store carrying an unknown top-level member; artifact, witness, revocation, policy and clock are otherwise clean and supplied",
+   "files": {
+    "bindings": "cases/MC1/bindings.json",
+    "clock": "cases/MC1/clock.json",
+    "independence": "cases/MC1/independence.json",
+    "request": "cases/MC1/request.json",
+    "revocation": "cases/MC1/revocation.json"
+   }
+  },
+  {
+   "case_id": "MC2",
+   "description": "independence policy document missing its required non_independent_pairs container; everything else clean and supplied",
+   "files": {
+    "bindings": "cases/MC2/bindings.json",
+    "clock": "cases/MC2/clock.json",
+    "independence": "cases/MC2/independence.json",
+    "request": "cases/MC2/request.json",
+    "revocation": "cases/MC2/revocation.json"
+   }
+  },
+  {
+   "case_id": "MC3",
+   "description": "revocation snapshot carrying an unknown top-level member; bindings, policy, clock and the witness itself are clean",
+   "files": {
+    "bindings": "cases/MC3/bindings.json",
+    "clock": "cases/MC3/clock.json",
+    "independence": "cases/MC3/independence.json",
+    "request": "cases/MC3/request.json",
+    "revocation": "cases/MC3/revocation.json"
+   }
+  },
+  {
+   "case_id": "MC4",
+   "description": "producer binding entry carrying BOTH an unknown member and trusted:false (s9 R-3 worked example); no head_witness supplied",
+   "files": {
+    "bindings": "cases/MC4/bindings.json",
+    "clock": "cases/MC4/clock.json",
+    "independence": "cases/MC4/independence.json",
+    "request": "cases/MC4/request.json",
+    "revocation": "cases/MC4/revocation.json"
+   }
+  }
+ ],
+ "note": "C1 adversarial coverage extension. These case directories live alongside the C0 45 under cases/ and are scored exactly the same way; they are indexed separately only so that case_index.json stays byte-identical to its pre-C1 bytes. Expected values here are MANUALLY DERIVED FROM CITED NORMATIVE CLAUSES, WITHOUT EXECUTING EVALUATION LOGIC (see ../C1_COVERAGE.md); the C0 45 are verbatim transcriptions of CLASS_VERIFIER_CONTRACT.md s7."
+}

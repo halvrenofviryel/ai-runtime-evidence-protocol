@@ -1,0 +1,520 @@
+{
+ "clause": "CLASS_VERIFIER_CONTRACT.md s2 (Results file)",
+ "derivation": "Mechanical application of the s2 rule to the corpus's own identifiers. No class, reason set or observer value is involved. The discriminating pair below is pinned by hand from its UTF-8 bytes and cross-checked by builder assertions ordering:discriminating-pair-*.",
+ "discriminating_pair": {
+  "chain_id": "cv-chain-ord",
+  "corpus_directory_order": [
+   "ORD1",
+   "ORD2"
+  ],
+  "first_expected": {
+   "case_id": "ORD2",
+   "final_scalar": "U+FF00",
+   "final_scalar_utf16be_hex": "ff00",
+   "final_scalar_utf8_hex": "efbc80",
+   "record_id": "cv-rec-ord-＀",
+   "record_id_utf8_hex": "63762d7265632d6f72642defbc80"
+  },
+  "note": "The corpus-directory order deliberately AGREES with the wrong (UTF-16) order, so emitting verdicts in directory order fails the same gate.",
+  "purpose": "Separate UTF-8 byte order from JavaScript's native UTF-16 code-unit order. Code-point order and UTF-8 byte order agree for ALL valid Unicode scalar values (UTF-8 is order-preserving by construction), so UTF-16 code-unit order is the only one of the three that diverges: this fixture is a naive-JavaScript-sort detector, which is the requirement's real runtime risk.",
+  "required_relative_order": [
+   "ORD2",
+   "ORD1"
+  ],
+  "second_expected": {
+   "case_id": "ORD1",
+   "final_scalar": "U+10000",
+   "final_scalar_utf16be_hex": "d800dc00",
+   "final_scalar_utf8_hex": "f0908080",
+   "record_id": "cv-rec-ord-𐀀",
+   "record_id_utf8_hex": "63762d7265632d6f72642df0908080"
+  },
+  "unicode_validity": "Both record_ids end in a valid Unicode SCALAR value. No lone surrogate is used anywhere in this corpus.",
+  "utf16_reasoning": "In UTF-16 code units the first differing unit is ff00 against the high surrogate d800. 0xD800 < 0xFF00, so a native JavaScript string comparison yields ORD1 before ORD2 — the OPPOSITE order, and a detectable failure.",
+  "utf8_reasoning": "The two record_ids share the prefix `cv-rec-ord-`; the first differing byte is ef (0xEF) against f0 (0xF0). 0xEF < 0xF0, so ORD2 precedes ORD1."
+ },
+ "order": [
+  {
+   "case_id": "CTL1",
+   "chain_id": "cv-chain-ctl1",
+   "chain_id_utf8_hex": "63762d636861696e2d63746c31",
+   "index": 0,
+   "record_id": "cv-rec-ctl1",
+   "record_id_utf8_hex": "63762d7265632d63746c31"
+  },
+  {
+   "case_id": "FR1",
+   "chain_id": "cv-chain-fr1",
+   "chain_id_utf8_hex": "63762d636861696e2d667231",
+   "index": 1,
+   "record_id": "cv-rec-fr1",
+   "record_id_utf8_hex": "63762d7265632d667231"
+  },
+  {
+   "case_id": "FR2",
+   "chain_id": "cv-chain-fr2",
+   "chain_id_utf8_hex": "63762d636861696e2d667232",
+   "index": 2,
+   "record_id": "cv-rec-fr2",
+   "record_id_utf8_hex": "63762d7265632d667232"
+  },
+  {
+   "case_id": "FR3",
+   "chain_id": "cv-chain-fr3",
+   "chain_id_utf8_hex": "63762d636861696e2d667233",
+   "index": 3,
+   "record_id": "cv-rec-fr3",
+   "record_id_utf8_hex": "63762d7265632d667233"
+  },
+  {
+   "case_id": "FR4",
+   "chain_id": "cv-chain-fr4",
+   "chain_id_utf8_hex": "63762d636861696e2d667234",
+   "index": 4,
+   "record_id": "cv-rec-fr4",
+   "record_id_utf8_hex": "63762d7265632d667234"
+  },
+  {
+   "case_id": "IND1",
+   "chain_id": "cv-chain-ind1",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6431",
+   "index": 5,
+   "record_id": "cv-rec-ind1",
+   "record_id_utf8_hex": "63762d7265632d696e6431"
+  },
+  {
+   "case_id": "IND2",
+   "chain_id": "cv-chain-ind2",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6432",
+   "index": 6,
+   "record_id": "cv-rec-ind2",
+   "record_id_utf8_hex": "63762d7265632d696e6432"
+  },
+  {
+   "case_id": "IND3",
+   "chain_id": "cv-chain-ind3",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6433",
+   "index": 7,
+   "record_id": "cv-rec-ind3",
+   "record_id_utf8_hex": "63762d7265632d696e6433"
+  },
+  {
+   "case_id": "IND4",
+   "chain_id": "cv-chain-ind4",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6434",
+   "index": 8,
+   "record_id": "cv-rec-ind4",
+   "record_id_utf8_hex": "63762d7265632d696e6434"
+  },
+  {
+   "case_id": "IND5",
+   "chain_id": "cv-chain-ind5",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6435",
+   "index": 9,
+   "record_id": "cv-rec-ind5",
+   "record_id_utf8_hex": "63762d7265632d696e6435"
+  },
+  {
+   "case_id": "IND6",
+   "chain_id": "cv-chain-ind6",
+   "chain_id_utf8_hex": "63762d636861696e2d696e6436",
+   "index": 10,
+   "record_id": "cv-rec-ind6",
+   "record_id_utf8_hex": "63762d7265632d696e6436"
+  },
+  {
+   "case_id": "LEX1",
+   "chain_id": "cv-chain-lex1",
+   "chain_id_utf8_hex": "63762d636861696e2d6c657831",
+   "index": 11,
+   "record_id": "cv-rec-lex1",
+   "record_id_utf8_hex": "63762d7265632d6c657831"
+  },
+  {
+   "case_id": "LEX2",
+   "chain_id": "cv-chain-lex2",
+   "chain_id_utf8_hex": "63762d636861696e2d6c657832",
+   "index": 12,
+   "record_id": "cv-rec-lex2",
+   "record_id_utf8_hex": "63762d7265632d6c657832"
+  },
+  {
+   "case_id": "LEX3",
+   "chain_id": "cv-chain-lex3",
+   "chain_id_utf8_hex": "63762d636861696e2d6c657833",
+   "index": 13,
+   "record_id": "cv-rec-lex3",
+   "record_id_utf8_hex": "63762d7265632d6c657833"
+  },
+  {
+   "case_id": "MC1",
+   "chain_id": "cv-chain-mc1",
+   "chain_id_utf8_hex": "63762d636861696e2d6d6331",
+   "index": 14,
+   "record_id": "cv-rec-mc1",
+   "record_id_utf8_hex": "63762d7265632d6d6331"
+  },
+  {
+   "case_id": "MC2",
+   "chain_id": "cv-chain-mc2",
+   "chain_id_utf8_hex": "63762d636861696e2d6d6332",
+   "index": 15,
+   "record_id": "cv-rec-mc2",
+   "record_id_utf8_hex": "63762d7265632d6d6332"
+  },
+  {
+   "case_id": "MC3",
+   "chain_id": "cv-chain-mc3",
+   "chain_id_utf8_hex": "63762d636861696e2d6d6333",
+   "index": 16,
+   "record_id": "cv-rec-mc3",
+   "record_id_utf8_hex": "63762d7265632d6d6333"
+  },
+  {
+   "case_id": "MC4",
+   "chain_id": "cv-chain-mc4",
+   "chain_id_utf8_hex": "63762d636861696e2d6d6334",
+   "index": 17,
+   "record_id": "cv-rec-mc4",
+   "record_id_utf8_hex": "63762d7265632d6d6334"
+  },
+  {
+   "case_id": "NG1",
+   "chain_id": "cv-chain-ng1",
+   "chain_id_utf8_hex": "63762d636861696e2d6e6731",
+   "index": 18,
+   "record_id": "cv-rec-ng1",
+   "record_id_utf8_hex": "63762d7265632d6e6731"
+  },
+  {
+   "case_id": "OB1",
+   "chain_id": "cv-chain-ob1",
+   "chain_id_utf8_hex": "63762d636861696e2d6f6231",
+   "index": 19,
+   "record_id": "cv-rec-ob1",
+   "record_id_utf8_hex": "63762d7265632d6f6231"
+  },
+  {
+   "case_id": "OB2",
+   "chain_id": "cv-chain-ob2",
+   "chain_id_utf8_hex": "63762d636861696e2d6f6232",
+   "index": 20,
+   "record_id": "cv-rec-ob2",
+   "record_id_utf8_hex": "63762d7265632d6f6232"
+  },
+  {
+   "case_id": "OB3",
+   "chain_id": "cv-chain-ob3",
+   "chain_id_utf8_hex": "63762d636861696e2d6f6233",
+   "index": 21,
+   "record_id": "cv-rec-ob3",
+   "record_id_utf8_hex": "63762d7265632d6f6233"
+  },
+  {
+   "case_id": "OB4",
+   "chain_id": "cv-chain-ob4",
+   "chain_id_utf8_hex": "63762d636861696e2d6f6234",
+   "index": 22,
+   "record_id": "cv-rec-ob4",
+   "record_id_utf8_hex": "63762d7265632d6f6234"
+  },
+  {
+   "case_id": "OB5",
+   "chain_id": "cv-chain-ob5",
+   "chain_id_utf8_hex": "63762d636861696e2d6f6235",
+   "index": 23,
+   "record_id": "cv-rec-ob5",
+   "record_id_utf8_hex": "63762d7265632d6f6235"
+  },
+  {
+   "case_id": "OBX1",
+   "chain_id": "cv-chain-obx1",
+   "chain_id_utf8_hex": "63762d636861696e2d6f627831",
+   "index": 24,
+   "record_id": "cv-rec-obx1",
+   "record_id_utf8_hex": "63762d7265632d6f627831"
+  },
+  {
+   "case_id": "OBX2",
+   "chain_id": "cv-chain-obx2",
+   "chain_id_utf8_hex": "63762d636861696e2d6f627832",
+   "index": 25,
+   "record_id": "cv-rec-obx2",
+   "record_id_utf8_hex": "63762d7265632d6f627832"
+  },
+  {
+   "case_id": "ORD2",
+   "chain_id": "cv-chain-ord",
+   "chain_id_utf8_hex": "63762d636861696e2d6f7264",
+   "index": 26,
+   "record_id": "cv-rec-ord-＀",
+   "record_id_utf8_hex": "63762d7265632d6f72642defbc80"
+  },
+  {
+   "case_id": "ORD1",
+   "chain_id": "cv-chain-ord",
+   "chain_id_utf8_hex": "63762d636861696e2d6f7264",
+   "index": 27,
+   "record_id": "cv-rec-ord-𐀀",
+   "record_id_utf8_hex": "63762d7265632d6f72642df0908080"
+  },
+  {
+   "case_id": "P1",
+   "chain_id": "cv-chain-p1",
+   "chain_id_utf8_hex": "63762d636861696e2d7031",
+   "index": 28,
+   "record_id": "cv-rec-p1",
+   "record_id_utf8_hex": "63762d7265632d7031"
+  },
+  {
+   "case_id": "P2",
+   "chain_id": "cv-chain-p2",
+   "chain_id_utf8_hex": "63762d636861696e2d7032",
+   "index": 29,
+   "record_id": "cv-rec-p2",
+   "record_id_utf8_hex": "63762d7265632d7032"
+  },
+  {
+   "case_id": "P3",
+   "chain_id": "cv-chain-p3",
+   "chain_id_utf8_hex": "63762d636861696e2d7033",
+   "index": 30,
+   "record_id": "cv-rec-p3",
+   "record_id_utf8_hex": "63762d7265632d7033"
+  },
+  {
+   "case_id": "PB1",
+   "chain_id": "cv-chain-pb1",
+   "chain_id_utf8_hex": "63762d636861696e2d706231",
+   "index": 31,
+   "record_id": "cv-rec-pb1",
+   "record_id_utf8_hex": "63762d7265632d706231"
+  },
+  {
+   "case_id": "PB2",
+   "chain_id": "cv-chain-pb2",
+   "chain_id_utf8_hex": "63762d636861696e2d706232",
+   "index": 32,
+   "record_id": "cv-rec-pb2",
+   "record_id_utf8_hex": "63762d7265632d706232"
+  },
+  {
+   "case_id": "PB3",
+   "chain_id": "cv-chain-pb3",
+   "chain_id_utf8_hex": "63762d636861696e2d706233",
+   "index": 33,
+   "record_id": "cv-rec-pb3",
+   "record_id_utf8_hex": "63762d7265632d706233"
+  },
+  {
+   "case_id": "PB4",
+   "chain_id": "cv-chain-pb4",
+   "chain_id_utf8_hex": "63762d636861696e2d706234",
+   "index": 34,
+   "record_id": "cv-rec-pb4",
+   "record_id_utf8_hex": "63762d7265632d706234"
+  },
+  {
+   "case_id": "PB5",
+   "chain_id": "cv-chain-pb5",
+   "chain_id_utf8_hex": "63762d636861696e2d706235",
+   "index": 35,
+   "record_id": "cv-rec-pb5",
+   "record_id_utf8_hex": "63762d7265632d706235"
+  },
+  {
+   "case_id": "PB6",
+   "chain_id": "cv-chain-pb6",
+   "chain_id_utf8_hex": "63762d636861696e2d706236",
+   "index": 36,
+   "record_id": "cv-rec-pb6",
+   "record_id_utf8_hex": "63762d7265632d706236"
+  },
+  {
+   "case_id": "PB7",
+   "chain_id": "cv-chain-pb7",
+   "chain_id_utf8_hex": "63762d636861696e2d706237",
+   "index": 37,
+   "record_id": "cv-rec-pb7",
+   "record_id_utf8_hex": "63762d7265632d706237"
+  },
+  {
+   "case_id": "PI1",
+   "chain_id": "cv-chain-pi1",
+   "chain_id_utf8_hex": "63762d636861696e2d706931",
+   "index": 38,
+   "record_id": "cv-rec-pi1",
+   "record_id_utf8_hex": "63762d7265632d706931"
+  },
+  {
+   "case_id": "PI2",
+   "chain_id": "cv-chain-pi2",
+   "chain_id_utf8_hex": "63762d636861696e2d706932",
+   "index": 39,
+   "record_id": "cv-rec-pi2",
+   "record_id_utf8_hex": "63762d7265632d706932"
+  },
+  {
+   "case_id": "PI3",
+   "chain_id": "cv-chain-pi3",
+   "chain_id_utf8_hex": "63762d636861696e2d706933",
+   "index": 40,
+   "record_id": "cv-rec-pi3",
+   "record_id_utf8_hex": "63762d7265632d706933"
+  },
+  {
+   "case_id": "PS1",
+   "chain_id": "cv-chain-ps1",
+   "chain_id_utf8_hex": "63762d636861696e2d707331",
+   "index": 41,
+   "record_id": "cv-rec-ps1",
+   "record_id_utf8_hex": "63762d7265632d707331"
+  },
+  {
+   "case_id": "PS2",
+   "chain_id": "cv-chain-ps2",
+   "chain_id_utf8_hex": "63762d636861696e2d707332",
+   "index": 42,
+   "record_id": "cv-rec-ps2",
+   "record_id_utf8_hex": "63762d7265632d707332"
+  },
+  {
+   "case_id": "PS3",
+   "chain_id": "cv-chain-ps3",
+   "chain_id_utf8_hex": "63762d636861696e2d707333",
+   "index": 43,
+   "record_id": "cv-rec-ps3",
+   "record_id_utf8_hex": "63762d7265632d707333"
+  },
+  {
+   "case_id": "TI1",
+   "chain_id": "cv-chain-ti1",
+   "chain_id_utf8_hex": "63762d636861696e2d746931",
+   "index": 44,
+   "record_id": "cv-rec-ti1",
+   "record_id_utf8_hex": "63762d7265632d746931"
+  },
+  {
+   "case_id": "TI2",
+   "chain_id": "cv-chain-ti2",
+   "chain_id_utf8_hex": "63762d636861696e2d746932",
+   "index": 45,
+   "record_id": "cv-rec-ti2",
+   "record_id_utf8_hex": "63762d7265632d746932"
+  },
+  {
+   "case_id": "WB1",
+   "chain_id": "cv-chain-wb1",
+   "chain_id_utf8_hex": "63762d636861696e2d776231",
+   "index": 46,
+   "record_id": "cv-rec-wb1",
+   "record_id_utf8_hex": "63762d7265632d776231"
+  },
+  {
+   "case_id": "WB2",
+   "chain_id": "cv-chain-wb2",
+   "chain_id_utf8_hex": "63762d636861696e2d776232",
+   "index": 47,
+   "record_id": "cv-rec-wb2",
+   "record_id_utf8_hex": "63762d7265632d776232"
+  },
+  {
+   "case_id": "WB3",
+   "chain_id": "cv-chain-wb3",
+   "chain_id_utf8_hex": "63762d636861696e2d776233",
+   "index": 48,
+   "record_id": "cv-rec-wb3",
+   "record_id_utf8_hex": "63762d7265632d776233"
+  },
+  {
+   "case_id": "WB4",
+   "chain_id": "cv-chain-wb4",
+   "chain_id_utf8_hex": "63762d636861696e2d776234",
+   "index": 49,
+   "record_id": "cv-rec-wb4",
+   "record_id_utf8_hex": "63762d7265632d776234"
+  },
+  {
+   "case_id": "WB5",
+   "chain_id": "cv-chain-wb5",
+   "chain_id_utf8_hex": "63762d636861696e2d776235",
+   "index": 50,
+   "record_id": "cv-rec-wb5",
+   "record_id_utf8_hex": "63762d7265632d776235"
+  },
+  {
+   "case_id": "WB6",
+   "chain_id": "cv-chain-wb6",
+   "chain_id_utf8_hex": "63762d636861696e2d776236",
+   "index": 51,
+   "record_id": "cv-rec-wb6",
+   "record_id_utf8_hex": "63762d7265632d776236"
+  },
+  {
+   "case_id": "WB7",
+   "chain_id": "cv-chain-wb7",
+   "chain_id_utf8_hex": "63762d636861696e2d776237",
+   "index": 52,
+   "record_id": "cv-rec-wb7",
+   "record_id_utf8_hex": "63762d7265632d776237"
+  },
+  {
+   "case_id": "WM1",
+   "chain_id": "cv-chain-wm1",
+   "chain_id_utf8_hex": "63762d636861696e2d776d31",
+   "index": 53,
+   "record_id": "cv-rec-wm1",
+   "record_id_utf8_hex": "63762d7265632d776d31"
+  },
+  {
+   "case_id": "WM2",
+   "chain_id": "cv-chain-wm2",
+   "chain_id_utf8_hex": "63762d636861696e2d776d32",
+   "index": 54,
+   "record_id": "cv-rec-wm2",
+   "record_id_utf8_hex": "63762d7265632d776d32"
+  },
+  {
+   "case_id": "WM3",
+   "chain_id": "cv-chain-wm3",
+   "chain_id_utf8_hex": "63762d636861696e2d776d33",
+   "index": 55,
+   "record_id": "cv-rec-wm3",
+   "record_id_utf8_hex": "63762d7265632d776d33"
+  },
+  {
+   "case_id": "WM4",
+   "chain_id": "cv-chain-wm4",
+   "chain_id_utf8_hex": "63762d636861696e2d776d34",
+   "index": 56,
+   "record_id": "cv-rec-wm4",
+   "record_id_utf8_hex": "63762d7265632d776d34"
+  },
+  {
+   "case_id": "WM5",
+   "chain_id": "cv-chain-wm5",
+   "chain_id_utf8_hex": "63762d636861696e2d776d35",
+   "index": 57,
+   "record_id": "cv-rec-wm5",
+   "record_id_utf8_hex": "63762d7265632d776d35"
+  },
+  {
+   "case_id": "WM6",
+   "chain_id": "cv-chain-wm6-a",
+   "chain_id_utf8_hex": "63762d636861696e2d776d362d61",
+   "index": 58,
+   "record_id": "cv-rec-wm6-dup",
+   "record_id_utf8_hex": "63762d7265632d776d362d647570"
+  },
+  {
+   "case_id": "XT1",
+   "chain_id": "cv-chain-xt1",
+   "chain_id_utf8_hex": "63762d636861696e2d787431",
+   "index": 59,
+   "record_id": "cv-rec-xt1",
+   "record_id_utf8_hex": "63762d7265632d787431"
+  }
+ ],
+ "rule": "Results file: {\"verdicts\": [ ... ]} — a deterministically ordered array sorted by (chain_id, record_id) under unsigned lexicographic order over each string's UTF-8 byte sequence, with no Unicode normalization.",
+ "scope": "A batch run over corpus/cases/ (all C0 + C1 verdict cases). For any sub-batch the expected order is the induced subsequence of `order`. corpus/probes/ is NOT part of a scored batch."
+}
