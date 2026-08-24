@@ -328,11 +328,10 @@ class OperatorInputs:
         # Entry type and member closure were already established document-wide
         # by _binding_maps (errata E-4); a malformed store never reaches here.
 
-        # Contract 1.1 priority order: not-trusted (definitive negative) before
-        # the structural malformed bucket, then the suite registry.
-        if "trusted" in entry and entry["trusted"] is not True:
-            return binding_id, entry, "binding-not-trusted"
-
+        # Section 9 R-3: structural malformation PRECEDES the semantic trust
+        # decision. `*-binding-not-trusted` applies only when the input is
+        # structurally valid and `trusted` is present but not literally `true`,
+        # so every *-binding-malformed test runs first.
         if not RE_NAMESPACED.match(binding_id):
             return binding_id, entry, "binding-malformed"
         if "trusted" not in entry:
@@ -348,6 +347,12 @@ class OperatorInputs:
         suite = entry.get("suite")
         if not isinstance(suite, str):
             return binding_id, entry, "binding-malformed"
+
+        # The entry is structurally valid: now the operator policy's definitive
+        # negative (R-3), which still precedes the suite registry.
+        if entry["trusted"] is not True:
+            return binding_id, entry, "binding-not-trusted"
+
         if suite not in SUITE_REGISTRY:
             return binding_id, entry, "suite-unsupported"
         return binding_id, entry, None
@@ -791,21 +796,17 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str,
         emit("no-witness-supplied")
     else:
         claim = head_witness.get("claim")
+        # Stage 6 is ONE gate with three DEPENDENT sub-steps (section 9 R-2):
+        # shape -> resolution/reconciliation -> time. Exactly one of them may
+        # report; a failing sub-step suppresses the ones after it. Shape and
+        # time therefore never both report.
+        #
         # 6a. frozen five-member claim shape + numeric SOURCE LEXEMES (E-1).
         claim_ok = claim_structurally_valid(claim, claim_lexemes)
         if not claim_ok:
             emit("witness-claim-invalid")
-        # 6b. witnessed_at format + Gregorian validity (E-2). Its only
-        # prerequisite is that the member is present and a string, so it is
-        # reported alongside 6a rather than suppressed by it, and it runs
-        # whether or not clock inputs were supplied.
-        time_ok = False
-        if isinstance(claim, dict) and isinstance(claim.get("witnessed_at"), str):
-            time_ok = claim_time_structurally_valid(claim)
-            if not time_ok:
-                emit("witness-time-invalid")
-        # 6c. resolution + reconciliation, gated on a structurally valid claim.
-        if claim_ok and time_ok:
+        else:
+            # 6b. head resolution, must-be-primary, reconciliation (R-2/R-5).
             candidates = [artifact] + related
             resolved, status = resolve_reference(head_witness["head_ref"], candidates)
             if status != "ok":
@@ -820,6 +821,11 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str,
                 or claim["current"] != artifact["integrity"]["current"]
             ):
                 emit("witness-head-mismatch")
+            # 6c. witnessed_at format + Gregorian validity (E-2, sequenced by
+            # R-2). Runs only after 6a and 6b are clean. Clock inputs play no
+            # part in this check.
+            elif not claim_time_structurally_valid(claim):
+                emit("witness-time-invalid")
             else:
                 head_artifact = resolved
                 stage6_clean = True
