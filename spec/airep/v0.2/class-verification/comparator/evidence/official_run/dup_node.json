@@ -1,0 +1,48 @@
+{
+ "verdicts": [
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p1",
+    "record_id": "cv-rec-p1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p1",
+    "record_id": "cv-rec-p1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ ]
+}

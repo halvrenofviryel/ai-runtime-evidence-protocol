@@ -1,0 +1,1013 @@
+{
+ "verdicts": [
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr1",
+    "record_id": "cv-rec-fr1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-freshness-outside-window"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr2",
+    "record_id": "cv-rec-fr2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-freshness-outside-window"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr3",
+    "record_id": "cv-rec-fr3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Witnessed",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr4",
+    "record_id": "cv-rec-fr4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": null,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": null,
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "freshness-inputs-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind1",
+    "record_id": "cv-rec-ind1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:b343cdc7a3846a0fbd21c40bbcf65d3815e92c1a878a78d4cf7640cdbb8034ba",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:52923dc9be8476bddb96911fc869c8a31c0ebeb7b860b6ccb7b45da5adf349fa",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:dd0b1cf58f4d6ace6dd1c714ed95a193ee18e0e00c64c62eb8acb8bbd378610c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-key-not-distinct"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind2",
+    "record_id": "cv-rec-ind2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:6dbe9a42b6e6b5a887849c142675223a69b89356c0ad4e1dc74650ec2fbb9014",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:2f410964d578544178735bf303a0425e718784b1b58bdf58083ea5500b646249",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:6723f39505bdc7fe5293f48720127c7c16813d4cb8064a7a5074fc08b30eadd4"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-identity-not-distinct"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind3",
+    "record_id": "cv-rec-ind3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:1e4b5cdce414bd177b28534f814c4441cb1dc33cfed6f4f79b640adf0741a14e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "independence-relation-absent"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind4",
+    "record_id": "cv-rec-ind4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:2433f2c4b02c93c1389739c85232f058301336a5719c5b537fc48866998f6687",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "independence-explicitly-denied"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind5",
+    "record_id": "cv-rec-ind5"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:49ee91755231d2f1169b040496f6cb484d5dd6745b59de51a6ba863ade0fa330",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "independence-policy-malformed"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind6",
+    "record_id": "cv-rec-ind6"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": null,
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "independence-policy-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob1",
+    "record_id": "cv-rec-ob1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "independent",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob2",
+    "record_id": "cv-rec-ob2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "unknown",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob3",
+    "record_id": "cv-rec-ob3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "same_executor",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob4",
+    "record_id": "cv-rec-ob4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "unknown",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob5",
+    "record_id": "cv-rec-ob5"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "unknown",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p1",
+    "record_id": "cv-rec-p1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p2",
+    "record_id": "cv-rec-p2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Witnessed",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p3",
+    "record_id": "cv-rec-p3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "independent",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb1",
+    "record_id": "cv-rec-pb1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-binding-revoked"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:d66e5c4f526ed1e19382efac5b0f3c4b74811774b3645a9976b7bb64aca17047"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb2",
+    "record_id": "cv-rec-pb2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-binding-missing"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad423d563f6917eac7821067041b63e7b6642cede06fb093b58213e902f06422",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb3",
+    "record_id": "cv-rec-pb3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-binding-not-trusted"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:38ee3d0189bded20681fbe42e45a018c7a8d79d37fcfb3aee9e35547a143015f",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb4",
+    "record_id": "cv-rec-pb4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-binding-malformed"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:e2c8b6b7fdc8083973e6335aff1fca61d54e1f8c171c7ac2923189f4e7150600",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb5",
+    "record_id": "cv-rec-pb5"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-suite-unsupported"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:1765e2daa7198c0ccda18a481c2d9a8ed06453e4756af0ff1228155aa68f1e0b",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb6",
+    "record_id": "cv-rec-pb6"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-revocation-state-missing"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:f11408bf87c35bbe3712aad70045f8c558a750e2809c88b67a085fdc2c9b41a7"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb7",
+    "record_id": "cv-rec-pb7"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-revocation-state-malformed"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:16197a42f96ff8875db2fd4e6072c758be079f77ee0bc14454a15268c2050c2a"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pi1",
+    "record_id": "cv-rec-pi1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-revocation-state-missing"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": null,
+    "independence_policy_digest": null,
+    "now": null,
+    "revocation_digest": null
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "freshness-inputs-missing",
+    "witness-revocation-state-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pi2",
+    "record_id": "cv-rec-pi2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": null,
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "independence-policy-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pi3",
+    "record_id": "cv-rec-pi3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": null,
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "freshness-inputs-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ps1",
+    "record_id": "cv-rec-ps1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-signature-invalid"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ps2",
+    "record_id": "cv-rec-ps2"
+   },
+   "authenticated_caveats": [
+    "wire-alg-mismatch"
+   ],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ps3",
+    "record_id": "cv-rec-ps3"
+   },
+   "authenticated_caveats": [
+    "producer-key-self-revoked"
+   ],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb1",
+    "record_id": "cv-rec-wb1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:595b2d2d7b4f0813021a757883faf2907cf302b3ed46e374989558268329c859"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-binding-revoked"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb2",
+    "record_id": "cv-rec-wb2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:b85ce6bec76b6c191513ae2e3d42e8d60b8033abcfc79c44ba8c454298da081b",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-binding-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb3",
+    "record_id": "cv-rec-wb3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:a3819091ce9599cc3434e6d1674a1f451d421d5aec6660731a7cadb50c845e27",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-binding-not-trusted"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb4",
+    "record_id": "cv-rec-wb4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:79d7833d35aca23e5617f474d9b620fe65b6286634b161e44236efefbf201c20",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-binding-malformed"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb5",
+    "record_id": "cv-rec-wb5"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:3790a12ef1aac1f61d4cf1bb0017d656cb1e46209dd0751e1259e512ea4ece3f",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-suite-unsupported"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb6",
+    "record_id": "cv-rec-wb6"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:f4e00d85ac2028d4981b5dee3b14c5adaded709335cafe80baf4ff4da1ea417a"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-revocation-state-missing"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb7",
+    "record_id": "cv-rec-wb7"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:f7ca06c02f0d94253a06ca05be421c6b10b39abaa4f22eb0ea444df14b0c3fc6"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-revocation-state-malformed"
+   ]
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm1",
+    "record_id": "cv-rec-wm1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-claim-invalid"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm2",
+    "record_id": "cv-rec-wm2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-signature-invalid"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm3",
+    "record_id": "cv-rec-wm3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-head-unresolved"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm4",
+    "record_id": "cv-rec-wm4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-head-mismatch"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm5",
+    "record_id": "cv-rec-wm5"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-head-mismatch"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm6-a",
+    "record_id": "cv-rec-wm6-dup"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-head-unresolved"
+   ],
+   "witnessed_withheld": []
+  },
+  {
+   "artifact_ref": {
+    "chain_id": "cv-chain-xt1",
+    "record_id": "cv-rec-xt1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-binding-revoked"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:d66e5c4f526ed1e19382efac5b0f3c4b74811774b3645a9976b7bb64aca17047"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  }
+ ]
+}
