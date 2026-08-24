@@ -25,7 +25,12 @@ const PUBKEY_HEX = /^[0-9a-f]{64}$/;
 const WITNESSED_AT = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})Z$/;
 const NOW_PATTERN = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.([0-9]{1,9}))?Z$/;
 
-const SPEC_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "spec", "schemas");
+// Committed repository layout: this file sits at
+// <root>/v0.2/class-verification/verifier_node_r2/class_verifier.mjs and the
+// accepted schemas at <root>/v0.2/schemas/ -- hence "../../schemas". Any other
+// layout (e.g. a review snapshot) supplies --schema-dir.
+const DEFAULT_SCHEMA_DIR = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "..", "schemas");
+let schemaDir = DEFAULT_SCHEMA_DIR;
 
 // Closed reason registry (contract section 5). tier: authenticated|witnessed.
 const REASONS = {
@@ -97,6 +102,81 @@ function isPlainObject(v) {
 
 function deepCopy(v) {
   return JSON.parse(JSON.stringify(v));
+}
+
+// ---------------------------------------------------------------------------
+// 2b. Numeric source lexemes (errata E-1)
+// ---------------------------------------------------------------------------
+// INTEGRITY 4.2's "no sign, no fraction, no exponent" constrains the SOURCE
+// SPELLING of the witness claim's `sequence` / `length`, but JSON.parse erases
+// it ("1e0", "1.0", "-0" all become a number) and this runtime's reviver has no
+// source access. So the request text is scanned once into a shadow tree that
+// mirrors the document's containers and member names while replacing every
+// number token with { lexeme: "<raw token text>" } and every other scalar with
+// null. The input has already parsed, so the scanner assumes well-formed JSON.
+
+const NUMBER_TOKEN = /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][-+]?[0-9]+)?/;
+const INTEGER_LEXEME = /^(0|[1-9][0-9]*)$/;   // the frozen lexical rule
+
+function jsonShadow(text) {
+  let i = 0;
+  const ws = () => { while (i < text.length && " \t\n\r".includes(text[i])) i++; };
+  const str = () => {
+    const start = i++;                                  // consume the opening quote
+    for (;;) {
+      const c = text[i];
+      if (c === "\\") { i += 2; continue; }
+      i++;
+      if (c === '"') break;
+    }
+    return JSON.parse(text.slice(start, i));            // member names keep escape semantics
+  };
+  const value = () => {
+    ws();
+    const c = text[i];
+    if (c === "{") {
+      i++; ws();
+      const o = {};
+      if (text[i] === "}") { i++; return o; }
+      for (;;) {
+        ws();
+        const k = str();
+        ws(); i++;                                      // consume ':'
+        o[k] = value();
+        ws();
+        if (text[i] === ",") { i++; continue; }
+        i++;                                            // consume '}'
+        return o;
+      }
+    }
+    if (c === "[") {
+      i++; ws();
+      const a = [];
+      if (text[i] === "]") { i++; return a; }
+      for (;;) {
+        a.push(value());
+        ws();
+        if (text[i] === ",") { i++; continue; }
+        i++;                                            // consume ']'
+        return a;
+      }
+    }
+    if (c === '"') { str(); return null; }
+    const m = NUMBER_TOKEN.exec(text.slice(i));
+    if (m) { i += m[0].length; return { lexeme: m[0] }; }
+    i += text.startsWith("true", i) ? 4 : text.startsWith("false", i) ? 5 : 4;   // true|false|null
+    return null;
+  };
+  return value();
+}
+
+// The two lexemes stage 6 needs, or null when the document has no such token.
+function claimNumericLexemes(shadow) {
+  const claim = isPlainObject(shadow) && isPlainObject(shadow.head_witness)
+    ? shadow.head_witness.claim : null;
+  const lex = (k) => (isPlainObject(claim) && isPlainObject(claim[k])
+    && typeof claim[k].lexeme === "string" ? claim[k].lexeme : null);
+  return { sequence: lex("sequence"), length: lex("length") };
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +322,15 @@ function schemaValidators() {
   const files = ["common", "decision", "control", "execution", "effect"];
   const schemas = {};
   for (const f of files) {
-    schemas[f] = JSON.parse(fs.readFileSync(path.join(SPEC_DIR, `${f}.schema.json`), "utf8"));
+    let text;
+    try {
+      text = fs.readFileSync(path.join(schemaDir, `${f}.schema.json`), "utf8");
+    } catch {
+      // A schema directory that does not resolve is a config error, not a class
+      // result (contract 6.4 exit 2, as for the malformed clock inputs).
+      throw new UsageError(`accepted schema not readable under --schema-dir: ${schemaDir}`);
+    }
+    schemas[f] = JSON.parse(text);
   }
   ajv.addSchema(schemas.common);
   validators = {};
@@ -278,7 +366,7 @@ function readJsonFile(file, what) {
     throw new InvalidRunError(`${what} file could not be parsed as JSON: ${file}`);
   }
   const digest = "sha256:" + crypto.createHash("sha256").update(bytes).digest("hex");
-  return { value, digest };
+  return { value, digest, text: bytes.toString("utf8") };
 }
 
 function onlyKeys(obj, allowed) {
@@ -292,18 +380,15 @@ function loadBindingStore(value) {
   if (!isPlainObject(value)) return store;
   if (!onlyKeys(value, ["bindings", "producer_bindings", "witness_bindings"])) return store;
   const b = value.bindings, p = value.producer_bindings, w = value.witness_bindings;
-  if (b !== undefined && !isPlainObject(b)) return store;
-  if (p !== undefined && !isPlainObject(p)) return store;
-  if (w !== undefined && !isPlainObject(w)) return store;
+  // E-4: the section-1 container members are REQUIRED, not defaulted to empty.
+  if (!isPlainObject(b) || !isPlainObject(p) || !isPlainObject(w)) return store;
   for (const map of [p, w]) {
-    if (map) {
-      for (const k of Object.keys(map)) if (typeof map[k] !== "string") return store;
-    }
+    for (const k of Object.keys(map)) if (typeof map[k] !== "string") return store;
   }
   store.wellFormed = true;
-  store.bindings = b || {};
-  store.producer = p || {};
-  store.witness = w || {};
+  store.bindings = b;
+  store.producer = p;
+  store.witness = w;
   return store;
 }
 
@@ -343,9 +428,9 @@ function loadRevocation(value) {
   if (!isPlainObject(value)) return snap;
   if (!onlyKeys(value, ["snapshot_id", "bindings"])) return snap;
   if (typeof value.snapshot_id !== "string" || !NAMESPACED_ID.test(value.snapshot_id)) return snap;
-  if (value.bindings !== undefined && !isPlainObject(value.bindings)) return snap;
+  if (!isPlainObject(value.bindings)) return snap;          // E-4: required member
   snap.wellFormed = true;
-  snap.bindings = value.bindings || {};
+  snap.bindings = value.bindings;
   return snap;
 }
 
@@ -367,8 +452,7 @@ function loadIndependence(value) {
   if (!isPlainObject(value)) return pol;
   if (!onlyKeys(value, ["independent_pairs", "non_independent_pairs"])) return pol;
   const parse = (arr) => {
-    if (arr === undefined) return [];
-    if (!Array.isArray(arr)) return null;
+    if (!Array.isArray(arr)) return null;                   // E-4: required member
     const out = [];
     for (const p of arr) {
       if (!isPlainObject(p) || !onlyKeys(p, ["a", "b"])) return null;
@@ -406,7 +490,9 @@ function policyRelation(policy, x, y) {
 // 7. Contract section 0: evaluation request envelope + reference resolution
 // ---------------------------------------------------------------------------
 
-function loadRequest(value) {
+const CLAIM_MEMBERS = ["chain_id", "sequence", "current", "length", "witnessed_at"];
+
+function loadRequest(value, text) {
   if (!isPlainObject(value)) throw new InvalidRunError("request is not a JSON object");
   if (!onlyKeys(value, ["artifact", "related_artifacts", "head_witness"])) {
     throw new InvalidRunError("request envelope carries an unknown member (closed envelope)");
@@ -428,10 +514,23 @@ function loadRequest(value) {
         throw new InvalidRunError(`head_witness is missing ${k}`);
       }
     }
+    // E-4: the section-0 envelope's nested objects are closed; an unknown member
+    // in head_ref / claim / signature makes the RUN invalid (not a class reason).
+    if (isPlainObject(h.head_ref) && !onlyKeys(h.head_ref, ["record_id", "chain_id"])) {
+      throw new InvalidRunError("head_witness.head_ref carries an unknown member (closed envelope)");
+    }
+    if (isPlainObject(h.claim) && !onlyKeys(h.claim, CLAIM_MEMBERS)) {
+      throw new InvalidRunError("head_witness.claim carries an unknown member (closed envelope)");
+    }
     if (!isPlainObject(h.signature)) throw new InvalidRunError("head_witness.signature is not an object");
+    if (!onlyKeys(h.signature, ["alg", "value"])) {
+      throw new InvalidRunError("head_witness.signature carries an unknown member (closed envelope)");
+    }
     hw = h;
   }
-  return { artifact: value.artifact, related, head_witness: hw };
+  // E-1: the claim's numeric source lexemes, recovered from the request text.
+  const claimLexemes = claimNumericLexemes(typeof text === "string" ? jsonShadow(text) : null);
+  return { artifact: value.artifact, related, head_witness: hw, claimLexemes };
 }
 
 // v0.2 reference semantics: match record_id, additionally chain_id when carried.
@@ -534,17 +633,20 @@ function independenceGate(aBindingId, aBinding, bBindingId, bBinding, policy, na
 // 10. Head-witness claim structural validation (frozen INTEGRITY 4.2)
 // ---------------------------------------------------------------------------
 
-function claimStructurallyValid(claim) {
+function claimStructurallyValid(claim, lexemes) {
   if (!isPlainObject(claim)) return false;
-  const members = ["chain_id", "sequence", "current", "length", "witnessed_at"];
   const keys = Object.keys(claim);
-  if (keys.length !== members.length) return false;              // closed: exactly five
-  for (const m of members) if (!Object.prototype.hasOwnProperty.call(claim, m)) return false;
+  if (keys.length !== CLAIM_MEMBERS.length) return false;        // closed: exactly five
+  for (const m of CLAIM_MEMBERS) if (!Object.prototype.hasOwnProperty.call(claim, m)) return false;
   if (typeof claim.chain_id !== "string") return false;
   if (typeof claim.sequence !== "number" || !Number.isSafeInteger(claim.sequence) || claim.sequence < 0) return false;
   if (typeof claim.current !== "string" || !SHA256_DIGEST.test(claim.current)) return false;
   if (typeof claim.length !== "number" || !Number.isSafeInteger(claim.length) || claim.length < 1) return false;
-  if (typeof claim.witnessed_at !== "string") return false;      // time semantics: stage 10
+  if (typeof claim.witnessed_at !== "string") return false;      // value semantics: stage 6, below
+  // E-1: the numeric members carry a LEXICAL rule; the parsed value is not
+  // sufficient, so the source spelling must itself be a bare decimal integer.
+  if (!INTEGER_LEXEME.test(lexemes.sequence ?? "")) return false;
+  if (!INTEGER_LEXEME.test(lexemes.length ?? "")) return false;
   return true;
 }
 
@@ -581,8 +683,16 @@ function evaluate(request, policy) {
   } else {
     const pool = [artifact, ...request.related];
     const resolved = resolveRef(hw.head_ref, pool);
-    const claimOk = claimStructurallyValid(hw.claim);
+    const claimOk = claimStructurallyValid(hw.claim, request.claimLexemes);
     if (!claimOk) witFailures.push("witness-claim-invalid");
+    // E-2: witnessed_at format + Gregorian validity is part of the claim's own
+    // structural validity and is evaluated here, independently of the clock
+    // inputs. Stage 10 below computes recency only.
+    let timeOk = false;
+    if (claimOk) {
+      timeOk = parseWitnessedAt(hw.claim.witnessed_at) !== null;
+      if (!timeOk) witFailures.push("witness-time-invalid");
+    }
     if (resolved.status !== "ok") {
       witFailures.push("witness-head-unresolved");
     } else if (resolved.artifact !== artifact) {
@@ -590,11 +700,13 @@ function evaluate(request, policy) {
       witFailures.push("witness-head-mismatch");
     } else if (claimOk) {
       const c = hw.claim;
+      // E-5: a claim that resolves to the primary but does not reconcile is
+      // witness-head-mismatch, the same reason as resolving elsewhere.
       const reconciles = c.chain_id === artifact.chain_id
         && c.sequence === artifact.sequence
         && c.current === artifact.integrity.current;
       if (!reconciles) witFailures.push("witness-head-mismatch");
-      else stage6Clean = true;
+      else if (timeOk) stage6Clean = true;
     }
   }
 
@@ -653,10 +765,9 @@ function evaluate(request, policy) {
     if (policy.now === null || policy.freshnessWindow === null) {
       witWithheld.push("freshness-inputs-missing");
     } else {
+      // stage6Clean implies witnessed_at already parsed (E-2): recency only here.
       const w = parseWitnessedAt(hw.claim.witnessed_at);
-      if (w === null) {
-        witFailures.push("witness-time-invalid");
-      } else if (!withinWindow(policy.nowInstant, w, policy.freshnessWindow)) {
+      if (!withinWindow(policy.nowInstant, w, policy.freshnessWindow)) {
         witFailures.push("witness-freshness-outside-window");
       }
     }
@@ -749,6 +860,9 @@ Single case:
 Batch:
   node class_verifier.mjs --corpus DIR --out FILE
 
+  --schema-dir DIR   accepted v0.2 schema directory
+                     (default: ../../schemas, relative to this file)
+
 Exit codes: 0 evaluation completed; 1 unparseable input or stage-0/1 artifact
 invalidity (no verdict producible); 2 CLI usage/config error.
 `;
@@ -756,7 +870,7 @@ invalidity (no verdict producible); 2 CLI usage/config error.
 function parseArgs(argv) {
   const flags = {
     request: null, bindings: null, "independence-policy": null, revocation: null,
-    now: null, "freshness-window": null, corpus: null, out: null,
+    now: null, "freshness-window": null, corpus: null, out: null, "schema-dir": null,
   };
   let help = false;
   for (let i = 0; i < argv.length; i++) {
@@ -833,7 +947,7 @@ function runSingle(flags) {
     freshnessWindow: flags["freshness-window"],
   });
   const req = readJsonFile(flags.request, "request");
-  const request = loadRequest(req.value);
+  const request = loadRequest(req.value, req.text);
   const verdict = evaluate(request, policy);
   process.stdout.write(stableStringify(verdict) + "\n");
   return 0;
@@ -847,6 +961,7 @@ function runBatch(flags) {
   if (!Array.isArray(index)) throw new InvalidRunError("case_index.json is not an array");
 
   const verdicts = [];
+  let invalidCases = 0;
   for (const entry of index) {
     const files = entry.files || {};
     const resolve = (k) => (files[k] === undefined ? null : path.join(dir, files[k]));
@@ -873,8 +988,16 @@ function runBatch(flags) {
     });
     const reqPath = resolve("request");
     if (reqPath === null) throw new InvalidRunError(`case ${entry.case_id} supplies no request file`);
-    const request = loadRequest(readJsonFile(reqPath, "request").value);
-    verdicts.push(evaluate(request, policy));
+    try {
+      const reqFile = readJsonFile(reqPath, "request");
+      const request = loadRequest(reqFile.value, reqFile.text);
+      verdicts.push(evaluate(request, policy));
+    } catch (e) {
+      if (!(e instanceof InvalidRunError)) throw e;
+      // No class verdict is producible for this case (contract 6.4 exit 1).
+      process.stderr.write(`invalid: case ${entry.case_id}: ${e.message}\n`);
+      invalidCases++;
+    }
   }
 
   verdicts.sort((x, y) => {
@@ -883,7 +1006,7 @@ function runBatch(flags) {
   });
 
   fs.writeFileSync(flags.out, stableStringify({ verdicts }) + "\n");
-  return 0;
+  return invalidCases > 0 ? 1 : 0;
 }
 
 function main() {
@@ -899,6 +1022,7 @@ function main() {
     return 0;
   }
   const { flags } = parsed;
+  if (flags["schema-dir"] !== null) schemaDir = flags["schema-dir"];
   try {
     if (flags.corpus !== null) {
       if (flags.request !== null) throw new UsageError("--corpus and --request are mutually exclusive");

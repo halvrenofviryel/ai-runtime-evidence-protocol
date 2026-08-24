@@ -12,7 +12,17 @@ const P2 = "corpus/cases/P2";
 const base = ["--bindings", `${P2}/bindings.json`, "--independence-policy", `${P2}/independence.json`,
   "--revocation", `${P2}/revocation.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "3600"];
 
+// Section 9 portability note: the committed default schema directory is
+// ../../schemas, so this review snapshot passes --schema-dir explicitly.
+const SCHEMAS = ["--schema-dir", "spec/schemas"];
+
 function run(args) {
+  const r = spawnSync(process.execPath, ["class_verifier.mjs", ...SCHEMAS, ...args], { encoding: "utf8" });
+  return r.status;
+}
+
+// Same, without the snapshot's --schema-dir prefix, for the cases that set it.
+function runBare(args) {
   const r = spawnSync(process.execPath, ["class_verifier.mjs", ...args], { encoding: "utf8" });
   return r.status;
 }
@@ -27,6 +37,19 @@ delete schemaBad.artifact.claim;
 fs.writeFileSync(path.join(TMP, "schema_bad.json"), JSON.stringify(schemaBad));
 fs.writeFileSync(path.join(TMP, "not_json.json"), "{ this is not json");
 fs.writeFileSync(path.join(TMP, "bad_bindings.json"), "{ nope");
+
+// Errata E-4: unknown members in the section-0 envelope's nested objects are a
+// run-invalid result (exit 1), not a class reason.
+const P2WIT = "corpus/cases/P2";
+for (const [name, mutate] of [
+  ["claim", (r) => { r.head_witness.claim.note = "x"; }],
+  ["head_ref", (r) => { r.head_witness.head_ref.note = "x"; }],
+  ["signature", (r) => { r.head_witness.signature.note = "x"; }],
+]) {
+  const r = JSON.parse(fs.readFileSync(`${P2WIT}/request.json`, "utf8"));
+  mutate(r);
+  fs.writeFileSync(path.join(TMP, `unknown_${name}.json`), JSON.stringify(r));
+}
 
 const cases = [
   ["--help", ["--help"], 0],
@@ -45,9 +68,18 @@ const cases = [
   ["malformed --freshness-window (non-integer)", ["--request", `${P2}/request.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "1.5"], 2],
   ["malformed --freshness-window (negative)", ["--request", `${P2}/request.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "-1"], 2],
   ["--corpus without --out", ["--corpus", "corpus"], 2],
+  ["unknown member in head_witness.claim", ["--request", `${TMP}/unknown_claim.json`, ...base], 1],
+  ["unknown member in head_witness.head_ref", ["--request", `${TMP}/unknown_head_ref.json`, ...base], 1],
+  ["unknown member in head_witness.signature", ["--request", `${TMP}/unknown_signature.json`, ...base], 1],
 ];
 
 let bad = 0;
+// Section 9 portability note: an unresolvable --schema-dir is a config error.
+{
+  const got = runBare(["--request", `${P2}/request.json`, "--schema-dir", `${TMP}/nope`]);
+  if (got !== 2) { console.log(`FAIL: unresolvable --schema-dir: expected exit 2, got ${got}`); bad++; }
+  else console.log("  ok  exit 2  unresolvable --schema-dir");
+}
 for (const [name, args, want] of cases) {
   const got = run(args);
   if (got !== want) { console.log(`FAIL: ${name}: expected exit ${want}, got ${got}`); bad++; }
