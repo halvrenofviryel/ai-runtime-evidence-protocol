@@ -504,6 +504,39 @@ expectation.
 not "revoked": the signature gate still runs diagnostically while Authenticated remains
 withheld for the unresolvable revocation state. Recorded so it is not "fixed" later by mistake.
 
+**R-7 — Missing known `head_witness` evidence members are semantic evidence
+failures/withholding, not harness run-invalidity.** Raised independently by both
+implementations after the R-1..R-6 round: each treated all four `head_witness` members as
+harness-required and exited 1 when any was absent, while §0 declares only the `head_witness`
+object itself optional and R-1/R-4 do not close sub-member requiredness. The governing
+distinction is: **absence of a KNOWN evidence field fails or withholds the tier evaluation;
+structure FOREIGN to the harness invalidates the run.** Exact behaviour:
+
+| Input | Result |
+|---|---|
+| `head_witness` entirely absent | `no-witness-supplied` (WITHHELD) — unchanged, already measured by 17 corpus cases |
+| `head_witness` present but `null` / non-object | **run-invalid, exit 1** |
+| unknown member inside `head_witness` | **run-invalid, exit 1** — envelope closure preserved |
+| `claim` absent / non-object / structurally invalid | `witness-claim-invalid` (FAILURE) |
+| `head_ref` absent / non-object / no usable `record_id` | `witness-head-unresolved` (FAILURE), **if 6a is clean** |
+| `witness_id` absent / non-string | `witness-binding-missing` (**WITHHELD**), **if stage 6 is clean** |
+| `signature` absent / non-object, or `signature.value` absent / wrong-typed | `witness-signature-invalid` (FAILURE), **if stage 7 is clean** |
+| `head_ref` or `signature` present as an object carrying an unknown member | **run-invalid** — R-4 is unchanged |
+
+Two consequences implementations MUST NOT diverge on:
+
+1. **Channel assignment follows §5, not intuition.** `no-witness-supplied` and
+   `witness-binding-missing` are WITHHELD and go to `witnessed_withheld`;
+   `witness-claim-invalid`, `witness-head-unresolved` and `witness-signature-invalid` are
+   FAILURE and go to `witnessed_failures`. No new reason code is introduced — all five are
+   already in the closed §5 registry.
+2. **R-2's dependency precedence applies unchanged.** The reason emitted is the first one
+   *reachable* under the stage order, not every one that would independently apply. If both
+   `claim` and `signature` are absent, the result is `witness-claim-invalid` alone.
+
+R-7 changes no §7 expected value: no corpus case supplies a `head_witness` with a missing
+sub-member, and the entirely-absent path is unchanged.
+
 **Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
 `sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
 check is insufficient, and a violation is `witness-claim-invalid`), the E-2 principle that
