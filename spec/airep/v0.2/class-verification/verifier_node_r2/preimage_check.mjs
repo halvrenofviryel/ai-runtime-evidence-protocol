@@ -31,8 +31,8 @@ function jcs(v) {
   return JSON.stringify(v);
 }
 const LF = 0x0a;
-const req = JSON.parse(fs.readFileSync("corpus/cases/P2/request.json", "utf8"));
-const bnd = JSON.parse(fs.readFileSync("corpus/cases/P2/bindings.json", "utf8"));
+const req = JSON.parse(fs.readFileSync("../corpus/cases/P2/request.json", "utf8"));
+const bnd = JSON.parse(fs.readFileSync("../corpus/cases/P2/bindings.json", "utf8"));
 const a = req.artifact;
 
 const body = JSON.parse(JSON.stringify(a));

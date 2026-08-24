@@ -514,13 +514,13 @@ function loadRequest(value, text) {
         throw new InvalidRunError(`head_witness is missing ${k}`);
       }
     }
-    // E-4: the section-0 envelope's nested objects are closed; an unknown member
-    // in head_ref / claim / signature makes the RUN invalid (not a class reason).
+    // E-4 as narrowed by section 9 R-4: the section-0 nested closure is limited
+    // to head_ref and signature; an unknown member in either makes the RUN
+    // invalid. R-1 WITHDREW `claim` from that closure -- the claim is the frozen
+    // INTEGRITY 4.2 evidence object and is evaluated on its own semantic path
+    // (stage 6a), so a claim defect is never run-invalid.
     if (isPlainObject(h.head_ref) && !onlyKeys(h.head_ref, ["record_id", "chain_id"])) {
       throw new InvalidRunError("head_witness.head_ref carries an unknown member (closed envelope)");
-    }
-    if (isPlainObject(h.claim) && !onlyKeys(h.claim, CLAIM_MEMBERS)) {
-      throw new InvalidRunError("head_witness.claim carries an unknown member (closed envelope)");
     }
     if (!isPlainObject(h.signature)) throw new InvalidRunError("head_witness.signature is not an object");
     if (!onlyKeys(h.signature, ["alg", "value"])) {
@@ -675,38 +675,47 @@ function evaluate(request, policy) {
   const witFailures = [];
   const witWithheld = [];
 
-  // ---- Stage 6: witness head resolution + claim reconciliation -------------
+  // ---- Stage 6: 6a claim validity -> 6b head -> 6c witnessed_at validity ---
+  // Section 9 R-2: these are dependent sub-steps of one witness-head gate, not
+  // independent gates. A failing sub-step reports its reason ALONE and the
+  // later sub-steps do not run. Stage 6 is clean only when all three pass.
   const hw = request.head_witness;
   let stage6Clean = false;
   if (hw === null) {
     witWithheld.push("no-witness-supplied");
+  } else if (!claimStructurallyValid(hw.claim, request.claimLexemes)) {
+    // 6a - claim structural + lexical validity (closed five-member set, member
+    // types, E-1 source-token rule). Reported alone; section 4 then suppresses
+    // stages 7-10 as well.
+    witFailures.push("witness-claim-invalid");
   } else {
+    // 6b - head resolution, must-be-primary, reconciliation. Reported alone.
     const pool = [artifact, ...request.related];
     const resolved = resolveRef(hw.head_ref, pool);
-    const claimOk = claimStructurallyValid(hw.claim, request.claimLexemes);
-    if (!claimOk) witFailures.push("witness-claim-invalid");
-    // E-2: witnessed_at format + Gregorian validity is part of the claim's own
-    // structural validity and is evaluated here, independently of the clock
-    // inputs. Stage 10 below computes recency only.
-    let timeOk = false;
-    if (claimOk) {
-      timeOk = parseWitnessedAt(hw.claim.witnessed_at) !== null;
-      if (!timeOk) witFailures.push("witness-time-invalid");
-    }
+    let headOk = false;
     if (resolved.status !== "ok") {
       witFailures.push("witness-head-unresolved");
     } else if (resolved.artifact !== artifact) {
       // A valid witness over some OTHER artifact never confers Witnessed here.
       witFailures.push("witness-head-mismatch");
-    } else if (claimOk) {
+    } else {
       const c = hw.claim;
-      // E-5: a claim that resolves to the primary but does not reconcile is
+      // R-5: a claim that resolves to the primary but does not reconcile is
       // witness-head-mismatch, the same reason as resolving elsewhere.
       const reconciles = c.chain_id === artifact.chain_id
         && c.sequence === artifact.sequence
         && c.current === artifact.integrity.current;
       if (!reconciles) witFailures.push("witness-head-mismatch");
-      else if (timeOk) stage6Clean = true;
+      else headOk = true;
+    }
+    // 6c - witnessed_at format + Gregorian validity (E-2, sequenced by R-2).
+    // Clock inputs play no part here; stage 10 computes recency only.
+    if (headOk) {
+      if (parseWitnessedAt(hw.claim.witnessed_at) === null) {
+        witFailures.push("witness-time-invalid");
+      } else {
+        stage6Clean = true;
+      }
     }
   }
 
@@ -961,7 +970,6 @@ function runBatch(flags) {
   if (!Array.isArray(index)) throw new InvalidRunError("case_index.json is not an array");
 
   const verdicts = [];
-  let invalidCases = 0;
   for (const entry of index) {
     const files = entry.files || {};
     const resolve = (k) => (files[k] === undefined ? null : path.join(dir, files[k]));
@@ -988,16 +996,11 @@ function runBatch(flags) {
     });
     const reqPath = resolve("request");
     if (reqPath === null) throw new InvalidRunError(`case ${entry.case_id} supplies no request file`);
-    try {
-      const reqFile = readJsonFile(reqPath, "request");
-      const request = loadRequest(reqFile.value, reqFile.text);
-      verdicts.push(evaluate(request, policy));
-    } catch (e) {
-      if (!(e instanceof InvalidRunError)) throw e;
-      // No class verdict is producible for this case (contract 6.4 exit 1).
-      process.stderr.write(`invalid: case ${entry.case_id}: ${e.message}\n`);
-      invalidCases++;
-    }
+    // A genuinely invalid run propagates to main() and is reported as invalid
+    // (contract 6.4, exit 1). No per-case swallowing, no case-specific path.
+    const reqFile = readJsonFile(reqPath, "request");
+    const request = loadRequest(reqFile.value, reqFile.text);
+    verdicts.push(evaluate(request, policy));
   }
 
   verdicts.sort((x, y) => {
@@ -1006,7 +1009,7 @@ function runBatch(flags) {
   });
 
   fs.writeFileSync(flags.out, stableStringify({ verdicts }) + "\n");
-  return invalidCases > 0 ? 1 : 0;
+  return 0;
 }
 
 function main() {

@@ -9,7 +9,7 @@ const TMP = "tmp_erratacheck";
 fs.rmSync(TMP, { recursive: true, force: true });
 fs.mkdirSync(TMP, { recursive: true });
 
-const SCHEMAS = ["--schema-dir", "spec/schemas"];
+const SCHEMAS = ["--schema-dir", "../../schemas"];
 let bad = 0;
 const say = (m) => { bad++; console.log("FAIL:", m); };
 
@@ -21,7 +21,7 @@ const has = (a, x) => Array.isArray(a) && a.includes(x);
 
 // P2 is a clean Decision with a clean, fresh, independent witness: every gate
 // runs, so a single mutation isolates exactly one errata rule.
-const P2 = "corpus/cases/P2";
+const P2 = "../corpus/cases/P2";
 const P2TEXT = fs.readFileSync(`${P2}/request.json`, "utf8");
 const CLOCK = ["--now", "2026-08-23T12:00:00Z", "--freshness-window", "3600"];
 const opInputs = (dir = P2) => ["--bindings", `${dir}/bindings.json`,
@@ -107,7 +107,7 @@ for (const [name, stamp] of [["calendar", "2026-02-30T11:30:00Z"], ["leap-second
 
 // --- E-3: a wire `independent` is never effective below Authenticated ------
 {
-  const OB = "corpus/cases/OB1";
+  const OB = "../corpus/cases/OB1";
   const rev = JSON.parse(fs.readFileSync(`${OB}/revocation.json`, "utf8"));
   delete rev.bindings["airep.producer-a"];            // the PRIMARY's binding only
   const f = writeJson("e3_revocation.json", rev);

@@ -8,13 +8,13 @@ const TMP = "tmp_exitcheck";
 fs.rmSync(TMP, { recursive: true, force: true });
 fs.mkdirSync(TMP, { recursive: true });
 
-const P2 = "corpus/cases/P2";
+const P2 = "../corpus/cases/P2";
 const base = ["--bindings", `${P2}/bindings.json`, "--independence-policy", `${P2}/independence.json`,
   "--revocation", `${P2}/revocation.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "3600"];
 
 // Section 9 portability note: the committed default schema directory is
 // ../../schemas, so this review snapshot passes --schema-dir explicitly.
-const SCHEMAS = ["--schema-dir", "spec/schemas"];
+const SCHEMAS = ["--schema-dir", "../../schemas"];
 
 function run(args) {
   const r = spawnSync(process.execPath, ["class_verifier.mjs", ...SCHEMAS, ...args], { encoding: "utf8" });
@@ -38,11 +38,11 @@ fs.writeFileSync(path.join(TMP, "schema_bad.json"), JSON.stringify(schemaBad));
 fs.writeFileSync(path.join(TMP, "not_json.json"), "{ this is not json");
 fs.writeFileSync(path.join(TMP, "bad_bindings.json"), "{ nope");
 
-// Errata E-4: unknown members in the section-0 envelope's nested objects are a
-// run-invalid result (exit 1), not a class reason.
-const P2WIT = "corpus/cases/P2";
+// E-4 as narrowed by section 9 R-4: the section-0 nested closure covers head_ref
+// and signature only, and an unknown member in either is run-invalid (exit 1),
+// not a class reason. R-1 withdrew `claim` from that closure.
+const P2WIT = "../corpus/cases/P2";
 for (const [name, mutate] of [
-  ["claim", (r) => { r.head_witness.claim.note = "x"; }],
   ["head_ref", (r) => { r.head_witness.head_ref.note = "x"; }],
   ["signature", (r) => { r.head_witness.signature.note = "x"; }],
 ]) {
@@ -67,8 +67,7 @@ const cases = [
   ["malformed --now (no Z)", ["--request", `${P2}/request.json`, "--now", "2026-08-23T12:00:00", "--freshness-window", "60"], 2],
   ["malformed --freshness-window (non-integer)", ["--request", `${P2}/request.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "1.5"], 2],
   ["malformed --freshness-window (negative)", ["--request", `${P2}/request.json`, "--now", "2026-08-23T12:00:00Z", "--freshness-window", "-1"], 2],
-  ["--corpus without --out", ["--corpus", "corpus"], 2],
-  ["unknown member in head_witness.claim", ["--request", `${TMP}/unknown_claim.json`, ...base], 1],
+  ["--corpus without --out", ["--corpus", "../corpus"], 2],
   ["unknown member in head_witness.head_ref", ["--request", `${TMP}/unknown_head_ref.json`, ...base], 1],
   ["unknown member in head_witness.signature", ["--request", `${TMP}/unknown_signature.json`, ...base], 1],
 ];
