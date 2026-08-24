@@ -206,3 +206,7 @@ function scratchCorpus(name, cases) {
 
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(bad === 0 ? "EXIT-CODE SELF-CHECK: clean" : `${bad} exit-code problems`);
+// Failure MUST reach the process exit status. Without this line the script printed
+// its failures and still exited 0, so any CI gate reading only the exit status would
+// have read a failing exit-code surface as clean. Proven by exitcode_check_selftest.mjs.
+process.exit(bad === 0 ? 0 : 1);
