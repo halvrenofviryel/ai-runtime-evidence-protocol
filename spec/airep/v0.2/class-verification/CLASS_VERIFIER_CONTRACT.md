@@ -443,57 +443,76 @@ outside the ladder by design §7); SCITT anchoring (design ODQ-7); N-of-M witnes
 online revocation, transparency-log proofs, nonce/challenge freshness; any change to the
 frozen integrity construction or the accepted schemas.
 
-## 9. Source-review errata (2026-08-24) — normative
+## 9. Source-review rulings — normative (maintainer, 2026-08-24)
 
 > Raised by the maintainer's **source-level** review of the two independently authored class
-> verifiers, before any comparator run. Each item below fixes an under-determination that both
-> implementations resolved the same wrong way or resolved differently — precisely the class of
-> defect a 45-case parity run would have hidden. These items are **normative** and bind every
-> implementation; they do not change any expected value in §7.
+> verifiers, before any comparator run, and closed by maintainer ruling after both authors
+> reported a conflict in the first draft of this section. These rulings are **normative** and
+> bind every implementation. They change no expected value in §7.
+>
+> **Process note, stated at its correct strength:** independent review of two separately
+> authored implementations surfaced the same specification conflict (R-1 below). That is
+> evidence the independent-authoring process works; it is **not** a proof of implementation
+> independence, and must not be described as one.
 
-**E-1 — Witness claim numeric members carry a LEXICAL rule.** For `sequence` and `length`
-inside the head-witness claim, INTEGRITY §4.2's "no sign, no fraction, no exponent" constrains
-the **source spelling of the numeric token**, not merely the parsed value. A conforming class
-verifier MUST preserve or re-derive each numeric token's source lexeme and require it to match
-`^(0|[1-9][0-9]*)$`; a post-parse `isinstance(int)` / `Number.isSafeInteger` check is NOT
-sufficient, because ordinary JSON parsing erases the spelling (`1e0`, `1.0`, `-0` all parse to
-a number). A lexical violation is **`witness-claim-invalid`** (stage 6). This is the same
-lesson the WP-α01 Stage-4 integrity verifiers already carry.
+**R-1 — `claim` is NOT harness-level closure. (The first draft of E-4 named `claim`; that
+clause is WITHDRAWN.)** The content of `head_witness.claim` in the §0 evaluation request is
+**not** part of the envelope's harness closure. The claim is the evidence object of frozen
+INTEGRITY §4.2 and is evaluated on its own semantic-verifier path. Extra, missing or
+wrong-typed claim members are **never run-invalid**: they produce **`witness-claim-invalid`**.
+Corpus case WM1 therefore remains the 45th verdict, not an aborted run.
 
-**E-2 — `witnessed_at` structural + Gregorian validity belongs to stage 6, not stage 10.**
-Format (`YYYY-MM-DDTHH:MM:SSZ`, no leap second, no fractional seconds, no offset) and calendar
-validity are part of the claim's own structural validity and MUST be evaluated in the witness
-structural path, **independently of whether clock inputs were supplied**. A violation is
-**`witness-time-invalid`**. Stage 10 then computes **recency only**. Consequence, stated so it
-cannot be missed: an invalid `witnessed_at` with no clock supplied yields
-`witness-time-invalid`, not merely `freshness-inputs-missing`.
+**R-2 — Stage 6 uses a single dependent failure precedence; shape and time never both
+report.** These are not independent gates but dependent sub-steps of one witness-head gate, so
+reporting one reason is consistent with §2's sorted-reason-set rule. The exact order is:
 
-**E-3 — A wire `independent` is never the effective assessment below Authenticated.** If the
-**primary Effect artifact itself** has not earned Authenticated, its `observer_assessment` is
-`unknown`, regardless of what the referenced Execution artifact proves. Authenticating the
-Execution artifact is necessary but not sufficient; the primary must also be Authenticated.
+1. **6a — claim structural + lexical validity** (closed five-member set, member types, and the
+   E-1 source-token rule) ⇒ on failure, **`witness-claim-invalid`** alone; 6b and 6c do not run.
+2. **6b — head resolution, must-be-primary, reconciliation** ⇒ on failure,
+   **`witness-head-unresolved`** or **`witness-head-mismatch`** alone; 6c does not run.
+3. **6c — `witnessed_at` format + Gregorian validity** ⇒ on failure, **`witness-time-invalid`**.
+   **Clock inputs play no part in this check.**
 
-**E-4 — Operator-input container members and nested objects are closed, fail-closed.** The
-container members shown in the §1 shapes are **required**: an independence policy missing
-`independent_pairs` or `non_independent_pairs` is **malformed**, not an empty list. Unknown
-members anywhere in an operator document — including the binding store's top level — and
-unknown members in the §0 envelope's nested objects (`head_ref`, `claim`, `signature`) are
-rejected fail-closed to the corresponding `*-malformed` WITHHELD reason (operator documents) or
-to a run-invalid result (the §0 envelope), never silently tolerated.
+Stage 6 is clean only when all three pass. Stage 10 is **recency only**:
+`abs(now − witnessed_at) <= window`. This order matches the frozen Stage-4 sequence — claim
+structure → reconcile → timestamp validity.
 
-**E-5 — Reconciliation failure reason pinned.** When the witness claim resolves to the primary
-artifact but its `chain_id`, `sequence`, or `current` does not reconcile with that artifact's
-own members, the reason is **`witness-head-mismatch`** — the same reason as resolving to a
-non-primary artifact. `witness-claim-invalid` is reserved for intrinsic claim defects. (This
-matches the already-pinned §7 expectation for that case.)
+**R-3 — Binding precedence: structural malformation precedes the semantic trust decision.** If
+a referenced binding entry, or a required container, is structurally malformed, the result is
+**`*-binding-malformed`** (WITHHELD) and a `trusted: false` on the same entry does **not**
+additionally produce `*-binding-not-trusted`. **`*-binding-not-trusted`** (FAILURE) applies
+only when the input is structurally valid and `trusted` is present but not literally `true`.
+So: unknown member + `trusted: false` ⇒ **malformed only**; clean entry + `trusted: false` ⇒
+**not-trusted only**.
 
-**E-6 — Producer signature dependency: current behaviour is CONFIRMED, no change.** Stage 4's
-prerequisite is "binding accepted **and** not definitively revoked". A **missing or malformed**
-revocation state is not "revoked", so the signature gate still runs diagnostically, while
-Authenticated remains withheld for the unresolvable revocation state. Both implementations read
-this correctly; it is recorded here so it is not "fixed" later by mistake.
+**R-4 — §0 nested envelope closure is limited to `head_ref` and `signature`.** An unknown
+member in either of those two harness objects remains run-invalid. **No new requiredness is
+created:** a missing or unusable `head_ref.record_id` ⇒ `witness-head-unresolved`; a missing,
+wrong-typed or cryptographically invalid `signature.value` ⇒ `witness-signature-invalid`;
+`signature.alg` is informative-only, so its absence affects neither the cryptography nor the
+class, and its presence still selects nothing (frozen INTEGRITY §3.2). E-4 therefore adds
+closure only — it creates no new semantic reason surface.
 
-**Portability note (non-normative, raised by the same review):** a verifier's schema directory
-must be resolvable in its committed repository location, not only in the authoring snapshot —
-via a CLI override or a correct relative default. This is a packaging obligation, not a
-semantic rule.
+**R-5 — Reconciliation failure is `witness-head-mismatch`.** A structurally valid claim whose
+uniquely resolved primary head disagrees on `chain_id`, `sequence` or `current` fails with
+**`witness-head-mismatch`** — the same reason as resolving to a non-primary artifact.
+`witness-claim-invalid` stays reserved for intrinsic claim defects. This matches §7's WM4
+expectation.
+
+**R-6 — Producer signature dependency unchanged (confirmation).** Stage 4's prerequisite is
+"binding accepted **and** not definitively revoked". A missing or malformed revocation state is
+not "revoked": the signature gate still runs diagnostically while Authenticated remains
+withheld for the unresolvable revocation state. Recorded so it is not "fixed" later by mistake.
+
+**Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
+`sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
+check is insufficient, and a violation is `witness-claim-invalid`), the E-2 principle that
+`witnessed_at` validity is independent of clock inputs (now sequenced by R-2), the E-3 rule
+that a wire `independent` is never the effective assessment unless the **primary** artifact
+earned Authenticated, and the E-4 requirement that operator-document container members are
+required and unknown members anywhere in an operator document are fail-closed to
+`*-binding-malformed` / `independence-policy-malformed` / `*-revocation-state-malformed`.
+
+**Portability note (non-normative):** a verifier's schema directory must resolve in its
+committed repository location, not only in an authoring snapshot — via a CLI override or a
+correct relative default. A packaging obligation, not a semantic rule.
