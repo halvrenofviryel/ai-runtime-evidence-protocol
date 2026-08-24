@@ -537,6 +537,33 @@ Two consequences implementations MUST NOT diverge on:
 R-7 changes no §7 expected value: no corpus case supplies a `head_witness` with a missing
 sub-member, and the entirely-absent path is unchanged.
 
+**R-8 — `witness_id` usability precedes binding-store resolution at Stage 7.** Both
+implementations independently reported that an absent `witness_id` combined with a malformed
+binding store yields `witness-binding-malformed`. Their agreement surfaced the specification
+gap; it does **not** make the behaviour normative. Stage 7 is pinned as three dependent
+sub-steps, in this order:
+
+1. **7a — witness identifier usability.** When stage 6 is clean, an absent or non-string
+   `witness_id` emits **`witness-binding-missing`** (WITHHELD) and stage 7 stops there.
+2. **7b — witness binding-store resolution.** Runs only when 7a is clean. The store, the
+   `witness_bindings` map and the referenced entry are evaluated here, under R-3: a malformed
+   store or entry ⇒ `witness-binding-malformed`; a well-formed store with no map entry for the
+   id ⇒ `witness-binding-missing`; the trusted and suite rules follow.
+3. **7c — witness revocation.** Runs only after an accepted witness binding.
+
+The governing combination is therefore: **absent `witness_id` + malformed binding store ⇒
+`witness-binding-missing` alone.**
+
+The reason is not that the store's malformation is excused. With no `witness_id`, the verifier
+has not yet determined *which* witness binding it would evaluate, so the store-resolution gate
+is never reached. The same malformed store may still independently produce
+`producer-binding-malformed` on the producer path — that path resolves its own wire id and does
+reach the gate.
+
+This inverts the current order in both implementations, which resolve the store before checking
+the wire id. R-8 changes no §7 expected value: no corpus case combines an absent `witness_id`
+with a malformed store.
+
 **Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
 `sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
 check is insufficient, and a violation is `witness-claim-invalid`), the E-2 principle that
