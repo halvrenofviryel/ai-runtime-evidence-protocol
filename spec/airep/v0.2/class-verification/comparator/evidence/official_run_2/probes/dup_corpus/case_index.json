@@ -1,0 +1,22 @@
+[
+ {
+  "case_id": "DUP-A",
+  "files": {
+   "bindings": "../../../../../corpus/cases/P1/bindings.json",
+   "clock": "../../../../../corpus/cases/P1/clock.json",
+   "independence": "../../../../../corpus/cases/P1/independence.json",
+   "request": "../../../../../corpus/cases/P1/request.json",
+   "revocation": "../../../../../corpus/cases/P1/revocation.json"
+  }
+ },
+ {
+  "case_id": "DUP-B",
+  "files": {
+   "bindings": "../../../../../corpus/cases/P1/bindings.json",
+   "clock": "../../../../../corpus/cases/P1/clock.json",
+   "independence": "../../../../../corpus/cases/P1/independence.json",
+   "request": "../../../../../corpus/cases/P1/request.json",
+   "revocation": "../../../../../corpus/cases/P1/revocation.json"
+  }
+ }
+]

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""AIREP v0.2 class-verifier parity comparator (third-party measurement tool).
+"""AIREP v0.2 class-verifier parity comparator.
+
+A parity measurement tool authored in a THIRD INTEGRATION CONTEXT: independent
+of both verifier implementations (it reads neither one's source as a source of
+truth and imports no code from either), but NOT an external third party -- not
+an outside organisation, not an independent auditor, and not an acceptance
+authority. It is same-project measurement evidence. Do not restate this as
+"third-party" review; the only correct use of "third-party" in this directory
+is the dependency sense (no third-party PACKAGE is imported).
 
 stdlib only. Imports NOTHING from either verifier: canonicalisation, ordering,
 digesting, the reason registry and the envelope invariants are implemented here
@@ -474,6 +482,42 @@ def check_coverage(py_idx, nd_idx, cases, case_by_tuple):
 
 # ------------------------------------------------------------ verifier driver
 
+def file_state(path):
+    """Fingerprint a path so that 'neither created nor modified' is measurable.
+
+    Records existence, exact bytes digest, size and mtime_ns. A sentinel file
+    written before the probe makes the 'nor modified' half provable: an
+    unchanged digest AND an unchanged mtime_ns together rule out a rewrite with
+    identical content.
+    """
+    if not os.path.exists(path):
+        return {"exists": False}
+    st = os.stat(path)
+    return {"exists": True, "size": st.st_size, "mtime_ns": st.st_mtime_ns,
+            "sha256": sha256_bytes(read_bytes(path))}
+
+
+def side_effect_findings(code_created, code_modified, impl, path, before, after, **extra):
+    """Compare two file_state() fingerprints and name what actually happened."""
+    out = []
+    if not before["exists"] and after["exists"]:
+        out.append(F(code_created, impl=impl, path=os.path.basename(path),
+                     created_size=after["size"], **extra))
+    elif before["exists"] and after["exists"] and (
+            before["sha256"] != after["sha256"] or before["mtime_ns"] != after["mtime_ns"]):
+        out.append(F(code_modified, impl=impl, path=os.path.basename(path),
+                     before_sha256=before["sha256"], after_sha256=after["sha256"],
+                     mtime_ns_changed=before["mtime_ns"] != after["mtime_ns"], **extra))
+    elif before["exists"] and not after["exists"]:
+        out.append(F(code_modified, impl=impl, path=os.path.basename(path),
+                     before_sha256=before["sha256"], after_sha256=None,
+                     note="the sentinel was deleted", **extra))
+    return out
+
+
+SENTINEL = b"comparator sentinel: this file must be neither created nor modified\n"
+
+
 class Runner:
     def __init__(self, root):
         self.root = root
@@ -490,6 +534,8 @@ class Runner:
             "argv": [os.path.relpath(a, self.root) if a.startswith(self.root) else a
                      for a in base + args],
             "exit": proc.returncode,
+            "stdout_bytes": len(proc.stdout),
+            "stdout_head": proc.stdout.decode("utf-8", "replace")[:200],
             "stderr_head": proc.stderr.decode("utf-8", "replace")[:200],
         }
 
@@ -593,11 +639,12 @@ def exit_code_matrix(runner, root, probes, corpus_dir):
         ("unknown-option", ["--nope", "x"], 2, True),
         ("corpus-and-request", ["--corpus", corpus_dir, "--request", ok], 2, True),
         ("corpus-without-out", ["--corpus", corpus_dir], 2, True),
-        # not pinned by the contract:
-        ("request-with-out", ["--request", ok, "--out",
-                              os.path.join(os.path.dirname(probes["unparseable"]),
-                                           "stray_out.json")] + clean, None, False),
     ]
+    # NOTE: the `--request FILE --out PATH` shape is NOT in this generic matrix.
+    # Section 9 R-9 pins more than an exit code for it (no verdict emitted, and
+    # PATH neither created nor modified), so it has its own probe with those
+    # extra assertions -- see request_with_out_probe(). It is measured, pinned
+    # and strict; it is not exempted.
 
     observations, div, contract = [], [], []
     for pid, argv, expected, pinned in rows:
@@ -624,40 +671,132 @@ def exit_code_matrix(runner, root, probes, corpus_dir):
     return observations, div, contract
 
 
+def request_with_out_probe(runner, root, probe_dir):
+    """Section 9 R-9: `--request FILE --out PATH` is a CLI usage error, exit 2,
+    no verdict emitted, and PATH is neither created nor modified.
+
+    Four assertions per implementation, not one:
+      exit == 2 -- pinned by R-9;
+      stdout empty -- "no verdict is emitted";
+      a NON-EXISTENT PATH is not created;
+      a PRE-EXISTING sentinel PATH is not modified (digest AND mtime_ns).
+    """
+    ok = os.path.join(root, "corpus/cases/P1/request.json")
+    observations, findings = [], []
+    rows = []
+
+    for impl, fn in (("python", runner.python), ("node", runner.node)):
+        for variant in ("absent-path", "sentinel-path"):
+            path = os.path.join(probe_dir, "r9_%s_%s.json" % (impl, variant))
+            if variant == "sentinel-path":
+                with open(path, "wb") as fh:
+                    fh.write(SENTINEL)
+            elif os.path.exists(path):
+                os.remove(path)
+            before = file_state(path)
+            res = fn(["--request", ok, "--out", path])
+            after = file_state(path)
+
+            row = {"probe": "request-with-out", "impl": impl, "variant": variant,
+                   "contract_pinned": True, "contract_expected": 2,
+                   "exit": res["exit"], "stdout_bytes": res["stdout_bytes"],
+                   "out_path_created": (not before["exists"]) and after["exists"],
+                   "out_path_modified": before["exists"] and (
+                       not after["exists"]
+                       or before["sha256"] != after.get("sha256")
+                       or before["mtime_ns"] != after.get("mtime_ns"))}
+            rows.append(row)
+
+            if res["exit"] != 2:
+                findings.append(F("exit-code-contract-mismatch",
+                                  probe="request-with-out", impl=impl,
+                                  variant=variant, expected=2, actual=res["exit"],
+                                  ruling="R-9", stderr=res["stderr_head"].strip()))
+            if res["stdout_bytes"] != 0:
+                findings.append(F("request-out-stdout-not-empty", impl=impl,
+                                  variant=variant, ruling="R-9",
+                                  stdout_bytes=res["stdout_bytes"],
+                                  stdout_head=res["stdout_head"].strip()[:120]))
+            findings.extend(side_effect_findings(
+                "request-out-path-created", "request-out-path-modified",
+                impl, path, before, after, variant=variant, ruling="R-9"))
+            observations.append(row)
+
+    by_impl = {}
+    for row in rows:
+        by_impl.setdefault(row["variant"], {})[row["impl"]] = row["exit"]
+    for variant, exits in sorted(by_impl.items()):
+        if exits.get("python") != exits.get("node"):
+            findings.append(F("exit-code-divergence", probe="request-with-out",
+                              variant=variant, contract_pinned=True,
+                              contract_expected=2, ruling="R-9",
+                              python=exits.get("python"), node=exits.get("node")))
+    return observations, findings
+
+
 def duplicate_rejection_probe(runner, probes, out_dir):
-    """Contract section 2 makes a duplicate (chain_id, record_id) tuple a
-    run-invalidating condition. The frozen corpus contains no duplicate, so the
-    behaviour is measured on a comparator-authored two-case probe corpus that
-    references the frozen P1 fixture twice."""
-    py_out = os.path.join(out_dir, "dup_python.json")
-    nd_out = os.path.join(out_dir, "dup_node.json")
-    p = runner.python(["--corpus", probes["dup_corpus"], "--out", py_out])
-    n = runner.node(["--corpus", probes["dup_corpus"], "--out", nd_out])
+    """Section 2 as amended plus section 9 R-10: a duplicate
+    (chain_id, record_id) tuple in the produced verdict set is VERIFIER
+    run-invalidity -- exit 1, no results file emitted, not a class reason, not
+    exit 2. The comparator must independently gate the same property.
 
-    def describe(res, path):
-        d = {"exit": res["exit"], "stderr_head": res["stderr_head"].strip(),
-             "output_written": os.path.exists(path)}
-        if d["output_written"]:
-            try:
-                doc = read_json(path)
-                d["verdict_count"] = len(doc.get("verdicts", []))
-                d["duplicate_tuple_emitted"] = bool(check_order_and_uniqueness(doc, "probe"))
-            except Exception as exc:  # pragma: no cover - probe robustness
-                d["parse_error"] = str(exc)
-        return d
+    The frozen corpus contains no duplicate tuple, so the behaviour is measured
+    on a comparator-authored two-case probe corpus that references the frozen P1
+    fixture twice. Four assertions per implementation:
+      exit == 1 -- pinned by R-10 and by the amended section 6.4;
+      a NON-EXISTENT results path is not created;
+      a PRE-EXISTING sentinel results path is not modified;
+      no emitted file carries a duplicate tuple (checked when a file does exist).
+    """
+    obs, findings = {}, []
+    for impl, fn in (("python", runner.python), ("node", runner.node)):
+        obs[impl] = {}
+        for variant in ("absent-path", "sentinel-path"):
+            path = os.path.join(out_dir, "dup_%s_%s.json" % (impl, variant))
+            if variant == "sentinel-path":
+                with open(path, "wb") as fh:
+                    fh.write(SENTINEL)
+            elif os.path.exists(path):
+                os.remove(path)
+            before = file_state(path)
+            res = fn(["--corpus", probes["dup_corpus"], "--out", path])
+            after = file_state(path)
 
-    obs = {"python": describe(p, py_out), "node": describe(n, nd_out)}
-    findings = []
-    if obs["python"]["exit"] != obs["node"]["exit"]:
-        findings.append(F("duplicate-rejection-divergence",
-                          python_exit=obs["python"]["exit"],
-                          node_exit=obs["node"]["exit"],
-                          python_stderr=obs["python"]["stderr_head"],
-                          node_emitted_duplicate=obs["node"].get("duplicate_tuple_emitted"),
-                          contract_pinned=False,
-                          contract_note=("section 2 assigns duplicate-tuple rejection to the "
-                                         "comparator; section 6.4 does not list it as an "
-                                         "exit-1 condition")))
+            d = {"contract_pinned": True, "contract_expected": 1,
+                 "exit": res["exit"], "stderr_head": res["stderr_head"].strip(),
+                 "results_file_present_after": after["exists"],
+                 "results_file_created": (not before["exists"]) and after["exists"]}
+            if after["exists"] and after["sha256"] != before.get("sha256"):
+                try:
+                    doc = read_json(path)
+                    d["verdict_count"] = len(doc.get("verdicts", []))
+                    d["duplicate_tuple_emitted"] = bool(
+                        check_order_and_uniqueness(doc, "probe"))
+                except (OSError, ValueError):
+                    d["emitted_file_unparseable"] = True
+            obs[impl][variant] = d
+
+            if res["exit"] != 1:
+                findings.append(F("exit-code-contract-mismatch",
+                                  probe="duplicate-tuple", impl=impl,
+                                  variant=variant, expected=1, actual=res["exit"],
+                                  ruling="R-10", stderr=res["stderr_head"].strip()))
+            findings.extend(side_effect_findings(
+                "duplicate-results-file-created", "duplicate-results-file-modified",
+                impl, path, before, after, variant=variant, ruling="R-10"))
+            if d.get("duplicate_tuple_emitted"):
+                findings.append(F("duplicate-tuple-emitted", impl=impl,
+                                  variant=variant, ruling="R-10",
+                                  verdict_count=d.get("verdict_count")))
+
+    for variant in ("absent-path", "sentinel-path"):
+        pe, ne = obs["python"][variant]["exit"], obs["node"][variant]["exit"]
+        if pe != ne:
+            findings.append(F("duplicate-rejection-divergence", variant=variant,
+                              contract_pinned=True, contract_expected=1,
+                              ruling="R-10", python_exit=pe, node_exit=ne,
+                              python_stderr=obs["python"][variant]["stderr_head"],
+                              node_stderr=obs["node"][variant]["stderr_head"]))
     return obs, findings
 
 
@@ -707,10 +846,12 @@ def compare_outputs(result, root, py_doc, nd_doc, cases, case_by_tuple,
     order = order + list(dup_findings)
     result.gate("G12", "UTF-8 tuple ordering and duplicate (chain_id, record_id) rejection",
                 "ordering", "FAIL" if order else "PASS", order,
-                note=("output ordering and uniqueness are checked on both output files; "
-                      "duplicate-tuple REJECTION behaviour was "
-                      + ("measured with a comparator-authored probe corpus (the frozen "
-                         "corpus contains no duplicate tuple)" if dup_measured
+                note=("output ordering and uniqueness are checked on both output files "
+                      "(the comparator's independent gate, section 2 as amended); the "
+                      "verifier's own duplicate-tuple REJECTION duty (section 9 R-10: "
+                      "exit 1, no results file emitted) was "
+                      + ("measured with a comparator-authored probe corpus, since the "
+                         "frozen corpus contains no duplicate tuple" if dup_measured
                          else "NOT MEASURED in this mode")))
 
     exp = compare_expected(py_idx, "python", cases, case_by_tuple) + \
@@ -831,14 +972,19 @@ def main(argv=None):
                 probe_dir = os.path.join(out_dir, "probes")
                 probes = build_probes(root, probe_dir)
                 obs, div, contract_mismatch = exit_code_matrix(runner, root, probes, corpus_dir)
+                r9_obs, r9_findings = request_with_out_probe(runner, root, probe_dir)
                 dup_obs, dup_findings = duplicate_rejection_probe(runner, probes, out_dir)
                 dup_measured = True
+                g2_findings = div + contract_mismatch + r9_findings
                 g = result.gate("G2", "exit semantics agree (Python vs Node) across the "
                                       "contract-pinned matrix and the corpus run",
                                 "exit-semantics",
-                                "FAIL" if (div + contract_mismatch) else "PASS",
-                                div + contract_mismatch)
+                                "FAIL" if g2_findings else "PASS", g2_findings,
+                                note=("the `--request FILE --out PATH` shape (section 9 R-9) "
+                                      "additionally asserts an empty stdout and that PATH is "
+                                      "neither created nor modified"))
                 g["probe_matrix"] = obs
+                g["request_with_out_probe"] = r9_obs
                 g["corpus_run_exits"] = {"python": runs["python"]["exits"],
                                          "node": runs["node"]["exits"]}
                 result.auxiliary("A3", "duplicate-tuple handling probe",

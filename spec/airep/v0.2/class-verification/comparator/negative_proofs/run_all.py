@@ -20,6 +20,7 @@ PROOFS = ["proof_1_class_flip.py",
 
 
 def control():
+    print("known-good pair: %s" % os.path.relpath(H.GOOD, os.path.dirname(HERE)))
     good = H.known_good()
     work = H.workspace()
     try:

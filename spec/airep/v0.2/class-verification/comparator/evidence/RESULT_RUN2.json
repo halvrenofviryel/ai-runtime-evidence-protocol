@@ -1,0 +1,425 @@
+{
+ "auxiliary_observations": [
+  {
+   "detail": {
+    "node": {
+     "absent-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": false,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple in the verdict set: (cv-chain-p1, cv-rec-p1)"
+     },
+     "sentinel-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": true,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple in the verdict set: (cv-chain-p1, cv-rec-p1)"
+     }
+    },
+    "python": {
+     "absent-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": false,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple: (b'cv-chain-p1', b'cv-rec-p1')"
+     },
+     "sentinel-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": true,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple: (b'cv-chain-p1', b'cv-rec-p1')"
+     }
+    }
+   },
+   "id": "A3",
+   "name": "duplicate-tuple handling probe",
+   "observation": "measured on a comparator-authored probe corpus (the frozen corpus contains no duplicate tuple)"
+  },
+  {
+   "detail": {
+    "consequence": "UTF-8 byte order and UTF-16 code-unit order coincide on ASCII, so this run does NOT establish cross-runtime ordering agreement on non-ASCII identifiers",
+    "non_ascii_identifiers_present": false
+   },
+   "id": "A2",
+   "name": "ordering exercise strength",
+   "observation": "corpus identifiers are ASCII-only"
+  },
+  {
+   "detail": {
+    "node_sha256": "sha256:556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735",
+    "python_sha256": "sha256:556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735",
+    "status": "AUXILIARY ONLY -- byte equality is neither required nor sufficient for parity; the gate is semantic and envelope parity, measured by G1-G14"
+   },
+   "id": "A1",
+   "name": "cross-runtime byte equality of the two output files",
+   "observation": "identical"
+  }
+ ],
+ "comparator": {
+  "independent_of": [
+   "verifier_py",
+   "verifier_node_r2"
+  ],
+  "mode": "run",
+  "name": "airep-v0.2-class-parity-comparator",
+  "version": "1.0.0"
+ },
+ "findings": [],
+ "gates": [
+  {
+   "findings": [],
+   "id": "G1",
+   "kind": "hard",
+   "name": "corpus coverage: 45 cases present, intact, and every case evaluated",
+   "note": "every recorded corpus digest and the manifest aggregate rule are recomputed by the comparator",
+   "outcome": "PASS",
+   "surface": "fixture-set"
+  },
+  {
+   "corpus_run_exits": {
+    "node": [
+     0,
+     0
+    ],
+    "python": [
+     0,
+     0
+    ]
+   },
+   "findings": [],
+   "id": "G2",
+   "kind": "hard",
+   "name": "exit semantics agree (Python vs Node) across the contract-pinned matrix and the corpus run",
+   "note": "the `--request FILE --out PATH` shape (section 9 R-9) additionally asserts an empty stdout and that PATH is neither created nor modified",
+   "outcome": "PASS",
+   "probe_matrix": [
+    {
+     "agree": true,
+     "contract_expected": 0,
+     "contract_pinned": true,
+     "node_exit": 0,
+     "probe": "help",
+     "python_exit": 0
+    },
+    {
+     "agree": true,
+     "contract_expected": 0,
+     "contract_pinned": true,
+     "node_exit": 0,
+     "probe": "valid-single-case",
+     "python_exit": 0
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "unparseable-request",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "unreadable-request",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "stage0-schema-invalid",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "stage1-hash-mismatch",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "envelope-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-witness-null",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-witness-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-ref-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "signature-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "now-malformed",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "now-not-gregorian",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "window-negative",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "window-non-integer",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "no-arguments",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "unknown-option",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "corpus-and-request",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "corpus-without-out",
+     "python_exit": 2
+    }
+   ],
+   "request_with_out_probe": [
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "python",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "absent-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "python",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "sentinel-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "node",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "absent-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "node",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "sentinel-path"
+    }
+   ],
+   "surface": "exit-semantics"
+  },
+  {
+   "findings": [],
+   "id": "G3",
+   "kind": "hard",
+   "name": "class parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G4",
+   "kind": "hard",
+   "name": "authenticated_failures parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G5",
+   "kind": "hard",
+   "name": "authenticated_withheld parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G6",
+   "kind": "hard",
+   "name": "authenticated_caveats parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G7",
+   "kind": "hard",
+   "name": "witnessed_failures parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G8",
+   "kind": "hard",
+   "name": "witnessed_withheld parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G9",
+   "kind": "hard",
+   "name": "observer_assessment parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G10",
+   "kind": "hard",
+   "name": "evidence block parity and comparator-recomputed input digests",
+   "note": "input digests recomputed by the comparator from the exact operator input file bytes; the digests reported by the verifiers are not trusted",
+   "outcome": "PASS",
+   "surface": "evidence"
+  },
+  {
+   "findings": [],
+   "id": "G11",
+   "kind": "hard",
+   "name": "verdict envelope shape, closed membership, registry and invariants",
+   "outcome": "PASS",
+   "surface": "envelope"
+  },
+  {
+   "findings": [],
+   "id": "G12",
+   "kind": "hard",
+   "name": "UTF-8 tuple ordering and duplicate (chain_id, record_id) rejection",
+   "note": "output ordering and uniqueness are checked on both output files (the comparator's independent gate, section 2 as amended); the verifier's own duplicate-tuple REJECTION duty (section 9 R-10: exit 1, no results file emitted) was measured with a comparator-authored probe corpus, since the frozen corpus contains no duplicate tuple",
+   "outcome": "PASS",
+   "surface": "ordering"
+  },
+  {
+   "findings": [],
+   "id": "G13",
+   "kind": "hard",
+   "name": "each implementation equals the frozen expected.json values",
+   "outcome": "PASS",
+   "surface": "expected-equality"
+  },
+  {
+   "findings": [],
+   "id": "G14",
+   "kind": "hard",
+   "name": "per-implementation determinism (byte-identical repeat runs)",
+   "outcome": "PASS",
+   "surface": "determinism"
+  }
+ ],
+ "inputs": {
+  "contract_sha256": "sha256:d3b6ea307460f62c8058b4bc54813b6d3ad699d4311f1b9fe64666843643367d",
+  "corpus_case_count": 45,
+  "corpus_manifest_aggregate_sha256": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
+  "reason_registry_size": 31,
+  "root": "/tmp/wk_cmp/task/spec/airep/v0.2/class-verification",
+  "verifier_node_sha256": "sha256:e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+  "verifier_py_sha256": "sha256:5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc"
+ },
+ "measurement_counts": {
+  "cases_in_corpus": 45,
+  "comparator_recomputed_digest_comparisons": 270,
+  "corpus_files_digest_verified": 265,
+  "cross_impl_evidence_member_comparisons": 225,
+  "cross_impl_field_comparisons": 315,
+  "expected_value_comparisons": 630,
+  "verdict_pairs_compared": 45,
+  "verdicts_node": 45,
+  "verdicts_python": 45
+ },
+ "outcome": "PASS"
+}

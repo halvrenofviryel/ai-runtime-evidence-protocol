@@ -1,0 +1,26 @@
+known-good pair: evidence/official_run_2/python_out_run1.json
+CONTROL  unmutated pair: no gate FAILED; exit 2; NOT_MEASURED in compare-only mode: ['G2', 'G14']
+
+PROOF 1 / class flip
+   mutated: node-side verdict cv-rec-p1 class AIREP-Authenticated -> AIREP-Core
+   comparator exit: 1 (expected 1)
+   cause: G3 class-mismatch {'case_id': 'P1', 'chain_id': 'cv-chain-p1', 'code': 'class-mismatch', 'field': 'class', 'node': 'AIREP-Core', 'python': 'AIREP-Authenticated', 'record_id': 'cv-rec-p1'}
+   corroborating: G13 expected-mismatch (node vs frozen expected.json)
+   sharpness: G11 envelope gate stayed clean, so G3 is what caught it
+   RESULT: comparator failed for the expected cause
+
+PROOF 2 / reason mutation (add, drop, rename)
+   ADD     P1 witnessed_withheld: ['no-witness-supplied'] -> ['independence-policy-missing', 'no-witness-supplied'] | caught by G8 reason-set-mismatch, exit 1, G11 clean
+   DROP    WM1 witnessed_failures: ['witness-claim-invalid'] -> [] | caught by G7 reason-set-mismatch, exit 1, G11 clean
+   RENAME  PB1 authenticated_failures: ['producer-binding-revoked'] -> ['producer-binding-not-trusted'] | caught by G4 reason-set-mismatch, exit 1, G11 clean
+   RESULT: comparator failed for the expected cause
+
+PROOF 3 / envelope and invariant violations
+   (a) invariant  : class->AIREP-Witnessed with witnessed_withheld non-empty | G11 invariant-violation {witnessed-implies-all-clean, witness-negative-implies-not-witnessed}, exit 1
+   (b) membership : added unknown member 'assurance_score' | G11 envelope-unknown-member, exit 1
+   (c) membership : removed required member 'authenticated_caveats' | G11 envelope-missing-member, exit 1
+   (d) registry   : reason 'witness-probably-fine' outside the closed 31-reason registry | G11 reason-not-in-registry, exit 1
+   (e) ordering   : transposed verdicts 0 and 1 on the node side | G12 order-violation, exit 1
+   RESULT: comparator failed for the expected cause
+
+NEGATIVE PROOFS: all 3 proofs demonstrated the comparator failing for the expected cause.

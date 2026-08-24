@@ -15,8 +15,33 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 COMPARATOR = os.path.join(os.path.dirname(HERE), "compare.py")
 ROOT = os.path.normpath(os.path.join(os.path.dirname(HERE), os.pardir))
-GOOD = os.path.join(os.path.dirname(HERE), "evidence", "official_run",
-                    "python_out_run1.json")
+EVIDENCE = os.path.join(os.path.dirname(HERE), "evidence")
+
+
+def _known_good_path():
+    """Pick the known-good output pair explicitly, never implicitly.
+
+    AIREP_COMPARATOR_GOOD overrides. Otherwise the LATEST official run
+    directory is used (official_run_2 before official_run), because run 1's
+    evidence is immutable and a proof must be run against the current HEAD's
+    outputs. The chosen path is printed by run_all.py so the choice is on the
+    record rather than inferred.
+    """
+    override = os.environ.get("AIREP_COMPARATOR_GOOD")
+    if override:
+        return override
+    runs = sorted((d for d in os.listdir(EVIDENCE)
+                   if d.startswith("official_run") and
+                   os.path.isdir(os.path.join(EVIDENCE, d))),
+                  key=lambda d: (len(d), d), reverse=True)
+    for d in runs:
+        candidate = os.path.join(EVIDENCE, d, "python_out_run1.json")
+        if os.path.exists(candidate):
+            return candidate
+    return os.path.join(EVIDENCE, "official_run", "python_out_run1.json")
+
+
+GOOD = _known_good_path()
 
 
 class ProofFailure(AssertionError):

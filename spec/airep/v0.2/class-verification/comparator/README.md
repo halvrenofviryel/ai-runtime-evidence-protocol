@@ -1,10 +1,20 @@
 # AIREP v0.2 class-verifier parity comparator
 
-Third-party measurement tool for the two independently authored class verifiers
+A parity measurement tool for the two independently authored class verifiers
 (`verifier_py/class_verifier.py` and `verifier_node_r2/class_verifier.mjs`)
-against the frozen 45-case corpus and `CLASS_VERIFIER_CONTRACT.md`.
+against the frozen 45-case corpus and `CLASS_VERIFIER_CONTRACT.md`, **authored
+in a third integration context**.
 
 This directory contains **measurement**, not authoring and not acceptance.
+
+> **Naming note — do not let this drift back.** "Third integration context"
+> means independent *of both verifier implementations*: this tool reads neither
+> verifier as a source of truth and imports no code from either. It is **not a
+> third party** — not an outside organisation, not an independent auditor, not
+> an acceptance authority. It is same-project, implementer-side measurement
+> evidence. The only correct use of "third-party" in this directory is the
+> dependency sense, in the Independence posture bullet below ("no third-party
+> package of any kind"); that line is about packages and is correct as written.
 
 ## Independence posture
 
@@ -63,7 +73,7 @@ reported, never tolerated and never adjusted away.
 | Gate | Surface |
 |---|---|
 | G1 | the full 45-case fixture set is present, byte-intact against `corpus_manifest.json` (every recorded digest plus the aggregate rule recomputed), and every case is evaluated by both implementations — no silent truncation |
-| G2 | exit semantics agree between Python and Node, across the corpus run and a 20-row CLI probe matrix; the 19 rows the contract pins are additionally checked against the contract's own expected code |
+| G2 | exit semantics agree between Python and Node, across the corpus run and a 19-row contract-pinned CLI probe matrix (each row also checked against the contract's own expected code), **plus** the §9 R-9 `--request FILE --out PATH` probe: exit 2, empty stdout, and `PATH` neither created nor modified — asserted for both implementations against a non-existent path and against a pre-written sentinel (bytes and `mtime_ns`) |
 | G3 | `class` |
 | G4 | `authenticated_failures` |
 | G5 | `authenticated_withheld` |
@@ -73,7 +83,7 @@ reported, never tolerated and never adjusted away.
 | G9 | `observer_assessment` |
 | G10 | the `evidence` block: cross-implementation equality **and** equality against the comparator's own independently recomputed input digests, `now` and `freshness_window_seconds` |
 | G11 | verdict envelope: closed top-level and per-verdict membership, `artifact_ref` shape, legal `class` and `observer_assessment` values, all five reason arrays present, registry-only reasons in the correct `(tier, channel)`, deduplicated and ASCII-ascending, `evidence` member shape and types, and the four section 2 consistency invariants |
-| G12 | UTF-8 tuple ordering of the verdict array, absence of duplicate `(chain_id, record_id)` tuples in each output, identical ordering across the two implementations, and duplicate-tuple *rejection* behaviour |
+| G12 | UTF-8 tuple ordering of the verdict array, absence of duplicate `(chain_id, record_id)` tuples in each output, identical ordering across the two implementations (the comparator's independent gate under amended §2), **and** the verifier's own §9 R-10 rejection duty: exit 1, no results file created and no pre-existing file modified, no duplicate-bearing output — asserted for both implementations in both path variants |
 | G13 | each implementation's equality against the frozen `expected.json` values (`class`, all five channels, `observer_assessment`) — read by the comparator only |
 | G14 | per-implementation determinism: each verifier byte-identical across repeated corpus runs |
 
@@ -111,9 +121,41 @@ reported, never tolerated and never adjusted away.
 - **Not a claim about any behaviour outside the 45 corpus cases and the
   probe matrix.**
 
+## Run history
+
+| Run | Evidence | Outcome |
+|---|---|---|
+| 1 | `evidence/RESULT.json`, `SUMMARY.txt`, `FINDINGS.md`, `NEGATIVE_PROOFS.txt`, `official_run/` | **FAILURE** — 2 findings on the run-validity / CLI surface (`--request … --out …`, duplicate-tuple rejection); the 45-case semantic surface was clean. Accepted by the maintainer as a valid measurement; both findings closed by rulings §9 R-9 and R-10. |
+| 2 | `evidence/RESULT_RUN2.json`, `SUMMARY_RUN2.txt`, `FINDINGS_RUN2.md`, `NEGATIVE_PROOFS_RUN2.txt`, `official_run_2/` | **PASS** — 0 findings, all 14 hard gates PASS. |
+
+Run 1's evidence is **immutable** and is never overwritten by a later run.
+
+### What changed between run 1 and run 2, and what was NOT loosened
+
+Changed: the naming correction (see the note at the top of this file); stdout
+capture added to the verifier runner; `file_state()` / `side_effect_findings()`
+/ `SENTINEL` added so "neither created nor modified" is measurable; the
+`request-with-out` row moved out of the generic exit matrix into its own probe
+with **four** assertions instead of one; the duplicate probe rewritten with
+**four** assertions per implementation across two path variants.
+
+**Nothing was loosened.** Both changed probes moved from `contract_pinned=false`
+with an exit-code-only comparison to `contract_pinned=true` with a pinned
+expected code *and* side-effect assertions — strictly more is asserted, on
+strictly more inputs. G1, G3–G11, G13 and G14 are untouched. No gate was
+downgraded to an observation, no exemption was added, and no tolerance was
+widened anywhere. The only removal is the generic matrix row for
+`--request … --out …`, which was replaced by a superset of its assertions; the
+matrix comment at that site records why.
+
+Both rewritten probes were additionally **replayed against synthetic
+pre-remediation behaviour** to show they still reproduce run 1's findings — a
+clean run is the expected outcome now, which is exactly when a probe most easily
+passes for the wrong reason. See `evidence/FINDINGS_RUN2.md`.
+
 ## Negative proofs
 
-`negative_proofs/run_all.py` runs a control plus three proofs. Each proof takes
+`negative_proofs/run_all.py` runs a control plus three proofs against the **latest** official run's known-good output (override with `AIREP_COMPARATOR_GOOD`; the path chosen is printed, never inferred). Each proof takes
 a known-good pair of outputs, mutates a **copy** of one side, and asserts that
 the comparator reports FAILURE **and** names the expected cause — the finding
 code and its fields, not merely a non-zero exit.
@@ -149,8 +191,12 @@ comparator/
     proof_3_envelope_invariant.py
     run_all.py                            control + all three proofs
   evidence/
-    RESULT.json                           machine-readable official result
-    SUMMARY.txt                           readable official summary
-    NEGATIVE_PROOFS.txt                   captured negative-proof run
-    official_run/                         both verifiers' outputs (2 runs each) and the probe inputs
+    RESULT.json / SUMMARY.txt             run 1 machine-readable result and summary (IMMUTABLE)
+    FINDINGS.md                           run 1 findings, stated at their measured strength
+    NEGATIVE_PROOFS.txt                   run 1 captured negative-proof run
+    official_run/                         run 1 verifier outputs (2 runs each) and probe inputs
+    RESULT_RUN2.json / SUMMARY_RUN2.txt   run 2 machine-readable result and summary
+    FINDINGS_RUN2.md                      run 2 record -- states explicitly that run 2 is clean
+    NEGATIVE_PROOFS_RUN2.txt              run 2 captured negative-proof run
+    official_run_2/                       run 2 verifier outputs, probe inputs and sentinels
 ```
