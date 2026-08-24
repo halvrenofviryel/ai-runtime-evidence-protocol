@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -31,7 +32,46 @@ from typing import Any, Dict, List, Optional, Tuple
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
-import jcs
+
+# --------------------------------------------------------------------------
+# JCS (RFC 8785) canonicalizer -- loaded from the REPOSITORY, not from PyPI.
+#
+# The canonical bytes AIREP hashes over are defined by the repository's own
+# frozen canonicalizer at <repo>/spec/airep/v0.1/conformance/jcs.py. A bare
+# `import jcs` resolved to whatever happened to be installed in the authoring
+# environment, so the verifier could not execute from the committed repository
+# without an out-of-band package download. It is now loaded deterministically
+# by explicit relative path, resolved against THIS file's location so the
+# working directory never matters. Public API consumed here: `canonicalize(obj)
+# -> bytes` (that module's documented stable surface). Nothing is vendored and
+# no copy is made: the single repository file is the one source of those bytes.
+# --------------------------------------------------------------------------
+
+JCS_RELPATH = (os.pardir, os.pardir, os.pardir, "v0.1", "conformance", "jcs.py")
+
+
+def _load_repo_jcs():
+    path = os.path.normpath(
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), *JCS_RELPATH)
+    )
+    spec = importlib.util.spec_from_file_location("airep_v0_1_jcs", path)
+    if spec is None or spec.loader is None:
+        raise ImportError("cannot load the repository JCS canonicalizer at %s" % path)
+    module = importlib.util.module_from_spec(spec)
+    # Loading by path would otherwise drop a __pycache__ next to a FROZEN file.
+    # The verifier writes nothing into the frozen tree.
+    previous = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = previous
+    if not callable(getattr(module, "canonicalize", None)):
+        raise ImportError("%s does not expose canonicalize()" % path)
+    return module
+
+
+jcs = _load_repo_jcs()
 
 # --------------------------------------------------------------------------
 # Frozen registries (INTEGRITY 1.2, 3.1)
@@ -609,19 +649,27 @@ def parse_request(doc: Any) -> Tuple[dict, List[dict], Optional[dict]]:
     related = doc.get("related_artifacts", [])
     if not isinstance(related, list) or any(not isinstance(a, dict) for a in related):
         raise RunInvalid("related_artifacts is not an array of objects")
-    hw = doc.get("head_witness")
-    if hw is not None:
+    # Section 9 R-7: the ONLY optional thing at this level is the `head_witness`
+    # OBJECT. Its absence is `no-witness-supplied`; a present-but-null or
+    # non-object value is run-invalid; a member FOREIGN to the harness is
+    # run-invalid. Absence of a KNOWN member is NOT run-invalid -- it is a
+    # semantic evidence failure/withholding reported by the stage that needs it
+    # (claim -> 6a, head_ref -> 6b, witness_id -> 7, signature -> 9). `is None`
+    # would conflate an explicit `null` with absence, so membership is tested.
+    hw = None
+    if "head_witness" in doc:
+        hw = doc["head_witness"]
         if not isinstance(hw, dict):
-            raise RunInvalid("head_witness is not a JSON object")
+            raise RunInvalid("head_witness is present but not a JSON object")
         if set(hw.keys()) - {"head_ref", "witness_id", "claim", "signature"}:
             raise RunInvalid("head_witness carries unknown members (closed envelope)")
-        for member in ("head_ref", "witness_id", "claim", "signature"):
-            if member not in hw:
-                raise RunInvalid("head_witness is missing %s" % member)
-        if not isinstance(hw["head_ref"], dict) or set(hw["head_ref"].keys()) - {"record_id", "chain_id"}:
-            raise RunInvalid("head_witness.head_ref is malformed")
-        if not isinstance(hw["signature"], dict) or set(hw["signature"].keys()) - {"alg", "value"}:
-            raise RunInvalid("head_witness.signature is malformed")
+        # R-4 (unchanged): closure applies to `head_ref` and `signature` WHEN
+        # PRESENT AS OBJECTS. It creates no requiredness, and a non-object value
+        # is a semantic defect for its own stage, never harness closure.
+        if isinstance(hw.get("head_ref"), dict) and set(hw["head_ref"].keys()) - {"record_id", "chain_id"}:
+            raise RunInvalid("head_witness.head_ref carries unknown members (closed envelope)")
+        if isinstance(hw.get("signature"), dict) and set(hw["signature"].keys()) - {"alg", "value"}:
+            raise RunInvalid("head_witness.signature carries unknown members (closed envelope)")
     return artifact, related, hw
 
 
@@ -808,7 +856,9 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str,
         else:
             # 6b. head resolution, must-be-primary, reconciliation (R-2/R-5).
             candidates = [artifact] + related
-            resolved, status = resolve_reference(head_witness["head_ref"], candidates)
+            # R-7: an absent / non-object / record_id-less head_ref reaches
+            # resolve_reference as a non-reference and is `unresolved`.
+            resolved, status = resolve_reference(head_witness.get("head_ref"), candidates)
             if status != "ok":
                 # zero matches or ambiguous: fail closed, same reason
                 emit("witness-head-unresolved")
@@ -869,16 +919,23 @@ def evaluate(request_doc: Any, ops: OperatorInputs, schema_dir: str,
 
     # Stage 9: witness signature. Prerequisite: stage 7 clean.
     if stage7_clean:
-        try:
-            preimage = witness_sig_preimage(
-                head_artifact["airep_version"], w_entry["suite"], claim
-            )
-            wsig_ok = verify_suite_signature(
-                w_entry["suite"], w_entry["public_key_hex"],
-                head_witness["signature"].get("value", ""), preimage,
-            )
-        except (RunInvalid, KeyError, TypeError, ValueError):
+        # R-7: an absent or non-object `signature`, and an absent or wrong-typed
+        # `signature.value`, are all `witness-signature-invalid` -- never
+        # run-invalid, and never a silent pass.
+        sig_obj = head_witness.get("signature")
+        sig_value = sig_obj.get("value") if isinstance(sig_obj, dict) else None
+        if not isinstance(sig_value, str):
             wsig_ok = False
+        else:
+            try:
+                preimage = witness_sig_preimage(
+                    head_artifact["airep_version"], w_entry["suite"], claim
+                )
+                wsig_ok = verify_suite_signature(
+                    w_entry["suite"], w_entry["public_key_hex"], sig_value, preimage,
+                )
+            except (RunInvalid, KeyError, TypeError, ValueError):
+                wsig_ok = False
         if not wsig_ok:
             emit("witness-signature-invalid")
 

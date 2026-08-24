@@ -13,9 +13,17 @@ import subprocess
 import sys
 import tempfile
 
+# Round 3: paths corrected to the COMMITTED repository layout -- this file at
+# <v0.2>/class-verification/verifier_py/, the corpus at
+# <v0.2>/class-verification/corpus/, the schemas at <v0.2>/schemas/ and the
+# frozen JCS canonicalizer at <airep>/v0.1/conformance/jcs.py. Path resolution
+# only: no assertion in this file was added, removed or weakened.
 HERE = os.path.dirname(os.path.abspath(__file__))
-CORPUS = os.path.join(HERE, "corpus", "cases")
-SCHEMAS = os.path.join(HERE, "spec", "schemas")
+CVDIR = os.path.normpath(os.path.join(HERE, os.pardir))
+CORPUS = os.path.join(CVDIR, "corpus", "cases")
+SCHEMAS = os.path.normpath(os.path.join(CVDIR, os.pardir, "schemas"))
+JCS_SRC = os.path.normpath(
+    os.path.join(CVDIR, os.pardir, os.pardir, "v0.1", "conformance", "jcs.py"))
 VERIFIER = os.path.join(HERE, "class_verifier.py")
 
 FAILURES = []
@@ -301,10 +309,16 @@ with tempfile.TemporaryDirectory(dir=HERE) as tmp:
         with open(os.path.join(SCHEMAS, fn), "rb") as src, \
                 open(os.path.join(root, "schemas", fn), "wb") as dst:
             dst.write(src.read())
-    for fn in ("class_verifier.py", "jcs.py"):
-        with open(os.path.join(HERE, fn), "rb") as src, \
-                open(os.path.join(vdir, fn), "wb") as dst:
-            dst.write(src.read())
+    with open(VERIFIER, "rb") as src, \
+            open(os.path.join(vdir, "class_verifier.py"), "wb") as dst:
+        dst.write(src.read())
+    # The verifier loads the frozen canonicalizer from its repository-relative
+    # location, so the synthetic tree must carry it there too (round 3).
+    jcs_dir = os.path.join(tmp, "v0.1", "conformance")
+    os.makedirs(jcs_dir)
+    with open(JCS_SRC, "rb") as src, \
+            open(os.path.join(jcs_dir, "jcs.py"), "wb") as dst:
+        dst.write(src.read())
     reqpath = os.path.join(tmp, "request.json")
     with open(reqpath, "w", encoding="utf-8") as fh:
         fh.write(req)

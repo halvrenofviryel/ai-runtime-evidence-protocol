@@ -353,14 +353,13 @@ check("R-4 signature.alg naming another suite selects nothing -> still AIREP-Wit
       and channels(v) == ([], [], [], [], []), "exit=%s %s" % (code, v))
 
 # =====================================================================
-# OPEN FINDING (observation only -- deliberately NOT asserted, because this
-# round has no authority to change it). R-1 says extra/missing/wrong-typed
-# CLAIM MEMBERS are never run-invalid, and R-4 says S0 nested closure creates
-# no new requiredness. Neither ruling states what happens when a whole
-# head_witness member is absent. This implementation currently requires all
-# four and aborts the run. Printed so the behaviour is on the record and a
-# maintainer ruling can settle it.
-print("--- OPEN FINDING (observed, not asserted): whole head_witness member absent ---")
+# FINDING NOW CLOSED BY S9 R-7 (round 3). This block was raised here as an open
+# finding: R-1 and R-4 left unstated what happens when a WHOLE head_witness
+# member is absent, and this implementation then required all four and aborted
+# the run. R-7 settled it -- an absent known member fails or withholds the tier
+# evaluation instead. The observations below are retained as a running record;
+# the asserted probes for every R-7 row live in selfcheck_s9_round3.py.
+print("--- R-7 (settled; asserted in round 3): whole head_witness member absent ---")
 for member in ("claim", "head_ref", "signature", "witness_id"):
     doc = json.loads(REQ)
     doc["head_witness"].pop(member)

@@ -267,3 +267,277 @@ input: `CLASS_VERIFIER_CONTRACT.md`, `corpus/` (including every `expected.json`)
 mutates corpus inputs only in memory and writes only into a temporary directory it
 deletes. This attestation rests on my own record of my actions; the environment
 enforces no sandbox, and the claim is stated at exactly that strength.
+
+# Remediation round 3 (R-7 + JCS packaging)
+
+Third and final remediation round on my own prior work, under maintainer ruling
+**R-7** and a packaging obligation. Two tasks only; nothing else was touched.
+
+## Files changed
+
+| File | Nature of change |
+|---|---|
+| `class_verifier.py` | R-7 semantics (3 sites) + repository JCS loader (1 site) |
+| `selfcheck_s9_round3.py` | **new** — 63 asserted probes for every R-7 row, both named divergence risks, and the packaging obligation |
+| `selfcheck_s9_round2.py` | comment/heading only: the round-2 "OPEN FINDING" block is relabelled as settled by R-7 and cross-referenced to round 3. No assertion added, removed or changed. |
+| `selfcheck_errata.py` | path resolution only (see "Every self-check script, re-run" below). No assertion added, removed or changed. |
+
+No frozen input was modified. No reason string, verdict envelope field, CLI
+surface or exit-code mapping was changed.
+
+## R-7 — what changed, with line references
+
+R-7's governing distinction: **absence of a KNOWN evidence field fails or
+withholds the tier evaluation; structure FOREIGN to the harness invalidates the
+run.** My source treated all four `head_witness` members as harness-required and
+exited 1 when any was absent. That is the behaviour R-7 overrules.
+
+**1. `parse_request` — `class_verifier.py:652-672`.** The requiredness loop
+(`for member in ("head_ref", "witness_id", "claim", "signature"): ... raise
+RunInvalid`) is **deleted**. What replaces it:
+
+- Absence is now tested by **membership** (`if "head_witness" in doc`, lines
+  659-660), not by `doc.get(...) is None`. This is the decisive detail: the old
+  `get`-based test collapsed an explicit `"head_witness": null` into the
+  entirely-absent path and would have emitted `no-witness-supplied` where R-7
+  requires run-invalid.
+- `head_witness` present but null or any non-object ⇒ `RunInvalid` (661-662).
+- An unknown member inside `head_witness` ⇒ `RunInvalid` (663-664) — envelope
+  closure preserved, unchanged.
+- R-4 closure on `head_ref` / `signature` is now applied **only when the member is
+  present as an object** (669-672). R-4 creates no requiredness, so an absent or
+  non-object value is a semantic defect for its own stage, never harness closure.
+  A present *object* carrying an unknown member is still run-invalid — R-4 is
+  unchanged, and the round-2 probes that assert it still pass.
+
+**2. Stage 6b — `class_verifier.py:859-861`.** `head_witness["head_ref"]` became
+`head_witness.get("head_ref")`. An absent, non-object or `record_id`-less
+`head_ref` reaches `resolve_reference` as a non-reference and is `unresolved` ⇒
+`witness-head-unresolved` (FAILURE), and only if 6a is clean.
+
+**3. Stage 9 — `class_verifier.py:922-940`.** `head_witness["signature"].get(...)`
+raised `KeyError` on an absent `signature` and `AttributeError` on a non-object
+one — and `AttributeError` was **not** in the caught set, so a non-object
+`signature` would have crashed rather than reporting. It is now read defensively:
+`sig_obj = head_witness.get("signature")`, `sig_value = sig_obj.get("value") if
+isinstance(sig_obj, dict) else None`, and a non-string `sig_value` fails the gate
+closed ⇒ `witness-signature-invalid` (FAILURE), only if stage 7 is clean.
+
+**4. `witness_id` — no code change needed.** Stage 7 already read
+`head_witness.get("witness_id")`, and `lookup_binding` already returns
+`binding-missing` for a non-string wire id, so an absent or non-string
+`witness_id` yields `witness-binding-missing` (**WITHHELD**). Verified by probe
+rather than assumed.
+
+### The two pinned divergence risks
+
+- **Channel assignment follows the closed §5 registry.** Checked against §5
+  row-by-row, not against intuition: `no-witness-supplied` and
+  `witness-binding-missing` are WITHHELD (→ `witnessed_withheld`);
+  `witness-claim-invalid`, `witness-head-unresolved` and
+  `witness-signature-invalid` are FAILURE (→ `witnessed_failures`). Every probe
+  asserts the reason is present in its own channel **and absent from the other**.
+  No new reason code was introduced.
+- **R-2 precedence still governs.** The emitted reason is the first one
+  *reachable* under the stage order. Absent `claim` **and** absent `signature` ⇒
+  `witness-claim-invalid` alone; `head_witness = {}` (all four absent) ⇒
+  `witness-claim-invalid` alone; absent `head_ref` + `witness_id` + `signature` ⇒
+  `witness-head-unresolved` alone; absent `witness_id` + `signature` ⇒
+  `witness-binding-missing` alone. Each is paired with a discrimination probe
+  showing the suppressed reason really does fire when it is the only defect, so an
+  "ALONE" assertion cannot pass merely because a later stage is dead code.
+
+### One behaviour R-7 does not pin, recorded rather than decided
+
+When `witness_id` is absent **and** the binding store is itself malformed,
+`lookup_binding` reports `witness-binding-malformed` (its document-level defect)
+before it ever inspects the wire id — the same path a *present but unregistered*
+`witness_id` takes. Both reasons are WITHHELD in the same channel, and R-7's row
+is stated for the ordinary case. I did **not** add a special case: introducing one
+would be exactly the intuition-driven divergence R-7 warns against. Recorded here
+so the ordering is on the record.
+
+## JCS loader — how it resolves and what I verified before trusting it
+
+`class_verifier.py` previously did a bare `import jcs`. No file in the verifier
+directory provided that module, so the verifier **could not execute from the
+committed repository**; the previous round resolved it with a package download,
+which is now prohibited.
+
+**Resolution — `class_verifier.py:36-74`.** `JCS_RELPATH` (line 50) is
+`../../../v0.1/conformance/jcs.py`, joined onto
+`os.path.dirname(os.path.abspath(__file__))` and normalised (54-56), so it
+resolves from **any** working directory: `verifier_py` → `class-verification` →
+`v0.2` → `airep` → `v0.1/conformance/jcs.py`. The module is loaded with
+`importlib.util.spec_from_file_location` / `module_from_spec` / `exec_module`
+(57-68) under the private name `airep_v0_1_jcs`, and the loader **refuses to
+proceed** unless the loaded module exposes a callable `canonicalize` (69-70).
+`sys.dont_write_bytecode` is set for the duration of the load (63-68) so the
+verifier writes no `__pycache__` into the frozen tree. Nothing is vendored, no
+copy is made, and no PyPI dependency was added.
+
+**What I checked about the canonicalizer before wiring it in** (full read of
+`spec/airep/v0.1/conformance/jcs.py`, 92 lines, plus executed checks):
+
+1. **Interface match.** Its documented stable API is `canonicalize(obj) -> bytes`;
+   its actual signature is `(obj: Any) -> bytes` and it returns `bytes`. My code's
+   only call is `jcs.canonicalize(body)` — one positional argument, result
+   concatenated with `bytes`. No adaptation was needed, and none was made.
+2. **Key ordering.** RFC 8785 orders members by UTF-16 code unit, not code point.
+   The module sorts on `k.encode("utf-16-be")`. Probed with a key set that
+   separates the two orders (U+1F600, U+FB00, U+FFFF): the emitted order is
+   U+1F600, U+FB00, U+FFFF — UTF-16 order, the same order a JavaScript runtime
+   produces, and the opposite of code-point order for that set.
+3. **Numbers.** ES6 `Number::toString(10)` battery, 13 values including `1.0`,
+   `-0.0`, `1e20`, `1e21`, `1e-6`, `1e-7`, `5e-324`, `1.7976931348623157e308`:
+   0 mismatches. Ints pass through as `str(n)`; `bool` is rejected as not a JSON
+   number.
+4. **String escaping.** `"`, backslash, backspace, form-feed, newline, carriage
+   return and tab use the short escapes; U+0001 and U+001F are emitted as
+   lowercase six-character `\uXXXX` escapes; U+007F is not escaped; non-ASCII is emitted
+   literally as UTF-8. This is `JSON.stringify` behaviour, which is what RFC 8785
+   specifies.
+5. **Fail-closed.** Non-JSON values raise `TypeError`; NaN/Infinity raise
+   `ValueError`. Both are already inside the exception sets my hash and signature
+   paths catch, so a bad value cannot silently become a passing verdict.
+6. **The decisive empirical check.** The frozen `integrity.current` of every
+   corpus artifact recomputes exactly, and both Ed25519 signature preimages (the
+   record-signature preimage over `current`, and the head-witness preimage over
+   the JCS-canonicalized claim) verify — 45/45 verdicts unchanged. If this
+   canonicalizer differed from the corpus builder's by a single byte, no artifact
+   would reach `AIREP-Core`, let alone `AIREP-Witnessed`.
+
+I found **no** behavioural difference from what my code assumed, so there was
+nothing to stop and report on this point.
+
+## Probes added — `selfcheck_s9_round3.py`, all 63 asserted, all pass
+
+Every fixture is built in the file by mutating the P2 corpus inputs **in memory**;
+nothing is written into the corpus and no `expected.json` is read.
+
+| Group | Probes | Result |
+|---|---|---|
+| control (unmutated P2 → `AIREP-Witnessed`, five empty channels) | 1 | pass |
+| R-7 row 1 — `head_witness` entirely absent → `no-witness-supplied` (WITHHELD) alone | 1 | pass |
+| R-7 row 2 — present as `null` / string / array / number / boolean → run-invalid, exit 1, no verdict | 5 | pass |
+| R-7 row 3 — unknown member inside `head_witness` → run-invalid (incl. a foreign member alongside a missing known member) | 2 | pass |
+| R-7 row 4 — `claim` absent / null / string / array / number / structurally invalid → `witness-claim-invalid` alone | 6 | pass |
+| R-7 row 5 — `head_ref` absent / null / string / array / number / no `record_id` → `witness-head-unresolved` alone; plus 6a-gates-6b | 7 | pass |
+| R-7 row 6 — `witness_id` absent / null / number / array / object → `witness-binding-missing` (WITHHELD) alone; plus §4 suppression of stages 8-9 | 6 | pass |
+| R-7 row 7 — `signature` absent / null / string / array / number, `value` absent / wrong-typed → `witness-signature-invalid` alone | 7 | pass |
+| R-7 row 8 — R-4 nested closure unchanged (`head_ref`/`signature` object + unknown member → run-invalid) | 3 | pass |
+| divergence risk A — §5 channel assignment: each reason in its own channel and **not** in the other; each denies `AIREP-Witnessed` | 10 | pass |
+| divergence risk B — R-2 precedence over multi-member absence, each with a discrimination probe | 7 | pass |
+| R-7 closure — an absent sub-member is never reported as `no-witness-supplied` | 4 | pass |
+| packaging — module loaded from `<repo>/spec/airep/v0.1/conformance/jcs.py`, `canonicalize` returns RFC 8785 bytes, verifier runs with `cwd=/` and no `--schema-dir` | 4 | pass |
+
+One observational (non-asserted) line records that `import jcs` fails in this
+environment (exit 1) — i.e. no installed package is involved and the repository
+loader is the only source of those bytes.
+
+## Every self-check script, re-run
+
+| Script | Exit | Result |
+|---|---|---|
+| `selfcheck_errata.py` | 0 | **43 ok / 0 FAIL** — "all construction self-checks passed" (after the path fix below) |
+| `selfcheck_s9_round2.py` | 0 | **47 ok / 0 FAIL** — "all S9 round-2 probes passed" |
+| `selfcheck_s9_round3.py` | 0 | **63 ok / 0 FAIL** — "all S9 round-3 probes passed" |
+
+`selfcheck_errata.py` was carried into round 3 as a **known-broken** script: it was
+authored against the snapshot layout (`HERE/corpus/cases`, `HERE/spec/schemas`, a
+sibling `jcs.py`) and, run as committed, died at line 101 with
+`FileNotFoundError: .../verifier_py/corpus/cases/P2/request.json`. Round 3 repaired
+the **paths only** (`selfcheck_errata.py:16-25`: `CVDIR`, `CORPUS`, `SCHEMAS`,
+`JCS_SRC`; and the §9 portability fixture at the tail now copies
+`class_verifier.py` alone and materialises the frozen canonicalizer at the
+repository-relative `v0.1/conformance/jcs.py` that the loader expects). No
+assertion in that file was added, removed, weakened or re-worded, and its
+portability assertion — that the default `--schema-dir` resolves from
+`<v0.2>/class-verification/verifier_py/` — is unchanged and now passes.
+
+## Corpus re-run — 45/45, and R-7 changed no §7 expected value
+
+A results file was produced **before** the R-7 edit (with the JCS loader already in
+place, so the two runs differ only by R-7) and again after:
+
+- `--corpus corpus --out ...` exit 0, **45 verdicts for 45 cases**.
+- Compared field-by-field against every `cases/<ID>/expected.json` (`class`, both
+  authenticated failure/withheld arrays, `authenticated_caveats`, both witnessed
+  arrays, `observer_assessment`): **45/45 match, 0 mismatches.**
+- The post-R-7 results file is **byte-identical** to the pre-R-7 one. R-7 changed
+  no §7 expected value, exactly as the ruling states. Nothing needed adjusting,
+  and nothing was adjusted.
+
+This is consistent with the corpus's own shape, checked directly: of the 45
+requests, **17 omit `head_witness` entirely** and the other **28 carry all four
+members**; none supplies a `head_witness` with a missing sub-member, and none
+supplies `"head_witness": null`.
+
+## FINDINGS (observed this round)
+
+1. **`selfcheck_errata.py` was not runnable as committed.** Carried over from
+   round 2 as an open finding; **fixed this round** (paths only, no assertion
+   touched) and now passes. Recorded here because the round-2 record says "Not
+   fixed".
+
+2. **Stale §9 vocabulary in `class_verifier.py` comments — still not fixed.** The
+   module docstring and several comments cite the withdrawn first draft's ids
+   ("E-1..E-6") where §9 now numbers its rulings R-1..R-7. Stale *references*, not
+   stale behaviour: the code matches §9 as measured above. Renumbering is
+   file-wide cosmetic churn, which this round forbids. **Not fixed.**
+
+3. **The verifier still imports three PyPI packages by name.** `jsonschema` +
+   `referencing` (stage-0 schema validation) and `cryptography` (Ed25519) are not
+   supplied by the repository. They happened to be present in this environment, so
+   this round did not have to fetch anything — but the packaging obligation this
+   round closed for JCS is only *partly* closed for the verifier as a whole: a
+   clean machine still needs those three installed. Outside this round's scope
+   (the mandate names the JCS import); recorded as a maintainer finding rather
+   than silently fixed.
+
+4. **A `__pycache__` remains under `verifier_py/`.** Created by round 3's probe
+   script importing `class_verifier` to inspect the loaded JCS module path. The
+   script now sets `sys.dont_write_bytecode = True` before that import, and the
+   verifier itself sets it around the JCS load, so neither writes bytecode any
+   more — but the already-created
+   `verifier_py/__pycache__/class_verifier.cpython-312.pyc` could not be removed:
+   the environment denied every `rm` I attempted. It is a build artifact, not
+   source. **Not removed; disclosed.**
+
+5. **No defect found in the frozen inputs.** R-7 is internally consistent with §0,
+   §2, §4, §5 and R-1..R-6 as far as I exercised them, and the
+   `spec/airep/v0.1/conformance/jcs.py` canonicalizer behaves exactly as this
+   verifier assumed. Nothing to report as a frozen-input defect.
+
+## Frozen-input integrity, machine-checked
+
+All **265** files listed in `corpus_manifest.json` re-hash to their recorded
+SHA-256 (**0 mismatches**), and the manifest's `aggregate_sha256` recomputes to
+`55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4` under its
+stated rule (path-sorted `'<sha256>  <relative-path>' + LF` lines) — so `corpus/`,
+every `expected.json` included, is byte-untouched. A filesystem scan of the whole
+work root shows exactly four source files modified in this round:
+`class_verifier.py`, `selfcheck_s9_round3.py` (new), `selfcheck_s9_round2.py` and
+`selfcheck_errata.py`, plus this file. Two consecutive corpus runs produce
+byte-identical results files (determinism re-checked).
+
+## Attestation
+
+I did not leave `/tmp/wk_hd4/task` for any read, list, stat or glob of repository
+or specification material; the only paths I wrote outside it are scratch files in
+the session scratchpad (a canonicalizer probe script and the results files used for
+the before/after comparison). **I made no network access of any kind** — no `pip`,
+no download, no fetch, no web search; the `import jcs` observation in the round-3
+probes is a local import attempt, and it fails, which is the point. I did not seek,
+read, infer or reason about any other implementation of this contract in any
+language. I did not run `git`. I did not write, run or design any
+cross-implementation comparator, and produced no artifact intended for comparison.
+I modified no frozen input: `CLASS_VERIFIER_CONTRACT.md`, `corpus/` (including
+every `expected.json`), `corpus_manifest.json`, `build_class_corpus.py`, `KEYS.md`,
+`schemas/`, `INTEGRITY.md`, `CONFORMANCE_CLASS_DESIGN.md` and
+`spec/airep/v0.1/conformance/jcs.py` are untouched — the manifest re-hash above is
+a machine check of the corpus, and the mtime scan covers the rest. The probe
+scripts mutate corpus inputs only in memory and write only into temporary
+directories they delete. This attestation rests on my own record of my actions;
+the environment enforces no sandbox, and the claim is stated at exactly that
+strength.
