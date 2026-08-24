@@ -353,13 +353,26 @@ class OperatorInputs:
         'binding-missing' / 'binding-not-trusted' / 'binding-malformed' /
         'suite-unsupported', or None when the binding is accepted.
         """
+        # Section 9 R-8, sub-step 7a -- WIRE-ID USABILITY PRECEDES STORE
+        # RESOLUTION. With no usable wire id the verifier has not determined
+        # WHICH binding it would evaluate, so the store-resolution gate (7b) is
+        # never reached: an absent or non-string id is `*-binding-missing`
+        # (WITHHELD) even when the store itself is malformed. The producer path
+        # resolves its own wire id -- `subject.producer` is schema-required and
+        # typed `string`, established at stage 0 -- so it always reaches 7b and
+        # can still report `producer-binding-malformed` on the same store.
+        if not isinstance(wire_id, str):
+            return None, None, "binding-missing"
         if self.bindings_doc is None:
             return None, None, "binding-missing"
+        # 7b: store resolution, then the referenced entry (R-3 governs inside).
+        # A WELL-FORMED store with no map entry for a usable id stays
+        # `*-binding-missing` here -- that is 7b, distinct from 7a above.
         bindings, producer_map, witness_map = self._binding_maps()
         role_map = producer_map if role == "producer" else witness_map
         if bindings is None or role_map is None:
             return None, None, "binding-malformed"
-        if not isinstance(wire_id, str) or wire_id not in role_map:
+        if wire_id not in role_map:
             return None, None, "binding-missing"
         binding_id = role_map[wire_id]
         if not isinstance(binding_id, str) or binding_id not in bindings:

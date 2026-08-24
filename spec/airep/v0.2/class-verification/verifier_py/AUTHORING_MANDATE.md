@@ -541,3 +541,251 @@ scripts mutate corpus inputs only in memory and write only into temporary
 directories they delete. This attestation rests on my own record of my actions;
 the environment enforces no sandbox, and the claim is stated at exactly that
 strength.
+
+# Remediation round 4 (R-8)
+
+Scope of this round: implement §9 **R-8** — `witness_id` usability precedes
+binding-store resolution at Stage 7 — add regression probes for it, re-run every
+self-check script and the corpus, and change nothing else. No rename, no
+restructure, no refactor for taste, no new feature, no reason-string change, no
+envelope change, and no edit to any stage outside Stage 7.
+
+## R-8 — what changed, with line references
+
+**One file, one function, one hunk:** `class_verifier.py`,
+`OperatorInputs.lookup_binding`. The file went from 1207 to 1220 lines (+13, of
+which 11 are comment). Nothing else in the file was touched, and no other file's
+logic changed.
+
+**Before** (old lines 356–363) — the store was resolved and validated *first*,
+and the wire-id usability test was fused into the same condition as the map
+lookup, *after* the malformed-store return:
+
+```python
+if self.bindings_doc is None:
+    return None, None, "binding-missing"
+bindings, producer_map, witness_map = self._binding_maps()
+role_map = producer_map if role == "producer" else witness_map
+if bindings is None or role_map is None:
+    return None, None, "binding-malformed"
+if not isinstance(wire_id, str) or wire_id not in role_map:
+    return None, None, "binding-missing"
+```
+
+**After** (new lines 356–376) — the usability test is hoisted above
+`_binding_maps()`, and the map-lookup half of the old fused condition stays
+below it:
+
+```python
+# ... R-8 rationale comment, lines 356-363 ...
+if not isinstance(wire_id, str):          # 7a  (line 364-365)
+    return None, None, "binding-missing"
+if self.bindings_doc is None:             #     (line 366-367)
+    return None, None, "binding-missing"
+# ... 7b comment, lines 368-370 ...
+bindings, producer_map, witness_map = self._binding_maps()   # 7b (line 371)
+role_map = producer_map if role == "producer" else witness_map
+if bindings is None or role_map is None:
+    return None, None, "binding-malformed"
+if wire_id not in role_map:               # 7b  (line 375-376)
+    return None, None, "binding-missing"
+```
+
+Everything from `binding_id = role_map[wire_id]` (line 377) onward — the entry
+resolution, the R-3 malformed-before-not-trusted ordering, the suite check — is
+byte-unchanged. Stage 7's call sites in `evaluate()` are unchanged: the witness
+call still runs only when `stage6_clean` (7a's own precondition), and 7c
+(revocation) still runs only after an accepted binding.
+
+### Stage 7 order, before and after
+
+| | Before | After (R-8) |
+|---|---|---|
+| 1st | binding document present? | **7a — wire id is a usable string?** ⇒ `*-binding-missing` |
+| 2nd | store resolution + E-4 closure ⇒ `*-binding-malformed` | binding document present? |
+| 3rd | wire id usable **or** present in map ⇒ `*-binding-missing` | **7b —** store resolution + E-4 closure ⇒ `*-binding-malformed` |
+| 4th | entry resolution, R-3, suite | **7b —** id present in map? ⇒ `*-binding-missing`; then entry resolution, R-3, suite |
+| 5th | revocation (7c) | **7c —** revocation, unchanged |
+
+The governing combination therefore inverts as R-8 requires: absent `witness_id`
++ malformed store was `witness-binding-malformed`, and is now
+`witness-binding-missing` alone.
+
+### Why the hoist is unconditional, and why that does not weaken the producer path
+
+The test is not gated on `role`. R-8's rationale — with no usable wire id the
+verifier has not determined *which* binding it would evaluate — is stated as a
+property of the resolution step, so gating it on the role would encode the
+witness path's accident rather than the rule. It is observably a no-op for the
+producer path: the producer's wire id is `artifact.subject.producer`, which
+`common.schema.json` declares **required** and typed `"string"` inside a
+`"additionalProperties": false` `subject` object, and stage 0 runs full
+jsonschema validation before stage 2 — so by the time `lookup_binding("producer",
+...)` is called the id is always a string and control always reaches 7b. That is
+asserted, not assumed: two probes below drive the producer path across the same
+malformed stores and still get `producer-binding-malformed`.
+
+## Probes added — `selfcheck_s9_round4.py`, 19 asserted, all pass
+
+New sibling script (the three earlier ones were left untouched). Same discipline
+as rounds 2–3: every fixture is built **in the file** by mutating the P2 corpus
+inputs *in memory*; nothing is written into `corpus/`; **no `expected.json` is
+read anywhere**; temporary request/operator files go into a `TemporaryDirectory`
+that is deleted. Two structurally different malformed stores are used — one with
+an unknown top-level member (E-4 closure) and one with the `witness_bindings`
+container deleted — so the result does not rest on a single malformation shape.
+
+| # | Probe | Result |
+|---|---|---|
+| 1 | control: unmutated P2 + unmutated store ⇒ `AIREP-Witnessed`, all five channels empty | ok |
+| 2 | **absent `witness_id` + malformed store ⇒ `witness-binding-missing` ALONE** (governing combination) | ok |
+| 3 | absent `witness_id` + malformed store (missing container) ⇒ same | ok |
+| 4 | `witness_id: null` + malformed store ⇒ `witness-binding-missing` alone | ok |
+| 5 | `witness_id` integer + malformed store ⇒ same | ok |
+| 6 | `witness_id` float + malformed store ⇒ same | ok |
+| 7 | `witness_id` bool + malformed store ⇒ same | ok |
+| 8 | `witness_id` array + malformed store ⇒ same | ok |
+| 9 | `witness_id` object + malformed store ⇒ same | ok |
+| 10 | **discrimination:** malformed store + valid present `witness_id` ⇒ `witness-binding-malformed` | ok |
+| 11 | discrimination, second malformation shape ⇒ `witness-binding-malformed` | ok |
+| 12 | **producer path:** malformed store, no `head_witness` ⇒ `producer-binding-malformed` | ok |
+| 13 | producer path, second malformation shape ⇒ `producer-binding-malformed` | ok |
+| 14 | **7b intact:** well-formed store, present usable id, `witness_bindings` empty ⇒ `witness-binding-missing`, producer channels clean, `AIREP-Authenticated` | ok |
+| 15 | 7b intact: well-formed store, present unknown id ⇒ `witness-binding-missing` | ok |
+| 16 | 7a with a well-formed store: absent id ⇒ `witness-binding-missing` (unchanged, pinned) | ok |
+| 17 | 7a with a well-formed store: `null` id ⇒ `witness-binding-missing` (pinned) | ok |
+| 18 | dependency: stage-6 failure + absent id + malformed store ⇒ `witness-claim-invalid` alone, no stage-7 reason | ok |
+| 19 | 7c: absent id + malformed store + witness-less revocation snapshot ⇒ `witness-binding-missing` alone, **no** revocation reason | ok |
+
+Every probe also asserts the *other* four channels and the class, so a probe
+cannot pass while a second reason leaks into the same or a neighbouring channel.
+In probes 2–13 the authenticated channel is asserted to carry exactly
+`producer-binding-malformed` and the class to be `AIREP-Core`; in 14–17 the
+authenticated channels are asserted empty and the class `AIREP-Authenticated`.
+
+### The probes were shown to discriminate
+
+A probe suite that passes both before and after a fix measures nothing. So the
+same 19 probes were run against the **pre-R-8** source (the hunk temporarily
+reverted in place, then restored from a byte copy taken before the revert, and
+the restored file re-verified by re-running the suite):
+
+- **pre-R-8: 9 FAIL / 10 ok**, exit 1. The nine failures are exactly the
+  R-8-governed rows — probes 2–9 and 19 — each reporting
+  `witnessed_withheld: ['witness-binding-malformed']` where R-8 requires
+  `['witness-binding-missing']`.
+- **post-R-8: 19 ok / 0 FAIL**, exit 0.
+
+The ten rows that pass in both states are the ones R-8 leaves alone (control,
+discrimination, producer path, 7b, well-formed-store 7a, stage-6 dependency) —
+which is the evidence that the fix did not simply disable the malformed path.
+
+## Every self-check script, re-run
+
+Run with `PYTHONDONTWRITEBYTECODE=1`; `selfcheck_s9_round4.py` additionally sets
+`sys.dont_write_bytecode = True` and passes `PYTHONDONTWRITEBYTECODE=1` into every
+subprocess it spawns.
+
+| Script | Exit | Asserted | Result |
+|---|---|---|---|
+| `selfcheck_errata.py` | 0 | 43 | all construction self-checks passed |
+| `selfcheck_s9_round2.py` | 0 | 47 | all S9 round-2 probes passed |
+| `selfcheck_s9_round3.py` | 0 | 63 | all S9 round-3 probes passed |
+| `selfcheck_s9_round4.py` | 0 | 19 | all S9 round-4 probes passed |
+
+**0 failures across 172 assertions.** No earlier probe regressed under R-8 —
+including round 2's observation rows on an absent `witness_id`, which record the
+*witnessed_failures* channel (empty then, empty now: the reason is WITHHELD).
+
+## Corpus re-run — 45/45, and R-8 changed no §7 expected value
+
+- Baseline, **before** the edit: `--corpus corpus --out <tmp>/before.json` exit 0,
+  45 verdicts; compared field-by-field against every `cases/<ID>/expected.json`
+  (`class`, `authenticated_failures`, `authenticated_withheld`,
+  `authenticated_caveats`, `witnessed_failures`, `witnessed_withheld`,
+  `observer_assessment`): **MATCH 45, MISMATCH 0**.
+- **After** the edit: exit 0, 45 verdicts, **MATCH 45, MISMATCH 0**.
+- The two results files are **byte-identical** (`cmp` clean). R-8 changed no §7
+  expected value, exactly as the ruling states. Nothing needed adjusting, and
+  nothing was adjusted. Two consecutive post-edit runs are also byte-identical
+  (determinism re-checked).
+
+This is consistent with the corpus's own shape, checked directly: the only two
+cases that expect a `*-binding-malformed` (PB4, WB4) both carry a **structurally
+complete** store whose malformation is inside a `bindings` entry, and both supply
+a present, usable wire id — PB4 has no `head_witness` at all, WB4's `witness_id`
+is `"NOTARY-WITNESS #1"`. No case combines an absent or non-string `witness_id`
+with a malformed store, so no case can move. The one case expecting
+`witness-binding-missing` (WB2) is the 7b leg — well-formed store, present id,
+empty `witness_bindings` — and is unaffected by 7a.
+
+## FINDINGS (observed this round)
+
+1. **Stale §9 vocabulary in `class_verifier.py` comments — still not fixed.**
+   Carried from round 3. The module docstring and several comments still cite the
+   withdrawn first draft's ids ("E-1..E-6") where §9 now numbers its rulings
+   R-1..R-8. Stale *references*, not stale behaviour. The new hunk cites R-8 and
+   R-3 correctly; renumbering the rest is file-wide cosmetic churn, which this
+   round forbids. **Not fixed.**
+
+2. **The verifier still imports three PyPI packages by name.** Carried from
+   round 3, unchanged: `jsonschema` + `referencing` (stage-0 validation) and
+   `cryptography` (Ed25519) are not supplied by the repository; they were present
+   in this environment, so nothing was fetched. A clean machine still needs them.
+   Outside this round's scope. **Not fixed.**
+
+3. **No `__pycache__` this round.** Round 3's finding #4 (an unremovable
+   `verifier_py/__pycache__/class_verifier.cpython-312.pyc`) does **not** appear
+   in this snapshot, and none was created: a scan of the whole work root for
+   `__pycache__` / `*.pyc` after all runs returns nothing. Closed for this round;
+   whether the round-3 artifact still exists in the maintainer's copy is not
+   something this round can see.
+
+4. **A wording ambiguity in `corpus_manifest.json.aggregate_rule`, not a defect.**
+   The rule says "concatenated ASCII-sorted UTF-8 lines `'<sha256>  <relative-path>\n'`".
+   Sorting the *assembled lines* (i.e. by hash, since the hash is the prefix)
+   yields `277368162a79cb89…` and does **not** reproduce the recorded aggregate;
+   sorting by *relative path* yields `55d43c5170641b18…`, which matches. Both
+   readings are available from the sentence. Reported, not changed — the manifest
+   is frozen, the recorded aggregate is reproducible under the path-sorted
+   reading, and this affects no verdict.
+
+5. **No defect found in the frozen inputs.** R-8 is internally consistent with
+   §3's stage table, §4's dependency graph, §5's registry channels and R-1..R-7
+   as far as I exercised them. Nothing else to report.
+
+## Frozen-input integrity, machine-checked
+
+All **265** files listed in `corpus_manifest.json` re-hash to their recorded
+SHA-256 (**0 mismatches**), and the manifest's `aggregate_sha256` recomputes to
+`55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4` under the
+path-sorted reading of its stated rule — so `corpus/`, every `expected.json`
+included, is byte-untouched. An mtime scan of the whole work root shows the only
+files written in this round are `class_verifier.py` (edited),
+`selfcheck_s9_round4.py` (new) and this file; every frozen document
+(`CLASS_VERIFIER_CONTRACT.md`, `INTEGRITY.md`, `CONFORMANCE_CLASS_DESIGN.md`, the
+five schemas, `build_class_corpus.py`, `KEYS.md`, `corpus_manifest.json`,
+`spec/airep/v0.1/conformance/jcs.py`) still carries its snapshot-delivery
+timestamp, earlier than my first write.
+
+## Attestation
+
+I did not leave `/tmp/wk_tq2/task` for any read, list, stat or glob of repository
+or specification material; the only files I wrote outside the two deliverables and
+this document are scratch files inside the work root
+(`/tmp/wk_tq2/task/.r4scratch/`: the before/after corpus results, the per-case
+comparator, the captured self-check outputs and the byte copy of the patched
+source used to restore it after the discrimination run), and they are deleted at
+the end of the round. **I made no network access of any kind** — no `pip`, no
+download, no fetch, no web search. I did not seek, read, infer or reason about any
+other implementation of this contract in any language; R-8's mention of "both
+implementations" was read only as the maintainer's account of why the ruling
+exists. I did not run `git`. I did not write, run or design any
+cross-implementation comparator, and produced no artifact intended for comparison
+against another implementation — the per-case comparator named above compares this
+verifier's output against the frozen `expected.json` files only. I modified no
+frozen input: the manifest re-hash above is a machine check of the corpus, and the
+mtime scan covers the rest. The probe script mutates corpus inputs only in memory
+and writes only into a temporary directory it deletes. This attestation rests on
+my own record of my actions; the environment enforces no sandbox, and the claim is
+stated at exactly that strength.
