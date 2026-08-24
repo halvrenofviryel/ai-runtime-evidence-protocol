@@ -898,8 +898,10 @@ Batch:
   --schema-dir DIR   accepted v0.2 schema directory
                      (default: ../../schemas, relative to this file)
 
-Exit codes: 0 evaluation completed; 1 unparseable input or stage-0/1 artifact
-invalidity (no verdict producible); 2 CLI usage/config error.
+Exit codes: 0 evaluation completed; 1 unparseable input, stage-0/1 artifact
+invalidity, or a batch-level run-identity invariant failure - a duplicate
+(chain_id, record_id) tuple in the verdict set (no results file is emitted);
+2 CLI usage/config error. --out is batch mode only.
 `;
 
 function parseArgs(argv) {
@@ -973,6 +975,10 @@ function buildPolicy({ bindingsFile, independenceFile, revocationFile, now, fres
 }
 
 function runSingle(flags) {
+  // R-9: `--out` belongs to batch mode only. Silently discarding an operator-supplied
+  // destination is forbidden, so this is a CLI usage error (exit 2) raised BEFORE any
+  // evaluation: no verdict is emitted and the --out path is neither created nor modified.
+  if (flags.out !== null) throw new UsageError("--out is batch mode only; --request emits to stdout");
   if (flags.request === null) throw new UsageError("--request is required");
   const policy = buildPolicy({
     bindingsFile: flags.bindings,
@@ -1033,6 +1039,18 @@ function runBatch(flags) {
     const c = utf8Compare(x.artifact_ref.chain_id, y.artifact_ref.chain_id);
     return c !== 0 ? c : utf8Compare(x.artifact_ref.record_id, y.artifact_ref.record_id);
   });
+
+  // R-10: a duplicate (chain_id, record_id) tuple in the produced verdict set is a
+  // run-level identity invariant failure -- exit 1, not a class reason and not exit 2.
+  // Checked on the sorted array (duplicates are adjacent) and BEFORE any write, so an
+  // invalid run leaves no results file at all.
+  for (let i = 1; i < verdicts.length; i++) {
+    const a = verdicts[i - 1].artifact_ref, b = verdicts[i].artifact_ref;
+    if (utf8Compare(a.chain_id, b.chain_id) === 0 && utf8Compare(a.record_id, b.record_id) === 0) {
+      throw new InvalidRunError(
+        `duplicate (chain_id, record_id) tuple in the verdict set: (${b.chain_id}, ${b.record_id})`);
+    }
+  }
 
   fs.writeFileSync(flags.out, stableStringify({ verdicts }) + "\n");
   return 0;

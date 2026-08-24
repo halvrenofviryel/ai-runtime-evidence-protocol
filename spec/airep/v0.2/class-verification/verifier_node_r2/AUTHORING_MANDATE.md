@@ -615,3 +615,193 @@ requires.
   the run outputs `out_run1.json` / `out_run2.json`.
 - I am the sole author of this implementation and of this round; nothing here was independently
   reviewed. This record is implementer evidence, not acceptance.
+
+## Remediation round 5 (R-9, R-10)
+
+Fifth remediation round on my own prior work, following the **first official parity run**, whose
+result was **FAILURE**. The 45-case semantic surface came back completely clean; the two
+divergences were both on the **run-validity / CLI** surface, where the contract was genuinely
+ambiguous. The maintainer closed both ambiguities in `CLASS_VERIFIER_CONTRACT.md` §9 as **R-9**
+and **R-10**, and in both cases **my** behaviour is the side that had to change. R-1..R-8 are
+unchanged and still bind. Scope was R-9 and R-10 only: no rename, restructure, taste refactor,
+reason-string change, envelope change, or any edit to the semantic evaluation path.
+
+### What the two rulings pin
+
+**R-9** — `--out` belongs to batch mode only. `--request FILE --out PATH` is a **CLI usage
+error, exit 2**: no verdict is emitted and `PATH` is neither created nor modified. Silently
+discarding an operator-supplied destination is bad fail-closed behaviour.
+
+**R-10** — a duplicate `(chain_id, record_id)` tuple in the produced verdict set is **verifier
+run-invalidity**, not only a comparator gate: **exit 1**, **no results file emitted**
+(uniqueness must be established before any write), no new §5 reason code, and **not** exit 2 —
+a parsed batch failed a run-level identity invariant, which is not a usage error.
+
+### Before / after — measured on the real source, not asserted
+
+Both "before" rows below are **measurements taken on the pre-edit source at the start of this
+round**, not recollections.
+
+| Ruling | Before (pre-edit source, measured) | After (current source, measured) |
+|---|---|---|
+| **R-9** | `--request ../corpus/cases/P2/request.json --out PATH` ⇒ **exit 0**, 548 bytes of verdict JSON on **stdout**, `PATH` **not created**. `--out` was silently ignored — exactly what R-9 forbids. | ⇒ **exit 2**, `usage error: --out is batch mode only; --request emits to stdout` on stderr, **0 bytes on stdout**, `PATH` neither created nor modified (a pre-existing file at `PATH` comes back byte-identical). |
+| **R-10** | a two-case batch whose cases are byte-copies of the same frozen case ⇒ **exit 0** and a **results file containing two verdicts carrying the identical tuple** `(cv-chain-p2, cv-rec-p2)`. | ⇒ **exit 1**, `invalid: duplicate (chain_id, record_id) tuple in the verdict set: (cv-chain-p2, cv-rec-p2)` on stderr, and **no results file** (a pre-existing file at the `--out` path is left byte-identical). |
+
+### Edits — three, all in `verifier_node_r2/`
+
+**1. `class_verifier.mjs` lines 978–981** (`runSingle`, first statements) — R-9. Three comment
+lines plus one guard, placed **above** the existing `--request is required` check so the
+rejection happens *before* single-request mode is entered and before any input is read or
+evaluated:
+
+```js
+if (flags.out !== null) throw new UsageError("--out is batch mode only; --request emits to stdout");
+```
+
+`UsageError` already maps to exit 2 in `main()`'s catch, so no exit-code plumbing changed. The
+rest of `runSingle` is byte-for-byte the previous body.
+
+**2. `class_verifier.mjs` lines 1043–1053** (`runBatch`) — R-10. A duplicate scan inserted
+**between** the existing `verdicts.sort(...)` (lines 1038–1041) and the single
+`fs.writeFileSync(flags.out, ...)` (now line 1055). The scan reuses the same `utf8Compare` the
+sort uses, walks adjacent pairs of the **sorted** array (so duplicates are necessarily
+adjacent), and throws `InvalidRunError`, which `main()` already maps to exit 1.
+
+**Write ordering, checked rather than assumed.** `fs.writeFileSync` is the **only** write in
+`runBatch`, and it was already positioned after the sort, so inserting the scan before it is
+sufficient: an invalid run leaves no results file at all — not a partial one, not a complete
+one. There is no incremental or streaming write anywhere on the batch path. This is asserted
+directly by probe 5 below, which pre-creates a file at the `--out` path and demands it come back
+byte-identical.
+
+**3. `class_verifier.mjs` lines 901–904** (the `HELP` string, exit-code paragraph) — text only,
+no behaviour. The former text described exit 1 as "unparseable input or stage-0/1 artifact
+invalidity", which after R-10 is incomplete, and said nothing about `--out`'s mode. It now names
+the batch-level run-identity invariant and the no-results-file consequence, and states `--out is
+batch mode only`. Recorded explicitly as a **sixth** change beyond the five scoped items,
+because leaving the tool's own documented exit semantics contradicting its behaviour would be a
+defect introduced by this round. Nothing reads `--help` output as data; `§6.4`'s only `--help`
+requirement (exit `0`, nothing evaluated, no verdict) is unaffected and still measured.
+
+**4. `exitcode_check.mjs`** — probes. Line 1 header now names R-9/R-10 alongside §6.4; line 72
+adds the pinned §6.4 row `--request` together with `--corpus` ⇒ 2, which the script did not
+previously cover; lines 90–206 are the new probe block, inserted before the existing teardown.
+Every input is built by the script itself under `tmp_exitcheck/`, which is deleted at the end.
+The duplicate corpus is assembled by **copying** frozen fixture bytes into scratch case
+directories via `scratchCorpus()` (`exitcode_check.mjs:140–158`); `corpus/` is never added to or
+altered, and no `expected.json` is read by this script.
+
+`rulings_check.mjs` was **not** touched: R-9 and R-10 are run-validity / CLI rulings, and that
+script is the semantic-ruling harness. No semantic evaluation code was edited this round.
+
+### Probes added — 6, all passing
+
+| # | Probe | Demanded | Result |
+|---|---|---|---|
+| 1 | **R-9 governing:** `--request P2 --out tmp_exitcheck/r9_must_not_be_written.json` | exit **2**, **and** stdout exactly empty (no verdict), **and** the `--out` path not created — all three asserted, not just the exit code | **pass** |
+| 2 | **R-9 "nor modified":** same invocation with a sentinel file already at the `--out` path | exit **2**, empty stdout, sentinel bytes unchanged | **pass** |
+| 3 | **R-9 discrimination:** the same request **without** `--out` | exit **0** with a verdict on stdout — the gate rejects the flag, not the mode | **pass** |
+| 4 | **R-10 governing:** two-case scratch corpus, both cases byte-copies of frozen case P2 ⇒ identical tuple | exit **1** **and** no file at the `--out` path | **pass** |
+| 5 | **R-10 write ordering:** same duplicate corpus with a sentinel file already at the `--out` path | exit **1** and the sentinel bytes unchanged — proves uniqueness precedes every write | **pass** |
+| 6 | **R-10 discrimination:** the same two-case batch **shape** built from frozen cases P1 and P2 ⇒ distinct tuples | exit **0**, results file written, 2 verdicts, tuples asserted distinct — the gate rejects duplicates, not multi-case batches | **pass** |
+
+Probes 3 and 6 are the load-bearing discriminators: without them, a verifier that refused
+*every* single-request invocation, or *every* multi-case batch, would score identically.
+
+**Negative control (the probes discriminate).** A scratch copy of the current
+`class_verifier.mjs` with **only** the two new gates neutralised — the R-9 guard line deleted and
+the R-10 loop condition forced false, nothing else — was run inside `verifier_node_r2/` on the
+identical inputs. It produced **exit 0 with 548 stdout bytes and no file** for probe 1's
+invocation, and **exit 0 with a two-verdict results file** for probe 4's, i.e. probes 1, 2, 4 and
+5 fail against the pre-ruling behaviour and pass against the current source. (The first attempt
+placed the copy in a subdirectory, where `import "./node_modules/ajv/dist/2020.js"` cannot
+resolve and both runs died with `ERR_MODULE_NOT_FOUND` — recorded because that failed attempt is
+part of the honest record; the copy was then run from `verifier_node_r2/` itself.) The scratch
+copy, the scratch corpora and all probe outputs were deleted immediately afterwards and the
+directory listing re-checked to confirm only the tracked files and the two run outputs remain.
+
+### Every check script re-run
+
+Batch first, so `selfcheck.mjs` has its input. **Standing precondition, stated accurately:**
+`selfcheck.mjs` is **not** self-contained — it never invokes the verifier; it reads
+`out_run1.json` from the working directory, the output of a *prior* batch run, plus
+`class_verifier.mjs`'s own `REASONS` table as the registry. Run alone against a stale or absent
+`out_run1.json` it silently checks the wrong bytes or throws `ENOENT`.
+
+| Command | Result | Exit |
+|---|---|---|
+| `node class_verifier.mjs --schema-dir ../../schemas --corpus ../corpus --out out_run1.json` | 45 verdicts written | `0` |
+| `node class_verifier.mjs --schema-dir ../../schemas --corpus ../corpus --out out_run2.json` | 45 verdicts written | `0` |
+| `cmp out_run1.json out_run2.json` | **byte-identical**, both sha256 `556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735` | `0` |
+| `node selfcheck.mjs` | `ENVELOPE SELF-CHECK: clean (45 verdicts, 31 registry reasons)` | `0` |
+| `node corpus_compare.mjs` | `cases=45 aborted=0 mismatching=0 clean=45` | `0` |
+| `node rulings_check.mjs` | `RULINGS SELF-CHECK: clean` — 81 probes ok, unchanged from round 4 | `0` |
+| `node errata_check.mjs` | `ERRATA SELF-CHECK: clean` | `0` |
+| `node exitcode_check.mjs` | `EXIT-CODE SELF-CHECK: clean` — **26 probes ok**, 7 of them new this round (6 R-9/R-10 probes + the `--request` with `--corpus` row) | `0` |
+| `node preimage_check.mjs` | `CONSTRUCTION SELF-CHECK: clean` | `0` |
+| `node --check class_verifier.mjs`, `node --check exitcode_check.mjs` | parse clean | `0` |
+
+**Pinned §6.4 rows that already worked, re-confirmed individually** (all inside
+`exitcode_check.mjs`): `--corpus` without `--out` ⇒ **2**; `--request` together with `--corpus`
+⇒ **2**; `--help` ⇒ **0**; a valid single request ⇒ **0** (both with and without operator
+inputs).
+
+**Corpus: 45/45.** `corpus_compare.mjs` compared all seven expected members for every case
+against its `expected.json`: 45 clean, 0 mismatching, 0 aborted.
+
+**Determinism: confirmed.** Two consecutive batch runs are byte-identical.
+
+**R-9 and R-10 changed no §7 expected value — measured, not assumed.** A batch was run and
+hashed **before** any edit this round: `out_baseline.json` = sha256
+`556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735`. `out_run1.json` after the
+edits hashes to the **same** value, which is also the hash recorded for the post-R-7 and post-R-8
+batches earlier in this file. The 45 corpus verdicts are byte-identical before and after, so no
+blocking finding arose. This matches R-9/R-10's own statement that the frozen corpus contains no
+duplicate tuple and its runs use batch mode.
+
+**Frozen-input integrity re-measured.** All 265 corpus files were hashed and compared against
+`corpus_manifest.json`: 265/265 digests match, and the manifest's `aggregate_sha256` recomputes
+to `55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4` exactly.
+
+### FINDINGS (observed, not fixed)
+
+1. **`exitcode_check.mjs` does not propagate failure through its exit code.** It counts problems
+   into `bad` and prints `${bad} exit-code problems`, but — unlike `rulings_check.mjs` and
+   `corpus_compare.mjs`, which both end in `process.exit(bad === 0 ? 0 : 1)` — it has no final
+   `process.exit`, so the process exits **0 even when probes fail**. The script's *output* is
+   honest; its *exit status* is not, so any CI or wrapper gating on exit status alone would read
+   a failing exit-code surface as clean. This round's six new probes inherit that weakness. I did
+   not fix it: adding a `process.exit` is outside the five scoped items and would change a check
+   script's contract with whatever invokes it. Pre-existing, not introduced this round, and
+   reported rather than quietly repaired. **Every result reported above was read from the printed
+   output, not from an exit status**, so no claim in this section depends on the defect.
+2. **No frozen input appeared defective.** Nothing in `CLASS_VERIFIER_CONTRACT.md`, the corpus,
+   the schemas or the manifest was found wrong or self-contradictory this round.
+3. **Round-4's open item is unchanged and still deliberate:** the now-unreachable
+   `typeof wireId !== "string"` test inside `resolveBinding()` is retained because it is live for
+   the producer caller. Not touched this round.
+
+### Attestation
+
+- Every read, write and command in this round stayed inside `/tmp/wk_nx5/task`. No path outside
+  the work root was read, listed, `stat`ed, globbed or written — scratch files and shell redirect
+  targets included. All scratch (`tmp_pre/`, `tmp_negctl/`, `tmp_old_verifier.mjs`,
+  `tmp_exitcheck/`) was created under `verifier_node_r2/` and deleted there; the harness-supplied
+  scratchpad directory outside the root was deliberately **not** used. No filesystem-wide search
+  of any kind was run. The redirect slip disclosed in round 3 was not repeated.
+- I did not access the network in any form — no `npm install`, no fetch, no web search. `ajv`
+  8.20.0 was used exactly as already installed in `./node_modules`, matching the pinned lock.
+- I did not seek, read, infer about, or reason about any other implementation of this contract in
+  any language. I did not attempt to determine what the other implementation does about R-9 or
+  R-10, and I implemented the rulings as pinned rather than toward any imagined counterpart. I
+  wrote, ran and designed no cross-implementation comparator.
+- I ran no `git` command.
+- No frozen input was modified. `CLASS_VERIFIER_CONTRACT.md`, `corpus/` (every `expected.json`
+  included), `corpus_manifest.json`, `build_class_corpus.py`, `KEYS.md`, the schemas,
+  `INTEGRITY.md`, `CONFORMANCE_CLASS_DESIGN.md`, `package.json` and `package-lock.json` were read
+  only — and the corpus is additionally proven unchanged by the 265/265 manifest hash check above.
+  Files written this round, all inside `verifier_node_r2/`: `class_verifier.mjs` (edits 1–3),
+  `exitcode_check.mjs` (edit 4), this file, and the run outputs `out_baseline.json` /
+  `out_run1.json` / `out_run2.json`.
+- I am the sole author of this implementation and of this round; nothing here was independently
+  reviewed. This record is implementer evidence, not acceptance.
