@@ -1006,8 +1006,13 @@ def main() -> int:
         "corpus": "AIREP v0.2 class-verification adversarial corpus (CLASS_VERIFIER_CONTRACT s7)",
         "builder": "build_class_corpus.py (third-context harness; NOT a class verifier)",
         "aggregate_sha256": out["aggregate_sha256"],
-        "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines "
-                          "'<sha256>  <relative-path>\\n' relative to class-verification/corpus/",
+        "aggregate_rule": (
+            "sha256 of the concatenation, in ASCII-ascending order of corpus-relative "
+            "path strings, of UTF-8 lines '<sha256>  <relative-path>\\n', where "
+            "<sha256> is the recorded digest for that path. The sort key is the "
+            "relative path, NOT the assembled line and NOT the hash prefix; each line "
+            "is built AFTER the sort. Paths are relative to class-verification/corpus/."
+        ),
         "case_count": len(CASE_ORDER),
         "file_count": len(out["files"]),
         "files": out["files"],

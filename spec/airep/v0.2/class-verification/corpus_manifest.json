@@ -1,5 +1,5 @@
 {
- "aggregate_rule": "sha256 of concatenated ASCII-sorted UTF-8 lines '<sha256>  <relative-path>\\n' relative to class-verification/corpus/",
+ "aggregate_rule": "sha256 of the concatenation, in ASCII-ascending order of corpus-relative path strings, of UTF-8 lines '<sha256>  <relative-path>\\n', where <sha256> is the recorded digest for that path. The sort key is the relative path, NOT the assembled line and NOT the hash prefix; each line is built AFTER the sort. Paths are relative to class-verification/corpus/.",
  "aggregate_sha256": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
  "builder": "build_class_corpus.py (third-context harness; NOT a class verifier)",
  "builder_assertions": {
