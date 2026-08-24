@@ -248,6 +248,172 @@ const OTHER_DIGEST = "sha256:" + "ab".repeat(32);
     { class: "AIREP-Witnessed", af: [], aw: [], ac: [], wf: [], ww: [] });
 }
 
+// ---------------------------------------------------------------------------
+// R-7 - a MISSING KNOWN head_witness evidence member is a semantic
+// failure/withholding on its own stage; only structure FOREIGN to the harness
+// (null / non-object head_witness, or an unknown member) is run-invalid.
+// One probe per row of the R-7 table, plus the two pinned divergence risks.
+// ---------------------------------------------------------------------------
+
+// Row 1 - head_witness entirely absent => no-witness-supplied (WITHHELD).
+{
+  const r = req(); delete r.head_witness;
+  expect("R-7 row1: head_witness absent => no-witness-supplied in witnessed_withheld",
+    ["--request", writeJson("r7_hw_absent.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: [], ww: ["no-witness-supplied"] });
+}
+
+// Row 2 - head_witness present but null / non-object => run-invalid, exit 1.
+for (const [name, v] of [["null", null], ["array", []], ["string", "x"], ["number", 7], ["boolean", true]]) {
+  const r = req(); r.head_witness = v;
+  const { status } = run(["--request", writeJson(`r7_hw_${name}.json`, r), ...OPS, ...CLOCK]);
+  if (status !== 1) say(`R-7 row2: head_witness as ${name} should be run-invalid (exit 1), got ${status}`);
+  else ok(`R-7 row2: head_witness present as ${name} is run-invalid (exit 1)`);
+}
+
+// Row 3 - unknown member INSIDE head_witness => run-invalid (closure preserved).
+{
+  const r = req(); r.head_witness.note = "extra";
+  const { status } = run(["--request", writeJson("r7_hw_unknown_member.json", r), ...OPS, ...CLOCK]);
+  if (status !== 1) say(`R-7 row3: unknown member in head_witness should be run-invalid, got ${status}`);
+  else ok("R-7 row3: unknown member inside head_witness is run-invalid (exit 1)");
+}
+
+// Row 4 - claim absent / non-object => witness-claim-invalid (FAILURE).
+{
+  const r = req(); delete r.head_witness.claim;
+  expect("R-7 row4: claim absent => witness-claim-invalid in witnessed_failures",
+    ["--request", writeJson("r7_claim_absent.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: ["witness-claim-invalid"], ww: [] });
+}
+for (const [name, v] of [["string", "x"], ["array", []], ["null", null], ["number", 3]]) {
+  const r = req(); r.head_witness.claim = v;
+  expect(`R-7 row4: claim as ${name} => witness-claim-invalid`,
+    ["--request", writeJson(`r7_claim_${name}.json`, r), ...OPS, ...CLOCK],
+    { wf: ["witness-claim-invalid"], ww: [] });
+}
+
+// Row 5 - head_ref absent / non-object => witness-head-unresolved (FAILURE),
+// reached only because 6a (the claim) is clean.
+{
+  const r = req(); delete r.head_witness.head_ref;
+  expect("R-7 row5: head_ref absent => witness-head-unresolved in witnessed_failures",
+    ["--request", writeJson("r7_headref_absent.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: ["witness-head-unresolved"], ww: [] });
+}
+for (const [name, v] of [["string", "x"], ["array", []], ["null", null]]) {
+  const r = req(); r.head_witness.head_ref = v;
+  expect(`R-7 row5: head_ref as ${name} => witness-head-unresolved`,
+    ["--request", writeJson(`r7_headref_${name}.json`, r), ...OPS, ...CLOCK],
+    { wf: ["witness-head-unresolved"], ww: [] });
+}
+
+// Row 6 - witness_id absent / non-string => witness-binding-missing (WITHHELD),
+// reached only because stage 6 is clean. Note the CHANNEL: this one is WITHHELD
+// even though its neighbours on either side are FAILUREs.
+{
+  const r = req(); delete r.head_witness.witness_id;
+  expect("R-7 row6: witness_id absent => witness-binding-missing in witnessed_WITHHELD",
+    ["--request", writeJson("r7_witid_absent.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: [], ww: ["witness-binding-missing"] });
+}
+for (const [name, v] of [["number", 7], ["null", null], ["object", { a: 1 }]]) {
+  const r = req(); r.head_witness.witness_id = v;
+  expect(`R-7 row6: witness_id as ${name} => witness-binding-missing (withheld)`,
+    ["--request", writeJson(`r7_witid_${name}.json`, r), ...OPS, ...CLOCK],
+    { wf: [], ww: ["witness-binding-missing"] });
+}
+
+// Row 7 - signature absent / non-object, or signature.value absent / wrong-typed
+// => witness-signature-invalid (FAILURE), reached only because stage 7 is clean.
+{
+  const r = req(); delete r.head_witness.signature;
+  expect("R-7 row7: signature absent => witness-signature-invalid in witnessed_failures",
+    ["--request", writeJson("r7_sig_absent.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: ["witness-signature-invalid"], ww: [] });
+}
+for (const [name, v] of [["string", "x"], ["array", []], ["null", null], ["number", 3]]) {
+  const r = req(); r.head_witness.signature = v;
+  expect(`R-7 row7: signature as ${name} => witness-signature-invalid`,
+    ["--request", writeJson(`r7_sig_${name}.json`, r), ...OPS, ...CLOCK],
+    { wf: ["witness-signature-invalid"], ww: [] });
+}
+
+// Row 8 - head_ref / signature present as an OBJECT carrying an unknown member
+// stays run-invalid: R-4 is unchanged by R-7. (Re-asserted here so the two
+// rulings are measured together rather than only in the R-4 block above.)
+for (const [name, mutate] of [
+  ["head_ref", (r) => { r.head_witness.head_ref.note = "x"; }],
+  ["signature", (r) => { r.head_witness.signature.note = "x"; }],
+]) {
+  const r = req(); mutate(r);
+  const { status } = run(["--request", writeJson(`r7_row8_unknown_${name}.json`, r), ...OPS, ...CLOCK]);
+  if (status !== 1) say(`R-7 row8: unknown member in ${name} must stay run-invalid, got ${status}`);
+  else ok(`R-7 row8: unknown member in head_witness.${name} stays run-invalid (R-4 unchanged)`);
+}
+
+// --- Divergence risk 1: channel assignment follows the closed section 5
+// registry. Two WITHHELD reasons and three FAILURE reasons, each asserted in
+// the array it belongs to AND asserted absent from the other array.
+{
+  const CHANNEL_CASES = [
+    ["no-witness-supplied", "ww", (r) => { delete r.head_witness; }],
+    ["witness-binding-missing", "ww", (r) => { delete r.head_witness.witness_id; }],
+    ["witness-claim-invalid", "wf", (r) => { delete r.head_witness.claim; }],
+    ["witness-head-unresolved", "wf", (r) => { delete r.head_witness.head_ref; }],
+    ["witness-signature-invalid", "wf", (r) => { delete r.head_witness.signature; }],
+  ];
+  for (const [reason, channel, mutate] of CHANNEL_CASES) {
+    const r = req(); mutate(r);
+    const want = channel === "ww" ? { wf: [], ww: [reason] } : { wf: [reason], ww: [] };
+    expect(`R-7 divergence1: ${reason} is ${channel === "ww" ? "WITHHELD" : "FAILURE"} per section 5`,
+      ["--request", writeJson(`r7_channel_${reason}.json`, r), ...OPS, ...CLOCK], want);
+  }
+}
+
+// --- Divergence risk 2: R-2's dependency precedence still governs. Each probe
+// removes TWO known members at once; only the first REACHABLE reason may appear.
+{
+  const r = req(); delete r.head_witness.claim; delete r.head_witness.signature;
+  expect("R-7 divergence2: claim AND signature absent => witness-claim-invalid ALONE",
+    ["--request", writeJson("r7_prec_claim_sig.json", r), ...OPS, ...CLOCK],
+    { wf: ["witness-claim-invalid"], ww: [] });
+}
+{
+  const r = req(); delete r.head_witness.claim; delete r.head_witness.head_ref;
+  delete r.head_witness.witness_id; delete r.head_witness.signature;
+  expect("R-7 divergence2: all four members absent => witness-claim-invalid ALONE",
+    ["--request", writeJson("r7_prec_all_absent.json", r), ...OPS, ...CLOCK],
+    { wf: ["witness-claim-invalid"], ww: [] });
+}
+{
+  const r = req(); r.head_witness = {};
+  expect("R-7 divergence2: head_witness as an empty object => witness-claim-invalid ALONE",
+    ["--request", writeJson("r7_prec_empty_hw.json", r), ...OPS, ...CLOCK],
+    { class: "AIREP-Authenticated", af: [], aw: [], ac: [], wf: ["witness-claim-invalid"], ww: [] });
+}
+{
+  const r = req(); delete r.head_witness.head_ref; delete r.head_witness.witness_id;
+  expect("R-7 divergence2: head_ref AND witness_id absent => witness-head-unresolved ALONE",
+    ["--request", writeJson("r7_prec_headref_witid.json", r), ...OPS, ...CLOCK],
+    { wf: ["witness-head-unresolved"], ww: [] });
+}
+{
+  const r = req(); delete r.head_witness.witness_id; delete r.head_witness.signature;
+  expect("R-7 divergence2: witness_id AND signature absent => witness-binding-missing ALONE",
+    ["--request", writeJson("r7_prec_witid_sig.json", r), ...OPS, ...CLOCK],
+    { wf: [], ww: ["witness-binding-missing"] });
+}
+{
+  // Stage 10 does NOT depend on stage 7, so an absent witness_id must not
+  // suppress freshness: the withheld binding and the failed freshness both
+  // report. This pins that R-7 suppressed nothing beyond its own prerequisite.
+  const r = req(); delete r.head_witness.witness_id;
+  expect("R-7 divergence2: witness_id absent still leaves stage 10 running (no clock => freshness withheld)",
+    ["--request", writeJson("r7_prec_witid_noclock.json", r), ...OPS],
+    { wf: [], ww: ["freshness-inputs-missing", "witness-binding-missing"] });
+}
+
 fs.rmSync(TMP, { recursive: true, force: true });
 console.log(bad === 0 ? "RULINGS SELF-CHECK: clean" : `${bad} ruling problems`);
 process.exit(bad === 0 ? 0 : 1);

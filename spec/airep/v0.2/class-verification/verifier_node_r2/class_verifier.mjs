@@ -509,21 +509,26 @@ function loadRequest(value, text) {
     if (!onlyKeys(h, ["head_ref", "witness_id", "claim", "signature"])) {
       throw new InvalidRunError("head_witness carries an unknown member (closed envelope)");
     }
-    for (const k of ["head_ref", "witness_id", "claim", "signature"]) {
-      if (!Object.prototype.hasOwnProperty.call(h, k)) {
-        throw new InvalidRunError(`head_witness is missing ${k}`);
-      }
-    }
-    // E-4 as narrowed by section 9 R-4: the section-0 nested closure is limited
-    // to head_ref and signature; an unknown member in either makes the RUN
-    // invalid. R-1 WITHDREW `claim` from that closure -- the claim is the frozen
-    // INTEGRITY 4.2 evidence object and is evaluated on its own semantic path
-    // (stage 6a), so a claim defect is never run-invalid.
+    // Section 9 R-7: the four head_witness members are KNOWN evidence fields,
+    // not harness requirements. Absence of one fails or withholds the tier
+    // evaluation on its own stage; only structure FOREIGN to the harness (a
+    // null / non-object head_witness, or an unknown member) invalidates the run.
+    // The requiredness loop that stood here is deleted for exactly that reason.
+    //   claim      absent/non-object => witness-claim-invalid      (stage 6a)
+    //   head_ref   absent/non-object => witness-head-unresolved    (stage 6b)
+    //   witness_id absent/non-string => witness-binding-missing    (stage 7)
+    //   signature  absent/non-object => witness-signature-invalid  (stage 9)
+    // R-2's dependency precedence still decides which of those is REACHABLE.
+    //
+    // E-4 as narrowed by section 9 R-4 (unchanged by R-7): the section-0 nested
+    // closure is limited to head_ref and signature; an unknown member in either
+    // makes the RUN invalid. R-1 WITHDREW `claim` from that closure -- the claim
+    // is the frozen INTEGRITY 4.2 evidence object and is evaluated on its own
+    // semantic path (stage 6a), so a claim defect is never run-invalid.
     if (isPlainObject(h.head_ref) && !onlyKeys(h.head_ref, ["record_id", "chain_id"])) {
       throw new InvalidRunError("head_witness.head_ref carries an unknown member (closed envelope)");
     }
-    if (!isPlainObject(h.signature)) throw new InvalidRunError("head_witness.signature is not an object");
-    if (!onlyKeys(h.signature, ["alg", "value"])) {
+    if (isPlainObject(h.signature) && !onlyKeys(h.signature, ["alg", "value"])) {
       throw new InvalidRunError("head_witness.signature carries an unknown member (closed envelope)");
     }
     hw = h;
@@ -765,7 +770,11 @@ function evaluate(request, policy) {
   // ---- Stage 9: witness signature ----------------------------------------
   if (stage7Clean) {
     const preimage = headWitnessPreimage(artifact.airep_version, witRes.binding.suite, hw.claim);
-    const ok = verifyEd25519(preimage, hw.signature.value, witRes.binding.public_key_hex);
+    // R-7: `signature` absent or non-object is a KNOWN-field absence, not a
+    // harness defect, so it reaches here and reports witness-signature-invalid
+    // exactly as an absent or wrong-typed `signature.value` already did (R-4).
+    const sigValue = isPlainObject(hw.signature) ? hw.signature.value : undefined;
+    const ok = verifyEd25519(preimage, sigValue, witRes.binding.public_key_hex);
     if (!ok) witFailures.push("witness-signature-invalid");
   }
 

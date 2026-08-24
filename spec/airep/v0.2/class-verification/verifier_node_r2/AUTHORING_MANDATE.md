@@ -263,3 +263,191 @@ have not made it unilaterally.
   The contract, the corpus (every `expected.json` included), `corpus_manifest.json`,
   `build_class_corpus.py`, `KEYS.md`, the schemas, `INTEGRITY.md` and
   `CONFORMANCE_CLASS_DESIGN.md` were read only.
+
+---
+
+## Remediation round 3 (R-7)
+
+Third and final remediation round on my own prior work, against the new normative ruling
+**§9 R-7** of `CLASS_VERIFIER_CONTRACT.md`. R-7 closes the finding this file recorded at the
+end of round 2: `loadRequest` treated all four `head_witness` members as harness-required and
+exited 1 when any was absent, while §0 declares only the `head_witness` object itself optional.
+The governing distinction R-7 states — *absence of a KNOWN evidence field fails or withholds
+the tier evaluation; structure FOREIGN to the harness invalidates the run* — is what the code
+now implements. R-1..R-6 were re-read and are unchanged; nothing else was touched.
+
+### What changed — two edits, both in `class_verifier.mjs`
+
+**Edit 1 — `loadRequest`, `class_verifier.mjs:512-533` (the §0 envelope reader).**
+
+- **Deleted** the five-line requiredness loop that stood immediately after the `head_witness`
+  closure check and threw `InvalidRunError("head_witness is missing <member>")` when any of
+  `head_ref` / `witness_id` / `claim` / `signature` was absent. This was the exact defect R-7
+  names. In its place stands a comment block (`:512-521`) recording the four known-field
+  dispositions and that R-2 decides which is reachable.
+- **Changed** `class_verifier.mjs:531` from a two-statement form —
+  `if (!isPlainObject(h.signature)) throw …;` followed by an unconditional
+  `if (!onlyKeys(h.signature, …)) throw …;` — to the single guarded form
+  `if (isPlainObject(h.signature) && !onlyKeys(h.signature, ["alg", "value"])) throw …;`.
+  An absent or non-object `signature` is now a known-field absence that reaches stage 9; an
+  unknown member inside a `signature` **object** is still run-invalid. This makes `signature`
+  read exactly like `head_ref` already did at `:528`.
+- **Deliberately unchanged** in the same function: `:508` (`head_witness` present but
+  null/non-object ⇒ `InvalidRunError`), `:509-511` (unknown member inside `head_witness` ⇒
+  `InvalidRunError`), and `:528-530` (unknown member inside a `head_ref` object ⇒
+  `InvalidRunError`). R-7 rows 2, 3 and 8 require all three to stay as they are.
+
+**Edit 2 — stage 9, `class_verifier.mjs:773-777` (witness signature verification).**
+
+The old line read `verifyEd25519(preimage, hw.signature.value, …)`, which throws a `TypeError`
+— not a class reason — the moment `hw.signature` is absent, because edit 1 now lets that case
+reach stage 9. It is replaced by
+`const sigValue = isPlainObject(hw.signature) ? hw.signature.value : undefined;` followed by
+`verifyEd25519(preimage, sigValue, …)`. `verifyEd25519` already returns `false` for any
+non-string, so an absent or non-object `signature` yields `witness-signature-invalid`, exactly
+as an absent or wrong-typed `signature.value` already did under R-4.
+
+**No other change.** No reason string, no verdict envelope member, no channel mapping, no stage
+order, no rename, no refactor. The other four stages needed no edit and got none: `hw.claim`
+already flows into `claimStructurallyValid` (`:642`, non-object ⇒ `false`), `hw.head_ref` into
+`resolveRef` (`:544`, non-object ⇒ `unresolved`), and `hw.witness_id` into `resolveBinding`
+(`:400`, non-string ⇒ `missing`) — all three were already absence-tolerant, and the round did
+not touch them.
+
+### Probes added — `rulings_check.mjs:252-415`, one section per R-7 row
+
+Every probe builds its own input by mutating a parsed copy of `corpus/cases/P2/request.json`
+in memory and writing it under `tmp_rulingscheck/`. The frozen corpus is never added to or
+altered, and no `expected.json` is read anywhere in this file. Each probe asserts the **exact**
+five channel arrays (or the exact exit code), so a reason landing in the wrong array fails.
+
+| Probe group | R-7 row / risk | Probes | Result |
+|---|---|---|---|
+| `head_witness` entirely absent | row 1 | 1 | ok — `no-witness-supplied` in `witnessed_withheld`, `witnessed_failures` empty |
+| `head_witness` as `null`, `[]`, string, number, boolean | row 2 | 5 | ok — run-invalid, exit 1, all five |
+| unknown member inside `head_witness` | row 3 | 1 | ok — run-invalid, exit 1 |
+| `claim` absent; `claim` as string / array / null / number | row 4 | 5 | ok — `witness-claim-invalid` in `witnessed_failures` |
+| `head_ref` absent; `head_ref` as string / array / null | row 5 | 4 | ok — `witness-head-unresolved` in `witnessed_failures` |
+| `witness_id` absent; as number / null / object | row 6 | 4 | ok — `witness-binding-missing` in `witnessed_**withheld**` |
+| `signature` absent; as string / array / null / number | row 7 | 5 | ok — `witness-signature-invalid` in `witnessed_failures` |
+| unknown member in `head_ref` / `signature` object | row 8 | 2 | ok — still run-invalid, exit 1 (R-4 unchanged) |
+| **Divergence risk 1** — channel per closed §5 registry | 5 reasons | 5 | ok — see below |
+| **Divergence risk 2** — R-2 precedence over absences | 6 | 6 | ok — see below |
+
+**Divergence risk 1 (channel assignment).** Each of the five reasons R-7 names was checked
+against the §5 table by hand and then measured, asserting the reason present in its own array
+**and** the other array empty: `no-witness-supplied` WITHHELD, `witness-binding-missing`
+WITHHELD, `witness-claim-invalid` FAILURE, `witness-head-unresolved` FAILURE,
+`witness-signature-invalid` FAILURE. The `witness_id` row is the trap — a *missing* known field
+whose reason is nevertheless WITHHELD while its neighbours on both sides are FAILURE — and it
+is probed twice, once in row 6 and once here. `selfcheck.mjs` independently re-checks every
+emitted reason against the in-source registry kind, so a channel error has two detectors.
+
+**Divergence risk 2 (R-2 precedence).** Six probes remove two or more known members at once and
+demand the first *reachable* reason **alone**:
+
+- `claim` + `signature` absent ⇒ `witness-claim-invalid` alone (the case R-7 pins by name);
+- all four members absent ⇒ `witness-claim-invalid` alone;
+- `head_witness` as `{}` ⇒ `witness-claim-invalid` alone;
+- `head_ref` + `witness_id` absent ⇒ `witness-head-unresolved` alone;
+- `witness_id` + `signature` absent ⇒ `witness-binding-missing` alone;
+- `witness_id` absent with no clock ⇒ `witness-binding-missing` **and**
+  `freshness-inputs-missing` both present — stage 10 does not depend on stage 7, so this probe
+  pins that R-7 suppressed nothing beyond its own prerequisite chain.
+
+`rulings_check.mjs` totals **63 probes, 63 ok, 0 fail** — 38 R-7 probes added this round, 25
+pre-existing R-1..R-4 probes still green.
+
+### Results — every check script, final state
+
+Run from `spec/airep/v0.2/class-verification/verifier_node_r2/` on Node v20.19.6 with the
+pinned `ajv@8.20.0` already present in `./node_modules` (no install, no network this round).
+
+| Check | Result | Exit |
+|---|---|---|
+| `node class_verifier.mjs --schema-dir ../../schemas --corpus ../corpus --out out_run1.json` | 45 verdicts written | `0` |
+| `node class_verifier.mjs … --out out_run2.json` | 45 verdicts written | `0` |
+| determinism: `cmp out_run1.json out_run2.json` | **byte-identical**, both `sha256 556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735` | `0` |
+| `node selfcheck.mjs` | `ENVELOPE SELF-CHECK: clean (45 verdicts, 31 registry reasons)` | `0` |
+| `node rulings_check.mjs` | `RULINGS SELF-CHECK: clean` — 63/63 probes ok | `0` |
+| `node errata_check.mjs` | `ERRATA SELF-CHECK: clean` | `0` |
+| `node exitcode_check.mjs` | `EXIT-CODE SELF-CHECK: clean` — 19/19 exit-code cases ok | `0` |
+| `node preimage_check.mjs` | `CONSTRUCTION SELF-CHECK: clean` | `0` |
+| `node corpus_compare.mjs` | `cases=45 aborted=0 mismatching=0 clean=45` | `0` |
+
+**`selfcheck.mjs` is NOT self-contained, stated plainly.** It reads `out_run1.json` from the
+working directory — the output of a *prior* batch run — and does not invoke the verifier at
+all. Run alone against a stale or absent `out_run1.json` it either checks the wrong bytes or
+throws `ENOENT`. The batch above was therefore run **first**, and `selfcheck.mjs` immediately
+after, so its "45 verdicts" describes this round's final binary. It also checks structure only
+— envelope shape, registry membership, channel kind, §2 consistency invariants, dedup, ASCII
+ordering, UTF-8 tuple ordering, duplicate tuples. It asserts **no** expected value and reports
+no pass rate; it cannot detect a wrong-but-well-formed verdict.
+
+`corpus_compare.mjs` is **new this round** and is a regression harness, **not a probe**: it is
+the one script that reads `expected.json`, deliberately, because §7 regression is what it
+measures. It runs the verifier once per case in single-case mode with that case's own operator
+inputs and clock, and compares all seven expected members.
+
+### Corpus: 45/45, and R-7 provably moved nothing
+
+`corpus_compare.mjs` reports `cases=45 aborted=0 mismatching=0 clean=45` — every case produces
+a verdict, and all seven `expected.json` members match on all 45.
+
+The requirement was that R-7 change no §7 expected value. Rather than assert that from the
+45/45 alone, I measured it: I reconstructed the **pre-R-7** verifier into a throwaway file by
+reverse-applying both edits, ran the full corpus batch on it, and compared bytes.
+
+```
+pre-R-7  tmp_pre_r7_out.json  sha256 556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735
+post-R-7 out_run1.json        sha256 556ab69a6f86d942fa68abdd1a3ce5423e2604d8813f92ff7b3c0f6b2644f735
+```
+
+Byte-identical: R-7 changed no corpus verdict at all, as the ruling predicts ("no corpus case
+supplies a `head_witness` with a missing sub-member"). The throwaway file and its output were
+deleted immediately after the measurement. No blocking finding on this axis.
+
+### FINDINGS (observed, not fixed)
+
+1. **`witness_id` absence vs a malformed bindings document — an unruled interaction.** R-7 row
+   6 says an absent/non-string `witness_id` yields `witness-binding-missing`. `resolveBinding`
+   (`class_verifier.mjs:397-402`) tests the *store* before the wire id: a `null` store returns
+   `missing` and a structurally malformed store returns `malformed`, both before the
+   `typeof wireId !== "string"` test. So with a **malformed** bindings document *and* an absent
+   `witness_id`, the emitted reason is `witness-binding-malformed`, not
+   `witness-binding-missing`. I did not reorder these tests. R-7's row describes the
+   head_witness-side defect in isolation, while E-4 makes operator-document malformation
+   fail-closed and takes precedence; both reasons are WITHHELD, so no channel is at stake, and
+   reordering would change behaviour for a case R-7 does not rule on. Recording it because two
+   implementations could plausibly order these two tests differently. Not a defect I can
+   resolve without a ruling.
+2. **The round-2 finding is closed.** The finding recorded at the end of round 2 — the four
+   required `head_witness` members — is exactly what R-7 ruled on and what edit 1 removes. It
+   is no longer open.
+
+No other finding. No frozen input appeared defective this round.
+
+### Attestation
+
+- Every read, write and command in this round stayed inside `/tmp/wk_ns8/task`, **with one
+  disclosed exception**: while running the four check scripts I mistyped a shell redirect as
+  `> /tmp_out` (intended as a scratch file inside the work root). The redirect targeted a path
+  outside the root. I did not read, list, `stat` or glob that path, before or after, and I did
+  not inspect or remove it afterwards, because doing so would itself be a touch outside the
+  root; I report it rather than conceal it. Nothing outside the work root was read, and nothing
+  from outside it entered this work. The round-2 `find /` incident was **not** repeated: no
+  filesystem-wide search of any kind was run this round.
+- I did not access the network in any form — no `npm install`, no fetch, no web search. `ajv`
+  was used exactly as already installed in `./node_modules`.
+- I did not seek, read, infer about, or reason about any other implementation of this contract
+  in any language. I wrote, ran and designed no cross-implementation comparator and no artifact
+  intended for comparison against another implementation; parity remains on hold.
+- I ran no `git` command.
+- No frozen input was modified. `CLASS_VERIFIER_CONTRACT.md`, `corpus/` (every `expected.json`
+  included), `corpus_manifest.json`, `build_class_corpus.py`, `KEYS.md`, the schemas,
+  `INTEGRITY.md`, `CONFORMANCE_CLASS_DESIGN.md`, `package.json` and `package-lock.json` were
+  read only. Files written this round, all inside `verifier_node_r2/`: `class_verifier.mjs`
+  (the two edits above), `rulings_check.mjs` (R-7 probe section appended), the new
+  `corpus_compare.mjs`, this file, and the run outputs `out_run1.json` / `out_run2.json`.
+- I am the sole author of this implementation and this round; nothing here was independently
+  reviewed, and this record is implementer evidence, not acceptance.
