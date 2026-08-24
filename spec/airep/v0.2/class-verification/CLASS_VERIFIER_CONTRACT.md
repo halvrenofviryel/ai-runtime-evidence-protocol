@@ -199,7 +199,8 @@ Rules:
   sequence, with no Unicode normalization** (maintainer, 2026-08-23: these are free-form core
   strings that may be non-ASCII, and Python code-point order vs JavaScript UTF-16 order
   diverge on some characters — byte order is the one both runtimes can implement identically).
-  A **duplicate `(chain_id, record_id)` tuple makes the run invalid** (comparator gate).
+  A **duplicate `(chain_id, record_id)` tuple makes the run invalid** — the **verifier
+  MUST reject; the comparator MUST independently gate** (see §9 R-10).
   Trailing newline, no metadata, byte-deterministic across runs. Reason arrays remain
   ASCII-ascending: the registry is ASCII by construction, so the two rules never conflict.
 
@@ -345,8 +346,10 @@ values. Hard gates, checked by a third comparator independent of both:
    class):
    - `0` — evaluation completed; the presence of FAILURE / WITHHELD / CAVEAT reasons does
      **not** change the exit code;
-   - `1` — the evaluation request, an artifact, or an operator file could not be parsed, or
-     stage-0/1 artifact validity failed, so no class verdict could be produced;
+   - `1` — the evaluation request, an artifact, or an operator file could not be parsed,
+     stage-0/1 artifact validity failed, or a **batch-level run-identity invariant**
+     failed (a duplicate `(chain_id, record_id)` tuple in the produced verdict set,
+     §9 R-10), so no results file is emitted;
    - `2` — CLI usage error;
    - `--help` — `0`, with nothing evaluated and no verdict emitted.
    A parseable-but-malformed **tier-relevant** binding / policy / revocation entry becomes a
@@ -563,6 +566,43 @@ reach the gate.
 This inverts the current order in both implementations, which resolve the store before checking
 the wire id. R-8 changes no §7 expected value: no corpus case combines an absent `witness_id`
 with a malformed store.
+
+**R-9 — Single-request mode emits to stdout; `--out` belongs to batch mode only.** Official
+parity run 1 measured a divergence on an unpinned CLI shape: given `--request FILE --out PATH`,
+one implementation refused with exit 2 while the other exited 0, **silently ignored `--out`**,
+wrote the verdict to stdout and created no file. Silently discarding a destination the operator
+explicitly supplied is bad fail-closed behaviour and contrary to the parity contract's intent,
+so the refusing behaviour becomes normative. Pinned exactly:
+
+| Invocation | Result |
+|---|---|
+| `--request FILE` | valid; the verdict goes to **stdout** |
+| `--request FILE --out PATH` | **CLI usage error, exit 2** — no verdict is emitted, and `PATH` is neither created nor modified |
+| `--corpus DIR --out PATH` | valid batch mode |
+| `--corpus DIR` without `--out` | exit 2 (unchanged) |
+| `--request` together with `--corpus` | exit 2 (unchanged) |
+
+**R-10 — A duplicate `(chain_id, record_id)` tuple is verifier run-invalidity, not only a
+comparator gate.** §2's "(comparator gate)" parenthetical could reasonably be read as assigning
+the check exclusively to the comparator, and official parity run 1 measured exactly that
+divergence: one implementation rejected a duplicate batch with exit 1, the other emitted a
+results file containing two verdicts carrying the same tuple. The ambiguity was real; this
+closes it in favour of the stricter reading.
+
+**A batch verifier that detects a duplicate `(chain_id, record_id)` tuple in the verdict set it
+produced MUST reject the run. The comparator MUST independently enforce the same property.**
+Exactly:
+
+- duplicate tuple ⇒ **exit 1**;
+- **no results file is emitted** — uniqueness must be established before any write;
+- this is **not** a class FAILURE or WITHHELD reason, and **no new reason code** enters the
+  closed §5 registry;
+- it is **not** exit 2: there is no CLI usage error. A parsed batch failed a **run-level
+  identity invariant**.
+
+§2 and §6.4 are amended accordingly. R-9 and R-10 are **run-validity / CLI closure rulings**;
+they touch neither implementation's semantic evaluation algorithm, and they change no §7
+expected value — the frozen corpus contains no duplicate tuple and its runs use batch mode.
 
 **Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
 `sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
