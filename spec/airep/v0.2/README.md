@@ -1,9 +1,12 @@
 # AIREP v0.2 — Specification tree (alpha)
 
-**Status: v0.2 is alpha and unreleased.** The published, citable version of AIREP is **v0.1**
-(see [`../v0.1/`](../v0.1/)). This tree grows section by section as each work package freezes;
-nothing appears here before its gate passes. Nothing here supersedes v0.1 until v0.2 is
-released.
+**Status: `v0.2.0-alpha.1` prerelease.** This is an experimental prerelease of the v0.2 line.
+It does **not** supersede v0.1 as the stable/recommended implementation target, and it does
+**not** satisfy the AD-15 criteria for a stable `v0.2.0`.
+
+The **wire version is `0.2`** — `airep_version` is pinned `"const": "0.2"` in the shared
+schema. Release SemVer and the wire identifier are separate: an artifact says `0.2`, the
+prerelease that shipped this tooling is `v0.2.0-alpha.1`.
 
 | Present | Status |
 |---|---|

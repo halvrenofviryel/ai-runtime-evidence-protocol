@@ -19,7 +19,7 @@ tie the status lifecycle to the evidence lifecycle, which is why they are now ap
 | Corpus | **60 scored cases** (45 C0 + 15 C1) and **15 CLI/process-exit probes** |
 | Official C1 parity run | **PASS**, all hard gates, 0 findings |
 | Producer implementation | **not started** |
-| v0.2 | **alpha, unreleased** — no plain `v0.2`, no stable `v0.2.0` |
+| v0.2 | **`v0.2.0-alpha.1` — released prerelease.** Experimental and not stable. Producer implementation remains unstarted and the AD-15 stable-release criteria remain unmet. There is no stable `v0.2.0`. |
 | Stable-release criteria (AD-15) | **not met** |
 
 ## What the phase result does and does not establish

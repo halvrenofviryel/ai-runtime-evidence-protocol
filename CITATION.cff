@@ -4,16 +4,18 @@ title: "AI Runtime Evidence Protocol (AIREP)"
 abstract: >-
   A neutral, vendor- and model-independent record format for per-decision AI runtime
   governance evidence: one signed, tamper-evident, chained record per AI decision, checkable
-  offline by an independent verifier. AIREP v0.1 is a proposed open format with one reference
-  implementation; it is not a ratified standard.
+  offline by an independent verifier. AIREP is a proposed open format with one reference
+  implementation; it is not a ratified standard. v0.1 is the stable, recommended
+  implementation target; v0.2.0-alpha.1 is an experimental prerelease that does not supersede
+  it and has no producer implementation.
 type: software
-version: "0.1.2"
-date-released: 2026-05-31
-doi: 10.5281/zenodo.20475136
+version: "0.2.0-alpha.1"
+date-released: 2026-08-25
+doi: 10.5281/zenodo.22101986
 identifiers:
   - type: doi
-    value: 10.5281/zenodo.20475137
-    description: "Version 0.1 archived release"
+    value: 10.5281/zenodo.20475136
+    description: "AIREP concept DOI — all versions"
 license:
   - Apache-2.0
   - CC-BY-4.0

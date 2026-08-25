@@ -19,13 +19,13 @@ are formats and an *SBOM* is the thing.)
 > It is **not** a ratified standard. See [`spec/airep/v0.1/STATUS.md`](./spec/airep/v0.1/STATUS.md)
 > for the maturity picture, open items, and change control.
 >
-> **Which version is which.** **v0.1 is the released, citable version** — it is what the schema
-> `$id`s, the Zenodo archives and the conformance badge above refer to, and it is what to build
-> against today. **v0.2 is alpha and unreleased**: an in-progress line under
-> [`spec/airep/v0.2/`](./spec/airep/v0.2/) whose integrity construction, artifact schemas and
-> class verifiers have been measured, but which has no producer implementation and does not meet
-> the stable-release criteria. Do not read v0.2 material as superseding v0.1, and do not treat
-> the badge as covering it — the badge runs the v0.1 battery only.
+> **Which version is which.** **v0.1 remains the current stable and recommended implementation
+> target** — it is what the schema `$id`s and the conformance badge above refer to, and what to
+> build against today. **`v0.2.0-alpha.1` is a released experimental prerelease** under
+> [`spec/airep/v0.2/`](./spec/airep/v0.2/), with measured integrity constructions, artifact
+> schemas and class-verification tooling. It is **not stable**, has **no producer
+> implementation**, does not meet the stable-release criteria, and **does not supersede v0.1**.
+> The badge runs the v0.1 battery only; v0.2 has its own reproduction workflow.
 
 **Canonical home:** <https://github.com/halvrenofviryel/ai-runtime-evidence-protocol> — the schema
 `$id`s resolve as raw files under its `main` branch.
@@ -153,5 +153,14 @@ See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 Paper: *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance*, [arXiv:2608.21363](https://arxiv.org/abs/2608.21363) (preprint, not peer reviewed).
 
-Archived on Zenodo: concept DOI [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) (always resolves to the latest version); v0.1 specifically is [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
+Archived on Zenodo, in three layers:
+
+| Cite | DOI |
+|---|---|
+| All AIREP versions (concept) | [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) |
+| **v0.1** — the stable, recommended target | [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137) |
+| **v0.2.0-alpha.1** — experimental prerelease | [10.5281/zenodo.22101986](https://doi.org/10.5281/zenodo.22101986) |
+
+Cite the paper for the protocol, and a version DOI for the exact artifact you used. If you are
+building against AIREP today, that is the v0.1 DOI.
 Machine-readable metadata is in [`CITATION.cff`](./CITATION.cff).
