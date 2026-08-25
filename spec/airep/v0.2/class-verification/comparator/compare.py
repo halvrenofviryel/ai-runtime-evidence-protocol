@@ -43,7 +43,7 @@ from registry import (  # noqa: E402
     VERDICT_MEMBERS, ARTIFACT_REF_MEMBERS, EVIDENCE_MEMBERS,
 )
 
-COMPARATOR_VERSION = "1.1.0"
+COMPARATOR_VERSION = "1.1.1"
 
 # C1 extension. Every C0 constant is PRESERVED as its own named value: the C1
 # work is strictly additive, so a C0 property can still be asserted on its own
@@ -71,7 +71,11 @@ ORDERING_DISCRIMINATOR = ("ORD2", "ORD1")
 # them. Both are recorded in the evidence; only the properties marked "measured"
 # below are established by this comparator, and the rest is labelled as relayed.
 C1_EXECUTION_SEMANTIC_BASIS_SHA = "0cc95f5ce5426ca41e7a2c26c0f77a6ba842cd81"
-COMPARATOR_OFFICIAL_RUN_CHECKOUT_SHA = "7c03438382f74ffabc123c08fdb9e1a5182e63d4"
+# The checkout the OFFICIAL C1 evidence under evidence/ was measured in. It is a
+# historical constant, NOT "the tree this process is running in": every later
+# reproduction (CI, a release check, a fresh clone) runs somewhere else. The tree
+# actually in use is reported separately as current_reproduction_checkout_sha.
+OFFICIAL_C1_EVIDENCE_CHECKOUT_SHA = "7c03438382f74ffabc123c08fdb9e1a5182e63d4"
 
 NOW_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?Z$")
 DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -82,6 +86,21 @@ class HarnessError(Exception):
 
 
 # ---------------------------------------------------------------- primitives
+
+def current_checkout_sha():
+    """The checkout this process is actually running in, or None if not determinable.
+
+    Read from the CI environment or an explicit override -- never by shelling out to
+    git, which the comparator does not depend on. None is reported honestly rather
+    than defaulting to the historical constant, because a wrong provenance value is
+    worse than an absent one.
+    """
+    for var in ("AIREP_REPRODUCTION_CHECKOUT_SHA", "GITHUB_SHA"):
+        v = os.environ.get(var)
+        if v:
+            return v
+    return None
+
 
 def sha256_bytes(raw):
     return "sha256:" + hashlib.sha256(raw).hexdigest()
@@ -452,7 +471,8 @@ def verify_execution_basis(root, measured):
         "c1_execution_semantic_basis_role": (
             "the frozen basis under which the first unmodified dual-verifier execution "
             "against C1 was measured"),
-        "comparator_official_run_checkout_sha": COMPARATOR_OFFICIAL_RUN_CHECKOUT_SHA,
+        "official_c1_evidence_checkout_sha": OFFICIAL_C1_EVIDENCE_CHECKOUT_SHA,
+        "current_reproduction_checkout_sha": current_checkout_sha(),
         "comparator_official_run_checkout_role": (
             "the tree this comparator ran in and measured"),
         "semantic_basis_unchanged_across_them": not findings,

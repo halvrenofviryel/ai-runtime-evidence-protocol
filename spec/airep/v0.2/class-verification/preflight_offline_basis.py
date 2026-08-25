@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Offline reproduction preflight for the AIREP v0.2 class-verification basis.
 
-Establishes that both verifiers run from a clean checkout with no network and no
-fallback to system-installed dependencies, and records each implementation's own
+Establishes that both verifiers run from a clean checkout in an offline/no-index
+configuration, with no fallback to system-installed dependencies, and records each implementation's own
 determinism digest.
 
 This script deliberately does NOT compare the two implementations' outputs to each
@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 
@@ -58,6 +59,43 @@ def offline_env():
     env["NODE_PATH"] = ""            # no ambient module search path
     env["npm_config_offline"] = "true"
     return env
+
+
+PINNED_COMBINED_INDEX_SHA256 = (
+    "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c")
+
+
+def build_combined_root(cv, dest):
+    """Assemble the disposable 60-case execution root the verifiers are run against.
+
+    The canonical `corpus/case_index.json` lists the 45 C0 cases only; C1's 15 are
+    indexed separately in `c1_case_index.json` precisely so the pre-C1 file keeps its
+    bytes. Running against the canonical index alone therefore scores 45 while the
+    expected-value sweep sees all 60 case directories -- which is exactly the stale
+    discovery this function replaces.
+
+    Both indexes are root arrays with the same member shape, so they concatenate with
+    no interpretation. The result is verified to be 60 unique case ids and to match the
+    combined-index digest pinned by the accepted C1 execution basis.
+    """
+    import json as _json
+    c0 = _json.loads((cv / "corpus/case_index.json").read_text(encoding="utf-8"))
+    c1 = _json.loads((cv / "corpus/c1_case_index.json").read_text(encoding="utf-8"))
+    if not isinstance(c0, list) or not isinstance(c1, list):
+        fail("both case indexes must be root arrays")
+    combined = c0 + c1
+    ids = [e["case_id"] for e in combined]
+    if len(ids) != 60 or len(set(ids)) != 60:
+        fail("combined index is %d entries / %d unique, expected 60 / 60"
+             % (len(ids), len(set(ids))))
+    shutil.rmtree(dest, ignore_errors=True)
+    (dest / "cases").mkdir(parents=True)
+    for e in combined:
+        shutil.copytree(cv / "corpus/cases" / e["case_id"], dest / "cases" / e["case_id"])
+    text = _json.dumps(combined, indent=1, sort_keys=True, ensure_ascii=False) + "\n"
+    (dest / "case_index.json").write_text(text, encoding="utf-8")
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return len(ids), digest
 
 
 def digest_runs(cmd, cwd, out_paths, env):
@@ -117,6 +155,7 @@ def main():
     scratch.mkdir(parents=True, exist_ok=True)
     env = offline_env()
     corpus = cv / "corpus"
+    combined_root = scratch / "combined_root"
 
     print("AIREP v0.2 class-verification -- OFFLINE REPRODUCTION PREFLIGHT")
     print("tree:", cv)
@@ -170,31 +209,37 @@ def main():
               p.startswith(str((cv / "verifier_node_r2/node_modules").resolve())), p)
         check("ajv is NOT the system copy", not p.startswith("/usr/"), p)
 
+    print("\n-- 3b. disposable 60-case execution root --")
+    n_cases, combined_digest = build_combined_root(cv, combined_root)
+    check("combined index is 60 unique cases (45 C0 + 15 C1)", n_cases == 60, str(n_cases))
+    check("combined-index digest matches the accepted C1 execution basis",
+          combined_digest == PINNED_COMBINED_INDEX_SHA256, combined_digest)
+
     print("\n-- 4. Python verifier, per-implementation determinism --")
     codes, digests, count = digest_runs(
-        [str(venv_py), "class_verifier.py", "--corpus", str(corpus)],
+        [str(venv_py), "class_verifier.py", "--corpus", str(combined_root)],
         cv / "verifier_py", [scratch / "py1.json", scratch / "py2.json"], env)
     check("python verifier exit 0 on both runs", codes == [0, 0], str(codes))
     check("python verifier byte-deterministic across two runs",
           digests[0] is not None and digests[0] == digests[1])
-    check("python verifier produced 45 verdicts", count == 45, str(count))
+    check("python verifier produced 60 verdicts", count == 60, str(count))
     if digests[0]:
         print("      python digest: " + digests[0])
-        n, mism, missing = compare_to_expected(scratch / "py1.json", corpus)
+        n, mism, missing = compare_to_expected(scratch / "py1.json", combined_root)
         check("python matches every frozen expected.json", not mism and not missing,
               ("%d mismatches, %d missing" % (len(mism), len(missing))) if (mism or missing) else "")
 
     print("\n-- 5. Node verifier, per-implementation determinism --")
     codes, digests_n, count = digest_runs(
-        ["node", "class_verifier.mjs", "--corpus", str(corpus)],
+        ["node", "class_verifier.mjs", "--corpus", str(combined_root)],
         cv / "verifier_node_r2", [scratch / "nd1.json", scratch / "nd2.json"], env)
     check("node verifier exit 0 on both runs", codes == [0, 0], str(codes))
     check("node verifier byte-deterministic across two runs",
           digests_n[0] is not None and digests_n[0] == digests_n[1])
-    check("node verifier produced 45 verdicts", count == 45, str(count))
+    check("node verifier produced 60 verdicts", count == 60, str(count))
     if digests_n[0]:
         print("      node digest:   " + digests_n[0])
-        n, mism, missing = compare_to_expected(scratch / "nd1.json", corpus)
+        n, mism, missing = compare_to_expected(scratch / "nd1.json", combined_root)
         check("node matches every frozen expected.json", not mism and not missing,
               ("%d mismatches, %d missing" % (len(mism), len(missing))) if (mism or missing) else "")
 

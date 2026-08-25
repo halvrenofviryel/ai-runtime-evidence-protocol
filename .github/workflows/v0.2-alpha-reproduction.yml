@@ -41,15 +41,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Pinned to the runtime axis the evidence was measured on. The vendored
-      # wheels are cp312/manylinux x86_64, so 3.12 is a hard requirement, not a
-      # preference: a different minor version cannot install this wheelhouse.
+      # EXACT pins, matching the runtime axis the evidence was measured on:
+      # Python 3.12.3 and Node v20.19.6. "Latest 3.12" and "latest 20" are NOT an
+      # evidence baseline -- the first hosted run resolved 3.12.14, which is a
+      # different interpreter from the one the recorded measurements were taken
+      # under. If an exact version is unavailable this job must fail rather than
+      # silently substitute; a compatibility matrix over newer runtimes is a
+      # separate claim and belongs in a separate job.
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.12.3"
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "20.19.6"
 
       - name: Runtime axis actually in use
         run: |
