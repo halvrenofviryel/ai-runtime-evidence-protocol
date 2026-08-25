@@ -604,6 +604,49 @@ Exactly:
 they touch neither implementation's semantic evaluation algorithm, and they change no §7
 expected value — the frozen corpus contains no duplicate tuple and its runs use batch mode.
 
+**R-11 — Binding-store structural validity is document-global once store resolution is
+reached.** Raised by the C1 corpus author, who stopped on the ambiguity rather than inventing
+around it: R-3 speaks of a *referenced binding entry*, E-4 forbids unknown members *anywhere in an
+operator document*, and R-8 uses store-level and path-level checks in the same passage. Two
+readings survived. This closes it.
+
+**A structural closure or shape defect in ANY concrete binding entry makes the binding-store
+operator document structurally malformed as a whole** — including an entry neither tier
+references. So a store whose unrelated third entry carries an unknown member is malformed, not
+partially valid.
+
+The **tier** consequence is then decided by **path reachability**, not by which entry held the
+defect:
+
+- the producer path reaching stage 2 ⇒ `producer-binding-malformed`;
+- the witness path reaching stage **7b** ⇒ `witness-binding-malformed`;
+- which binding id owned the malformed entry changes neither;
+- a path that never reaches its store-resolution gate emits **no derivative reason** (§4).
+
+**R-8 is unchanged and this is the worked case:** an absent or non-string `witness_id` *together
+with* a malformed binding store still yields **`witness-binding-missing` alone** — evaluation
+stopped at 7a and never reached 7b, where store validation lives.
+
+**What is NOT global.** Once document-level structural validation has passed, semantic and lookup
+outcomes stay **path-local**:
+
+| Condition | Result |
+|---|---|
+| wire id absent from the map | that path's `*-binding-missing` |
+| structurally clean entry with `trusted` not literally `true` | that path's `*-binding-not-trusted` |
+| unsupported suite | that path's `*-suite-unsupported` |
+| map→entry relationship defect (e.g. a producer map entry pointing at a witness-role binding) | that path's `*-binding-malformed` |
+
+R-11 therefore does **not** say "every problem poisons both tiers". **Document-level structural
+malformation is global; semantic lookup and its results are path-local.** The choice preserves
+E-4's fail-closed "anywhere in an operator document" language and prevents one operator-policy
+snapshot being read as partially valid by one implementation and globally invalid by another.
+
+R-11 changes no §7 expected value and requires no C1 fixture change: no existing fixture pins
+localized-entry cross-path behaviour. The C1 author's defensive placement — MC1/MC3 putting the
+defect at document top level where both readings agreed, and MC4 carrying no witness so the
+question never arose — was correct.
+
 **Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
 `sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
 check is insufficient, and a violation is `witness-claim-invalid`), the E-2 principle that
