@@ -1,0 +1,10 @@
+{
+ "case_count": 60,
+ "combined_case_index_sha256": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+ "contract_sha256": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+ "extended_manifest_aggregate": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+ "integration_sha": "0cc95f5ce5426ca41e7a2c26c0f77a6ba842cd81",
+ "note": "First unmodified dual-verifier execution against C1. Neither verifier was modified for this corpus. No cross-implementation comparison is performed here; the comparator is not authorized for C1 yet.",
+ "verifier_node_r2_sha256": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+ "verifier_py_sha256": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc"
+}
