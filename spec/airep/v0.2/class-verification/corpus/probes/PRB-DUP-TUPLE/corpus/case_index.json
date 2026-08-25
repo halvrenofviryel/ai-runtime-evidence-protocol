@@ -1,0 +1,24 @@
+[
+ {
+  "case_id": "D1",
+  "description": "clean Decision; first record under the duplicated tuple",
+  "files": {
+   "bindings": "cases/D1/bindings.json",
+   "clock": "cases/D1/clock.json",
+   "independence": "cases/D1/independence.json",
+   "request": "cases/D1/request.json",
+   "revocation": "cases/D1/revocation.json"
+  }
+ },
+ {
+  "case_id": "D2",
+  "description": "clean Decision; second, byte-different record under the SAME tuple",
+  "files": {
+   "bindings": "cases/D2/bindings.json",
+   "clock": "cases/D2/clock.json",
+   "independence": "cases/D2/independence.json",
+   "request": "cases/D2/request.json",
+   "revocation": "cases/D2/revocation.json"
+  }
+ }
+]

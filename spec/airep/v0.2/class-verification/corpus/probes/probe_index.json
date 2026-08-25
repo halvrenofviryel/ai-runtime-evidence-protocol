@@ -1,0 +1,479 @@
+{
+ "note": "CLI / process-exit probes for the AIREP v0.2 class verifier. These fixtures assert PROCESS behaviour (exit code, whether a results file is emitted), never a class verdict. They carry no expected.json and live outside corpus/cases/ so no scoring harness can mistake them for scored cases. Expected exits are MANUALLY DERIVED FROM THE CITED NORMATIVE CLAUSES, WITHOUT EXECUTING EVALUATION LOGIC.",
+ "pass_criteria": "The process exit code equals expected_exit; a results file exists afterwards iff expected_results_file is true; every path in must_not_create is absent after the run.",
+ "placeholders": {
+  "${CORPUS}": "the absolute path of the main corpus directory (class-verification/corpus)",
+  "${OUT}": "a results-file destination path that does NOT exist before the run",
+  "${PROBE}": "the absolute path of this probe's own directory, corpus/probes/<probe_id>",
+  "${VERIFIER}": "the class-verifier invocation under test (argv[0] and any interpreter prefix); the probes assume nothing about it"
+ },
+ "probes": [
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--corpus",
+    "${PROBE}/corpus",
+    "--out",
+    "${OUT}"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s2 (results file / duplicate tuple)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: batch-level run-identity invariant)",
+    "CLASS_VERIFIER_CONTRACT.md s9 R-10"
+   ],
+   "description": "batch of two individually clean cases whose primary artifacts carry the SAME (chain_id, record_id) tuple with different bytes",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "corpus/case_index.json",
+    "corpus/cases/D1/bindings.json",
+    "corpus/cases/D1/clock.json",
+    "corpus/cases/D1/independence.json",
+    "corpus/cases/D1/request.json",
+    "corpus/cases/D1/revocation.json",
+    "corpus/cases/D2/bindings.json",
+    "corpus/cases/D2/clock.json",
+    "corpus/cases/D2/independence.json",
+    "corpus/cases/D2/request.json",
+    "corpus/cases/D2/revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [
+    "${OUT}"
+   ],
+   "probe_id": "PRB-DUP-TUPLE"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s3 stage 0",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: stage-0 artifact validity failed)"
+   ],
+   "description": "primary artifact is hash-consistent but omits the schema-required `claim` member, so it is not a well-formed v0.2 Decision Receipt",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-SCHEMA-INVALID"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s3 stage 1",
+    "../INTEGRITY.md s2 (hash preimage) and s5 (tag selection is a function)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: stage-1 artifact validity failed)"
+   ],
+   "description": "primary artifact is schema-valid and its signature is well-formed, but a hashed member was mutated after sealing, so integrity.current does not recompute",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-HASH-INVALID"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: the evaluation request could not be parsed)"
+   ],
+   "description": "the evaluation request file is not parseable JSON",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-REQUEST-UNPARSEABLE"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s9 R-7 (input table)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"
+   ],
+   "description": "head_witness is present but null (R-7: present-but-not-an-object is run-invalid, distinct from `entirely absent`, which is the no-witness-supplied WITHHELD path)",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-HEADWITNESS-NULL"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s0 (the envelope is closed)",
+    "CLASS_VERIFIER_CONTRACT.md s9 R-7 (unknown member inside head_witness)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"
+   ],
+   "description": "an otherwise perfect head_witness carrying one member foreign to the s0 envelope",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-HEADWITNESS-UNKNOWN-MEMBER"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s9 R-4",
+    "CLASS_VERIFIER_CONTRACT.md s9 R-7 (final row of the input table)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"
+   ],
+   "description": "head_ref carrying an unknown member (R-4 keeps the nested closure on head_ref and signature, and only on those two)",
+   "expected_exit": 1,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "run_invalidity",
+   "must_not_create": [],
+   "probe_id": "PRB-HEADREF-UNKNOWN-MEMBER"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600",
+    "--out",
+    "${OUT}"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 2)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2: CLI usage error)"
+   ],
+   "description": "single-request mode invoked together with --out; R-9 makes this a usage error, and the destination must be neither created nor modified",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [
+    "${OUT}"
+   ],
+   "probe_id": "PRB-CLI-REQUEST-WITH-OUT"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--corpus",
+    "${CORPUS}"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 4)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"
+   ],
+   "description": "batch mode invoked without --out",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [],
+   "kind": "cli_usage",
+   "must_not_create": [],
+   "probe_id": "PRB-CLI-CORPUS-NO-OUT"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--corpus",
+    "${CORPUS}",
+    "--out",
+    "${OUT}"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 5)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"
+   ],
+   "description": "--request and --corpus supplied together",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [
+    "${OUT}"
+   ],
+   "probe_id": "PRB-CLI-REQUEST-AND-CORPUS"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23 12:00:00",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s1.4 (present but malformed => exit 2, no verdict)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"
+   ],
+   "description": "--now is structurally invalid (no T separator, no trailing Z)",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [],
+   "probe_id": "PRB-CLI-NOW-STRUCTURAL"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-02-30T12:00:00Z",
+    "--freshness-window",
+    "3600"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s1.4 (`--now` ... not a valid Gregorian datetime => exit 2)",
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"
+   ],
+   "description": "--now is 2026-02-30T12:00:00Z: format-conformant but not a valid Gregorian datetime. Pairs with verdict cases TI1/TI2, which carry the SAME bad date inside the signed claim - there it is witness-time-invalid, here it is exit 2",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [],
+   "probe_id": "PRB-CLI-NOW-NOT-GREGORIAN"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "-1"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s1.4 (`--freshness-window` non-integer or negative => exit 2)"
+   ],
+   "description": "--freshness-window is negative",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [],
+   "probe_id": "PRB-CLI-WINDOW-NEGATIVE"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--request",
+    "${PROBE}/request.json",
+    "--bindings",
+    "${PROBE}/bindings.json",
+    "--revocation",
+    "${PROBE}/revocation.json",
+    "--independence-policy",
+    "${PROBE}/independence.json",
+    "--now",
+    "2026-08-23T12:00:00Z",
+    "--freshness-window",
+    "3600.5"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s1.4 (`--freshness-window` non-integer or negative => exit 2)"
+   ],
+   "description": "--freshness-window is not an integer",
+   "expected_exit": 2,
+   "expected_results_file": false,
+   "files": [
+    "bindings.json",
+    "independence.json",
+    "request.json",
+    "revocation.json"
+   ],
+   "kind": "cli_usage",
+   "must_not_create": [],
+   "probe_id": "PRB-CLI-WINDOW-NONINTEGER"
+  },
+  {
+   "argv": [
+    "${VERIFIER}",
+    "--help"
+   ],
+   "clauses": [
+    "CLASS_VERIFIER_CONTRACT.md s6.4 (`--help` - 0, with nothing evaluated and no verdict emitted)"
+   ],
+   "description": "--help: exit 0, nothing evaluated, no verdict emitted",
+   "expected_exit": 0,
+   "expected_results_file": false,
+   "files": [],
+   "kind": "help",
+   "must_not_create": [
+    "${OUT}"
+   ],
+   "probe_id": "PRB-CLI-HELP"
+  }
+ ]
+}

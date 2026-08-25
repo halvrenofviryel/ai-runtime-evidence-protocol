@@ -1,0 +1,12 @@
+{
+ "bindings": {
+  "airep.producer-a": {
+   "state": "active"
+  },
+  "airep.witness-a": {
+   "state": "active"
+  }
+ },
+ "note": "member foreign to the s1.3 revocation-snapshot document",
+ "snapshot_id": "airep.snapshot-1"
+}

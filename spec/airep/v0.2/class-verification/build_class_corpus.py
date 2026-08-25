@@ -2,7 +2,10 @@
 """AIREP v0.2 class-verification deterministic corpus builder (third-context harness).
 
 Builds the 45-case adversarial corpus pinned in CLASS_VERIFIER_CONTRACT.md s7, from the
-frozen construction in ../INTEGRITY.md and the accepted schemas in ../schemas/.
+frozen construction in ../INTEGRITY.md and the accepted schemas in ../schemas/, plus the
+strictly additive C1 adversarial coverage extension (15 further verdict cases, 15 CLI /
+process-exit probes and the s2 batch-ordering expectation). C0 bytes are unchanged and the
+build proves it: see C0_AGGREGATE_SHA256_PRE_C1 and the c0-preservation assertions.
 
 WHAT THIS IS: harness code. It constructs each case's artifacts and operator inputs, applies
 exactly the one tamper the appendix row names (everything else clean and supplied), and
@@ -404,11 +407,12 @@ def assert_(name: str, cond: bool, detail: str = "") -> None:
 
 def emit(case_id: str, description: str, req: dict, *, bindings=None, independence=None,
          revocation=None, clock=None, sig_ok=True, witness_sig_ok=True,
-         head_matches=None, head_is_primary=None, related_sig_ok=None) -> None:
+         head_matches=None, head_is_primary=None, related_sig_ok=None,
+         claim_semantic=None, raw_check=None) -> None:
     """Register a case. `sig_ok` / `witness_sig_ok` / `head_matches` are the case's OWN
     construction intent, checked below — not class evaluation."""
-    if case_id not in EXPECTED_APPENDIX:
-        stop(f"{case_id} is not a pinned appendix case")
+    if case_id not in EXPECTED_ALL:
+        stop(f"{case_id} is not a pinned appendix case nor a declared C1 case")
     if any(c["case_id"] == case_id for c in CASES):
         stop(f"duplicate case id {case_id}")
     CASES.append({
@@ -417,7 +421,8 @@ def emit(case_id: str, description: str, req: dict, *, bindings=None, independen
         "clock": clock,
         "_intent": {"sig_ok": sig_ok, "witness_sig_ok": witness_sig_ok,
                     "head_matches": head_matches, "head_is_primary": head_is_primary,
-                    "related_sig_ok": related_sig_ok or {}},
+                    "related_sig_ok": related_sig_ok or {},
+                    "claim_semantic": claim_semantic, "raw_check": raw_check},
     })
 
 
@@ -794,6 +799,542 @@ def build_cases() -> None:
          head_matches=1, head_is_primary=True)
 
 
+# ======================================================================================
+# C1 ADVERSARIAL COVERAGE EXTENSION (strictly additive; C0 untouched)
+# ======================================================================================
+#
+# PROVENANCE OF C1 EXPECTED VALUES — read this before changing anything below.
+#
+# The 45 C0 rows in EXPECTED_APPENDIX are a VERBATIM TRANSCRIPTION of the
+# CLASS_VERIFIER_CONTRACT.md s7 table. The C1 rows in EXPECTED_C1 are NOT in that table.
+# They are MANUALLY DERIVED FROM CITED NORMATIVE CLAUSES, WITHOUT EXECUTING EVALUATION
+# LOGIC: for each case the derivation chain (input/tamper -> clause -> dependency rule ->
+# expected class/channels) is written out in C1_COVERAGE.md, and every derivation is
+# anchored either on an explicit s9 ruling or on an existing pinned s7 row of the same
+# shape. No expected class, reason set or observer value below was produced by running a
+# class verifier, a comparator, or any ladder-evaluation code. This file still contains no
+# ladder evaluation, no reason derivation and no channel computation.
+#
+# C1 also adds two NON-VERDICT artefact groups, deliberately outside corpus/cases/:
+#   corpus/probes/   - CLI / process-exit probes (run-validity surfaces; NO expected.json,
+#                      so no scoring harness can mistake them for verdict cases)
+#   corpus/ordering/ - the batch results-file ordering expectation (s2)
+
+# The pre-C1 corpus_manifest.json aggregate, over exactly the 265 C0 files
+# (case_index.json + cases/<C0 case id>/*). Asserted below to prove C0 immutability.
+C0_AGGREGATE_SHA256_PRE_C1 = (
+    "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4")
+C0_FILE_COUNT_PRE_C1 = 265
+
+# --- C1 identifiers ------------------------------------------------------------------
+# Ordering discriminator (C1 item 1). Both are VALID Unicode scalar values; no lone
+# surrogate is used anywhere (a lone surrogate is not UTF-8 encodable and would raise a
+# separate Unicode-validity question that is not what this fixture tests).
+ORD_CHAIN = "cv-chain-ord"
+ORD_SUPP_REC = "cv-rec-ord-\U00010000"   # ends U+10000, UTF-8 f0 90 80 80
+ORD_BMP_REC = "cv-rec-ord-＀"        # ends U+FF00,  UTF-8 ef bc 80
+
+BAD_GREGORIAN_AT = "2026-02-30T12:00:00Z"   # matches the fixed format, February 30 does
+                                            # not exist (INTEGRITY s4.2)
+
+# Raw-source-token machinery: some C1 cases need a JSON number written with a specific
+# SOURCE SPELLING (s9 E-1) that json.dumps cannot produce. A marker string is emitted and
+# replaced with the raw token in dump(); the marker never occurs in C0 content.
+_RAW_RE = __import__("re").compile(r'"@@RAW:(.*?):RAW@@"')
+
+
+def raw_token(tok: str) -> str:
+    return f"@@RAW:{tok}:RAW@@"
+
+
+# --------------------------------------------------------------------------------------
+# C1 expected values — MANUALLY DERIVED from cited clauses (see C1_COVERAGE.md).
+# Column order matches EXPECTED_APPENDIX:
+#   class, A-fail, A-withheld, A-caveats, W-fail, W-withheld, observer
+# --------------------------------------------------------------------------------------
+EXPECTED_C1 = {
+    # item 1 - UTF-8 vs UTF-16 batch ordering. Verdict shape is the pinned s7 P1 row.
+    "ORD1": ("AIREP-Authenticated", [], [], [], [], NWS, NA),
+    "ORD2": ("AIREP-Authenticated", [], [], [], [], NWS, NA),
+    # item 9 - Control-family Authenticated positive. Verdict shape is the pinned s7 P1
+    # row, carried to the control family by design s7 ("Core and Authenticated apply to
+    # every artifact family identically").
+    "CTL1": ("AIREP-Authenticated", [], [], [], [], NWS, NA),
+    # item 10 - non-genesis Witnessed head. Verdict shape is the pinned s7 P2 row.
+    "NG1": ("AIREP-Witnessed", [], [], [], [], [], NA),
+    # item 5 - E-1 source-token rule on sequence/length. s9 R-2 6a + retained E-1:
+    # violation is witness-claim-invalid ALONE (6b/6c do not run), and s4's dependency
+    # rule suppresses every stage 7-10 reason. Same shape as the pinned s7 WM1 row.
+    "LEX1": ("AIREP-Authenticated", [], [], [], ["witness-claim-invalid"], [], NA),
+    "LEX2": ("AIREP-Authenticated", [], [], [], ["witness-claim-invalid"], [], NA),
+    "LEX3": ("AIREP-Authenticated", [], [], [], ["witness-claim-invalid"], [], NA),
+    # item 6 - witnessed_at Gregorian-invalid. s9 R-2 6c (clock inputs play no part);
+    # s4 dependency: stage 10 needs stage 6 CLEAN, so freshness-inputs-missing must NOT
+    # appear in TI1 even though no clock was supplied. TI1/TI2 differ only in whether the
+    # clock is supplied and are pinned to the same expected value - that pairing IS the
+    # clock-independence proof.
+    "TI1": ("AIREP-Authenticated", [], [], [], ["witness-time-invalid"], [], NA),
+    "TI2": ("AIREP-Authenticated", [], [], [], ["witness-time-invalid"], [], NA),
+    # item 7 - wire observer_relationship "independent" while the referenced Execution
+    # fails authentication for a NON-signature reason. s0 observer path + design s4/s2;
+    # effective assessment unknown, primary Effect class unaffected. Verdict shape is the
+    # pinned s7 OB4 row.
+    "OBX1": ("AIREP-Authenticated", [], [], [], [], NWS, "unknown"),
+    "OBX2": ("AIREP-Authenticated", [], [], [], [], NWS, "unknown"),
+    # item 8 - operator-document closure / container variants (s9 E-4, R-3, R-8).
+    "MC1": ("AIREP-Core", [], ["producer-binding-malformed"], [], [],
+            ["witness-binding-malformed"], NA),
+    "MC2": ("AIREP-Authenticated", [], [], [], [], ["independence-policy-malformed"], NA),
+    "MC3": ("AIREP-Core", [], ["producer-revocation-state-malformed"], [], [],
+            ["witness-revocation-state-malformed"], NA),
+    "MC4": ("AIREP-Core", [], ["producer-binding-malformed"], [], [], NWS, NA),
+}
+
+C1_ORDER = ["ORD1", "ORD2", "CTL1", "NG1",
+            "LEX1", "LEX2", "LEX3",
+            "TI1", "TI2",
+            "OBX1", "OBX2",
+            "MC1", "MC2", "MC3", "MC4"]
+
+PROBES: list[dict] = []
+
+
+def control_body(chain_id: str, record_id: str, sequence: int = 0,
+                 producer: str = PRODUCER_WIRE, previous: str = GENESIS,
+                 decision_record_id: str = "cv-rec-decision-1") -> dict:
+    b = core_members("control", chain_id, record_id, sequence, producer, previous)
+    b["decision_ref"] = {"chain_id": chain_id, "record_id": decision_record_id}
+    b["instruction_id"] = "instr-1"
+    b["instruction_digest"] = "sha256:" + "ab" * 32
+    b["authorized_action_digest"] = "sha256:" + "ab" * 32
+    b["control_event"] = "dispatched"
+    b["boundary_side"] = "issuer"
+    b["authority"] = {"issuer_id": "acme-control-plane",
+                      "writable_by_controlled_system": False}
+    b["evidence"] = [{"type": "policy", "ref": "ref:policy-1", "resolvable": False,
+                      "content_hash": "sha256:" + "ef" * 32}]
+    return b
+
+
+def build_c1_cases() -> None:
+    # ============ item 1: UTF-8 byte order vs JavaScript UTF-16 code-unit order ========
+    # Two records in ONE chain whose record_ids differ first at the discriminating scalar.
+    # UTF-8:  ...ef bc 80  (U+FF00)  <  ...f0 90 80 80 (U+10000)   -> ORD2 before ORD1
+    # UTF-16: ...ff00      (U+FF00)  >  ...d800 dc00   (U+10000)   -> ORD1 before ORD2
+    # The corpus-directory order (ORD1, ORD2) deliberately AGREES with the wrong (UTF-16)
+    # order, so a directory-order emitter fails the same gate.
+    ord1 = seal(decision_body(ORD_CHAIN, ORD_SUPP_REC))
+    emit("ORD1", "clean Decision whose record_id ends U+10000 (UTF-8 f0 90 80 80); the "
+                 "batch results file must order it AFTER ORD2 under the s2 UTF-8 byte rule",
+         request(ord1),
+         bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc())
+
+    ord2 = seal(decision_body(ORD_CHAIN, ORD_BMP_REC, sequence=1,
+                              previous=ord1["integrity"]["current"]))
+    emit("ORD2", "clean Decision in the SAME chain whose record_id ends U+FF00 (UTF-8 "
+                 "ef bc 80); the batch results file must order it BEFORE ORD1",
+         request(ord2),
+         bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc())
+
+    # ============ item 9: Control-family Authenticated positive =======================
+    ctl = seal(control_body("cv-chain-ctl1", "cv-rec-ctl1"))
+    emit("CTL1", "clean Control Evidence artifact, all operator inputs supplied, no "
+                 "head_witness in the request (the corpus's first control-family case)",
+         request(ctl),
+         bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc())
+
+    # ============ item 10: non-genesis Witnessed head (sequence > 0, length > 1) =======
+    ng_prev = seal(decision_body("cv-chain-ng1", "cv-rec-ng1-prev"))
+    ng_head = seal(decision_body("cv-chain-ng1", "cv-rec-ng1", sequence=1,
+                                 previous=ng_prev["integrity"]["current"]))
+    ng_claim = claim_for(ng_head, length=2)
+    emit("NG1", "clean witness over a NON-GENESIS chain head: claim.sequence=1 and "
+                "claim.length=2 (the referenced head included), the predecessor supplied "
+                "as a related artifact",
+         request(ng_head, related=[ng_prev],
+                 head_witness=witness_block(head_ref(ng_head), ng_claim,
+                                            sign_witness("0.2", ng_claim))),
+         bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc(),
+         head_matches=1, head_is_primary=True,
+         related_sig_ok={"cv-rec-ng1-prev": True})
+
+    # ============ item 5: E-1 witness-claim source-token spellings ====================
+    # The signature is genuine over the claim's CANONICAL bytes: RFC 8785 / ES6 number
+    # serialization renders 1e0, 1.0 and -0 to exactly the digits of 1, 1 and 0, so the
+    # wire claim and the semantic claim canonicalize identically. The ONLY defect is the
+    # source spelling - which is precisely what a post-parse integer check cannot see.
+    def lexical_case(cid: str, member: str, token: str, desc: str) -> None:
+        art = seal(decision_body(f"cv-chain-{cid.lower()}", f"cv-rec-{cid.lower()}"))
+        semantic = claim_for(art)
+        wire = dict(semantic)
+        wire[member] = raw_token(token)
+        emit(cid, desc,
+             request(art, head_witness=witness_block(head_ref(art), wire,
+                                                     sign_witness("0.2", semantic))),
+             bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+             independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc(),
+             head_matches=1, head_is_primary=True, claim_semantic=semantic,
+             raw_check={"member": member, "token": token,
+                        "semantic_value": semantic[member]})
+
+    lexical_case("LEX1", "length", "1e0",
+                 "witness claim whose length is written 1e0 - semantically 1, but the "
+                 "source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)")
+    lexical_case("LEX2", "length", "1.0",
+                 "witness claim whose length is written 1.0 - semantically 1, but the "
+                 "source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)")
+    lexical_case("LEX3", "sequence", "-0",
+                 "witness claim whose sequence is written -0 - semantically 0, but the "
+                 "source token carries a sign and fails ^(0|[1-9][0-9]*)$ (s9 E-1)")
+
+    # ============ item 6: Gregorian-invalid witnessed_at, with and without a clock =====
+    def time_case(cid: str, desc: str, clock) -> None:
+        art = seal(decision_body(f"cv-chain-{cid.lower()}", f"cv-rec-{cid.lower()}"))
+        cl = claim_for(art, witnessed_at=BAD_GREGORIAN_AT)
+        emit(cid, desc,
+             request(art, head_witness=witness_block(head_ref(art), cl,
+                                                     sign_witness("0.2", cl))),
+             bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+             independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock,
+             head_matches=1, head_is_primary=True)
+
+    time_case("TI1", f"claim.witnessed_at is {BAD_GREGORIAN_AT} (format-conformant, "
+                     f"February 30 is not a Gregorian date); NO clock input supplied",
+              _OMIT)
+    time_case("TI2", f"identical Gregorian-invalid claim.witnessed_at {BAD_GREGORIAN_AT} "
+                     f"with the clock input fully supplied - the paired control that "
+                     f"makes 6c's clock-independence measurable", clock_doc())
+
+    # ============ item 7: wire `independent` over a non-Authenticated Execution ========
+    # OB4 already covers the invalid-signature route. These two cover the OTHER two ways
+    # the referenced Execution fails to reach Authenticated in its own right.
+    def observer_case(cid: str, desc: str, *, bindings, revocation, independence) -> None:
+        chain = f"cv-chain-{cid.lower()}"
+        dec = seal(decision_body(chain, "cv-rec-decision-1"))
+        ex = seal(execution_body(chain, "cv-rec-execution-1", sequence=1,
+                                 producer=EXECUTOR_WIRE,
+                                 previous=dec["integrity"]["current"]), sk=_xsk)
+        eff = seal(effect_body(chain, f"cv-rec-{cid.lower()}", head_ref(ex), "independent",
+                               sequence=2, previous=ex["integrity"]["current"]))
+        emit(cid, desc, request(eff, related=[dec, ex]),
+             bindings=bindings, revocation=revocation, independence=independence,
+             clock=clock_doc(),
+             related_sig_ok={"cv-rec-decision-1": True, "cv-rec-execution-1": True})
+
+    observer_case("OBX1",
+                  "Effect declares independent; the referenced Execution is hash-consistent "
+                  "and correctly signed under its own binding, but the revocation snapshot "
+                  "marks that executor binding revoked, so it cannot reach Authenticated",
+                  bindings=bindings_doc(executor=True),
+                  revocation=revocation_doc([B_PRODUCER, B_WITNESS, B_EXECUTOR],
+                                            {B_EXECUTOR: "revoked"}),
+                  independence=independence_doc([(B_PRODUCER, B_EXECUTOR)]))
+
+    observer_case("OBX2",
+                  "Effect declares independent; the referenced Execution is hash-consistent "
+                  "and correctly signed, but producer_bindings carries no entry for its wire "
+                  "producer id, so its Authenticated tier is not evaluable",
+                  bindings=bindings_doc(executor=False),
+                  revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+                  independence=independence_doc([(B_PRODUCER, B_WITNESS)]))
+
+    # ============ item 8: operator-document closure / container variants ===============
+    # MC1 - unknown member at the TOP LEVEL of the binding store. s9 E-4 closes the whole
+    # document; s9 R-8 states in terms that the producer path still "does reach the gate"
+    # on a malformed store, and R-8 7b that a malformed store yields the witness reason.
+    art = seal(decision_body("cv-chain-mc1", "cv-rec-mc1"))
+    cl = claim_for(art)
+    b = bindings_doc()
+    b["note"] = "member foreign to the s1.1 binding-store document"
+    emit("MC1", "binding store carrying an unknown top-level member; artifact, witness, "
+                "revocation, policy and clock are otherwise clean and supplied",
+         request(art, head_witness=witness_block(head_ref(art), cl, sign_witness("0.2", cl))),
+         bindings=b, revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc(),
+         head_matches=1, head_is_primary=True)
+
+    # MC2 - required container ABSENT from the independence policy document (s1.2 + E-4).
+    art = seal(decision_body("cv-chain-mc2", "cv-rec-mc2"))
+    cl = claim_for(art)
+    ind = independence_doc([(B_PRODUCER, B_WITNESS)])
+    del ind["non_independent_pairs"]
+    emit("MC2", "independence policy document missing its required non_independent_pairs "
+                "container; everything else clean and supplied",
+         request(art, head_witness=witness_block(head_ref(art), cl, sign_witness("0.2", cl))),
+         bindings=bindings_doc(), revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=ind, clock=clock_doc(),
+         head_matches=1, head_is_primary=True)
+
+    # MC3 - unknown member at the top level of the revocation snapshot document (E-4).
+    art = seal(decision_body("cv-chain-mc3", "cv-rec-mc3"))
+    cl = claim_for(art)
+    rev = revocation_doc([B_PRODUCER, B_WITNESS])
+    rev["note"] = "member foreign to the s1.3 revocation-snapshot document"
+    emit("MC3", "revocation snapshot carrying an unknown top-level member; bindings, "
+                "policy, clock and the witness itself are clean",
+         request(art, head_witness=witness_block(head_ref(art), cl, sign_witness("0.2", cl))),
+         bindings=bindings_doc(), revocation=rev,
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc(),
+         head_matches=1, head_is_primary=True)
+
+    # MC4 - s9 R-3 worked example: unknown member INSIDE the referenced binding entry AND
+    # trusted:false on that same entry. No head_witness is supplied, so the witness path
+    # never resolves a binding and the case isolates the producer-side precedence question.
+    art = seal(decision_body("cv-chain-mc4", "cv-rec-mc4"))
+    b = bindings_doc()
+    b["bindings"][B_PRODUCER]["trusted"] = False
+    b["bindings"][B_PRODUCER]["note"] = "member foreign to the s1.1 binding entry"
+    emit("MC4", "producer binding entry carrying BOTH an unknown member and trusted:false "
+                "(s9 R-3 worked example); no head_witness supplied",
+         request(art), bindings=b, revocation=revocation_doc([B_PRODUCER, B_WITNESS]),
+         independence=independence_doc([(B_PRODUCER, B_WITNESS)]), clock=clock_doc())
+
+
+# --------------------------------------------------------------------------------------
+# C1 probe fixtures — CLI / process-exit surfaces. NOT verdict cases: no expected.json is
+# ever written under corpus/probes/, and probes live outside corpus/cases/, so a scoring
+# harness that enumerates cases cannot pick them up.
+# --------------------------------------------------------------------------------------
+def probe(probe_id: str, description: str, kind: str, clauses: list[str],
+          argv: list[str], expected_exit: int, *, files: dict | None = None,
+          raw_files: dict | None = None, expected_results_file: bool = False,
+          must_not_create: list[str] | None = None) -> None:
+    if any(p["probe_id"] == probe_id for p in PROBES):
+        stop(f"duplicate probe id {probe_id}")
+    PROBES.append({"probe_id": probe_id, "description": description, "kind": kind,
+                   "clauses": clauses, "argv": argv, "expected_exit": expected_exit,
+                   "expected_results_file": expected_results_file,
+                   "must_not_create": must_not_create or [],
+                   "_files": files or {}, "_raw_files": raw_files or {}})
+
+
+def _clean_operator_files() -> dict:
+    return {"bindings.json": bindings_doc(),
+            "revocation.json": revocation_doc([B_PRODUCER, B_WITNESS]),
+            "independence.json": independence_doc([(B_PRODUCER, B_WITNESS)])}
+
+
+def _single_request_argv(extra: list[str] | None = None) -> list[str]:
+    return ["${VERIFIER}",
+            "--request", "${PROBE}/request.json",
+            "--bindings", "${PROBE}/bindings.json",
+            "--revocation", "${PROBE}/revocation.json",
+            "--independence-policy", "${PROBE}/independence.json",
+            "--now", NOW, "--freshness-window", str(WINDOW)] + (extra or [])
+
+
+def build_probes() -> None:
+    # ---- item 2: duplicate (chain_id, record_id) tuple in one batch (s9 R-10) ---------
+    dup_files = {}
+    dup_index = []
+    for suffix, assertion in (("D1", "first record under the duplicated tuple"),
+                              ("D2", "second, byte-different record under the SAME tuple")):
+        body = decision_body("cv-chain-dup", "cv-rec-dup")
+        body["claim"]["assertion"] = assertion
+        art = seal(body)
+        entry = {}
+        for name, doc in (("request", request(art)),
+                          ("bindings", bindings_doc()),
+                          ("revocation", revocation_doc([B_PRODUCER, B_WITNESS])),
+                          ("independence", independence_doc([(B_PRODUCER, B_WITNESS)])),
+                          ("clock", clock_doc())):
+            rel = f"corpus/cases/{suffix}/{name}.json"
+            dup_files[rel] = doc
+            entry[name] = f"cases/{suffix}/{name}.json"
+        dup_index.append({"case_id": suffix,
+                          "description": f"clean Decision; {assertion}",
+                          "files": entry})
+    dup_files["corpus/case_index.json"] = dup_index
+    probe("PRB-DUP-TUPLE",
+          "batch of two individually clean cases whose primary artifacts carry the SAME "
+          "(chain_id, record_id) tuple with different bytes",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s2 (results file / duplicate tuple)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: batch-level run-identity invariant)",
+           "CLASS_VERIFIER_CONTRACT.md s9 R-10"],
+          ["${VERIFIER}", "--corpus", "${PROBE}/corpus", "--out", "${OUT}"],
+          1, files=dup_files, must_not_create=["${OUT}"])
+
+    # ---- item 3: stage-0 schema-invalid ---------------------------------------------
+    # The `claim` member (decision.schema.json required) is removed BEFORE sealing, so the
+    # artifact is hash-consistent for the bytes as presented: the only defect is schema.
+    body = decision_body("cv-chain-prb-schema", "cv-rec-prb-schema")
+    del body["claim"]
+    probe("PRB-SCHEMA-INVALID",
+          "primary artifact is hash-consistent but omits the schema-required `claim` "
+          "member, so it is not a well-formed v0.2 Decision Receipt",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s3 stage 0",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: stage-0 artifact validity failed)"],
+          _single_request_argv(), 1,
+          files=dict(_clean_operator_files(), **{"request.json": request(seal(body))}))
+
+    # ---- item 3: stage-1 hash-invalid ------------------------------------------------
+    art = seal(decision_body("cv-chain-prb-hash", "cv-rec-prb-hash"))
+    art["claim"]["assertion"] = "mutated after sealing"   # inside the hash preimage
+    probe("PRB-HASH-INVALID",
+          "primary artifact is schema-valid and its signature is well-formed, but a hashed "
+          "member was mutated after sealing, so integrity.current does not recompute",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s3 stage 1",
+           "../INTEGRITY.md s2 (hash preimage) and s5 (tag selection is a function)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: stage-1 artifact validity failed)"],
+          _single_request_argv(), 1,
+          files=dict(_clean_operator_files(), **{"request.json": request(art)}))
+
+    # ---- item 4: exit 1 - unparseable evaluation request -----------------------------
+    probe("PRB-REQUEST-UNPARSEABLE",
+          "the evaluation request file is not parseable JSON",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1: the evaluation request could not be "
+           "parsed)"],
+          _single_request_argv(), 1,
+          files=_clean_operator_files(),
+          raw_files={"request.json": '{"artifact": {"airep_version": "0.2",\n'})
+
+    # ---- item 4: exit 1 - s9 R-7 / R-4 harness closure -------------------------------
+    art = seal(decision_body("cv-chain-prb-hwnull", "cv-rec-prb-hwnull"))
+    req = request(art)
+    req["head_witness"] = None
+    probe("PRB-HEADWITNESS-NULL",
+          "head_witness is present but null (R-7: present-but-not-an-object is run-invalid, "
+          "distinct from `entirely absent`, which is the no-witness-supplied WITHHELD path)",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s9 R-7 (input table)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"],
+          _single_request_argv(), 1,
+          files=dict(_clean_operator_files(), **{"request.json": req}))
+
+    art = seal(decision_body("cv-chain-prb-hwunk", "cv-rec-prb-hwunk"))
+    cl = claim_for(art)
+    wb = witness_block(head_ref(art), cl, sign_witness("0.2", cl))
+    wb["nonce"] = "member foreign to the s0 head_witness object"
+    probe("PRB-HEADWITNESS-UNKNOWN-MEMBER",
+          "an otherwise perfect head_witness carrying one member foreign to the s0 envelope",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s0 (the envelope is closed)",
+           "CLASS_VERIFIER_CONTRACT.md s9 R-7 (unknown member inside head_witness)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"],
+          _single_request_argv(), 1,
+          files=dict(_clean_operator_files(),
+                     **{"request.json": request(art, head_witness=wb)}))
+
+    art = seal(decision_body("cv-chain-prb-hrunk", "cv-rec-prb-hrunk"))
+    cl = claim_for(art)
+    hr = head_ref(art)
+    hr["hint"] = "member foreign to the s0 head_ref object"
+    probe("PRB-HEADREF-UNKNOWN-MEMBER",
+          "head_ref carrying an unknown member (R-4 keeps the nested closure on head_ref "
+          "and signature, and only on those two)",
+          "run_invalidity",
+          ["CLASS_VERIFIER_CONTRACT.md s9 R-4",
+           "CLASS_VERIFIER_CONTRACT.md s9 R-7 (final row of the input table)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 1)"],
+          _single_request_argv(), 1,
+          files=dict(_clean_operator_files(),
+                     **{"request.json": request(art, head_witness=witness_block(
+                         hr, cl, sign_witness("0.2", cl)))}))
+
+    # ---- item 4: exit 2 - CLI usage / config surfaces --------------------------------
+    clean = seal(decision_body("cv-chain-prb-cli", "cv-rec-prb-cli"))
+    clean_files = dict(_clean_operator_files(), **{"request.json": request(clean)})
+
+    probe("PRB-CLI-REQUEST-WITH-OUT",
+          "single-request mode invoked together with --out; R-9 makes this a usage error, "
+          "and the destination must be neither created nor modified",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 2)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2: CLI usage error)"],
+          _single_request_argv(["--out", "${OUT}"]), 2,
+          files=clean_files, must_not_create=["${OUT}"])
+
+    probe("PRB-CLI-CORPUS-NO-OUT",
+          "batch mode invoked without --out",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 4)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"],
+          ["${VERIFIER}", "--corpus", "${CORPUS}"], 2)
+
+    probe("PRB-CLI-REQUEST-AND-CORPUS",
+          "--request and --corpus supplied together",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s9 R-9 (invocation table, row 5)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"],
+          ["${VERIFIER}", "--request", "${PROBE}/request.json",
+           "--corpus", "${CORPUS}", "--out", "${OUT}"], 2,
+          files=clean_files, must_not_create=["${OUT}"])
+
+    probe("PRB-CLI-NOW-STRUCTURAL",
+          "--now is structurally invalid (no T separator, no trailing Z)",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s1.4 (present but malformed => exit 2, no verdict)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"],
+          ["${VERIFIER}", "--request", "${PROBE}/request.json",
+           "--bindings", "${PROBE}/bindings.json",
+           "--revocation", "${PROBE}/revocation.json",
+           "--independence-policy", "${PROBE}/independence.json",
+           "--now", "2026-08-23 12:00:00", "--freshness-window", str(WINDOW)], 2,
+          files=clean_files)
+
+    probe("PRB-CLI-NOW-NOT-GREGORIAN",
+          f"--now is {BAD_GREGORIAN_AT}: format-conformant but not a valid Gregorian "
+          f"datetime. Pairs with verdict cases TI1/TI2, which carry the SAME bad date "
+          f"inside the signed claim - there it is witness-time-invalid, here it is exit 2",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s1.4 (`--now` ... not a valid Gregorian datetime "
+           "=> exit 2)",
+           "CLASS_VERIFIER_CONTRACT.md s6.4 (exit 2)"],
+          ["${VERIFIER}", "--request", "${PROBE}/request.json",
+           "--bindings", "${PROBE}/bindings.json",
+           "--revocation", "${PROBE}/revocation.json",
+           "--independence-policy", "${PROBE}/independence.json",
+           "--now", BAD_GREGORIAN_AT, "--freshness-window", str(WINDOW)], 2,
+          files=clean_files)
+
+    probe("PRB-CLI-WINDOW-NEGATIVE",
+          "--freshness-window is negative",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s1.4 (`--freshness-window` non-integer or negative "
+           "=> exit 2)"],
+          ["${VERIFIER}", "--request", "${PROBE}/request.json",
+           "--bindings", "${PROBE}/bindings.json",
+           "--revocation", "${PROBE}/revocation.json",
+           "--independence-policy", "${PROBE}/independence.json",
+           "--now", NOW, "--freshness-window", "-1"], 2,
+          files=clean_files)
+
+    probe("PRB-CLI-WINDOW-NONINTEGER",
+          "--freshness-window is not an integer",
+          "cli_usage",
+          ["CLASS_VERIFIER_CONTRACT.md s1.4 (`--freshness-window` non-integer or negative "
+           "=> exit 2)"],
+          ["${VERIFIER}", "--request", "${PROBE}/request.json",
+           "--bindings", "${PROBE}/bindings.json",
+           "--revocation", "${PROBE}/revocation.json",
+           "--independence-policy", "${PROBE}/independence.json",
+           "--now", NOW, "--freshness-window", "3600.5"], 2,
+          files=clean_files)
+
+    # ---- item 4: --help --------------------------------------------------------------
+    probe("PRB-CLI-HELP",
+          "--help: exit 0, nothing evaluated, no verdict emitted",
+          "help",
+          ["CLASS_VERIFIER_CONTRACT.md s6.4 (`--help` - 0, with nothing evaluated and no "
+           "verdict emitted)"],
+          ["${VERIFIER}", "--help"], 0, must_not_create=["${OUT}"])
+
+
+# Combined view used by emit()/write_corpus(): C0 rows are transcription, C1 rows are
+# derivation. The two dicts stay separate so provenance is never blurred.
+EXPECTED_ALL = dict(EXPECTED_APPENDIX)
+EXPECTED_ALL.update(EXPECTED_C1)
+ALL_ORDER = CASE_ORDER + C1_ORDER
+
+
 # --------------------------------------------------------------------------------------
 # Builder self-validation (construction fidelity only — no class evaluation)
 # --------------------------------------------------------------------------------------
@@ -870,22 +1411,40 @@ def self_validate() -> dict:
                 assert_(f"{cid}:head-is-primary=={intent['head_is_primary']}",
                         is_prim == intent["head_is_primary"], f"observed {is_prim}")
             wpub = witness_pub_for(case)
+            claim_for_sig = intent.get("claim_semantic") or hw["claim"]
             if wpub:
-                got = verify_witness_sig("0.2", hw["claim"], hw["signature"]["value"], wpub)
+                got = verify_witness_sig("0.2", claim_for_sig, hw["signature"]["value"],
+                                         wpub)
                 assert_(f"{cid}:witness-signature-verifies=={intent['witness_sig_ok']}",
                         got == intent["witness_sig_ok"], f"observed {got}")
             if probe is None:
-                probe = {"case_id": cid, "claim_jcs_hex": jcs(hw["claim"]).hex(),
-                         "claim_jcs_sha256": hashlib.sha256(jcs(hw["claim"])).hexdigest(),
-                         "witness_preimage_sha256":
-                             hashlib.sha256(witness_preimage("0.2", hw["claim"])).hexdigest()}
+                probe = {"case_id": cid, "claim_jcs_hex": jcs(claim_for_sig).hex(),
+                         "claim_jcs_sha256":
+                             hashlib.sha256(jcs(claim_for_sig)).hexdigest(),
+                         "witness_preimage_sha256": hashlib.sha256(
+                             witness_preimage("0.2", claim_for_sig)).hexdigest()}
 
     # Transcription checks (over the copied appendix, not over any evaluation).
+    assert_("appendix:c0-case-set-complete",
+            sorted(EXPECTED_APPENDIX) == sorted(CASE_ORDER),
+            f"{len(EXPECTED_APPENDIX)} pinned / {len(CASE_ORDER)} ordered")
+    assert_("appendix:c1-case-set-complete",
+            sorted(EXPECTED_C1) == sorted(C1_ORDER),
+            f"{len(EXPECTED_C1)} derived / {len(C1_ORDER)} ordered")
+    assert_("appendix:c0-c1-disjoint",
+            not (set(EXPECTED_APPENDIX) & set(EXPECTED_C1)), "C1 must add, never redefine")
     assert_("appendix:case-set-complete",
-            sorted(EXPECTED_APPENDIX) == sorted(CASE_ORDER) ==
+            sorted(EXPECTED_ALL) == sorted(ALL_ORDER) ==
             sorted(c["case_id"] for c in CASES),
-            f"{len(EXPECTED_APPENDIX)} pinned / {len(CASES)} built")
-    for cid, row in EXPECTED_APPENDIX.items():
+            f"{len(EXPECTED_ALL)} pinned+derived / {len(CASES)} built")
+    # Every verdict case's primary artifact must carry a UNIQUE (chain_id, record_id):
+    # a duplicate would make the whole batch run-invalid under s9 R-10. The duplicate
+    # tuple lives ONLY inside the PRB-DUP-TUPLE probe corpus, deliberately.
+    tuples = [(c["request"]["artifact"]["chain_id"], c["request"]["artifact"]["record_id"])
+              for c in CASES]
+    assert_("corpus:verdict-tuples-unique", len(set(tuples)) == len(tuples),
+            f"{len(tuples) - len(set(tuples))} duplicate tuple(s)")
+    for cid, row in EXPECTED_ALL.items():
         klass, af, aw, ac, wf, ww, obs = row
         assert_(f"{cid}:class-legal",
                 klass in ("AIREP-Core", "AIREP-Authenticated", "AIREP-Witnessed"), klass)
@@ -949,7 +1508,163 @@ def witness_pub_for(case: dict) -> str | None:
 # Emission
 # --------------------------------------------------------------------------------------
 def dump(obj) -> str:
-    return json.dumps(obj, sort_keys=True, ensure_ascii=False, indent=1) + "\n"
+    """Serialize a corpus document.
+
+    The only non-obvious step is the raw-source-token substitution: a few C1 cases must
+    pin the SOURCE SPELLING of a JSON number (s9 E-1), which json.dumps cannot emit. The
+    builder carries those as marker STRINGS and this replaces `"@@RAW:1e0:RAW@@"` with the
+    bare token `1e0`. The marker grammar occurs nowhere in C0 content, so C0 bytes are
+    provably unaffected (asserted by the c0-preservation checks below).
+    """
+    text = json.dumps(obj, sort_keys=True, ensure_ascii=False, indent=1) + "\n"
+    return _RAW_RE.sub(lambda m: m.group(1), text)
+
+
+def _check_raw_token(cid: str, text: str, case: dict) -> None:
+    """Construction fidelity for the s9 E-1 lexical cases. Verifies that (a) the raw token
+    reached the file, (b) it parses to the case's semantic value, (c) the wire claim and
+    the signed semantic claim canonicalize to the SAME bytes — so the signature is valid
+    and the ONLY defect is the source spelling — and (d) the token really does violate
+    ^(0|[1-9][0-9]*)$. None of this evaluates the ladder."""
+    import re as _re
+    rc = case["_intent"]["raw_check"]
+    member, token = rc["member"], rc["token"]
+    assert_(f"{cid}:raw-marker-substituted", "@@RAW:" not in text, "marker left in file")
+    assert_(f"{cid}:raw-token-present:{member}", f'"{member}": {token}' in text,
+            f'expected literal `"{member}": {token}`')
+    parsed = json.loads(text)["head_witness"]["claim"]
+    assert_(f"{cid}:raw-token-parses-to-semantic-value",
+            parsed[member] == rc["semantic_value"],
+            f"{parsed[member]!r} != {rc['semantic_value']!r}")
+    assert_(f"{cid}:wire-claim-canonicalizes-identically",
+            jcs(parsed) == jcs(case["_intent"]["claim_semantic"]),
+            "wire and semantic claims differ after RFC 8785")
+    assert_(f"{cid}:raw-token-violates-E1-grammar",
+            _re.fullmatch(r"(0|[1-9][0-9]*)", token) is None, token)
+
+
+def _write_ordering(put, by_id) -> None:
+    """The s2 batch results-file ordering expectation.
+
+    This is a MECHANICAL application of the s2 sort rule (unsigned lexicographic order over
+    each string's UTF-8 bytes, no Unicode normalization) to the corpus's own identifiers —
+    it derives no class, no reason and no observer value. The discriminating pair is
+    additionally pinned by hand, with its UTF-8 bytes written out, and cross-checked here.
+    """
+    rows = []
+    for cid in ALL_ORDER:
+        art = by_id[cid]["request"]["artifact"]
+        rows.append({"case_id": cid, "chain_id": art["chain_id"],
+                     "record_id": art["record_id"],
+                     "chain_id_utf8_hex": art["chain_id"].encode("utf-8").hex(),
+                     "record_id_utf8_hex": art["record_id"].encode("utf-8").hex()})
+    rows.sort(key=lambda r: (r["chain_id"].encode("utf-8"),
+                             r["record_id"].encode("utf-8")))
+    for i, r in enumerate(rows):
+        r["index"] = i
+
+    pos = {r["case_id"]: r["index"] for r in rows}
+    # Hand-pinned, from the byte values written out below — not from any sort.
+    assert_("ordering:discriminating-pair-utf8-order", pos["ORD2"] < pos["ORD1"],
+            "U+FF00 (ef bc 80) must precede U+10000 (f0 90 80 80) in UTF-8 byte order")
+    assert_("ordering:discriminating-pair-utf16-would-invert",
+            ORD_BMP_REC.encode("utf-16-be") > ORD_SUPP_REC.encode("utf-16-be"),
+            "the pair must actually separate UTF-8 order from UTF-16 code-unit order")
+    assert_("ordering:discriminating-pair-same-chain",
+            by_id["ORD1"]["request"]["artifact"]["chain_id"] ==
+            by_id["ORD2"]["request"]["artifact"]["chain_id"],
+            "the pair must be separated by record_id, not chain_id")
+    assert_("ordering:corpus-directory-order-is-the-wrong-order",
+            ALL_ORDER.index("ORD1") < ALL_ORDER.index("ORD2"),
+            "directory order must NOT accidentally equal the required order")
+
+    put("ordering/expected_verdict_order.json", dump({
+        "rule": "Results file: {\"verdicts\": [ ... ]} — a deterministically ordered "
+                "array sorted by (chain_id, record_id) under unsigned lexicographic order "
+                "over each string's UTF-8 byte sequence, with no Unicode normalization.",
+        "clause": "CLASS_VERIFIER_CONTRACT.md s2 (Results file)",
+        "scope": "A batch run over corpus/cases/ (all C0 + C1 verdict cases). For any "
+                 "sub-batch the expected order is the induced subsequence of `order`. "
+                 "corpus/probes/ is NOT part of a scored batch.",
+        "derivation": "Mechanical application of the s2 rule to the corpus's own "
+                      "identifiers. No class, reason set or observer value is involved. "
+                      "The discriminating pair below is pinned by hand from its UTF-8 "
+                      "bytes and cross-checked by builder assertions "
+                      "ordering:discriminating-pair-*.",
+        "discriminating_pair": {
+            "purpose": "Separate UTF-8 byte order from JavaScript's native UTF-16 "
+                       "code-unit order. Code-point order and UTF-8 byte order agree for "
+                       "ALL valid Unicode scalar values (UTF-8 is order-preserving by "
+                       "construction), so UTF-16 code-unit order is the only one of the "
+                       "three that diverges: this fixture is a naive-JavaScript-sort "
+                       "detector, which is the requirement's real runtime risk.",
+            "unicode_validity": "Both record_ids end in a valid Unicode SCALAR value. No "
+                                "lone surrogate is used anywhere in this corpus.",
+            "chain_id": ORD_CHAIN,
+            "first_expected": {
+                "case_id": "ORD2", "record_id": ORD_BMP_REC,
+                "final_scalar": "U+FF00",
+                "record_id_utf8_hex": ORD_BMP_REC.encode("utf-8").hex(),
+                "final_scalar_utf8_hex": "efbc80",
+                "final_scalar_utf16be_hex": "ff00"},
+            "second_expected": {
+                "case_id": "ORD1", "record_id": ORD_SUPP_REC,
+                "final_scalar": "U+10000",
+                "record_id_utf8_hex": ORD_SUPP_REC.encode("utf-8").hex(),
+                "final_scalar_utf8_hex": "f0908080",
+                "final_scalar_utf16be_hex": "d800dc00"},
+            "required_relative_order": ["ORD2", "ORD1"],
+            "utf8_reasoning": "The two record_ids share the prefix `cv-rec-ord-`; the "
+                              "first differing byte is ef (0xEF) against f0 (0xF0). "
+                              "0xEF < 0xF0, so ORD2 precedes ORD1.",
+            "utf16_reasoning": "In UTF-16 code units the first differing unit is ff00 "
+                               "against the high surrogate d800. 0xD800 < 0xFF00, so a "
+                               "native JavaScript string comparison yields ORD1 before "
+                               "ORD2 — the OPPOSITE order, and a detectable failure.",
+            "corpus_directory_order": ["ORD1", "ORD2"],
+            "note": "The corpus-directory order deliberately AGREES with the wrong "
+                    "(UTF-16) order, so emitting verdicts in directory order fails the "
+                    "same gate."},
+        "order": rows}))
+
+
+def _write_probes(put) -> list:
+    """CLI / process-exit probe fixtures. These are NOT verdict cases: no expected.json is
+    written under corpus/probes/, and they live outside corpus/cases/."""
+    entries = []
+    for pr in PROBES:
+        pid = pr["probe_id"]
+        rels = []
+        for rel, doc in sorted(pr["_files"].items()):
+            put(f"probes/{pid}/{rel}", dump(doc))
+            rels.append(rel)
+        for rel, text in sorted(pr["_raw_files"].items()):
+            put(f"probes/{pid}/{rel}", text)
+            rels.append(rel)
+        entries.append({k: pr[k] for k in
+                        ("probe_id", "description", "kind", "clauses", "argv",
+                         "expected_exit", "expected_results_file", "must_not_create")}
+                       | {"files": sorted(rels)})
+    put("probes/probe_index.json", dump({
+        "note": "CLI / process-exit probes for the AIREP v0.2 class verifier. These "
+                "fixtures assert PROCESS behaviour (exit code, whether a results file is "
+                "emitted), never a class verdict. They carry no expected.json and live "
+                "outside corpus/cases/ so no scoring harness can mistake them for scored "
+                "cases. Expected exits are MANUALLY DERIVED FROM THE CITED NORMATIVE "
+                "CLAUSES, WITHOUT EXECUTING EVALUATION LOGIC.",
+        "placeholders": {
+            "${VERIFIER}": "the class-verifier invocation under test (argv[0] and any "
+                           "interpreter prefix); the probes assume nothing about it",
+            "${PROBE}": "the absolute path of this probe's own directory, "
+                        "corpus/probes/<probe_id>",
+            "${CORPUS}": "the absolute path of the main corpus directory "
+                         "(class-verification/corpus)",
+            "${OUT}": "a results-file destination path that does NOT exist before the run"},
+        "pass_criteria": "The process exit code equals expected_exit; a results file "
+                         "exists afterwards iff expected_results_file is true; every path "
+                         "in must_not_create is absent after the run.",
+        "probes": entries}))
+    return entries
 
 
 def write_corpus() -> dict:
@@ -965,9 +1680,9 @@ def write_corpus() -> dict:
         p.write_text(text, encoding="utf-8")
         files[rel] = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
-    index = []
+    index, c1_index = [], []
     by_id = {c["case_id"]: c for c in CASES}
-    for cid in CASE_ORDER:
+    for cid in ALL_ORDER:
         case = by_id[cid]
         entry_files = {}
         for name, doc in (("request", case["request"]), ("bindings", case["bindings"]),
@@ -976,9 +1691,12 @@ def write_corpus() -> dict:
             if doc is None or isinstance(doc, _Omit):
                 continue          # file omitted entirely: that input was not supplied
             rel = f"cases/{cid}/{name}.json"
-            put(rel, dump(doc))
+            text = dump(doc)
+            put(rel, text)
             entry_files[name] = rel
-        klass, af, aw, ac, wf, ww, obs = EXPECTED_APPENDIX[cid]
+            if name == "request" and case["_intent"].get("raw_check"):
+                _check_raw_token(cid, text, case)
+        klass, af, aw, ac, wf, ww, obs = EXPECTED_ALL[cid]
         put(f"cases/{cid}/expected.json", dump({
             "class": klass,
             "authenticated_failures": af,
@@ -988,17 +1706,44 @@ def write_corpus() -> dict:
             "witnessed_withheld": ww,
             "observer_assessment": obs,
         }))
-        index.append({"case_id": cid, "description": case["description"],
-                      "files": entry_files})
+        entry = {"case_id": cid, "description": case["description"],
+                 "files": entry_files}
+        (index if cid in EXPECTED_APPENDIX else c1_index).append(entry)
 
+    # case_index.json stays the C0 index, byte-for-byte. C1 cases are discoverable through
+    # their own index, so no pre-existing corpus file changes.
     put("case_index.json", dump(index))
+    # SAME root-array shape as case_index.json, so a runner can simply concatenate the two
+    # arrays with no interpretation: combined = C0 array + C1 array. The explanatory prose
+    # that previously sat in a "note" member lives in C1_COVERAGE.md -- an index carrying a
+    # different root shape than the index it extends is a harness defect, not documentation.
+    put("c1_case_index.json", dump(c1_index))
+
+    _write_ordering(put, by_id)
+    probe_entries = _write_probes(put)
+
+    # ---- C0 immutability proof (machine-checked, not asserted in prose) --------------
+    c0_paths = sorted(n for n in files
+                      if n == "case_index.json"
+                      or (n.startswith("cases/") and n.split("/")[1] in EXPECTED_APPENDIX))
+    c0_agg = hashlib.sha256(
+        "".join(f"{files[n]}  {n}\n" for n in c0_paths).encode("utf-8")).hexdigest()
+    assert_("c0-preservation:file-count", len(c0_paths) == C0_FILE_COUNT_PRE_C1,
+            f"{len(c0_paths)} != {C0_FILE_COUNT_PRE_C1}")
+    assert_("c0-preservation:aggregate-unchanged",
+            c0_agg == C0_AGGREGATE_SHA256_PRE_C1,
+            f"{c0_agg} != {C0_AGGREGATE_SHA256_PRE_C1}")
 
     agg = "".join(f"{files[n]}  {n}\n" for n in sorted(files))
-    return {"files": files, "aggregate_sha256": hashlib.sha256(agg.encode("utf-8")).hexdigest()}
+    return {"files": files, "c0_paths": c0_paths, "c0_aggregate_sha256": c0_agg,
+            "probes": probe_entries,
+            "aggregate_sha256": hashlib.sha256(agg.encode("utf-8")).hexdigest()}
 
 
 def main() -> int:
     build_cases()
+    build_c1_cases()
+    build_probes()
     probes = self_validate()
     out = write_corpus()
     failed = [a for a in ASSERTIONS if not a["passed"]]
@@ -1013,8 +1758,39 @@ def main() -> int:
             "relative path, NOT the assembled line and NOT the hash prefix; each line "
             "is built AFTER the sort. Paths are relative to class-verification/corpus/."
         ),
-        "case_count": len(CASE_ORDER),
+        "case_count": len(ALL_ORDER),
+        "c0_case_count": len(CASE_ORDER),
+        "c1_case_count": len(C1_ORDER),
+        "probe_count": len(PROBES),
         "file_count": len(out["files"]),
+        "c0_preservation": {
+            "claim": "The C0 45 cases and their expected values are bit-for-bit unchanged; "
+                     "C1 is strictly additive.",
+            "c0_paths": "case_index.json + cases/<C0 case id>/* (the exact file set the "
+                        "pre-C1 manifest covered)",
+            "c0_file_count": len(out["c0_paths"]),
+            "c0_file_count_pre_c1": C0_FILE_COUNT_PRE_C1,
+            "c0_aggregate_sha256": out["c0_aggregate_sha256"],
+            "c0_aggregate_sha256_pre_c1": C0_AGGREGATE_SHA256_PRE_C1,
+            "unchanged": out["c0_aggregate_sha256"] == C0_AGGREGATE_SHA256_PRE_C1,
+            "method": "The C0 subset of `files` is aggregated under the SAME aggregate_rule "
+                      "and compared against the pre-C1 manifest's aggregate_sha256, which "
+                      "covered exactly those 265 paths. Enforced by builder assertions "
+                      "c0-preservation:file-count and c0-preservation:aggregate-unchanged; "
+                      "a mismatch stops the build with MAINTAINER_FINDING.",
+        },
+        "extension": {
+            "name": "C1 adversarial coverage extension",
+            "c1_cases": C1_ORDER,
+            "c1_probes": [pr["probe_id"] for pr in PROBES],
+            "expected_value_provenance": {
+                "c0": "verbatim transcription of the CLASS_VERIFIER_CONTRACT.md s7 "
+                      "appendix rows",
+                "c1": "manually derived from cited normative clauses, without executing "
+                      "evaluation logic; derivation chains in C1_COVERAGE.md",
+            },
+            "coverage_document": "C1_COVERAGE.md",
+        },
         "files": out["files"],
         "keys": {
             "note": "TEST-ONLY key material. These seeds are published in this repository; "
@@ -1036,13 +1812,20 @@ def main() -> int:
                              for a in ASSERTIONS}),
             "probes": probes,
         },
-        "expected_values_note": "cases/<CASE_ID>/expected.json is a verbatim transcription of "
-                                "the CLASS_VERIFIER_CONTRACT s7 appendix row; case_index.json "
-                                "deliberately carries no expected values.",
+        "expected_values_note": "For the 45 C0 cases, cases/<CASE_ID>/expected.json is a "
+                                "verbatim transcription of the CLASS_VERIFIER_CONTRACT s7 "
+                                "appendix row. For the 15 C1 cases it is manually derived "
+                                "from cited normative clauses, without executing evaluation "
+                                "logic (derivation chains: C1_COVERAGE.md). Neither index "
+                                "file carries expected values.",
     }
     (HERE / "corpus_manifest.json").write_text(dump(manifest), encoding="utf-8")
-    print(f"class corpus: {len(CASE_ORDER)} cases, {len(out['files'])} files, "
-          f"{len(ASSERTIONS)} self-checks ({len(failed)} failed)")
+    print(f"class corpus: {len(ALL_ORDER)} cases "
+          f"({len(CASE_ORDER)} C0 + {len(C1_ORDER)} C1), {len(PROBES)} probes, "
+          f"{len(out['files'])} files, {len(ASSERTIONS)} self-checks "
+          f"({len(failed)} failed)")
+    print(f"C0 aggregate_sha256 = {out['c0_aggregate_sha256']} "
+          f"({'UNCHANGED' if out['c0_aggregate_sha256'] == C0_AGGREGATE_SHA256_PRE_C1 else 'CHANGED'})")
     print(f"aggregate_sha256 = {out['aggregate_sha256']}")
     return 0 if not failed else 3
 
