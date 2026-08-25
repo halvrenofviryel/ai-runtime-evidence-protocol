@@ -104,7 +104,9 @@ existing `aggregate_rule` **unchanged**:
 Every C1 path is pure ASCII (the non-ASCII identifiers of the ordering fixture live *inside*
 `record_id` values, never in a path), so ASCII-ascending path order is unambiguous.
 
-- extended `aggregate_sha256` = `5b05318396002fee1adcf95aeeedfbe0d6e5f5ebf8759d0737276f7eba7b9b95`
+- extended `aggregate_sha256` = `55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a`
+  (the pre-remediation value `5b053183…b9b95` was superseded when `c1_case_index.json`
+  was re-emitted as a root array; the corpus bytes were otherwise unchanged)
 - C0-subset aggregate = `55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4` (unchanged)
 
 **Determinism.** Two consecutive builds produce byte-identical `corpus/` trees and byte-identical
