@@ -6,11 +6,18 @@ name: v0.2-alpha reproduction
 # Scope: v0.2 alpha only. The v0.1 conformance battery has its own workflow
 # (conformance.yml) and is deliberately not duplicated or replaced here.
 #
-# Every dependency is vendored in the repository: Node tarballs under
+# Every project dependency is vendored in the repository: Node tarballs under
 # class-verification/offline-node-deps/, Python wheels under
-# class-verification/offline-python-deps/. Nothing is fetched from a package
-# registry at run time. The schema-validation phase reuses the same bundle --
-# its pinned versions are a subset of the class-verifier bundle's.
+# class-verification/offline-python-deps/. The schema-validation phase reuses
+# the same bundle -- its pinned versions are a subset of the class-verifier
+# bundle's.
+#
+# Boundary of that claim, stated precisely: project third-party dependencies are
+# consumed from the vendored, hash-verified bundle with package indexes disabled
+# during reproduction. GitHub-hosted CI may use network access to obtain the
+# checkout, the Actions, and the exact pinned Python/Node runtime distributions;
+# those provisioning steps are outside the vendored-dependency claim. (Observed:
+# setup-python downloads the 3.12.3 distribution and upgrades pip.)
 #
 # What a green run establishes: the committed artifacts reproduce their recorded
 # measurements from a clean checkout, with the toolchain configured no-index
