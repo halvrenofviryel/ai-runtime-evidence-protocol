@@ -1,12 +1,9 @@
-# AIREP v0.2 — Class-Verifier Implementation Contract
+# AIREP v0.2 — Class-Verifier Implementation Contract (contract only)
 
-> **Status: ACCEPTED and implemented.** Two verifiers were authored separately against this
-> contract, measured against a 60-case corpus with 15 process probes, and compared by a
-> separate parity comparator carrying five negative proofs. The class-verifier corpus/parity
-> phase is complete; §9 carries the rulings issued during it.
-> Spec-before-code held throughout: the machine output surface and reason vocabulary were
-> frozen here *first*, and the verifiers were written afterwards. **Producer implementation
-> remains unstarted.**
+> **Status: CONTRACT for maintainer review — no class-verifier code exists yet.**
+> Spec-before-code, as with every prior stage: the machine output surface and reason vocabulary
+> are frozen here, *then* two verifiers are authored independently. Producer implementation
+> remains unstarted.
 >
 > **Frozen inputs (expressed, never re-decided):** the accepted
 > [`../conformance-design/CONFORMANCE_CLASS_DESIGN.md`](../conformance-design/CONFORMANCE_CLASS_DESIGN.md)

@@ -1,0 +1,132 @@
+name: v0.2-alpha reproduction
+
+# Reproduces the v0.2 alpha evidence chain from a clean checkout in an
+# offline/no-index configuration.
+#
+# Scope: v0.2 alpha only. The v0.1 conformance battery has its own workflow
+# (conformance.yml) and is deliberately not duplicated or replaced here.
+#
+# Every dependency is vendored in the repository: Node tarballs under
+# class-verification/offline-node-deps/, Python wheels under
+# class-verification/offline-python-deps/. Nothing is fetched from a package
+# registry at run time. The schema-validation phase reuses the same bundle --
+# its pinned versions are a subset of the class-verifier bundle's.
+#
+# What a green run establishes: the committed artifacts reproduce their recorded
+# measurements from a clean checkout, with the toolchain configured no-index
+# against vendored, hash-verified inputs. It does NOT establish that the network
+# was unavailable at the kernel level, nor correctness of the underlying
+# semantics, third-party audit, or stable-release readiness.
+#
+# This workflow produces REPRODUCTION / REGRESSION evidence only. It does not
+# produce new official acceptance evidence: the official runs are the ones
+# recorded under class-verification/comparator/evidence/. The comparator carries
+# two historical SHAs for the accepted basis; CI output must not be filed as a
+# new official run.
+
+on:
+  push:
+    branches: [main, "integration/**"]
+    paths: ["spec/airep/v0.2/**", ".github/workflows/v0.2-alpha-reproduction.yml"]
+  pull_request:
+    paths: ["spec/airep/v0.2/**", ".github/workflows/v0.2-alpha-reproduction.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pinned to the runtime axis the evidence was measured on. The vendored
+      # wheels are cp312/manylinux x86_64, so 3.12 is a hard requirement, not a
+      # preference: a different minor version cannot install this wheelhouse.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Runtime axis actually in use
+        run: |
+          python3 -VV
+          node --version
+
+      - name: Materialize Node dependencies from vendored tarballs (offline)
+        working-directory: spec/airep/v0.2/class-verification
+        run: python3 offline-node-deps/materialize_node_modules.py
+
+      - name: Build the isolated offline venv from vendored wheels
+        working-directory: spec/airep/v0.2/class-verification
+        run: python3 offline-python-deps/prepare_offline_venv.py
+
+      - name: Offline reproduction preflight (isolation, determinism, corpus integrity)
+        working-directory: spec/airep/v0.2/class-verification
+        run: python3 preflight_offline_basis.py
+
+      # The schema-validation phase runs on the same vendored bundle: its pinned
+      # jsonschema/referencing/attrs/rpds-py/jsonschema-specifications and ajv
+      # versions are all present there.
+      - name: Schema validation — Python engine (117 fixtures)
+        working-directory: spec/airep/v0.2/schema-validation
+        run: ../class-verification/offline-python-deps/.venv/bin/python run_python.py
+
+      - name: Schema validation — Node engine (117 fixtures)
+        working-directory: spec/airep/v0.2/schema-validation
+        env:
+          NODE_PATH: ${{ github.workspace }}/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules
+        run: node run_node.mjs
+
+      - name: Schema validation — two-engine comparison
+        working-directory: spec/airep/v0.2/schema-validation
+        run: ../class-verification/offline-python-deps/.venv/bin/python compare_schema_results.py
+
+      - name: Schema validation — gate proof (corruption must fail)
+        working-directory: spec/airep/v0.2/schema-validation
+        run: ../class-verification/offline-python-deps/.venv/bin/python prove_schema_gates.py
+
+      - name: Class-verifier check scripts (Node)
+        working-directory: spec/airep/v0.2/class-verification/verifier_node_r2
+        run: |
+          node class_verifier.mjs --corpus ../corpus --out out_run1.json
+          cp out_run1.json out_run2.json
+          node selfcheck.mjs
+          node corpus_compare.mjs
+          node rulings_check.mjs
+          node errata_check.mjs
+          node exitcode_check.mjs
+          node exitcode_check_selftest.mjs
+          node preimage_check.mjs
+
+      - name: Class-verifier self-checks (Python)
+        working-directory: spec/airep/v0.2/class-verification/verifier_py
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          V=../offline-python-deps/.venv/bin/python
+          "$V" selfcheck_errata.py
+          "$V" selfcheck_s9_round2.py
+          "$V" selfcheck_s9_round3.py
+          "$V" selfcheck_s9_round4.py
+
+      - name: Parity comparator — all hard gates (reproduction, not an official run)
+        working-directory: spec/airep/v0.2/class-verification
+        run: python3 comparator/compare.py --root . --out-dir /tmp/ci_run --result /tmp/ci_result.json --summary /tmp/ci_summary.txt
+
+      - name: Comparator negative proofs (the comparator must be able to fail)
+        working-directory: spec/airep/v0.2/class-verification/comparator
+        run: python3 negative_proofs/run_all.py
+
+      - name: Upload reproduction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0.2-alpha-reproduction
+          path: |
+            /tmp/ci_result.json
+            /tmp/ci_summary.txt
+          if-no-files-found: warn
