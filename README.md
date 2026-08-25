@@ -1,6 +1,6 @@
 # AI Runtime Evidence Protocol (AIREP)
 
-[![AIREP conformance](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml)
+[![v0.1 conformance](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475136-blue)](https://doi.org/10.5281/zenodo.20475136)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
@@ -18,6 +18,14 @@ are formats and an *SBOM* is the thing.)
 > **Status: Experimental.** AIREP is a *proposed* open format with one reference implementation.
 > It is **not** a ratified standard. See [`spec/airep/v0.1/STATUS.md`](./spec/airep/v0.1/STATUS.md)
 > for the maturity picture, open items, and change control.
+>
+> **Which version is which.** **v0.1 is the released, citable version** — it is what the schema
+> `$id`s, the Zenodo archives and the conformance badge above refer to, and it is what to build
+> against today. **v0.2 is alpha and unreleased**: an in-progress line under
+> [`spec/airep/v0.2/`](./spec/airep/v0.2/) whose integrity construction, artifact schemas and
+> class verifiers have been measured, but which has no producer implementation and does not meet
+> the stable-release criteria. Do not read v0.2 material as superseding v0.1, and do not treat
+> the badge as covering it — the badge runs the v0.1 battery only.
 
 **Canonical home:** <https://github.com/halvrenofviryel/ai-runtime-evidence-protocol> — the schema
 `$id`s resolve as raw files under its `main` branch.

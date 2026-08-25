@@ -1,7 +1,9 @@
-# AIREP v0.2 — Specification tree (partial, under construction)
+# AIREP v0.2 — Specification tree (alpha)
 
-**This tree is intentionally incomplete.** It grows section by section as WP-α work packages
-freeze; nothing exists here before its gate passes.
+**Status: v0.2 is alpha and unreleased.** The published, citable version of AIREP is **v0.1**
+(see [`../v0.1/`](../v0.1/)). This tree grows section by section as each work package freezes;
+nothing appears here before its gate passes. Nothing here supersedes v0.1 until v0.2 is
+released.
 
 | Present | Status |
 |---|---|
@@ -12,11 +14,12 @@ freeze; nothing exists here before its gate passes.
 | [`schemas/`](./schemas/) | The five JSON Schema (2020-12) files mechanically expressing the accepted design contract — ACCEPTED 2026-08-23 as the implementation basis. Schema validation confers no assurance class, signature validity, or evidence truth. |
 | [`schema-validation/`](./schema-validation/) | Schema fixture/validation phase — **COMPLETE 2026-08-23**: 117-fixture corpus + two-engine harness, ALL GATES PASSED. Measured claim only: the five schemas discriminate the measured corpus as expected under two independent engines. |
 | [`conformance-design/`](./conformance-design/) | Conformance-class phase Stage 1: the **class design contract** (Core → Authenticated → Witnessed; verifier-accepted binding; witness-key independence; snapshot revocation) — ACCEPTED 2026-08-23. |
-| [`class-verification/`](./class-verification/) | Class-verifier **implementation contract**: operator-input formats, normalized verdict envelope, closed reason registry, evaluation order, two-implementation parity contract, adversarial matrix. CONTRACT — no verifier code exists yet. |
+| [`class-verification/`](./class-verification/) | Class-verifier implementation contract **plus two separately authored verifiers, a 60-case corpus with 15 process probes, a parity comparator with five negative proofs, and the offline reproduction basis**. Class-verifier corpus/parity phase COMPLETE. The measured claim is parity and conformance to the frozen expected values on the measured corpus — not correctness of the underlying semantics, and not third-party audit. |
 
-**Absent by design (blocked):** the four artifact schemas (decision / control / execution /
-effect), the profile schemas, the conformance classes text, and the verifiers. They open only
-after WP-α01 completes as a whole (stages 2–4 accepted).
+**Still absent:** the profile schemas, the normative conformance-classes text, and any
+**producer** implementation. Producer work has not started. The stable-release criteria of
+AD-15 — including genuine external independence and interoperability evidence — are not met, so
+there is no plain `v0.2` and no stable `v0.2.0`.
 
 The design record for everything here lives in
 [`../v0.2-design/`](../v0.2-design/) — architecture decisions, breaking-change inventory,
