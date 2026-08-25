@@ -1,0 +1,11 @@
+{
+ "bindings": {
+  "airep.producer-a": {
+   "state": "active"
+  },
+  "airep.witness-a": {
+   "state": "revoked"
+  }
+ },
+ "snapshot_id": "airep.snapshot-1"
+}

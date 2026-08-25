@@ -1,0 +1,655 @@
+[
+ {
+  "case_id": "P1",
+  "description": "clean Decision, all operator inputs supplied, no head_witness in the request",
+  "files": {
+   "bindings": "cases/P1/bindings.json",
+   "clock": "cases/P1/clock.json",
+   "independence": "cases/P1/independence.json",
+   "request": "cases/P1/request.json",
+   "revocation": "cases/P1/revocation.json"
+  }
+ },
+ {
+  "case_id": "P2",
+  "description": "clean Decision plus a clean, fresh, independent witness over this artifact",
+  "files": {
+   "bindings": "cases/P2/bindings.json",
+   "clock": "cases/P2/clock.json",
+   "independence": "cases/P2/independence.json",
+   "request": "cases/P2/request.json",
+   "revocation": "cases/P2/revocation.json"
+  }
+ },
+ {
+  "case_id": "P3",
+  "description": "clean Effect; referenced Execution is Authenticated in its own right under a distinct binding identity and key, and the pair is explicitly independent",
+  "files": {
+   "bindings": "cases/P3/bindings.json",
+   "clock": "cases/P3/clock.json",
+   "independence": "cases/P3/independence.json",
+   "request": "cases/P3/request.json",
+   "revocation": "cases/P3/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB1",
+  "description": "producer binding present and trusted, revocation snapshot marks it revoked",
+  "files": {
+   "bindings": "cases/PB1/bindings.json",
+   "clock": "cases/PB1/clock.json",
+   "independence": "cases/PB1/independence.json",
+   "request": "cases/PB1/request.json",
+   "revocation": "cases/PB1/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB2",
+  "description": "producer_bindings carries no entry for the artifact's wire producer id",
+  "files": {
+   "bindings": "cases/PB2/bindings.json",
+   "clock": "cases/PB2/clock.json",
+   "independence": "cases/PB2/independence.json",
+   "request": "cases/PB2/request.json",
+   "revocation": "cases/PB2/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB3",
+  "description": "producer binding entry present with trusted:false (present, not literally true)",
+  "files": {
+   "bindings": "cases/PB3/bindings.json",
+   "clock": "cases/PB3/clock.json",
+   "independence": "cases/PB3/independence.json",
+   "request": "cases/PB3/request.json",
+   "revocation": "cases/PB3/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB4",
+  "description": "binding referenced from producer_bindings declares role:witness (s1.1 malformed)",
+  "files": {
+   "bindings": "cases/PB4/bindings.json",
+   "clock": "cases/PB4/clock.json",
+   "independence": "cases/PB4/independence.json",
+   "request": "cases/PB4/request.json",
+   "revocation": "cases/PB4/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB5",
+  "description": "producer binding names suite ed448, absent from the closed v0.2 suite registry",
+  "files": {
+   "bindings": "cases/PB5/bindings.json",
+   "clock": "cases/PB5/clock.json",
+   "independence": "cases/PB5/independence.json",
+   "request": "cases/PB5/request.json",
+   "revocation": "cases/PB5/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB6",
+  "description": "revocation snapshot supplied but carries no entry for the producer binding",
+  "files": {
+   "bindings": "cases/PB6/bindings.json",
+   "clock": "cases/PB6/clock.json",
+   "independence": "cases/PB6/independence.json",
+   "request": "cases/PB6/request.json",
+   "revocation": "cases/PB6/revocation.json"
+  }
+ },
+ {
+  "case_id": "PB7",
+  "description": "revocation entry for the producer binding has state:suspended (neither value)",
+  "files": {
+   "bindings": "cases/PB7/bindings.json",
+   "clock": "cases/PB7/clock.json",
+   "independence": "cases/PB7/independence.json",
+   "request": "cases/PB7/request.json",
+   "revocation": "cases/PB7/revocation.json"
+  }
+ },
+ {
+  "case_id": "PS1",
+  "description": "hash-consistent Decision whose record signature was produced by a different key than the producer binding's",
+  "files": {
+   "bindings": "cases/PS1/bindings.json",
+   "clock": "cases/PS1/clock.json",
+   "independence": "cases/PS1/independence.json",
+   "request": "cases/PS1/request.json",
+   "revocation": "cases/PS1/revocation.json"
+  }
+ },
+ {
+  "case_id": "PS2",
+  "description": "valid ed25519 record signature; wire integrity.signature.alg names ECDSA-P256",
+  "files": {
+   "bindings": "cases/PS2/bindings.json",
+   "clock": "cases/PS2/clock.json",
+   "independence": "cases/PS2/independence.json",
+   "request": "cases/PS2/request.json",
+   "revocation": "cases/PS2/revocation.json"
+  }
+ },
+ {
+  "case_id": "PS3",
+  "description": "valid signature; the artifact's airep.key-trust profile self-declares revocation.revoked=true while the operator snapshot says active",
+  "files": {
+   "bindings": "cases/PS3/bindings.json",
+   "clock": "cases/PS3/clock.json",
+   "independence": "cases/PS3/independence.json",
+   "request": "cases/PS3/request.json",
+   "revocation": "cases/PS3/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB1",
+  "description": "clean witness over this artifact; revocation snapshot marks the witness binding revoked",
+  "files": {
+   "bindings": "cases/WB1/bindings.json",
+   "clock": "cases/WB1/clock.json",
+   "independence": "cases/WB1/independence.json",
+   "request": "cases/WB1/request.json",
+   "revocation": "cases/WB1/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB2",
+  "description": "witness_bindings carries no entry for the wire witness_id",
+  "files": {
+   "bindings": "cases/WB2/bindings.json",
+   "clock": "cases/WB2/clock.json",
+   "independence": "cases/WB2/independence.json",
+   "request": "cases/WB2/request.json",
+   "revocation": "cases/WB2/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB3",
+  "description": "witness binding entry present with trusted:false",
+  "files": {
+   "bindings": "cases/WB3/bindings.json",
+   "clock": "cases/WB3/clock.json",
+   "independence": "cases/WB3/independence.json",
+   "request": "cases/WB3/request.json",
+   "revocation": "cases/WB3/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB4",
+  "description": "binding referenced from witness_bindings declares role:producer (s1.1 malformed)",
+  "files": {
+   "bindings": "cases/WB4/bindings.json",
+   "clock": "cases/WB4/clock.json",
+   "independence": "cases/WB4/independence.json",
+   "request": "cases/WB4/request.json",
+   "revocation": "cases/WB4/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB5",
+  "description": "witness binding names suite ed448, absent from the closed registry",
+  "files": {
+   "bindings": "cases/WB5/bindings.json",
+   "clock": "cases/WB5/clock.json",
+   "independence": "cases/WB5/independence.json",
+   "request": "cases/WB5/request.json",
+   "revocation": "cases/WB5/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB6",
+  "description": "revocation snapshot supplied but carries no entry for the witness binding",
+  "files": {
+   "bindings": "cases/WB6/bindings.json",
+   "clock": "cases/WB6/clock.json",
+   "independence": "cases/WB6/independence.json",
+   "request": "cases/WB6/request.json",
+   "revocation": "cases/WB6/revocation.json"
+  }
+ },
+ {
+  "case_id": "WB7",
+  "description": "revocation entry for the witness binding has state:unknown",
+  "files": {
+   "bindings": "cases/WB7/bindings.json",
+   "clock": "cases/WB7/clock.json",
+   "independence": "cases/WB7/independence.json",
+   "request": "cases/WB7/request.json",
+   "revocation": "cases/WB7/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND1",
+  "description": "witness binding carries the producer's public key under a distinct binding id and distinct subject_identity; the pair is listed independent",
+  "files": {
+   "bindings": "cases/IND1/bindings.json",
+   "clock": "cases/IND1/clock.json",
+   "independence": "cases/IND1/independence.json",
+   "request": "cases/IND1/request.json",
+   "revocation": "cases/IND1/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND2",
+  "description": "witness binding carries a distinct key but the producer binding's subject_identity; the pair is listed independent",
+  "files": {
+   "bindings": "cases/IND2/bindings.json",
+   "clock": "cases/IND2/clock.json",
+   "independence": "cases/IND2/independence.json",
+   "request": "cases/IND2/request.json",
+   "revocation": "cases/IND2/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND3",
+  "description": "independence policy supplied and well-formed but relates only an unrelated pair; the producer/witness pair is absent from both lists",
+  "files": {
+   "bindings": "cases/IND3/bindings.json",
+   "clock": "cases/IND3/clock.json",
+   "independence": "cases/IND3/independence.json",
+   "request": "cases/IND3/request.json",
+   "revocation": "cases/IND3/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND4",
+  "description": "producer/witness pair listed in non_independent_pairs",
+  "files": {
+   "bindings": "cases/IND4/bindings.json",
+   "clock": "cases/IND4/clock.json",
+   "independence": "cases/IND4/independence.json",
+   "request": "cases/IND4/request.json",
+   "revocation": "cases/IND4/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND5",
+  "description": "producer/witness pair listed in BOTH independent_pairs and non_independent_pairs (malformed policy)",
+  "files": {
+   "bindings": "cases/IND5/bindings.json",
+   "clock": "cases/IND5/clock.json",
+   "independence": "cases/IND5/independence.json",
+   "request": "cases/IND5/request.json",
+   "revocation": "cases/IND5/revocation.json"
+  }
+ },
+ {
+  "case_id": "IND6",
+  "description": "no independence-policy input supplied at all",
+  "files": {
+   "bindings": "cases/IND6/bindings.json",
+   "clock": "cases/IND6/clock.json",
+   "request": "cases/IND6/request.json",
+   "revocation": "cases/IND6/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM1",
+  "description": "head claim carries a sixth member beyond the frozen five; the witness signature is genuine over that six-member canonical claim",
+  "files": {
+   "bindings": "cases/WM1/bindings.json",
+   "clock": "cases/WM1/clock.json",
+   "independence": "cases/WM1/independence.json",
+   "request": "cases/WM1/request.json",
+   "revocation": "cases/WM1/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM2",
+  "description": "valid claim over this artifact; the witness signature was produced by a third key, not the witness binding's key",
+  "files": {
+   "bindings": "cases/WM2/bindings.json",
+   "clock": "cases/WM2/clock.json",
+   "independence": "cases/WM2/independence.json",
+   "request": "cases/WM2/request.json",
+   "revocation": "cases/WM2/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM3",
+  "description": "head_ref names a record_id absent from artifact and related_artifacts",
+  "files": {
+   "bindings": "cases/WM3/bindings.json",
+   "clock": "cases/WM3/clock.json",
+   "independence": "cases/WM3/independence.json",
+   "request": "cases/WM3/request.json",
+   "revocation": "cases/WM3/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM4",
+  "description": "head_ref resolves uniquely to the primary artifact; the genuinely signed claim's sequence does not reconcile with that artifact",
+  "files": {
+   "bindings": "cases/WM4/bindings.json",
+   "clock": "cases/WM4/clock.json",
+   "independence": "cases/WM4/independence.json",
+   "request": "cases/WM4/request.json",
+   "revocation": "cases/WM4/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM5",
+  "description": "head_ref resolves uniquely to a related_artifacts member; the claim reconciles with that member and the signature is valid",
+  "files": {
+   "bindings": "cases/WM5/bindings.json",
+   "clock": "cases/WM5/clock.json",
+   "independence": "cases/WM5/independence.json",
+   "request": "cases/WM5/request.json",
+   "revocation": "cases/WM5/revocation.json"
+  }
+ },
+ {
+  "case_id": "WM6",
+  "description": "head_ref carries record_id only and matches both the primary artifact and a related artifact in a different chain (ambiguous)",
+  "files": {
+   "bindings": "cases/WM6/bindings.json",
+   "clock": "cases/WM6/clock.json",
+   "independence": "cases/WM6/independence.json",
+   "request": "cases/WM6/request.json",
+   "revocation": "cases/WM6/revocation.json"
+  }
+ },
+ {
+  "case_id": "FR1",
+  "description": "signed witnessed_at 2026-08-23T10:00:00Z is 7200s before now (window 3600s)",
+  "files": {
+   "bindings": "cases/FR1/bindings.json",
+   "clock": "cases/FR1/clock.json",
+   "independence": "cases/FR1/independence.json",
+   "request": "cases/FR1/request.json",
+   "revocation": "cases/FR1/revocation.json"
+  }
+ },
+ {
+  "case_id": "FR2",
+  "description": "signed witnessed_at 2026-08-23T14:00:00Z is 7200s after now (window 3600s)",
+  "files": {
+   "bindings": "cases/FR2/bindings.json",
+   "clock": "cases/FR2/clock.json",
+   "independence": "cases/FR2/independence.json",
+   "request": "cases/FR2/request.json",
+   "revocation": "cases/FR2/revocation.json"
+  }
+ },
+ {
+  "case_id": "FR3",
+  "description": "signed witnessed_at 2026-08-23T11:00:00Z is exactly 3600s before now (boundary-equal)",
+  "files": {
+   "bindings": "cases/FR3/bindings.json",
+   "clock": "cases/FR3/clock.json",
+   "independence": "cases/FR3/independence.json",
+   "request": "cases/FR3/request.json",
+   "revocation": "cases/FR3/revocation.json"
+  }
+ },
+ {
+  "case_id": "FR4",
+  "description": "clean witness in every respect; no clock inputs supplied",
+  "files": {
+   "bindings": "cases/FR4/bindings.json",
+   "independence": "cases/FR4/independence.json",
+   "request": "cases/FR4/request.json",
+   "revocation": "cases/FR4/revocation.json"
+  }
+ },
+ {
+  "case_id": "PI1",
+  "description": "only the binding store supplied: no revocation snapshot, no independence policy, no clock; the head witness itself is clean",
+  "files": {
+   "bindings": "cases/PI1/bindings.json",
+   "request": "cases/PI1/request.json"
+  }
+ },
+ {
+  "case_id": "PI2",
+  "description": "bindings and revocation supplied; no independence policy",
+  "files": {
+   "bindings": "cases/PI2/bindings.json",
+   "clock": "cases/PI2/clock.json",
+   "request": "cases/PI2/request.json",
+   "revocation": "cases/PI2/revocation.json"
+  }
+ },
+ {
+  "case_id": "PI3",
+  "description": "bindings, revocation and independence policy supplied; clock input present but carrying only the freshness window, no `now`",
+  "files": {
+   "bindings": "cases/PI3/bindings.json",
+   "clock": "cases/PI3/clock.json",
+   "independence": "cases/PI3/independence.json",
+   "request": "cases/PI3/request.json",
+   "revocation": "cases/PI3/revocation.json"
+  }
+ },
+ {
+  "case_id": "OB1",
+  "description": "Effect declares independent; referenced Execution is Authenticated under a distinct binding identity and key, and the pair is listed independent",
+  "files": {
+   "bindings": "cases/OB1/bindings.json",
+   "clock": "cases/OB1/clock.json",
+   "independence": "cases/OB1/independence.json",
+   "request": "cases/OB1/request.json",
+   "revocation": "cases/OB1/revocation.json"
+  }
+ },
+ {
+  "case_id": "OB2",
+  "description": "Effect declares independent; Execution is Authenticated under a distinct key and identity, but the policy relates only an unrelated pair",
+  "files": {
+   "bindings": "cases/OB2/bindings.json",
+   "clock": "cases/OB2/clock.json",
+   "independence": "cases/OB2/independence.json",
+   "request": "cases/OB2/request.json",
+   "revocation": "cases/OB2/revocation.json"
+  }
+ },
+ {
+  "case_id": "OB3",
+  "description": "Effect declares same_executor; referenced Execution is Authenticated under the same producer binding",
+  "files": {
+   "bindings": "cases/OB3/bindings.json",
+   "clock": "cases/OB3/clock.json",
+   "independence": "cases/OB3/independence.json",
+   "request": "cases/OB3/request.json",
+   "revocation": "cases/OB3/revocation.json"
+  }
+ },
+ {
+  "case_id": "OB4",
+  "description": "Effect declares independent; the referenced Execution's record signature was produced by a different key than its own producer binding, so it does not reach Authenticated in its own right",
+  "files": {
+   "bindings": "cases/OB4/bindings.json",
+   "clock": "cases/OB4/clock.json",
+   "independence": "cases/OB4/independence.json",
+   "request": "cases/OB4/request.json",
+   "revocation": "cases/OB4/revocation.json"
+  }
+ },
+ {
+  "case_id": "OB5",
+  "description": "Effect declares independent; execution_ref names a record absent from artifact and related_artifacts",
+  "files": {
+   "bindings": "cases/OB5/bindings.json",
+   "clock": "cases/OB5/clock.json",
+   "independence": "cases/OB5/independence.json",
+   "request": "cases/OB5/request.json",
+   "revocation": "cases/OB5/revocation.json"
+  }
+ },
+ {
+  "case_id": "XT1",
+  "description": "producer binding revoked in the snapshot while a clean, fresh, independent witness vouches for this artifact's head",
+  "files": {
+   "bindings": "cases/XT1/bindings.json",
+   "clock": "cases/XT1/clock.json",
+   "independence": "cases/XT1/independence.json",
+   "request": "cases/XT1/request.json",
+   "revocation": "cases/XT1/revocation.json"
+  }
+ },
+ {
+  "case_id": "ORD1",
+  "description": "clean Decision whose record_id ends U+10000 (UTF-8 f0 90 80 80); the batch results file must order it AFTER ORD2 under the s2 UTF-8 byte rule",
+  "files": {
+   "bindings": "cases/ORD1/bindings.json",
+   "clock": "cases/ORD1/clock.json",
+   "independence": "cases/ORD1/independence.json",
+   "request": "cases/ORD1/request.json",
+   "revocation": "cases/ORD1/revocation.json"
+  }
+ },
+ {
+  "case_id": "ORD2",
+  "description": "clean Decision in the SAME chain whose record_id ends U+FF00 (UTF-8 ef bc 80); the batch results file must order it BEFORE ORD1",
+  "files": {
+   "bindings": "cases/ORD2/bindings.json",
+   "clock": "cases/ORD2/clock.json",
+   "independence": "cases/ORD2/independence.json",
+   "request": "cases/ORD2/request.json",
+   "revocation": "cases/ORD2/revocation.json"
+  }
+ },
+ {
+  "case_id": "CTL1",
+  "description": "clean Control Evidence artifact, all operator inputs supplied, no head_witness in the request (the corpus's first control-family case)",
+  "files": {
+   "bindings": "cases/CTL1/bindings.json",
+   "clock": "cases/CTL1/clock.json",
+   "independence": "cases/CTL1/independence.json",
+   "request": "cases/CTL1/request.json",
+   "revocation": "cases/CTL1/revocation.json"
+  }
+ },
+ {
+  "case_id": "NG1",
+  "description": "clean witness over a NON-GENESIS chain head: claim.sequence=1 and claim.length=2 (the referenced head included), the predecessor supplied as a related artifact",
+  "files": {
+   "bindings": "cases/NG1/bindings.json",
+   "clock": "cases/NG1/clock.json",
+   "independence": "cases/NG1/independence.json",
+   "request": "cases/NG1/request.json",
+   "revocation": "cases/NG1/revocation.json"
+  }
+ },
+ {
+  "case_id": "LEX1",
+  "description": "witness claim whose length is written 1e0 - semantically 1, but the source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+  "files": {
+   "bindings": "cases/LEX1/bindings.json",
+   "clock": "cases/LEX1/clock.json",
+   "independence": "cases/LEX1/independence.json",
+   "request": "cases/LEX1/request.json",
+   "revocation": "cases/LEX1/revocation.json"
+  }
+ },
+ {
+  "case_id": "LEX2",
+  "description": "witness claim whose length is written 1.0 - semantically 1, but the source token fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+  "files": {
+   "bindings": "cases/LEX2/bindings.json",
+   "clock": "cases/LEX2/clock.json",
+   "independence": "cases/LEX2/independence.json",
+   "request": "cases/LEX2/request.json",
+   "revocation": "cases/LEX2/revocation.json"
+  }
+ },
+ {
+  "case_id": "LEX3",
+  "description": "witness claim whose sequence is written -0 - semantically 0, but the source token carries a sign and fails ^(0|[1-9][0-9]*)$ (s9 E-1)",
+  "files": {
+   "bindings": "cases/LEX3/bindings.json",
+   "clock": "cases/LEX3/clock.json",
+   "independence": "cases/LEX3/independence.json",
+   "request": "cases/LEX3/request.json",
+   "revocation": "cases/LEX3/revocation.json"
+  }
+ },
+ {
+  "case_id": "TI1",
+  "description": "claim.witnessed_at is 2026-02-30T12:00:00Z (format-conformant, February 30 is not a Gregorian date); NO clock input supplied",
+  "files": {
+   "bindings": "cases/TI1/bindings.json",
+   "independence": "cases/TI1/independence.json",
+   "request": "cases/TI1/request.json",
+   "revocation": "cases/TI1/revocation.json"
+  }
+ },
+ {
+  "case_id": "TI2",
+  "description": "identical Gregorian-invalid claim.witnessed_at 2026-02-30T12:00:00Z with the clock input fully supplied - the paired control that makes 6c's clock-independence measurable",
+  "files": {
+   "bindings": "cases/TI2/bindings.json",
+   "clock": "cases/TI2/clock.json",
+   "independence": "cases/TI2/independence.json",
+   "request": "cases/TI2/request.json",
+   "revocation": "cases/TI2/revocation.json"
+  }
+ },
+ {
+  "case_id": "OBX1",
+  "description": "Effect declares independent; the referenced Execution is hash-consistent and correctly signed under its own binding, but the revocation snapshot marks that executor binding revoked, so it cannot reach Authenticated",
+  "files": {
+   "bindings": "cases/OBX1/bindings.json",
+   "clock": "cases/OBX1/clock.json",
+   "independence": "cases/OBX1/independence.json",
+   "request": "cases/OBX1/request.json",
+   "revocation": "cases/OBX1/revocation.json"
+  }
+ },
+ {
+  "case_id": "OBX2",
+  "description": "Effect declares independent; the referenced Execution is hash-consistent and correctly signed, but producer_bindings carries no entry for its wire producer id, so its Authenticated tier is not evaluable",
+  "files": {
+   "bindings": "cases/OBX2/bindings.json",
+   "clock": "cases/OBX2/clock.json",
+   "independence": "cases/OBX2/independence.json",
+   "request": "cases/OBX2/request.json",
+   "revocation": "cases/OBX2/revocation.json"
+  }
+ },
+ {
+  "case_id": "MC1",
+  "description": "binding store carrying an unknown top-level member; artifact, witness, revocation, policy and clock are otherwise clean and supplied",
+  "files": {
+   "bindings": "cases/MC1/bindings.json",
+   "clock": "cases/MC1/clock.json",
+   "independence": "cases/MC1/independence.json",
+   "request": "cases/MC1/request.json",
+   "revocation": "cases/MC1/revocation.json"
+  }
+ },
+ {
+  "case_id": "MC2",
+  "description": "independence policy document missing its required non_independent_pairs container; everything else clean and supplied",
+  "files": {
+   "bindings": "cases/MC2/bindings.json",
+   "clock": "cases/MC2/clock.json",
+   "independence": "cases/MC2/independence.json",
+   "request": "cases/MC2/request.json",
+   "revocation": "cases/MC2/revocation.json"
+  }
+ },
+ {
+  "case_id": "MC3",
+  "description": "revocation snapshot carrying an unknown top-level member; bindings, policy, clock and the witness itself are clean",
+  "files": {
+   "bindings": "cases/MC3/bindings.json",
+   "clock": "cases/MC3/clock.json",
+   "independence": "cases/MC3/independence.json",
+   "request": "cases/MC3/request.json",
+   "revocation": "cases/MC3/revocation.json"
+  }
+ },
+ {
+  "case_id": "MC4",
+  "description": "producer binding entry carrying BOTH an unknown member and trusted:false (s9 R-3 worked example); no head_witness supplied",
+  "files": {
+   "bindings": "cases/MC4/bindings.json",
+   "clock": "cases/MC4/clock.json",
+   "independence": "cases/MC4/independence.json",
+   "request": "cases/MC4/request.json",
+   "revocation": "cases/MC4/revocation.json"
+  }
+ }
+]

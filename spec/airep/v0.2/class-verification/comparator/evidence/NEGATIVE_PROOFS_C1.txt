@@ -1,0 +1,40 @@
+known-good pair: evidence/official_run_c1/python_out_run1.json
+CONTROL  unmutated pair: no gate FAILED; exit 2; NOT_MEASURED in compare-only mode: ['G2', 'G14']
+
+PROOF 1 / class flip
+   mutated: node-side verdict cv-rec-p1 class AIREP-Authenticated -> AIREP-Core
+   comparator exit: 1 (expected 1)
+   cause: G3 class-mismatch {'case_id': 'P1', 'chain_id': 'cv-chain-p1', 'code': 'class-mismatch', 'field': 'class', 'node': 'AIREP-Core', 'python': 'AIREP-Authenticated', 'record_id': 'cv-rec-p1'}
+   corroborating: G13 expected-mismatch (node vs frozen expected.json)
+   sharpness: G11 envelope gate stayed clean, so G3 is what caught it
+   RESULT: comparator failed for the expected cause
+
+PROOF 2 / reason mutation (add, drop, rename)
+   ADD     P1 witnessed_withheld: ['no-witness-supplied'] -> ['independence-policy-missing', 'no-witness-supplied'] | caught by G8 reason-set-mismatch, exit 1, G11 clean
+   DROP    WM1 witnessed_failures: ['witness-claim-invalid'] -> [] | caught by G7 reason-set-mismatch, exit 1, G11 clean
+   RENAME  PB1 authenticated_failures: ['producer-binding-revoked'] -> ['producer-binding-not-trusted'] | caught by G4 reason-set-mismatch, exit 1, G11 clean
+   RESULT: comparator failed for the expected cause
+
+PROOF 3 / envelope and invariant violations
+   (a) invariant  : class->AIREP-Witnessed with witnessed_withheld non-empty | G11 invariant-violation {witnessed-implies-all-clean, witness-negative-implies-not-witnessed}, exit 1
+   (b) membership : added unknown member 'assurance_score' | G11 envelope-unknown-member, exit 1
+   (c) membership : removed required member 'authenticated_caveats' | G11 envelope-missing-member, exit 1
+   (d) registry   : reason 'witness-probably-fine' outside the closed 31-reason registry | G11 reason-not-in-registry, exit 1
+   (e) ordering   : transposed verdicts 0 and 1 on the node side | G12 order-violation, exit 1
+   RESULT: comparator failed for the expected cause
+
+PROOF 4 / ordering mutation (C1 UTF-8 discriminating pair)
+   mutated: node-side verdicts 26 and 27 transposed (ORD2 <-> ORD1)
+   comparator exit: 1 (expected 1)
+   cause: G12 ordering-discriminator-violated {"code": "ordering-discriminator-violated", "impl": "node", "index_of_first": 27, "index_of_second": 26, "required": "ORD2 must precede ORD1"}
+   corroborating: G12 order-not-utf8-expected against the comparator's own UTF-8 byte computation of all 60 positions
+   sharpness: G11 and every semantic parity gate (G3-G9, G13) stayed clean, so the ordering surface is what caught it
+   RESULT: comparator failed for the expected cause
+
+PROOF 5 / C1 pinned probe mutation (synthetic runner)
+   (a) wrong exit  : PRB-CLI-NOW-NOT-GREGORIAN node exit 0 against pinned 2 | c1-probe-exit-mismatch + c1-probe-exit-divergence, no other probe affected
+   (b) false file  : PRB-CLI-REQUEST-WITH-OUT node exits 2 correctly but writes ${OUT} | c1-probe-results-file-mismatch + c1-probe-must-not-create-violated + c1-probe-out-path-created, no other probe affected
+   control        : unmutated matrix over all 15 probes x 2 implementations produced 0 findings
+   RESULT: comparator failed for the expected cause
+
+NEGATIVE PROOFS: all 5 proofs demonstrated the comparator failing for the expected cause.

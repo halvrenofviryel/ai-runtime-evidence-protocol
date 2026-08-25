@@ -1,0 +1,807 @@
+{
+ "auxiliary_observations": [
+  {
+   "detail": {
+    "node": {
+     "absent-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": false,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple in the verdict set: (cv-chain-p1, cv-rec-p1)"
+     },
+     "sentinel-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": true,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple in the verdict set: (cv-chain-p1, cv-rec-p1)"
+     }
+    },
+    "python": {
+     "absent-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": false,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple: (b'cv-chain-p1', b'cv-rec-p1')"
+     },
+     "sentinel-path": {
+      "contract_expected": 1,
+      "contract_pinned": true,
+      "exit": 1,
+      "results_file_created": false,
+      "results_file_present_after": true,
+      "stderr_head": "invalid: duplicate (chain_id, record_id) tuple: (b'cv-chain-p1', b'cv-rec-p1')"
+     }
+    }
+   },
+   "id": "A3",
+   "name": "duplicate-tuple handling probe",
+   "observation": "measured on a comparator-authored probe corpus (the frozen corpus contains no duplicate tuple)"
+  },
+  {
+   "detail": {
+    "consequence": "the run-1/run-2 limitation is CLOSED: ORD1/ORD2 differ first at UTF-8 ef vs f0 while UTF-16 gives d800 < ff00, so the two orders disagree and a naive JavaScript sort is detectable",
+    "discriminating_pair": [
+     "ORD2",
+     "ORD1"
+    ],
+    "discriminating_pair_exercised": true,
+    "non_ascii_identifier_count": 2,
+    "non_ascii_identifiers_present": true
+   },
+   "id": "A2",
+   "name": "ordering exercise strength",
+   "observation": "non-ASCII identifiers present AND the UTF-8-vs-UTF-16 discriminating pair is exercised"
+  },
+  {
+   "detail": {
+    "node_sha256": "sha256:b078a3abeaf0555a9f369e3ffb244f8df6a472282e4c5f4f6191eb7aace363b1",
+    "python_sha256": "sha256:b078a3abeaf0555a9f369e3ffb244f8df6a472282e4c5f4f6191eb7aace363b1",
+    "status": "AUXILIARY ONLY -- byte equality is neither required nor sufficient for parity; the gate is semantic and envelope parity, measured by G1-G14"
+   },
+   "id": "A1",
+   "name": "cross-runtime byte equality of the two output files",
+   "observation": "identical"
+  }
+ ],
+ "comparator": {
+  "independent_of": [
+   "verifier_py",
+   "verifier_node_r2"
+  ],
+  "mode": "run",
+  "name": "airep-v0.2-class-parity-comparator",
+  "version": "1.1.0"
+ },
+ "findings": [],
+ "gates": [
+  {
+   "findings": [],
+   "id": "G1",
+   "kind": "hard",
+   "manifest_stats": {
+    "c0_subset_aggregate": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
+    "c0_subset_file_count": 265,
+    "extended_aggregate": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a"
+   },
+   "name": "corpus coverage: 60 scored cases (45 C0 + 15 C1) present, intact, C0 subset preserved, and every case evaluated",
+   "note": "all 416 recorded corpus digests and the manifest aggregate rule are recomputed by the comparator; the 60-case combined index is rebuilt from the two root arrays and its digest checked against the pinned value; the 265-path C0 subset is re-aggregated and compared against the pre-C1 aggregate",
+   "outcome": "PASS",
+   "surface": "fixture-set"
+  },
+  {
+   "c1_probe_matrix": [
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-DUP-TUPLE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-DUP-TUPLE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-SCHEMA-INVALID",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-SCHEMA-INVALID",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HASH-INVALID",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HASH-INVALID",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-REQUEST-UNPARSEABLE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-REQUEST-UNPARSEABLE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADWITNESS-NULL",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADWITNESS-NULL",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADWITNESS-UNKNOWN-MEMBER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADWITNESS-UNKNOWN-MEMBER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADREF-UNKNOWN-MEMBER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 1,
+     "expected_exit": 1,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "run_invalidity",
+     "probe_id": "PRB-HEADREF-UNKNOWN-MEMBER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-REQUEST-WITH-OUT",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-REQUEST-WITH-OUT",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-CORPUS-NO-OUT",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-CORPUS-NO-OUT",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-REQUEST-AND-CORPUS",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-REQUEST-AND-CORPUS",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-NOW-STRUCTURAL",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-NOW-STRUCTURAL",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-NOW-NOT-GREGORIAN",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-NOW-NOT-GREGORIAN",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-WINDOW-NEGATIVE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-WINDOW-NEGATIVE",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-WINDOW-NONINTEGER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 2,
+     "expected_exit": 2,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "cli_usage",
+     "probe_id": "PRB-CLI-WINDOW-NONINTEGER",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 0,
+     "expected_exit": 0,
+     "expected_results_file": false,
+     "impl": "python",
+     "kind": "help",
+     "probe_id": "PRB-CLI-HELP",
+     "results_file_present": false
+    },
+    {
+     "contract_pinned": true,
+     "exit": 0,
+     "expected_exit": 0,
+     "expected_results_file": false,
+     "impl": "node",
+     "kind": "help",
+     "probe_id": "PRB-CLI-HELP",
+     "results_file_present": false
+    }
+   ],
+   "corpus_run_exits": {
+    "node": [
+     0,
+     0
+    ],
+    "python": [
+     0,
+     0
+    ]
+   },
+   "findings": [],
+   "id": "G2",
+   "kind": "hard",
+   "name": "exit semantics agree (Python vs Node) across the contract-pinned matrix and the corpus run",
+   "note": "the run-2 matrix and the R-9 sentinel probe are retained unchanged; the 15 committed C1 probes are ADDED on top, each asserting its pinned expected_exit, expected_results_file and must_not_create",
+   "outcome": "PASS",
+   "probe_matrix": [
+    {
+     "agree": true,
+     "contract_expected": 0,
+     "contract_pinned": true,
+     "node_exit": 0,
+     "probe": "help",
+     "python_exit": 0
+    },
+    {
+     "agree": true,
+     "contract_expected": 0,
+     "contract_pinned": true,
+     "node_exit": 0,
+     "probe": "valid-single-case",
+     "python_exit": 0
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "unparseable-request",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "unreadable-request",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "stage0-schema-invalid",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "stage1-hash-mismatch",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "envelope-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-witness-null",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-witness-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "head-ref-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 1,
+     "contract_pinned": true,
+     "node_exit": 1,
+     "probe": "signature-unknown-member",
+     "python_exit": 1
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "now-malformed",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "now-not-gregorian",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "window-negative",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "window-non-integer",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "no-arguments",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "unknown-option",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "corpus-and-request",
+     "python_exit": 2
+    },
+    {
+     "agree": true,
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "node_exit": 2,
+     "probe": "corpus-without-out",
+     "python_exit": 2
+    }
+   ],
+   "request_with_out_probe": [
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "python",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "absent-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "python",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "sentinel-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "node",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "absent-path"
+    },
+    {
+     "contract_expected": 2,
+     "contract_pinned": true,
+     "exit": 2,
+     "impl": "node",
+     "out_path_created": false,
+     "out_path_modified": false,
+     "probe": "request-with-out",
+     "stdout_bytes": 0,
+     "variant": "sentinel-path"
+    }
+   ],
+   "surface": "exit-semantics"
+  },
+  {
+   "findings": [],
+   "id": "G3",
+   "kind": "hard",
+   "name": "class parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G4",
+   "kind": "hard",
+   "name": "authenticated_failures parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G5",
+   "kind": "hard",
+   "name": "authenticated_withheld parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G6",
+   "kind": "hard",
+   "name": "authenticated_caveats parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G7",
+   "kind": "hard",
+   "name": "witnessed_failures parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G8",
+   "kind": "hard",
+   "name": "witnessed_withheld parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G9",
+   "kind": "hard",
+   "name": "observer_assessment parity",
+   "outcome": "PASS",
+   "surface": "semantic-parity"
+  },
+  {
+   "findings": [],
+   "id": "G10",
+   "kind": "hard",
+   "name": "evidence block parity and comparator-recomputed input digests",
+   "note": "input digests recomputed by the comparator from the exact operator input file bytes; the digests reported by the verifiers are not trusted",
+   "outcome": "PASS",
+   "surface": "evidence"
+  },
+  {
+   "findings": [],
+   "id": "G11",
+   "kind": "hard",
+   "name": "verdict envelope shape, closed membership, registry and invariants",
+   "outcome": "PASS",
+   "surface": "envelope"
+  },
+  {
+   "findings": [],
+   "id": "G12",
+   "kind": "hard",
+   "name": "UTF-8 tuple ordering and duplicate (chain_id, record_id) rejection",
+   "note": "output ordering and uniqueness are checked on both output files (the comparator's independent gate, section 2 as amended); the verifier's own duplicate-tuple REJECTION duty (section 9 R-10: exit 1, no results file emitted) was measured with a comparator-authored probe corpus, since the frozen corpus contains no duplicate tuple; the exact order of all 60 verdicts is recomputed with the comparator's own UTF-8 byte comparator, and ORD2-precedes-ORD1 is asserted explicitly",
+   "outcome": "PASS",
+   "surface": "ordering"
+  },
+  {
+   "findings": [],
+   "id": "G13",
+   "kind": "hard",
+   "name": "each implementation equals the frozen expected.json values, separately, on all 60 cases",
+   "outcome": "PASS",
+   "surface": "expected-equality"
+  },
+  {
+   "findings": [],
+   "id": "G14",
+   "kind": "hard",
+   "name": "per-implementation determinism (byte-identical repeat runs)",
+   "outcome": "PASS",
+   "surface": "determinism"
+  }
+ ],
+ "inputs": {
+  "basis": {
+   "c1_execution_semantic_basis_role": "the frozen basis under which the first unmodified dual-verifier execution against C1 was measured",
+   "c1_execution_semantic_basis_sha": "0cc95f5ce5426ca41e7a2c26c0f77a6ba842cd81",
+   "comparator_official_run_checkout_role": "the tree this comparator ran in and measured",
+   "comparator_official_run_checkout_sha": "7c03438382f74ffabc123c08fdb9e1a5182e63d4",
+   "measured_here": [
+    {
+     "at_execution_basis": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc",
+     "identical": true,
+     "member": "verifier_py_sha256",
+     "recomputed_at_comparator_checkout": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc",
+     "subject": "verifier_py/class_verifier.py"
+    },
+    {
+     "at_execution_basis": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+     "identical": true,
+     "member": "verifier_node_r2_sha256",
+     "recomputed_at_comparator_checkout": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+     "subject": "verifier_node_r2/class_verifier.mjs"
+    },
+    {
+     "at_execution_basis": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+     "identical": true,
+     "member": "contract_sha256",
+     "recomputed_at_comparator_checkout": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+     "subject": "CLASS_VERIFIER_CONTRACT.md"
+    },
+    {
+     "at_execution_basis": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+     "identical": true,
+     "member": "extended_manifest_aggregate",
+     "recomputed_at_comparator_checkout": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+     "subject": "corpus_manifest.json aggregate"
+    },
+    {
+     "at_execution_basis": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+     "identical": true,
+     "member": "combined_case_index_sha256",
+     "recomputed_at_comparator_checkout": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+     "subject": "rebuilt 60-case index"
+    },
+    {
+     "at_execution_basis": 60,
+     "identical": true,
+     "member": "case_count",
+     "recomputed_at_comparator_checkout": 60,
+     "subject": "scored case count"
+    }
+   ],
+   "measurement_method": "each digest recorded in c1_execution/basis.json at the execution basis SHA is recomputed by this comparator from the bytes present at its own checkout SHA; equality is the evidence. No git, no network, no commit graph.",
+   "relayed_not_measured": {
+    "claims": [
+     "exactly 12 paths differ between the two SHAs: 11 under c1_execution/ and 1 is C1_COVERAGE.md",
+     "the commits between them carry only measurement evidence and a documentation correction"
+    ],
+    "corroboration_available_in_root": "the documentation correction is visible in-root: C1_COVERAGE.md carries the live extended aggregate 55f5189e... and mentions 5b053183...b9b95 only as an explicitly superseded pre-remediation value",
+    "source": "coordinator",
+    "why_not_measured": "the SHAPE of a difference between two commits is not derivable inside a single checkout without the commit graph, and git is not available here"
+   },
+   "semantic_basis_unchanged_across_them": true
+  },
+  "c0_subset_aggregate_sha256": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
+  "c0_subset_file_count": 265,
+  "combined_case_index_rebuilt_by": "the comparator, from corpus/case_index.json + corpus/c1_case_index.json; the committed c1_execution/combined_case_index.json is not read as truth",
+  "combined_case_index_sha256": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+  "contract_sha256": "sha256:7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+  "corpus_case_count": 60,
+  "corpus_manifest_aggregate_sha256": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+  "corpus_manifest_file_count": 416,
+  "reason_registry_size": 31,
+  "root": "/tmp/wk_cmp/task/spec/airep/v0.2/class-verification",
+  "verifier_node_sha256": "sha256:e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+  "verifier_py_sha256": "sha256:5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc"
+ },
+ "measurement_counts": {
+  "c0_cases": 45,
+  "c1_cases": 15,
+  "cases_in_corpus": 60,
+  "comparator_recomputed_digest_comparisons": 360,
+  "corpus_files_digest_verified": 416,
+  "cross_impl_evidence_member_comparisons": 300,
+  "cross_impl_field_comparisons": 420,
+  "expected_order_positions_checked": 120,
+  "expected_value_comparisons": 840,
+  "verdict_pairs_compared": 60,
+  "verdicts_node": 60,
+  "verdicts_python": 60
+ },
+ "outcome": "PASS"
+}

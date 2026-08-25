@@ -1,0 +1,102 @@
+{
+ "artifact": "AIREP v0.2 class-verifier parity comparator -- C1 official run basis",
+ "corpus_and_contract_at_the_comparator_checkout": {
+  "c0_subset_aggregate_sha256": "55d43c5170641b185dc5c95a71e8e336c902d26c556e03a10e248864de2950a4",
+  "c0_subset_file_count": 265,
+  "combined_case_index_provenance": "the comparator, from corpus/case_index.json + corpus/c1_case_index.json; the committed c1_execution/combined_case_index.json is not read as truth",
+  "combined_case_index_sha256": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+  "contract_sha256": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+  "corpus_manifest_aggregate_sha256": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+  "corpus_manifest_file_count": 416,
+  "scored_case_count": 60
+ },
+ "evidence_status": "Implementer/measurement evidence produced in a third integration context. NOT acceptance: only an authorized independent acceptance stage may assign ACCEPTED.",
+ "measured_by_this_comparator": {
+  "corroboration_of_the_documentation_correction": "Measured in-root: C1_COVERAGE.md carries the live extended aggregate 55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a and mentions 5b053183...b9b95 only as an explicitly superseded pre-remediation value.",
+  "cross_sha_identity_checks": [
+   {
+    "at_execution_basis": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc",
+    "identical": true,
+    "member": "verifier_py_sha256",
+    "recomputed_at_comparator_checkout": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc",
+    "subject": "verifier_py/class_verifier.py"
+   },
+   {
+    "at_execution_basis": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+    "identical": true,
+    "member": "verifier_node_r2_sha256",
+    "recomputed_at_comparator_checkout": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+    "subject": "verifier_node_r2/class_verifier.mjs"
+   },
+   {
+    "at_execution_basis": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+    "identical": true,
+    "member": "contract_sha256",
+    "recomputed_at_comparator_checkout": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+    "subject": "CLASS_VERIFIER_CONTRACT.md"
+   },
+   {
+    "at_execution_basis": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+    "identical": true,
+    "member": "extended_manifest_aggregate",
+    "recomputed_at_comparator_checkout": "55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a",
+    "subject": "corpus_manifest.json aggregate"
+   },
+   {
+    "at_execution_basis": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+    "identical": true,
+    "member": "combined_case_index_sha256",
+    "recomputed_at_comparator_checkout": "365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c",
+    "subject": "rebuilt 60-case index"
+   },
+   {
+    "at_execution_basis": 60,
+    "identical": true,
+    "member": "case_count",
+    "recomputed_at_comparator_checkout": 60,
+    "subject": "scored case count"
+   }
+  ],
+  "method": "each digest recorded in c1_execution/basis.json at the execution basis SHA is recomputed by this comparator from the bytes present at its own checkout SHA; equality is the evidence. No git, no network, no commit graph."
+ },
+ "produced_by": "comparator/compare.py 1.1.0 (parity measurement authored in a third integration context)",
+ "relayed_not_measured": {
+  "claims": [
+   "exactly 12 paths differ between the two SHAs: 11 under c1_execution/ and 1 is C1_COVERAGE.md",
+   "the commits between them carry only measurement evidence and a documentation correction"
+  ],
+  "corroboration_available_in_root": "the documentation correction is visible in-root: C1_COVERAGE.md carries the live extended aggregate 55f5189e... and mentions 5b053183...b9b95 only as an explicitly superseded pre-remediation value",
+  "source": "coordinator",
+  "why_not_measured": "the SHAPE of a difference between two commits is not derivable inside a single checkout without the commit graph, and git is not available here"
+ },
+ "run": {
+  "findings_file": "comparator/evidence/FINDINGS_C1.md",
+  "hard_gates_failed": 0,
+  "id": "C1",
+  "negative_proofs_file": "comparator/evidence/NEGATIVE_PROOFS_C1.txt",
+  "outcome": "PASS",
+  "outputs_directory": "comparator/evidence/official_run_c1/",
+  "result_file": "comparator/evidence/RESULT_C1.json",
+  "summary_file": "comparator/evidence/SUMMARY_C1.txt"
+ },
+ "two_shas_do_not_conflate_them": {
+  "c1_execution_semantic_basis": {
+   "role": "the frozen basis under which the first unmodified dual-verifier execution against C1 was measured",
+   "sha": "0cc95f5ce5426ca41e7a2c26c0f77a6ba842cd81"
+  },
+  "comparator_official_run_checkout": {
+   "role": "the tree this comparator ran in and measured",
+   "sha": "7c03438382f74ffabc123c08fdb9e1a5182e63d4"
+  },
+  "documentation_correction": "C1_COVERAGE.md carried a stale extended-aggregate value (the pre-remediation 5b053183...b9b95), superseded when c1_case_index.json was re-emitted as a root array. The corpus bytes never changed with it.",
+  "relationship": "The commits between the two carry ONLY measurement evidence and a documentation correction. The semantic basis -- both verifier sources, the contract, both corpus index arrays and the corpus manifest -- is unchanged across them.",
+  "semantic_basis_unchanged_across_them": true
+ },
+ "verifier_fingerprints_at_the_comparator_checkout": {
+  "note": "Recomputed from the bytes present at the comparator's checkout, and identical to the values c1_execution/basis.json recorded at the execution basis SHA -- so a reader can confirm WITHOUT a checkout that no implementation moved between the first C1 execution and this comparator run.",
+  "python_received_no_code_change_since_run_1": true,
+  "unchanged_since_run_2": true,
+  "verifier_node_r2_class_verifier_mjs_sha256": "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+  "verifier_py_class_verifier_py_sha256": "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc"
+ }
+}

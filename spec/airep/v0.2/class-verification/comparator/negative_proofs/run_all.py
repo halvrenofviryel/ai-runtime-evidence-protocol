@@ -16,7 +16,10 @@ import harness as H
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROOFS = ["proof_1_class_flip.py",
           "proof_2_reason_mutation.py",
-          "proof_3_envelope_invariant.py"]
+          "proof_3_envelope_invariant.py",
+          # C1 additions -- the surfaces C1 introduced, demonstrably measured
+          "proof_4_ordering_mutation.py",
+          "proof_5_c1_probe_mutation.py"]
 
 
 def control():
@@ -55,8 +58,8 @@ def main():
     if failures:
         print("NEGATIVE PROOFS: FAIL -- %s" % ", ".join(failures))
         return 1
-    print("NEGATIVE PROOFS: all 3 proofs demonstrated the comparator failing "
-          "for the expected cause.")
+    print("NEGATIVE PROOFS: all %d proofs demonstrated the comparator failing "
+          "for the expected cause." % len(PROOFS))
     return 0
 
 

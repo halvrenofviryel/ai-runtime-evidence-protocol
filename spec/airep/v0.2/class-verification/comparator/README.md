@@ -72,9 +72,9 @@ reported, never tolerated and never adjusted away.
 
 | Gate | Surface |
 |---|---|
-| G1 | the full 45-case fixture set is present, byte-intact against `corpus_manifest.json` (every recorded digest plus the aggregate rule recomputed), and every case is evaluated by both implementations — no silent truncation |
-| G2 | exit semantics agree between Python and Node, across the corpus run and a 19-row contract-pinned CLI probe matrix (each row also checked against the contract's own expected code), **plus** the §9 R-9 `--request FILE --out PATH` probe: exit 2, empty stdout, and `PATH` neither created nor modified — asserted for both implementations against a non-existent path and against a pre-written sentinel (bytes and `mtime_ns`) |
-| G3 | `class` |
+| G1 | the full **60-case** scored fixture set (45 C0 + 15 C1) is present, byte-intact against `corpus_manifest.json` (all **416** recorded digests plus the aggregate rule recomputed), the declared counts match, the **60-case combined index is rebuilt** by the comparator from the two root arrays and its digest checked against the pinned value, the **265-path C0 subset is re-aggregated** and must still equal the pre-C1 aggregate (C1 strictly additive), the **execution-basis cross-SHA identities** hold, and every case is evaluated by both implementations — no silent truncation |
+| G2 | exit semantics agree between Python and Node, across the corpus run and a 19-row contract-pinned CLI probe matrix (each row also checked against the contract's own expected code), **plus** the §9 R-9 `--request FILE --out PATH` probe: exit 2, empty stdout, and `PATH` neither created nor modified — asserted for both implementations against a non-existent path and against a pre-written sentinel (bytes and `mtime_ns`), **plus** the **15 committed C1 process probes** × 2 implementations, each asserting its pinned `expected_exit`, `expected_results_file` and `must_not_create` |
+| G3 | `class`, across all 60 cases |
 | G4 | `authenticated_failures` |
 | G5 | `authenticated_withheld` |
 | G6 | `authenticated_caveats` |
@@ -83,8 +83,8 @@ reported, never tolerated and never adjusted away.
 | G9 | `observer_assessment` |
 | G10 | the `evidence` block: cross-implementation equality **and** equality against the comparator's own independently recomputed input digests, `now` and `freshness_window_seconds` |
 | G11 | verdict envelope: closed top-level and per-verdict membership, `artifact_ref` shape, legal `class` and `observer_assessment` values, all five reason arrays present, registry-only reasons in the correct `(tier, channel)`, deduplicated and ASCII-ascending, `evidence` member shape and types, and the four section 2 consistency invariants |
-| G12 | UTF-8 tuple ordering of the verdict array, absence of duplicate `(chain_id, record_id)` tuples in each output, identical ordering across the two implementations (the comparator's independent gate under amended §2), **and** the verifier's own §9 R-10 rejection duty: exit 1, no results file created and no pre-existing file modified, no duplicate-bearing output — asserted for both implementations in both path variants |
-| G13 | each implementation's equality against the frozen `expected.json` values (`class`, all five channels, `observer_assessment`) — read by the comparator only |
+| G12 | UTF-8 tuple ordering of the verdict array, absence of duplicate `(chain_id, record_id)` tuples in each output, identical ordering across the two implementations (the comparator's independent gate under amended §2), **and** the verifier's own §9 R-10 rejection duty: exit 1, no results file created and no pre-existing file modified, no duplicate-bearing output — asserted for both implementations in both path variants, **plus** the exact order of all 60 verdicts recomputed with the comparator's **own** UTF-8 byte comparator (no helper imported from either verifier), an explicit **ORD2-must-precede-ORD1** discrimination assertion, and a cross-check of the committed `corpus/ordering/expected_verdict_order.json` fixture |
+| G13 | each implementation's equality, **separately**, against the frozen `expected.json` values (`class`, all five channels, `observer_assessment`) on all **60/60** cases — read by the comparator only |
 | G14 | per-implementation determinism: each verifier byte-identical across repeated corpus runs |
 
 ## What is AUXILIARY (not a gate)
@@ -128,7 +128,15 @@ reported, never tolerated and never adjusted away.
 | 1 | `evidence/RESULT.json`, `SUMMARY.txt`, `FINDINGS.md`, `NEGATIVE_PROOFS.txt`, `official_run/` | **FAILURE** — 2 findings on the run-validity / CLI surface (`--request … --out …`, duplicate-tuple rejection); the 45-case semantic surface was clean. Accepted by the maintainer as a valid measurement; both findings closed by rulings §9 R-9 and R-10. |
 | 2 | `evidence/RESULT_RUN2.json`, `SUMMARY_RUN2.txt`, `FINDINGS_RUN2.md`, `NEGATIVE_PROOFS_RUN2.txt`, `official_run_2/` | **PASS** — 0 findings, all 14 hard gates PASS. |
 
-Run 1's evidence is **immutable** and is never overwritten by a later run.
+| C1 | `evidence/RESULT_C1.json`, `SUMMARY_C1.txt`, `FINDINGS_C1.md`, `NEGATIVE_PROOFS_C1.txt`, `basis.json`, `official_run_c1/` | **PASS** — 0 findings, all 14 hard gates PASS, now over 60 scored cases and 15 process probes. |
+
+Runs 1 and 2 are **immutable** and are never overwritten by a later run.
+
+### C1: strict extension, nothing loosened
+
+Every run-2 gate is retained with its run-2 strictness. C1 surfaces are **added to** the existing gates, never substituted for them: the 19-row pinned CLI matrix and the R-9 sentinel probe are still run and still asserted; the R-10 duplicate probe is unchanged in both path variants; `check_order_and_uniqueness` still runs on both outputs alongside the new whole-order computation. The C0 constants survive as their own named values (`EXPECTED_C0_CASE_COUNT`, `EXPECTED_C0_FILE_COUNT`, `PINNED_C0_AGGREGATE`) rather than being folded into looser combined numbers, so C0 preservation is asserted on its own terms.
+
+**Nothing was loosened.** No gate was removed, downgraded to an observation, or replaced by a C1 probe; no exemption was added; no tolerance was widened. The two auxiliary observations that changed did so in the direction of *more* assurance: A2 moved from recording an untested-ordering limitation to recording that the discriminating pair is exercised, and the execution-basis cross-SHA check is a new way for G1 to FAIL, not a new way for it to pass.
 
 ### What changed between run 1 and run 2, and what was NOT loosened
 
@@ -155,7 +163,7 @@ passes for the wrong reason. See `evidence/FINDINGS_RUN2.md`.
 
 ## Negative proofs
 
-`negative_proofs/run_all.py` runs a control plus three proofs against the **latest** official run's known-good output (override with `AIREP_COMPARATOR_GOOD`; the path chosen is printed, never inferred). Each proof takes
+`negative_proofs/run_all.py` runs a control plus **five** proofs (three C0, two C1) against the **latest** official run's known-good output (override with `AIREP_COMPARATOR_GOOD`; the path chosen is printed, never inferred). Each proof takes
 a known-good pair of outputs, mutates a **copy** of one side, and asserts that
 the comparator reports FAILURE **and** names the expected cause — the finding
 code and its fields, not merely a non-zero exit.
@@ -176,6 +184,18 @@ code and its fields, not merely a non-zero exit.
   named invariants), `G11 envelope-unknown-member`, `G11
   envelope-missing-member`, `G11 reason-not-in-registry` and `G12
   order-violation` respectively.
+- **`proof_4_ordering_mutation.py`** (C1) — transposes ORD1 and ORD2, the UTF-8 vs
+  UTF-16 discriminating pair; asserts `G12 ordering-discriminator-violated` naming
+  the required relation, plus `G12 order-not-utf8-expected` against the comparator's
+  own computation of all 60 positions, and asserts that G11 and every semantic parity
+  gate stayed clean so the ordering surface is demonstrably what caught it.
+- **`proof_5_c1_probe_mutation.py`** (C1) — drives the C1 probe matrix with a
+  synthetic runner that misbehaves on exactly one pinned probe: (a) the wrong exit
+  code, asserting `c1-probe-exit-mismatch` + `c1-probe-exit-divergence`; (b) a
+  results file falsely created, asserting `c1-probe-results-file-mismatch` +
+  `c1-probe-must-not-create-violated` + `c1-probe-out-path-created`. Both sub-proofs
+  additionally assert that **no other probe** produced a finding, and a control
+  confirms the unmutated matrix is silent.
 
 ## Files
 
@@ -189,7 +209,9 @@ comparator/
     proof_1_class_flip.py
     proof_2_reason_mutation.py
     proof_3_envelope_invariant.py
-    run_all.py                            control + all three proofs
+    proof_4_ordering_mutation.py          C1: UTF-8 vs UTF-16 discriminating pair
+    proof_5_c1_probe_mutation.py          C1: pinned process probe, synthetic runner
+    run_all.py                            control + all five proofs
   evidence/
     RESULT.json / SUMMARY.txt             run 1 machine-readable result and summary (IMMUTABLE)
     FINDINGS.md                           run 1 findings, stated at their measured strength
@@ -199,4 +221,11 @@ comparator/
     FINDINGS_RUN2.md                      run 2 record -- states explicitly that run 2 is clean
     NEGATIVE_PROOFS_RUN2.txt              run 2 captured negative-proof run
     official_run_2/                       run 2 verifier outputs, probe inputs and sentinels
+    RESULT_C1.json / SUMMARY_C1.txt       C1 machine-readable result and summary
+    FINDINGS_C1.md                        C1 record -- states explicitly that C1 is clean
+    NEGATIVE_PROOFS_C1.txt                C1 captured negative-proof run (5 proofs + control)
+    basis.json                            the two SHAs with their roles named, and which
+                                          properties are measured vs relayed
+    official_run_c1/                      C1 verifier outputs over 60 cases, the rebuilt
+                                          combined index, probe inputs and sentinels
 ```

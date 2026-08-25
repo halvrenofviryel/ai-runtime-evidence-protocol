@@ -1,0 +1,31 @@
+AIREP v0.2 class-verifier parity comparator 1.1.0 (mode=run)
+==============================================================================
+
+OUTCOME: PASS
+
+Hard gates
+------------------------------------------------------------------------------
+  G1   PASS       corpus coverage: 60 scored cases (45 C0 + 15 C1) present, intact, C0 subset preserved, and every case evaluated
+  G2   PASS       exit semantics agree (Python vs Node) across the contract-pinned matrix and the corpus run
+  G3   PASS       class parity
+  G4   PASS       authenticated_failures parity
+  G5   PASS       authenticated_withheld parity
+  G6   PASS       authenticated_caveats parity
+  G7   PASS       witnessed_failures parity
+  G8   PASS       witnessed_withheld parity
+  G9   PASS       observer_assessment parity
+  G10  PASS       evidence block parity and comparator-recomputed input digests
+  G11  PASS       verdict envelope shape, closed membership, registry and invariants
+  G12  PASS       UTF-8 tuple ordering and duplicate (chain_id, record_id) rejection
+  G13  PASS       each implementation equals the frozen expected.json values, separately, on all 60 cases
+  G14  PASS       per-implementation determinism (byte-identical repeat runs)
+
+Auxiliary observations (NOT gates)
+------------------------------------------------------------------------------
+  A3   duplicate-tuple handling probe: measured on a comparator-authored probe corpus (the frozen corpus contains no duplicate tuple)
+  A2   ordering exercise strength: non-ASCII identifiers present AND the UTF-8-vs-UTF-16 discriminating pair is exercised
+  A1   cross-runtime byte equality of the two output files: identical
+
+0 finding(s).
+
+This is implementer/measurement evidence, not acceptance.

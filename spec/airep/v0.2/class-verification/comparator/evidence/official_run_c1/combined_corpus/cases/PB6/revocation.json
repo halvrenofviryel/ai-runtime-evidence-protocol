@@ -1,0 +1,8 @@
+{
+ "bindings": {
+  "airep.witness-a": {
+   "state": "active"
+  }
+ },
+ "snapshot_id": "airep.snapshot-1"
+}
