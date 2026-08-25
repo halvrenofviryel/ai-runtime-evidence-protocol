@@ -25,12 +25,12 @@ intent. They are visible in the repository history and in the committed evidence
   imports code from neither.
 - **Negative controls.** Checking harnesses are demonstrated to fail on deliberately broken
   input before their passing results are relied on. A check that cannot fail is not evidence.
-- **Failures are kept.** Measurement runs that fail are committed as they were measured. The
-  first official cross-implementation parity run of the v0.2 class verifiers failed; its
-  evidence is committed on the v0.2 development branch alongside the later passing run, in a
-  separate directory rather than overwritten. The two findings it raised were closed by
-  amending the specification and correcting the implementation that diverged from it — not by
-  relaxing the check that caught them.
+- **Failed measurements are preserved.** An initial official cross-implementation parity run
+  for the v0.2 class verifiers detected two CLI/run-validity divergences and therefore
+  correctly returned FAILURE. Its evidence is preserved on the v0.2 development branch
+  alongside the later passing run rather than overwritten. The findings were closed by
+  clarifying the specification and correcting the diverging implementation; the check that
+  detected them was not relaxed.
 - **Claims bounded by evidence.** Documentation uses the weakest accurate term for what was
   actually measured, and open gaps are recorded rather than omitted.
 
