@@ -30,6 +30,16 @@ keywords:
   - tamper-evident records
   - interchange format
   - AI accountability
+preferred-citation:
+  type: article
+  title: "AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance"
+  authors:
+    - family-names: Abak
+      given-names: Ali Toygar
+      orcid: "https://orcid.org/0009-0002-3718-4010"
+  year: 2026
+  doi: 10.48550/arXiv.2608.21363
+  url: "https://arxiv.org/abs/2608.21363"
 references:
   - type: article
     title: "Phionyx: A Deterministic AI Runtime Architecture with Structured State Management and Pre-Response Governance"

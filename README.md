@@ -143,5 +143,7 @@ See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 ## Citation
 
+Paper: *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance*, [arXiv:2608.21363](https://arxiv.org/abs/2608.21363) (preprint, not peer reviewed).
+
 Archived on Zenodo: concept DOI [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) (always resolves to the latest version); v0.1 specifically is [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
 Machine-readable metadata is in [`CITATION.cff`](./CITATION.cff).
