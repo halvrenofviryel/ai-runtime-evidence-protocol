@@ -46,6 +46,11 @@ node      conformance/verify.mjs examples/chain.jsonl   # both verifiers must ag
 Be precise, be kind, and assume good faith. Disagreements about the format are resolved by what the
 conformance vectors and the threat model actually demonstrate, not by authority.
 
+## Development process
+
+AIREP is developed with AI-assisted software engineering under human accountability. See
+[`DEVELOPMENT_PROCESS.md`](./DEVELOPMENT_PROCESS.md).
+
 ## License of contributions
 
 By contributing you agree your contributions are licensed under the same terms as the
