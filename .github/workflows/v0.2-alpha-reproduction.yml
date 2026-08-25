@@ -79,10 +79,20 @@ jobs:
         working-directory: spec/airep/v0.2/schema-validation
         run: ../class-verification/offline-python-deps/.venv/bin/python run_python.py
 
+      # NODE_PATH does NOT affect ESM `import` resolution -- it is a CommonJS
+      # mechanism only. ESM resolves a bare specifier by walking parent
+      # directories for node_modules, so the vendored bundle is linked into
+      # place instead. (A local run can pass on NODE_PATH alone only if an
+      # untracked node_modules already exists in this directory.)
+      - name: Link the vendored bundle for the schema-validation engine
+        working-directory: spec/airep/v0.2/schema-validation
+        run: |
+          rm -rf node_modules
+          ln -s ../class-verification/verifier_node_r2/node_modules node_modules
+          node -e "import('ajv').then(m => console.log('ajv resolves:', m.default.name))"
+
       - name: Schema validation — Node engine (117 fixtures)
         working-directory: spec/airep/v0.2/schema-validation
-        env:
-          NODE_PATH: ${{ github.workspace }}/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules
         run: node run_node.mjs
 
       - name: Schema validation — two-engine comparison
