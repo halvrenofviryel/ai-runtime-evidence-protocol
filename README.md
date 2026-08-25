@@ -2,6 +2,7 @@
 
 [![AIREP conformance](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475136-blue)](https://doi.org/10.5281/zenodo.20475136)
+[![arXiv](https://img.shields.io/badge/arXiv-2608.21363-b31b1b)](https://arxiv.org/abs/2608.21363)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
 
@@ -143,5 +144,27 @@ See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 ## Citation
 
-Archived on Zenodo: concept DOI [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) (always resolves to the latest version); v0.1 specifically is [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
+**Cite the protocol paper:**
+
+> Abak, A. T. (2026). *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance.*
+> arXiv:2608.21363 [cs.AI]. <https://doi.org/10.48550/arXiv.2608.21363>
+
+```bibtex
+@misc{abak2026airep,
+  title         = {AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance},
+  author        = {Abak, Ali Toygar},
+  year          = {2026},
+  eprint        = {2608.21363},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.AI},
+  doi           = {10.48550/arXiv.2608.21363},
+  url           = {https://arxiv.org/abs/2608.21363}
+}
+```
+
+The paper is an arXiv preprint (cs.AI; cross-listed cs.CR). It has not been peer reviewed, and
+it does not change AIREP's **Experimental** status — the format remains a *proposed* open format
+with one reference implementation, not a ratified standard.
+
+**Cite the software/spec archive:** concept DOI [10.5281/zenodo.20475136](https://doi.org/10.5281/zenodo.20475136) (always resolves to the latest version); v0.1 specifically is [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137).
 Machine-readable metadata is in [`CITATION.cff`](./CITATION.cff).
