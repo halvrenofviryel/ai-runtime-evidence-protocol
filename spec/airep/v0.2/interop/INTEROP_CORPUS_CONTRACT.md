@@ -82,6 +82,37 @@ Corpus-owned test keys are used so such fixtures can be sealed correctly.
 This applies to the four broken-per-family cases too: each targets one predicate, and its
 Level-1 expectation is only meaningful if nothing else fails first.
 
+### 2.3 The transformations (normative)
+
+Each row is the complete specification the builder applies. The builder adds nothing.
+
+**Broken-per-family — each breaks exactly one predicate, in a different family, so no two share
+a failure mode.**
+
+| ID | Source | Exact mutation | Preserved | Targeted predicate | Level 1 | Clause |
+|---|---|---|---|---|---|---|
+| `IOP-B-DEC` | `IOP-P-DEC` | flip one byte of a hashed member **after** `integrity.current` is computed | schema shape; signature over the *original* preimage | `integrity.current` recomputation | `REJECT` | INTEGRITY §2 |
+| `IOP-B-CTL` | `IOP-P-CTL` | add one unknown member to a closed sub-object | hash and signature recomputed over the mutated bytes, so integrity is **valid** | schema closure | `REJECT` | contract §0/§2; AD-07 |
+| `IOP-B-EXE` | `IOP-P-EXE` | re-sign with a key not in the trust store, leaving the suite label unchanged | schema shape; `integrity.current` correct | record-signature verification | `REJECT` | INTEGRITY §3, §3.2 |
+| `IOP-B-EFF` | `IOP-P-EFF` | set `integrity.previous` to a digest that is not the predecessor's `current` | own hash and signature valid | chain linkage | `REJECT` | INTEGRITY §2, §5 |
+
+`IOP-B-CTL` deliberately recomputes hash and signature over the mutated bytes: without that the
+fixture would fail at integrity and never reach the closure predicate, which is the single-target
+rule in §2.2.
+
+**Reconciliation-negative — all three are internally valid. Hash, signature and chain linkage are
+correct and sealed with corpus-owned test keys; only the reconciliation predicate is broken.**
+
+| ID | Source | Exact mutation | Preserved | Targeted predicate | Level 1 | Clause |
+|---|---|---|---|---|---|---|
+| `IOP-R-TOCTOU` | `IOP-R-CLEAN` | build the Execution over a different action payload, so `executed_action_digest` ≠ the Control's `authorized_action_digest` | **all four artifacts individually valid and correctly sealed**; chain intact | authorized-vs-executed digest equality | `RECONCILIATION_MISMATCH` | AD-03; AD-06 |
+| `IOP-R-XREF` | `IOP-R-CLEAN` | point the Effect's `decision_ref` at a `record_id` absent from the bundle | **all artifacts individually valid and correctly sealed** | cross-artifact reference resolution | `RECONCILIATION_MISMATCH` | AD-03 |
+| `IOP-R-INDEP` | `IOP-R-CLEAN` | Effect asserts `observer_relationship: independent` while the referenced Execution's producer binding is the **same identity/key** as the Effect's | **all artifacts individually valid and correctly sealed**; the wire label is present and well-formed | independence condition for an `independent` claim | `INDEPENDENCE_NOT_ESTABLISHED` | CONFORMANCE_CLASS_DESIGN §7 (AD-03 scoping); AD-09 |
+
+The `IOP-R-*` rows are the reason §2.2 exists. Each is a *semantically* broken bundle made of
+*cryptographically sound* artifacts — which is the only way the reconciliation predicate is ever
+reached.
+
 ## 3. Expected outcomes — two levels
 
 Requiring a participant to emit this project's exact reason codes would bind the independent
@@ -162,11 +193,12 @@ completeness of the scenario set beyond its 12 mandatory members; truth of any r
 evidence; nor, on its own, satisfaction of AD-15 — clauses (3) for SCITT (AD-10) and AuthZEN
 (AD-11) are separate workstreams W2 and W3.
 
-## 7. Open for maintainer decision
+## 7. Decided
 
-1. Whether the deterministic transformations that derive negative vectors from participant
-   positives are specified here or in the corpus builder, given the builder is ours and the
-   transformation must not encode our verifier's assumptions.
-2. Whether the participant's Level-1 mapping is reviewed by the maintainer before the official
-   run — reviewing it risks steering the implementation; not reviewing it risks a mapping that
-   quietly redefines a scenario.
+Both questions previously open here are closed and folded into the sections above:
+
+- **where transformations are defined** — in this contract (§2.1–§2.3), never in the builder, so
+  the corpus cannot encode our verifier's assumptions;
+- **whether the participant's Level-1 mapping is reviewed** — yes, bounded to completeness,
+  non-circularity and semantic correspondence, with no implementation advice, and frozen by
+  digest before the first official run (§3.1).
