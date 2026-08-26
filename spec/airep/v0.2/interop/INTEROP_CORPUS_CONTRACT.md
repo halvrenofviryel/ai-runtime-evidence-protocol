@@ -86,28 +86,63 @@ Level-1 expectation is only meaningful if nothing else fails first.
 
 Each row is the complete specification the builder applies. The builder adds nothing.
 
+Every mutation below is stated as a **JSON Pointer (RFC 6901) into the source artifact plus an
+exact replacement or addition value**, or as a **deterministic derivation from a literal byte
+string**. No row leaves a choice to the builder: two builders applying these rows to the same
+baseline produce byte-identical fixtures apart from signature values, which are a function of the
+named key.
+
+**Corpus test-key identities (closed).** Every signature below is produced with exactly one of
+these, and the binding store shipped with the corpus resolves exactly the first three:
+
+| Key identity | In binding store | Used by |
+|---|---|---|
+| `iop-key-decider-01` | yes | Decision artifacts |
+| `iop-key-controller-01` | yes | Control artifacts |
+| `iop-key-executor-01` | yes | Execution artifacts, and Effect artifacts in `IOP-R-INDEP` |
+| `iop-key-observer-01` | yes | Effect artifacts in every scenario except `IOP-R-INDEP` |
+| `iop-key-untrusted-01` | **no** | `IOP-B-EXE` only |
+
+"Re-seal" below means: recompute `integrity.current` per INTEGRITY §2 over the mutated bytes, then
+re-sign per INTEGRITY §3 with the artifact's own key identity from the table above. "Do not
+re-seal" means both `integrity.current` and `integrity.signature` are carried over from the source
+artifact unchanged.
+
 **Broken-per-family — each breaks exactly one predicate, in a different family, so no two share
 a failure mode.**
 
 | ID | Source | Exact mutation | Preserved | Targeted predicate | Level 1 | Clause |
 |---|---|---|---|---|---|---|
-| `IOP-B-DEC` | `IOP-P-DEC` | flip one byte of a hashed member **after** `integrity.current` is computed | schema shape; signature over the *original* preimage | `integrity.current` recomputation | `REJECT` | INTEGRITY §2 |
-| `IOP-B-CTL` | `IOP-P-CTL` | add one unknown member to a closed sub-object | hash and signature recomputed over the mutated bytes, so integrity is **valid** | schema closure | `REJECT` | contract §0/§2; AD-07 |
-| `IOP-B-EXE` | `IOP-P-EXE` | re-sign with a key not in the trust store, leaving the suite label unchanged | schema shape; `integrity.current` correct | record-signature verification | `REJECT` | INTEGRITY §3, §3.2 |
-| `IOP-B-EFF` | `IOP-P-EFF` | set `integrity.previous` to a digest that is not the predecessor's `current` | own hash and signature valid | chain linkage | `REJECT` | INTEGRITY §2, §5 |
+| `IOP-B-DEC` | `IOP-P-DEC` | at `/claim/assertion`, replace the value with the exact literal `"IOP-B-DEC mutated assertion"`. **Do not re-seal.** | schema shape; `integrity.current` and `integrity.signature` as computed over the *source* bytes | `integrity.current` recomputation (stage 1) | `REJECT` | INTEGRITY §2 |
+| `IOP-B-CTL` | `IOP-P-CTL` | add member `"iop_unknown"` with the exact value `true` at `/authority/iop_unknown`. **Re-seal.** | integrity valid over the mutated bytes | schema closure — `/authority` is `additionalProperties: false` (stage 0) | `REJECT` | contract §0/§2; AD-07 |
+| `IOP-B-EXE` | `IOP-P-EXE` | re-sign with key identity `iop-key-untrusted-01`, leaving `signature.alg` byte-identical to the source. Do not recompute `integrity.current` — `integrity.signature` is outside the hash preimage (INTEGRITY §2), so it is unchanged and still correct. | schema shape; `integrity.current` correct | record-signature verification (stage 4) | `REJECT` | INTEGRITY §3, §3.2 |
+| `IOP-B-EFF` | `IOP-P-EFF` | at `/observer_relationship`, replace the value with the exact literal string `"external"`. **Re-seal.** | integrity valid over the mutated bytes; every other member unchanged | accepted-family schema validation — `/observer_relationship` is a closed enum of `same_executor` / `independent` / `unknown` (stage 0) | `REJECT` | `effect.schema.json` `/observer_relationship`; contract §3 stage 0 |
 
-`IOP-B-CTL` deliberately recomputes hash and signature over the mutated bytes: without that the
-fixture would fail at integrity and never reach the closure predicate, which is the single-target
-rule in §2.2.
+`IOP-B-CTL` and `IOP-B-EFF` deliberately re-seal: without that the fixture would fail at integrity
+and never reach its targeted predicate, which is the single-target rule in §2.2.
 
-**Reconciliation-negative — all three are internally valid. Hash, signature and chain linkage are
-correct and sealed with corpus-owned test keys; only the reconciliation predicate is broken.**
+**Why `IOP-B-EFF` targets the schema and not chain linkage.** An earlier draft of this contract
+broke `integrity.previous` and named "chain linkage" as the predicate. That predicate is **not on
+the reference verifier surface**: the frozen class-verifier contract's evaluation order (§3,
+stages 0–11) contains no predecessor resolution and no `previous`-to-`current` equality gate, and
+§8 places reference resolution explicitly out of scope. `integrity.previous` is inside the hash
+preimage (INTEGRITY §2 rule 1), so a re-sealed artifact carrying a wrong `previous` is
+*internally* valid and both reference lanes would return `ACCEPT` — making the scenario
+unmeasurable under the "both reference verifiers cover all 12" commitment in §2. The v0.1
+conformance verifier does perform sequence linkage (`spec/airep/v0.1/conformance/verify.py`), which
+is where the assumption came from; it is a v0.1 property, not a v0.2 one. INTEGRITY §5 was also
+miscited: §5 binds `airep_version` and `artifact_type`, not chain position.
+
+**Reconciliation-negative — all three are internally valid. Hash and signature are correct and
+sealed with corpus-owned test keys, and the bundle is built with correct chain linkage (a
+construction property; per the note above, no v0.2 reference verifier measures it). Only the
+reconciliation predicate is broken.**
 
 | ID | Source | Exact mutation | Preserved | Targeted predicate | Level 1 | Clause |
 |---|---|---|---|---|---|---|
-| `IOP-R-TOCTOU` | `IOP-R-CLEAN` | build the Execution over a different action payload, so `executed_action_digest` ≠ the Control's `authorized_action_digest` | **all four artifacts individually valid and correctly sealed**; chain intact | authorized-vs-executed digest equality | `RECONCILIATION_MISMATCH` | AD-03; AD-06 |
-| `IOP-R-XREF` | `IOP-R-CLEAN` | point the Effect's `decision_ref` at a `record_id` absent from the bundle | **all artifacts individually valid and correctly sealed** | cross-artifact reference resolution | `RECONCILIATION_MISMATCH` | AD-03 |
-| `IOP-R-INDEP` | `IOP-R-CLEAN` | Effect asserts `observer_relationship: independent` while the referenced Execution's producer binding is the **same identity/key** as the Effect's | **all artifacts individually valid and correctly sealed**; the wire label is present and well-formed | independence condition for an `independent` claim | `INDEPENDENCE_NOT_ESTABLISHED` | CONFORMANCE_CLASS_DESIGN §7 (AD-03 scoping); AD-09 |
+| `IOP-R-TOCTOU` | `IOP-R-CLEAN` | at the Execution's `/executed_action_digest`, set the value to `"sha256:" || lowercase-hex(SHA-256(B))` where `B` is the exact UTF-8 bytes of `IOP-R-TOCTOU divergent action payload` with no trailing newline. The Control's `/authorized_action_digest` is unchanged. **Re-seal the Execution.** | **all four artifacts individually valid and correctly sealed**; chain intact | authorized-vs-executed digest equality | `RECONCILIATION_MISMATCH` | AD-03; AD-06 |
+| `IOP-R-XREF` | `IOP-R-CLEAN` | at the Effect's `/decision_ref`, set the value to the exact literal `"iop-absent-decision-0000"`, which is the `record_id` of no artifact in the bundle. **Re-seal the Effect.** | **all artifacts individually valid and correctly sealed** | cross-artifact reference resolution | `RECONCILIATION_MISMATCH` | AD-03 |
+| `IOP-R-INDEP` | `IOP-R-CLEAN` | leave `/observer_relationship` at `"independent"` and re-sign the Effect with key identity `iop-key-executor-01` — the same identity and key as the referenced Execution, instead of `iop-key-observer-01`. **Re-seal the Effect under that key.** | **all artifacts individually valid and correctly sealed**; the wire label is present and well-formed | independence condition for an `independent` claim | `INDEPENDENCE_NOT_ESTABLISHED` | CONFORMANCE_CLASS_DESIGN §7 (AD-03 scoping); AD-09 |
 
 The `IOP-R-*` rows are the reason §2.2 exists. Each is a *semantically* broken bundle made of
 *cryptographically sound* artifacts — which is the only way the reconciliation predicate is ever
@@ -123,6 +158,17 @@ therefore carries expectations at two levels:
 qualifies:
 
 `ACCEPT` · `REJECT` · `RECONCILIATION_MISMATCH` · `INDEPENDENCE_NOT_ESTABLISHED`
+
+**`REJECT` is a verdict about the artifact, not about the process.** A scenario counts as `REJECT`
+when the lane reaches a definitive negative determination on the targeted predicate — including
+when the lane completes normally and leaves the artifact at a lower tier. Under the frozen class
+contract an Authenticated-tier definitive failure (for example `IOP-B-EXE`: an accepted producer
+binding with an invalid record signature) yields a **completed verdict, `class = AIREP-Core`, and
+a populated `authenticated_failures` channel**. That is a `REJECT` for Level-1 purposes. It is
+**not** required to be a parse-level or process-level rejection, and a non-zero process exit is
+neither required nor sufficient. The distinction between *withheld* and *failure* in the frozen
+contract §4 is what separates a `REJECT` from an inconclusive result: a **withheld** channel is
+never a `REJECT`.
 
 **Level 2 — lane-native evidence.** For the Python and Node reference lanes: the exact verdict,
 class and reason sets already pinned by the class-verifier contract. For the participant lane:
