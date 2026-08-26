@@ -49,7 +49,7 @@ Retrieved from the IETF Datatracker on 2026-08-26.
 | SCITT Architecture | Draft **11** | **RFC 9943** — *An Architecture for Trustworthy and Transparent Digital Supply Chains*, Proposed Standard, 2026-06-30 (from `draft-ietf-scitt-architecture-22`) | **11 revisions + RFC publication** |
 | COSE Receipts | Draft **8** | **RFC 9942** — *COSE Receipts*, Proposed Standard, 2026-06-30 (from `draft-ietf-cose-merkle-tree-proofs-18`) | **10 revisions + RFC publication** |
 | SCRAPI | Draft **09** | `draft-ietf-scitt-scrapi-11`, still a draft (updated 2026-08-13) | 2 revisions |
-| CCF tree profile | Draft **03** | `draft-birkholz-cose-receipts-ccf-profile-05`, still an individual draft | 2 revisions |
+| CCF tree profile | Draft **03** | **`draft-ietf-scitt-receipts-ccf-profile-04`** (WG document, updated 2026-08-24). The individual draft named by the build is state **Replaced** / **Adopted by a WG**, last touched 2026-01-16 | **individual draft replaced by a WG line** |
 
 **The alignment document predates both RFCs.** It was last touched 2026-05-06; RFC 9943 and
 RFC 9942 published 2026-06-30; release `0.19.0` shipped 2026-07-29 without updating it. So the
@@ -128,5 +128,13 @@ is the whole point of the exercise.
 | Build's alignment statement | `gh api contents/docs/scitt.md?ref=0.19.0` | read in full; quoted above |
 | Same file on `main` | `gh api contents/docs/scitt.md?ref=main` + commit history | identical; last modified 2026-05-06 |
 | RFC 9943 / RFC 9942 identity | IETF Datatracker API | titles, Proposed Standard, both dated 2026-06-30 |
-| Draft revisions | IETF Datatracker API | architecture rev 22, merkle-tree-proofs rev 18, scrapi rev 11, ccf-profile rev 05 |
+| Draft revisions | IETF Datatracker API | architecture rev 22, merkle-tree-proofs rev 18, scrapi rev 11 |
+| CCF profile lineage | IETF Datatracker API (states resolved by ID) | individual `draft-birkholz-…-05` = **Replaced** + **Adopted by a WG**; successor `draft-ietf-scitt-receipts-ccf-profile-04` |
+
+**Correction (2026-08-26, maintainer-flagged).** The first version of this preflight reported the
+CCF profile as "still an individual draft" at rev 05. That was incomplete: it searched only the
+document name the build cites and did not look for a successor. The individual draft has been
+replaced and adopted by the SCITT WG, and the current line is
+`draft-ietf-scitt-receipts-ccf-profile-04`. The delta on this axis is larger than first reported —
+a changed document lineage, not a two-revision lag.
 | Upstream divergence | `gh issue view 414` | open; SCRAPI-11, `302` → `202` on registration |
