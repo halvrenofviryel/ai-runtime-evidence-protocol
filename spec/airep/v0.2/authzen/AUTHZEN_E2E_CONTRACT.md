@@ -153,10 +153,26 @@ entry's `ref`. The bound body digest is that entry's `content_hash`, which the s
 requires on every evidence item. The profile MUST NOT carry a second copy of either digest: one
 digest, one place, so the two can never disagree.
 
-Both entries use `type: "policy"` and `resolvable: false` unless the PoC actually publishes the
-bodies. (`type` is a PoC choice from the existing closed enum, not a semantic claim about
-authorization; the maintainer may substitute another enum member without changing anything else
-in this section.)
+### Ruling AUTHZEN-IR-3 — PoC evidence must be resolvable
+
+Both entries carry:
+
+- `type: "policy"` — the correct category in the existing closed vocabulary for an authorization
+  request/response exchange;
+- **`resolvable: true`**;
+- `content_hash` — the digest of the exact body bytes.
+
+`resolvable` is not a formatting preference. AIREP's inherited semantics are that `true` means a
+verifier can fetch and check the referenced material, and `false` means the material is
+unavailable or redacted. The A5 measurement re-reads the stored request and response body bytes
+and recomputes their digests — so this evidence **is** available, inside the PoC package, and
+declaring it `false` would misdescribe the very thing the measurement depends on.
+
+Both refs MUST therefore resolve deterministically from within the PoC evidence bundle.
+
+An earlier draft of this section specified `resolvable: false`. That was wrong for a qualifying
+positive run. If a body is ever *deliberately* withheld, that is a different negative or privacy
+scenario — it is not a qualifying positive E2E case.
 
 **Correlation.** When both `request_id` and `response_request_id` are present they MUST be equal —
 this is the positive case, and it is the property AuthZEN 1.0 makes normative when the PEP sends
