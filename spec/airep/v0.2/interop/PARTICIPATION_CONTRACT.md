@@ -27,8 +27,8 @@ AD-15 clause (2) asks the corpus to pass "under both reference verifiers **and t
 implementation**". A producer is not normally a verifier of foreign artifacts, so that phrase
 had no operational meaning. It is closed here, before any participant is approached:
 
-> **A qualifying external implementation = an external producer **plus** a
-> participant-owned evaluation/reproduction path.**
+> **A qualifying external implementation = an external producer *plus* a participant-owned
+> evaluation/reproduction path.**
 
 - an independent **verifier alone does not** satisfy clause (1);
 - an external **producer** satisfies clause (1);
@@ -87,7 +87,24 @@ Not "however partial". The path must, at minimum:
 - **generate** the positive cases assigned to it;
 - **demonstrate the expected rejection/failure outcome** on the negative cases assigned to it.
 
-It need not be a full AIREP class verifier, and it need not cover the reference lane.
+**Independence of the qualifying outcome (normative).** D3 permits invoking the reference
+verifiers as an external process or test oracle. Without the following restriction, a
+participant could satisfy D4 with a thin wrapper around those verifiers — and the project would
+then claim the corpus "passed under the independent implementation" when the independent
+evaluation was in fact our own code:
+
+> **For AD-15 qualification, the participant-owned evaluation path MUST NOT derive its
+> qualifying pass/fail outcomes solely from either AIREP reference verifier or from any wrapper
+> around them. Reference verifiers may be invoked separately as diagnostic or cross-check
+> oracles, but their outputs do not constitute the participant lane's qualifying result. The
+> participant lane's qualifying assertions must be computed by participant-authored logic
+> independent of the reference-verifier implementation code.**
+
+A participant evaluation path need not implement the full AIREP class-verifier surface; it only
+needs independent participant-authored logic sufficient to evaluate the assertions assigned to
+the participant lane.
+
+It need not cover the reference lane.
 
 D5 is not a formality. Our own first official parity run **failed**, and preserving that
 failure is why the later passing run means anything. A participant who reports only successes
@@ -133,6 +150,7 @@ rather than agreement with the specification.
 - an implementation that vendors or ports this project's verifier code;
 - a passing run with no negative cases, since a checker never shown to fail is not evidence;
 - our own re-measurement of a participant's artifacts as a substitute for their own checking path;
+- a participant evaluation path whose qualifying outcomes come from the reference verifiers or a wrapper around them, rather than from participant-authored logic;
 - informal agreement that "it interoperates" without the corpus results behind it.
 
 ## 6. What the maintainer commits to
