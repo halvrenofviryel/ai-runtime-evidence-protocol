@@ -89,19 +89,38 @@ Each row is the complete specification the builder applies. The builder adds not
 Every mutation below is stated as a **JSON Pointer (RFC 6901) into the source artifact plus an
 exact replacement or addition value**, or as a **deterministic derivation from a literal byte
 string**. No row leaves a choice to the builder: two builders applying these rows to the same
-baseline produce byte-identical fixtures apart from signature values, which are a function of the
-named key.
+baseline produce byte-identical fixtures, signatures included: Ed25519 is deterministic and both the
+seed and the preimage are pinned.
 
-**Corpus test-key identities (closed).** Every signature below is produced with exactly one of
-these, and the binding store shipped with the corpus resolves exactly the first three:
+**Corpus test-key identities (closed).** Five identities. The binding store shipped with the
+corpus resolves exactly the **first four**; `iop-key-untrusted-01` is deliberately absent.
 
-| Key identity | In binding store | Used by |
-|---|---|---|
-| `iop-key-decider-01` | yes | Decision artifacts |
-| `iop-key-controller-01` | yes | Control artifacts |
-| `iop-key-executor-01` | yes | Execution artifacts, and Effect artifacts in `IOP-R-INDEP` |
-| `iop-key-observer-01` | yes | Effect artifacts in every scenario except `IOP-R-INDEP` |
-| `iop-key-untrusted-01` | **no** | `IOP-B-EXE` only |
+Key material is pinned, not just named, so the fixtures are byte-reproducible end to end. Ed25519
+signing is deterministic (RFC 8032), so a fixed seed and a fixed preimage give a fixed signature.
+
+**Seed derivation (normative):** `seed = SHA-256(<key identity as ASCII>)`, taken as the 32-byte
+Ed25519 private seed. Both the seed and the resulting public key are pinned below; a builder that
+derives a different public key has made an error and must stop.
+
+| Key identity | Wire `subject.producer` token | In binding store | Seed (hex) | Ed25519 public key (hex) |
+|---|---|---|---|---|
+| `iop-key-decider-01` | `iop-producer-decider` | yes | `08f77d3458b09ccb381bbdc70c6d5b7457c4efcfeb7ae7673af3c391ee125ffe` | `e1030b1c4e4b093dc2db452792f18a0b056d47678ca53d7f7bb99678579446e8` |
+| `iop-key-controller-01` | `iop-producer-controller` | yes | `683cfd5742d282207f391471bf7377dc78ac3cab024a3e089f1c81ff1e219ccd` | `616d2d532aa119ee406bb4ed75197ead6db9075ff620ad6e7dd8debc5037d425` |
+| `iop-key-executor-01` | `iop-producer-executor` | yes | `a141b597840a2eb005da39cd7df3802c7d1c600fa26ef444d475c3504d9f5d89` | `0f406e8865d87a15e2bfa91714375ded05d60afbebb9568db041b8b6b910dd9a` |
+| `iop-key-observer-01` | `iop-producer-observer` | **yes** | `2a36bf2f2f120d13fdbe863b849b481727355e812f396842b86725dd64e2bc2b` | `14d68d08422890e0c78245bf295e9233df552228ffff23a3d56053a510ae8a7f` |
+| `iop-key-untrusted-01` | *(never appears on the wire)* | **no** | `6b0f646f140bdec734a3afaf7dd57efdac8a1b8c1a29c2307f47f2b08a3252a2` | `18c9e95426261596dbf096f0f7dc6feb4c69681fb577bdd91f0d262e1e80faef` |
+
+> **TEST KEYS ONLY.** These private seeds are published deliberately so the corpus is
+> reproducible. They MUST NOT be used for anything else, ever.
+
+**Binding store requirements (normative).** The `--bindings` file shipped with the corpus MUST
+contain a `producer` binding for **all four** resolvable identities above — including
+`iop-key-observer-01`. Without the observer binding, a clean Effect cannot reach the Authenticated
+surface at all, and the reconciliation-negative fixtures could not be what they claim to be:
+individually valid artifacts whose *only* defect is the reconciliation predicate. Each binding
+carries `role: "producer"`, `suite: "ed25519"`, `trusted: true`, the pinned `public_key_hex` above,
+and a distinct `subject_identity` per identity — except as pinned for `IOP-R-INDEP` below.
+`producer_bindings` maps each wire token in column 2 to its binding id.
 
 "Re-seal" below means: recompute `integrity.current` per INTEGRITY §2 over the mutated bytes, then
 re-sign per INTEGRITY §3 with the artifact's own key identity from the table above. "Do not
@@ -141,8 +160,29 @@ reconciliation predicate is broken.**
 | ID | Source | Exact mutation | Preserved | Targeted predicate | Level 1 | Clause |
 |---|---|---|---|---|---|---|
 | `IOP-R-TOCTOU` | `IOP-R-CLEAN` | at the Execution's `/executed_action_digest`, set the value to `"sha256:" || lowercase-hex(SHA-256(B))` where `B` is the exact UTF-8 bytes of `IOP-R-TOCTOU divergent action payload` with no trailing newline. The Control's `/authorized_action_digest` is unchanged. **Re-seal the Execution.** | **all four artifacts individually valid and correctly sealed**; chain intact | authorized-vs-executed digest equality | `RECONCILIATION_MISMATCH` | AD-03; AD-06 |
-| `IOP-R-XREF` | `IOP-R-CLEAN` | at the Effect's `/decision_ref`, set the value to the exact literal `"iop-absent-decision-0000"`, which is the `record_id` of no artifact in the bundle. **Re-seal the Effect.** | **all artifacts individually valid and correctly sealed** | cross-artifact reference resolution | `RECONCILIATION_MISMATCH` | AD-03 |
-| `IOP-R-INDEP` | `IOP-R-CLEAN` | leave `/observer_relationship` at `"independent"` and re-sign the Effect with key identity `iop-key-executor-01` — the same identity and key as the referenced Execution, instead of `iop-key-observer-01`. **Re-seal the Effect under that key.** | **all artifacts individually valid and correctly sealed**; the wire label is present and well-formed | independence condition for an `independent` claim | `INDEPENDENCE_NOT_ESTABLISHED` | CONFORMANCE_CLASS_DESIGN §7 (AD-03 scoping); AD-09 |
+| `IOP-R-XREF` | `IOP-R-CLEAN` | at the Effect's **`/decision_ref/record_id`**, set the value to the exact literal `"iop-absent-decision-0000"`, which is the `record_id` of no artifact in the bundle. `/decision_ref` stays an object and `/decision_ref/chain_id`, if present, is left unchanged. **Re-seal the Effect.** | **all artifacts individually valid and correctly sealed** | cross-artifact reference resolution | `RECONCILIATION_MISMATCH` | AD-03 |
+| `IOP-R-INDEP` | `IOP-R-CLEAN` | leave `/observer_relationship` at `"independent"`; set the Effect's **`/subject/producer`** to the exact literal `"iop-producer-executor"` (the Execution's wire token, replacing `"iop-producer-observer"`); **re-seal the Effect under `iop-key-executor-01`**. Both changes are required — see the note below. | **all artifacts individually valid and correctly sealed**; the wire label is present and well-formed | independence condition for an `independent` claim | `INDEPENDENCE_NOT_ESTABLISHED` | CONFORMANCE_CLASS_DESIGN §7 (AD-03 scoping); AD-09 |
+
+**Why `IOP-R-XREF` targets `/decision_ref/record_id` and not `/decision_ref`.** `decision_ref` is
+`common.schema.json` `$defs/artifact_ref` — an **object** with `additionalProperties: false` and a
+required `record_id`. Replacing the whole member with a bare string is a stage-0 type failure, so
+the fixture would be rejected as malformed and cross-reference reconciliation would never be
+reached. The mutation has to leave a *well-formed* reference that simply resolves to nothing.
+
+**Why `IOP-R-INDEP` moves the producer token as well as the key.** Producer binding resolution
+(stage 2) looks the artifact up in `producer_bindings` by the exact string `subject.producer`, and
+stage 4 verifies the record signature under the **binding-derived** key. Re-signing with the
+executor key while leaving `subject.producer` as the observer token would resolve the *observer*
+binding, verify an executor signature against the *observer* public key, and fail at stage 4 as
+`authenticated_failures` — a signature failure, not an independence failure, and stage 8 would
+never run because it requires an accepted producer binding.
+
+Moving the token as well makes both artifacts resolve to the **same** binding, so each is
+**independently Authenticated** and the only thing left broken is the independence condition: the
+Effect claims `independent` while sharing the referenced Execution's identity *and* key. That is
+the targeted predicate, reached for the right reason. For this fixture the binding store's
+`subject_identity` for the executor binding is shared by both artifacts by construction — which is
+precisely the "same identity" condition §1.2/§3 tests.
 
 The `IOP-R-*` rows are the reason §2.2 exists. Each is a *semantically* broken bundle made of
 *cryptographically sound* artifacts — which is the only way the reconciliation predicate is ever
