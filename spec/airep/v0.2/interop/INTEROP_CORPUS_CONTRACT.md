@@ -50,9 +50,37 @@ artifacts:
 So the producer carries **five generation obligations** — four family baselines plus the clean
 linked path — while the evaluation path must produce a machine-observable result on all twelve.
 
-Negative and reconciliation-negative vectors are supplied by the shared corpus, or derived from
-participant-generated positives by deterministic transformations defined in this contract, so
-that a participant never has to build a dishonest emitter to be measured on dishonest input.
+Negative and reconciliation-negative vectors are supplied by the shared corpus, or derived by
+deterministic transformations **defined in this contract**, so that a participant never has to
+build a dishonest emitter to be measured on dishonest input.
+
+### 2.1 Where transformations are defined
+
+Transformations are specified **here, not in the builder**. The builder applies this contract
+mechanically and carries no expected-outcome or verifier-semantic knowledge; otherwise the
+corpus would encode our verifier's assumptions and then measure implementations against them.
+
+Each transformation states, at minimum:
+
+`source scenario` → `exact mutation` → `preserved fields` → `targeted predicate` →
+`Level-1 expectation` → `normative clause`
+
+### 2.2 Causal isolation — single target per fixture (normative)
+
+**Reconciliation-negative fixtures MUST NOT be produced by field-mutating a participant's signed
+positive artifact.** Mutating a sealed artifact invalidates its hash or signature, so evaluation
+stops at integrity long before it reaches the reconciliation predicate — and the fixture then
+measures integrity failure while claiming to measure reconciliation.
+
+`IOP-R-TOCTOU`, `IOP-R-XREF` and `IOP-R-INDEP` are therefore **shared fixtures whose internal
+integrity and cryptography are valid**, with only the targeted reconciliation predicate broken.
+Corpus-owned test keys are used so such fixtures can be sealed correctly.
+
+> **Single-target rule.** A fixture MUST NOT create an independent failure that would be reached
+> before its targeted failure. The only exception is a fixture whose target *is* integrity.
+
+This applies to the four broken-per-family cases too: each targets one predicate, and its
+Level-1 expectation is only meaningful if nothing else fails first.
 
 ## 3. Expected outcomes — two levels
 
@@ -74,8 +102,23 @@ scenario's Level-1 expectation. Emitting our reason strings is explicitly **not*
 requirement. A participant may map their outcomes to the Level-1 vocabulary; they need not adopt
 our internal vocabulary to do so.
 
+### 3.1 Mapping review — bounded, and frozen before the run
+
 The mapping from a participant's raw results to Level 1 is declared by the participant and
-recorded before the official run, so it cannot be adjusted after seeing the outcome.
+**reviewed by the maintainer before the official run**, strictly as an *outcome mapping*:
+
+| Reviewed for | Not reviewed for |
+|---|---|
+| completeness — every scenario has a mapping | anything about how the producer or evaluator is built |
+| non-circularity — the mapping does not read our reason codes to decide | implementation quality, structure or approach |
+| semantic correspondence — each scenario's mapping matches its Level-1 meaning | whether their result "looks right" |
+
+The maintainer gives **no producer or evaluator implementation advice** during this review; that
+would be the steering the participation contract forbids before the first official measurement.
+
+The accepted mapping's **bytes and digest are frozen before the first official run**. This closes
+both failure modes at once: a mapping adjusted after seeing the outcome, and a review that
+quietly becomes implementation guidance.
 
 ## 4. Provenance rules
 
@@ -110,7 +153,8 @@ Once official:
 ## 6. What a clean run would and would not establish
 
 **Would:** an external producer exists; the same 12-scenario surface was evaluated by three
-independent evaluation paths; the participant's qualifying outcomes came from participant-authored
+evaluation paths, **including one externally authored participant path — the two reference paths
+remain same-project evidence**; the participant's qualifying outcomes came from participant-authored
 logic; negative cases were rejected rather than merely absent.
 
 **Would not:** semantic correctness of the protocol; third-party audit or certification;
