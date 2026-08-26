@@ -25,13 +25,40 @@ system. The end-to-end case must therefore demonstrate binding **without** inter
 
 ## 2. What the E2E case must demonstrate
 
+### Ruling AUTHZEN-IR-1 — no synthetic decision identifier
+
+The previous draft asked for "the decision's own identifier". **AuthZEN Authorization API 1.0
+defines no such thing.** Verified against the specification source: it contains no decision
+identifier of any kind, and an Access Evaluation response is a Decision entity — typically
+`{"decision": true}` or `{"decision": false, "context": {...}}`. The correlation mechanism the
+standard *does* define is `X-Request-ID`: the PEP MAY supply it, and *"if the PEP specified a
+request identifier in the request, the PDP MUST include the same identifier in the response"*.
+
+Qualifying binding for the AuthZEN 1.0 case is therefore:
+
+- the **PDP identity**;
+- the **exact request bytes**;
+- the **exact response bytes**;
+- the **response digest**;
+- `X-Request-ID`, where present, as the **exchange correlation identifier**;
+- the AIREP record's reference/digest binding to that evidence.
+
+`X-Request-ID` is **never** to be called a "decision identifier". If a PDP emits a
+vendor-specific decision id it may be recorded as optional vendor evidence, but it is not a
+qualification requirement. **AIREP does not mint a synthetic PDP decision identifier.**
+
 | # | Step | Observable |
 |---|---|---|
-| A1 | Obtain a real authorization decision from an AuthZEN 1.0 PDP | the request and response bytes as exchanged |
-| A2 | Digest the decision and record the PDP identity and decision identifier | the digest, computed from the exact response bytes |
+| A1 | Obtain a real authorization decision from an AuthZEN 1.0 PDP | the request and response bytes as exchanged, with `X-Request-ID` if used |
+| A2 | Digest the response and record the PDP identity | the digest, computed from the exact response bytes |
 | A3 | Emit an AIREP Decision Receipt referencing it | the artifact, with the reference resolvable to A1's bytes by digest |
-| A4 | Carry it through to a Control artifact | the authorization reference surviving the decision→control step intact |
+| A4 | Emit a Control artifact **referencing that Decision** | the Control's `decision_ref`, and the authorization evidence resolved **transitively** through the Decision — **not** copied into Control |
 | A5 | Verify the binding independently | recomputing A2's digest from A1's stored bytes and matching the artifact's recorded value |
+
+**A4 carries the authorization binding in exactly one place.** The Decision Receipt holds it;
+the Control artifact reaches it through its own `decision_ref`. Copying the authorization
+reference forward into Control would create two copies of the same external evidence that can
+later diverge, and nothing needs the duplicate.
 
 **A5 is the measurement.** Everything before it is plumbing. What is being shown is that a third
 party holding the AIREP artifact and the stored authorization response can confirm they belong
@@ -54,13 +81,22 @@ for, not assume.
 
 - **N1** a substituted authorization response whose digest no longer matches the artifact's
   recorded value — the binding check must fail;
-- **N2** a decision bound to the wrong AIREP artifact — must not verify;
+- **N2** a **request/response correlation mismatch**: the PEP sent `X-Request-ID: A` and the
+  captured response carries a different identifier, or the profile records a different one — the
+  transcript binding must fail. (The earlier draft used "a decision bound to the wrong AIREP
+  artifact". That was a bad test: referencing one AuthZEN decision from more than one AIREP
+  record is not prohibited, and deciding that a pairing is "wrong" would require AIREP to
+  interpret subject/action/resource like an authorization engine — precisely what AD-11 forbids.
+  Correlation mismatch tests a real, normative protocol property instead.)
 - **N3** a `deny` decision bound and carried correctly — the AIREP artifact's own class and
   reasons must be **unchanged** relative to the `permit` case, since AD-11 forbids the
   authorization outcome from driving AIREP evaluation. If this case shows any difference, that
   difference is a finding.
 
-N3 is the one that actually tests AD-11 rather than testing digest arithmetic.
+N3 is the one that actually tests AD-11 rather than testing digest arithmetic. Note that under
+AuthZEN a `deny` is a **successful** authorization response — HTTP 200 with `"decision": false`,
+not a transport failure — so a `deny` lowering an AIREP class would be a genuine AD-11
+violation, not a plausible edge case.
 
 ## 5. Evidence
 
@@ -82,10 +118,18 @@ trustworthy, that AIREP validates authorization semantics, or that any policy wa
 expressed. It satisfies AD-15 clause (3) only in part — SCITT (W2) is separate — and does not
 address clause (1) at all.
 
-## 7. Open for maintainer decision
+## 7. Decided (maintainer, 2026-08-26)
 
-1. Which AuthZEN 1.0 PDP — a reference implementation, a hosted service, or a local instance.
-2. Whether the OAuth token/delegation variant AD-11 also permits is exercised in this round or
-   deferred, given it is a second binding shape rather than a second decision source.
-3. Whether the authorization reference profile is normatively fixed in this release or stays a
-   demonstrated shape until a second implementation carries it.
+**PDP — Keycloak 26.7.2 in a local container, with the exact image digest pinned.** Keycloak
+added AuthZEN Authorization API 1.0 PDP support from 26.7.0, implementing the Evaluation and
+Evaluations endpoints. The feature is **experimental**, and that status must be recorded
+explicitly in the evidence metadata rather than left for a reader to discover.
+
+**The OAuth token / delegation variant is deferred.** AD-11 permits it, but it is a second
+binding *shape* rather than a second decision source, and AD-15 clause (3) is satisfied by the
+AuthZEN case. Adding it now widens scope for no gate benefit.
+
+**The authorization reference profile stays a PoC/informative demonstrated shape**, exactly as
+the SCITT projection mapping does in W2. No new normative profile semantics are bound onto
+`v0.2.0-alpha.1`. A freeze decision waits for a second PDP or an external implementation
+carrying it.
