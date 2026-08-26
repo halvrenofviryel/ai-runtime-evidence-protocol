@@ -93,7 +93,8 @@ class-verifier negative proofs were.
 
 A clean PoC would establish that an AIREP artifact can be sealed, registered with a SCITT
 implementation, and have its receipt anchored in a subsequent artifact without mutating the
-sealed bytes, and that receipt verification fails on tampered input.
+sealed bytes, and that the end-to-end binding detects tampered AIREP input **even when the original SCITT
+receipt remains cryptographically valid for the originally registered statement**.
 
 It would **not** establish that AIREP is SCITT-conformant in general, that any particular
 transparency service is trustworthy, that registration implies the recorded decision was correct,
@@ -126,8 +127,28 @@ Freezing a mapping against a single SCITT implementation would bake that impleme
 choices into the specification. The freeze decision waits for a second SCITT implementation or
 external interop.
 
+### Ruling SCITT-IR-2 — decision-chain carrier
+
 **No new checkpoint artifact type.** Introducing one after `v0.2.0-alpha.1` would mean a new wire
-family. The PoC uses an **existing, valid subsequent AIREP chain record carrying a namespaced
-experimental SCITT anchor profile**, holding the receipt digest/reference, the sealed head's
-`{record_id, current}`, and the statement/receipt references if needed. This is PoC packaging,
-not a new normative artifact family.
+family. Leaving the carrier as "an existing, valid subsequent chain record" was also insufficient:
+it left a wire-visible packaging choice to be made while writing code. It is pinned here.
+
+- the **sealed head is a Decision Receipt**;
+- the receipt is carried on the **next genuine, valid Decision Receipt in the same Decision
+  chain**, via a **namespaced experimental SCITT anchor profile**;
+- that second Decision Receipt **must be a semantically valid test decision in its own right**.
+  No empty or fabricated decision may be minted merely to carry an anchor — an artifact that
+  exists only as a envelope would make the PoC demonstrate a shape the protocol does not
+  actually produce;
+- normal chain linkage continues through `integrity.previous` as usual.
+
+The anchor profile carries at least:
+
+| Field | Content |
+|---|---|
+| anchored `record_id` | the sealed head being anchored |
+| anchored `integrity.current` | its digest at seal time |
+| SCITT statement digest/reference | what was registered |
+| SCITT receipt digest/reference | what came back |
+
+This is PoC packaging. It is **not** a new artifact family and **not** a normative profile.
