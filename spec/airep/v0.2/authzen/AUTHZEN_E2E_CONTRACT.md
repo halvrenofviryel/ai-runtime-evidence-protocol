@@ -128,6 +128,55 @@ violation, not a plausible edge case.
 - the three negative-case results with the cause each triggered;
 - an explicit statement of what was **not** derived from the authorization outcome.
 
+### 5.1 The PoC wire shape (pinned — experimental, PoC-only)
+
+The alpha common schema constrains `profiles` only as *namespaced key → object*
+(`common.schema.json` `$defs/profiles`); it does not define any inner member set. Without pinning
+it here the implementation would invent one, so the exact shape is fixed below.
+
+**Profile key:** `airep.authzen-poc` — verified against the `namespaced_id` grammar.
+
+**Closed member set.** Exactly these members; no others are permitted in the PoC.
+
+| Member | Required | Type | Meaning |
+|---|---|---|---|
+| `profile_version` | yes | string, exactly `"poc-1"` | PoC shape version. Not an AIREP version. |
+| `pdp_identity` | yes | string | The PDP identity recorded per AD-11. |
+| `request_evidence_ref` | yes | string | The `ref` of the `evidence[]` entry carrying the AuthZEN request body. |
+| `response_evidence_ref` | yes | string | The `ref` of the `evidence[]` entry carrying the AuthZEN response body. |
+| `request_id` | no | string | The `X-Request-ID` sent by the PEP, when one was sent. |
+| `response_request_id` | no | string | The `X-Request-ID` returned by the PDP, when one was returned. |
+
+**Digests live in `evidence[]`, never here.** `request_evidence_ref` and `response_evidence_ref`
+MUST each resolve to an entry in the same Decision Receipt's `evidence[]` array, matched on that
+entry's `ref`. The bound body digest is that entry's `content_hash`, which the schema already
+requires on every evidence item. The profile MUST NOT carry a second copy of either digest: one
+digest, one place, so the two can never disagree.
+
+Both entries use `type: "policy"` and `resolvable: false` unless the PoC actually publishes the
+bodies. (`type` is a PoC choice from the existing closed enum, not a semantic claim about
+authorization; the maintainer may substitute another enum member without changing anything else
+in this section.)
+
+**Correlation.** When both `request_id` and `response_request_id` are present they MUST be equal —
+this is the positive case, and it is the property AuthZEN 1.0 makes normative when the PEP sends
+`X-Request-ID`. **N2 measures exactly this inequality.** Both members are optional because the
+Authorization API does not require the header; absence is not a failure, and a missing pair is
+never reported as a correlation mismatch.
+
+**Headers are never bound.** `response_evidence_ref`'s `content_hash` is a digest of the exact
+response **body** bytes. No header value — `X-Request-ID` included — enters that digest, per
+`AUTHZEN-IR-2`. `response_request_id` is transcript correlation and carries no integrity weight.
+
+**No decision identifier.** Per `AUTHZEN-IR-1` and the AD-11 erratum, neither member above is a
+decision identifier, and the PoC MUST NOT add one. AuthZEN Authorization API 1.0 defines no
+decision identifier; `X-Request-ID` is an exchange correlation identifier.
+
+**Status — PoC-only.** This shape is experimental and demonstrated, not normative. It is not
+added to any schema, does not become a v0.2 profile, and binds nothing onto `v0.2.0-alpha.1`.
+A conformance-relevant freeze waits for a second PDP or an external implementation carrying it,
+per §7.
+
 ## 6. Claim boundary
 
 A clean run would establish that an external authorization decision can be referenced and
