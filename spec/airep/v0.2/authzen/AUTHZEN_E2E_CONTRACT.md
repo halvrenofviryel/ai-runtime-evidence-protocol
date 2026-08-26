@@ -15,7 +15,9 @@ is the point:
 
 A Decision Receipt may carry a reference to, and digest of, an external authorization decision —
 an AuthZEN Authorization API 1.0 decision, an OAuth token or delegation evidence artifact —
-including the PDP identity and the decision's own identifier. AIREP records **that** an
+including the PDP identity and, in AD-11's own wording, "the decision's own identifier"
+*(see ruling AUTHZEN-IR-1 below: AuthZEN 1.0 defines no such identifier, so this part of
+AD-11's description has no counterpart in the standard and is not a qualifying element)*. AIREP records **that** an
 authorization decision was obtained and **binds its bytes**. It never restates or reinterprets
 authorization semantics. The v0.1 `subject.principal` block with `established_by` remains the
 identity-provenance anchor.
@@ -77,6 +79,24 @@ A demonstration that binds an authorization decision **and also** lets it influe
 evaluation would violate AD-11 while appearing to satisfy it. That is the specific thing to test
 for, not assume.
 
+### Ruling AUTHZEN-IR-2 — body binding vs transcript correlation
+
+`X-Request-ID` is an HTTP **header** correlation property; the authorization decision is the
+response **body**. "Exact response bytes" must not be read as one blob covering both, or a header
+change would silently alter the decision digest and N1 and N2 would stop being separable.
+
+- the authorization decision digest is over the **exact response body bytes**;
+- request and response **bodies are hashed and recorded separately**;
+- `X-Request-ID` request and response header values are recorded as **transcript metadata**,
+  separately from any body digest;
+- **N2 tests the header-correlation predicate**; **N1 tests the body-binding predicate**;
+- the AIREP authorization evidence digest **never** folds header values into the body digest;
+- a full HTTP capture may be kept as a separate evidence artifact, but it is **not** a normative
+  binding input.
+
+This keeps a body mutation (N1) and a header-correlation mismatch (N2) independently detectable,
+which is the same single-target discipline W1 applies to its fixtures.
+
 ## 4. Negative cases — required
 
 - **N1** a substituted authorization response whose digest no longer matches the artifact's
@@ -101,7 +121,8 @@ violation, not a plausible edge case.
 ## 5. Evidence
 
 - the AuthZEN request/response bytes, and the PDP identity and version;
-- the recorded digest and decision identifier;
+- the recorded response-body digest, the PDP identity, and the `X-Request-ID` values from
+  request and response where present;
 - the emitted Decision Receipt and the downstream Control artifact;
 - the independent binding verification result;
 - the three negative-case results with the cause each triggered;
