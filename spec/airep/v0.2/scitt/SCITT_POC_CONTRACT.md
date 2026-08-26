@@ -46,29 +46,50 @@ At least one real SCITT implementation must be used. AD-10 notes that adjacent w
 a thin mapping — the PoC **tests** that claim rather than assuming it, and the mapping's actual
 size is a finding either way.
 
-## 3. Negative cases — required
+## 3. Three separate predicates
 
-A PoC that only shows success has demonstrated an integration, not a verification. At minimum:
+The previous draft conflated cryptographic receipt verification with AIREP↔SCITT binding, which
+would have produced negative cases that cannot fail for the reason claimed. They are distinct:
 
-- **N1** a tampered sealed object whose receipt verification must fail;
-- **N2** a receipt presented against the wrong sealed head, which must not verify as anchoring it;
-- **N3** a malformed or truncated receipt, which must be rejected rather than treated as absent.
+| Predicate | Question |
+|---|---|
+| **P1 — receipt cryptographic validity** | is the receipt well-formed and valid against the service's verification material, for the statement it attests? |
+| **P2 — statement ↔ AIREP projection binding** | do the AIREP bytes in hand project to the statement that was actually registered? |
+| **P3 — subsequent-anchor ↔ sealed-head binding** | does the anchoring artifact reference the sealed head it claims to anchor? |
 
-Each must be shown failing for its own cause, as the class-verifier negative proofs were.
+A receipt can be **cryptographically valid while the binding is wrong**. That is exactly the case
+the PoC must be able to detect, and it is a P2/P3 question, not a P1 one.
 
-## 4. Evidence
+## 4. Negative cases — required
+
+A PoC that only shows success has demonstrated an integration, not a verification.
+
+- **N1 — tampered AIREP sealed object.** The original signed statement and its receipt may still
+  verify **P1 perfectly**, because they attest bytes that were correct when registered. What must
+  fail is **P2**: the current AIREP bytes no longer project to the registered statement. A
+  negative case asserting "receipt verification fails" here would be testing the wrong predicate
+  and could pass or fail for reasons unrelated to the tamper.
+- **N2 — receipt anchored to the wrong sealed head.** Again **P1 may pass**: the receipt is valid
+  for its own statement. What must fail is **P3**, the anchor-to-head binding.
+- **N3 — malformed or truncated receipt.** This one *is* a direct **P1** failure, and must be
+  rejected rather than silently treated as an absent receipt.
+
+Each must be shown failing for its own cause **and for the right predicate**, as the
+class-verifier negative proofs were.
+
+## 5. Evidence
 
 - the sealed object digest at S1 and again after S6, with their comparison;
 - the projection mapping, and its input/output digests;
 - the registration request and the service identity;
 - the receipt bytes as returned;
-- the verification result, machine-observable;
+- the P1, P2 and P3 results separately, each machine-observable;
 - the anchoring artifact;
 - the three negative-case results with the cause each triggered;
 - the SCITT implementation identity and version, and whether it is a public service or a local
   instance.
 
-## 5. Claim boundary
+## 6. Claim boundary
 
 A clean PoC would establish that an AIREP artifact can be sealed, registered with a SCITT
 implementation, and have its receipt anchored in a subsequent artifact without mutating the
@@ -80,11 +101,33 @@ or that the control was delivered, executed or had effect. It satisfies AD-15 cl
 part — AuthZEN (W3) is separate — and satisfies clause (1) not at all, since it is maintainer-side
 work and produces no external producer.
 
-## 6. Open for maintainer decision
+## 7. Decided (maintainer, 2026-08-26)
 
-1. Which SCITT implementation — a public transparency service, a local instance, or both. A
-   local instance is reproducible in CI; a public one is more meaningful and less reproducible.
-2. Whether the projection mapping becomes a normative profile in this release or stays a PoC
-   artifact until a second implementation exercises it.
-3. Whether the anchoring artifact is a new checkpoint record type or the next chain record, given
-   AD-10 permits either and the choice is wire-visible.
+**SCITT implementation — a local, pinned `microsoft/scitt-ccf-ledger`** as the primary PoC
+target: it exposes a real registration and receipt flow and supports a local virtual-mode
+deployment, so the measurement is reproducible.
+
+**Standards-alignment preflight is mandatory before any implementation work.** The project's own
+alignment documentation still refers to Architecture Draft 11, COSE Receipt Draft 8 and SCRAPI
+Draft 09, while the SCITT architecture is now RFC 9943. That gap must be characterised, not
+assumed away:
+
+1. pin the exact `scitt-ccf-ledger` commit or container digest;
+2. document which RFC/draft versions **that exact build** implements;
+3. compare the S1–S6 path against RFC 9943 / RFC 9942 and the applicable API profile;
+4. on **material incompatibility, STOP** and choose another implementation rather than
+   proceeding and describing the result as a SCITT PoC.
+
+A second run against a public SCITT service would be valuable but is **not required** for the
+AD-15 gate. The reproducible local run against a real implementation is the primary measurement.
+
+**The projection mapping stays PoC/informative — it is NOT frozen as a normative profile.**
+Freezing a mapping against a single SCITT implementation would bake that implementation's
+choices into the specification. The freeze decision waits for a second SCITT implementation or
+external interop.
+
+**No new checkpoint artifact type.** Introducing one after `v0.2.0-alpha.1` would mean a new wire
+family. The PoC uses an **existing, valid subsequent AIREP chain record carrying a namespaced
+experimental SCITT anchor profile**, holding the receipt digest/reference, the sealed head's
+`{record_id, current}`, and the statement/receipt references if needed. This is PoC packaging,
+not a new normative artifact family.
