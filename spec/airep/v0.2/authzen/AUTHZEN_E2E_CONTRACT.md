@@ -123,6 +123,9 @@ violation, not a plausible edge case.
 - the AuthZEN request/response bytes, and the PDP identity and version;
 - the recorded response-body digest, the PDP identity, and the `X-Request-ID` values from
   request and response where present;
+- the **machine-observable transcript capture** of the actual request and response headers, with
+  its digest, kept separate from the body digests (`AUTHZEN-IR-4`), plus the reconciliation result
+  between it and the profile's recorded values;
 - the emitted Decision Receipt and the downstream Control artifact;
 - the independent binding verification result;
 - the three negative-case results with the cause each triggered;
@@ -180,9 +183,35 @@ this is the positive case, and it is the property AuthZEN 1.0 makes normative wh
 Authorization API does not require the header; absence is not a failure, and a missing pair is
 never reported as a correlation mismatch.
 
-**Headers are never bound.** `response_evidence_ref`'s `content_hash` is a digest of the exact
-response **body** bytes. No header value — `X-Request-ID` included — enters that digest, per
-`AUTHZEN-IR-2`. `response_request_id` is transcript correlation and carries no integrity weight.
+### Ruling AUTHZEN-IR-4 — headers are body-excluded, not integrity-free
+
+An earlier draft said "headers are never bound" and that `response_request_id` "carries no
+integrity weight". Both were wrong, and wrong in a way that understates what the artifact attests.
+
+The accurate statement:
+
+> Header values are not part of the request/response body content hashes. When recorded in the
+> AIREP profile, they are nevertheless integrity-bound as **producer claims** by the AIREP
+> artifact's own hash and signature. That proves what the producer recorded — not that the HTTP
+> exchange actually contained those header values.
+
+This follows from the frozen construction: INTEGRITY §2 removes only `integrity.current` and
+`integrity.signature` from the preimage and retains **every other member**, `profiles` included.
+So the moment an `X-Request-ID` is written into `profiles["airep.authzen-poc"]` it is inside the
+digest and under the record signature.
+
+**Consequence for N2.** Comparing the two self-reported strings inside the profile is not a
+correlation measurement — a producer that wrote both can trivially make them agree, and the
+artifact's signature attests only that it wrote them. The PoC evidence package MUST therefore
+retain a **machine-observable capture** of the actual `X-Request-ID` header values on the request
+and the response — a raw HTTP capture, or a deterministic transcript file plus its digest.
+
+N2 is measured by reconciling the profile's recorded values against **that captured transcript**,
+not against each other. The transcript is not part of any body digest; it is separate evidence
+about the exchange, and the distinction between "the producer says" and "the exchange showed" is
+the whole point of the case.
+
+A run whose only correlation evidence is the profile's own two strings does not satisfy N2.
 
 **No decision identifier.** Per `AUTHZEN-IR-1` and the AD-11 erratum, neither member above is a
 decision identifier, and the PoC MUST NOT add one. AuthZEN Authorization API 1.0 defines no
