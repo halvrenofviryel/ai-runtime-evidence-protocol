@@ -300,10 +300,29 @@ effect. Registration composes with, and does not replace, AD-03's evidence famil
 
 AIREP v0.2 defines an **authorization reference profile**: a Decision Receipt can carry a
 reference to (and digest of) an external authorization decision — an AuthZEN Authorization API 1.0
-decision, an OAuth token/delegation evidence artifact — including the PDP identity and the
-decision's own identifier. AIREP records *that* an authorization decision was obtained and *binds
-its bytes*; it never restates or reinterprets authorization semantics. The v0.1 `subject.principal`
-block (with `established_by`) remains the identity-provenance anchor.
+decision, an OAuth token/delegation evidence artifact — including the PDP identity and any
+identifier or correlation token **actually defined or emitted by the external authorization
+system**. AIREP records *that* an authorization decision was obtained and *binds its bytes*; it
+never restates or reinterprets authorization semantics. The v0.1 `subject.principal` block (with
+`established_by`) remains the identity-provenance anchor.
+
+> **Erratum (2026-08-26) — documentation only; no wire, schema or tag change.**
+> The adopted text above originally read "including the PDP identity and the decision's own
+> identifier". That described the external standard incorrectly. **AuthZEN Authorization API 1.0
+> defines no decision identifier.** `X-Request-ID`, when used, is an exchange/request correlation
+> identifier: the specification defines it as the request identifier and requires the same value
+> to be returned on the response when the client supplies it. A `deny` is a successful
+> authorization response — HTTP 200 with `"decision": false` — not a transport failure.
+>
+> Therefore: `X-Request-ID` **MUST NOT** be represented as a decision identifier, and **AIREP MUST
+> NOT synthesize an external decision identifier** where the external system defines none. Where
+> no identifier exists, the reference carries the PDP identity and the bound response-body digest,
+> and nothing is invented to fill the gap.
+>
+> This erratum corrects the description of an external standard in adopted architecture text. It
+> does not change `v0.2.0-alpha.1`, does not alter any tag or release history, does not modify any
+> schema, and creates no new normative profile. See `AUTHZEN-IR-1` in
+> `spec/airep/v0.2/authzen/AUTHZEN_E2E_CONTRACT.md`.
 
 ## AD-12 — MCP / A2A / OTel mappings are informative profiles
 
