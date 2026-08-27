@@ -95,6 +95,32 @@ ambiguous and fails closed.** An evaluator MUST NOT pick one. This mirrors the f
 deliberately: the same resolution semantics apply whether the resolution happens inside the class
 verifier or in the bundle layer above it.
 
+### 5.1 Frozen-verifier request construction (normative)
+
+The evaluator builds one §0 evaluation-request envelope **per artifact**, and the construction is
+fixed so that both lanes send the frozen verifier byte-identical evidence.
+
+For a four-artifact reconciliation bundle, evaluating artifact *A*:
+
+- `artifact` = *A* itself, **verbatim** — the exact bytes read from the bundle, never
+  re-serialized, re-ordered or normalized;
+- `related_artifacts` = the **other three** artifacts of the same bundle, verbatim, **and no
+  others**;
+- ordering of `related_artifacts` is **ascending UTF-8 byte order of `record_id`**, so the
+  envelope is a function of the bundle alone;
+- `head_witness` is present only where the scenario defines one, exactly as the bundle carries it.
+
+For a single-artifact scenario (the four positives and the four broken-per-family cases),
+`related_artifacts` is the **empty array** — not absent, not populated with unrelated artifacts.
+
+Operator inputs (`--bindings`, `--independence-policy`, `--revocation`, clock inputs) are passed
+as the **same bytes** to every artifact in the bundle and to both lanes. An evaluator MUST NOT
+synthesize, filter, reorder or re-emit them; it passes through the files the bundle ships.
+
+Both lanes MUST produce the same envelope bytes for the same (bundle, artifact) pair. This is
+mechanically checkable and is a required pre-run check, not an aspiration: if the two envelopes
+differ, the lanes are not measuring the same evidence and the run is invalid.
+
 ## 6. Reconciliation predicates (normative)
 
 Exactly three, evaluated **only after** every artifact in the bundle has a frozen-verifier result.
@@ -114,8 +140,32 @@ effective assessment of `unknown` fails this predicate. The evaluator MUST NOT r
 independence itself — that is a frozen stage-8 property and re-implementing it would create a
 second, unpinned definition.
 
-An evaluator computes all three and reports each. It does not stop at the first failure: a bundle
-that fails two predicates must say so, because "which predicate fired" is the measurement.
+### 6.1 Applicability (normative)
+
+Each predicate resolves to exactly one of **`PASS` · `FAIL` · `NOT_APPLICABLE`**. `NOT_APPLICABLE`
+is a first-class outcome and is never reported, aggregated or displayed as a pass.
+
+The four positive family baselines and the four broken-per-family scenarios are **single-artifact**
+scenarios. They have no bundle graph, no Control/Execution pair and no observer relationship to
+reconcile. They are **not run through the reconciliation predicates at all**:
+
+| Scenario | R-A graph | R-B digest equality | R-C independence |
+|---|---|---|---|
+| `IOP-P-DEC` · `IOP-P-CTL` · `IOP-P-EXE` · `IOP-P-EFF` | `NOT_APPLICABLE` | `NOT_APPLICABLE` | `NOT_APPLICABLE` |
+| `IOP-B-DEC` · `IOP-B-CTL` · `IOP-B-EXE` · `IOP-B-EFF` | `NOT_APPLICABLE` | `NOT_APPLICABLE` | `NOT_APPLICABLE` |
+| `IOP-R-CLEAN` | evaluated | evaluated | evaluated |
+| `IOP-R-TOCTOU` | evaluated | evaluated | evaluated |
+| `IOP-R-XREF` | evaluated | evaluated | evaluated |
+| `IOP-R-INDEP` | evaluated | evaluated | evaluated |
+
+Running a reconciliation predicate against a single-artifact scenario would either fabricate a
+vacuous `PASS` — an assertion about a graph that does not exist — or force the evaluator to invent
+a bundle. Both corrupt the measurement, which is why applicability is pinned here rather than left
+to the implementer.
+
+For the four `IOP-R-*` scenarios all three predicates are evaluated even when one has already
+failed. An evaluator does not stop at the first failure: a bundle that fails two predicates must
+say so, because **which** predicate fired is the measurement.
 
 ## 7. Level-1 mapping (normative)
 
@@ -139,20 +189,96 @@ individually sound precisely so this branch is not taken. Step 2 precedes step 3
 `IOP-R-INDEP` is built to satisfy R-A and R-B; if it ever reported
 `RECONCILIATION_MISMATCH`, the fixture is wrong, not the ordering.
 
+### 7.1 `authenticated_withheld` is never a qualifying `ACCEPT` (normative)
+
+**Withheld is not a pass.** Per frozen §4, a *withheld* channel means the tier could not be
+evaluated — an absent binding, a malformed or missing revocation snapshot, an unsupported suite.
+It is the absence of a measurement, not a negative one, and it must never be laundered into a
+positive Level-1 result.
+
+In an **official run** every operator input is complete by construction: the binding store
+resolves all four producer identities (`INTEROP_CORPUS_CONTRACT.md` §2.3), the revocation snapshot
+is present and well-formed, and the suite is registered. So for any artifact the scenario expects
+to reach `AIREP-Authenticated`:
+
+> a **non-empty `authenticated_withheld`** channel ⇒ **measurement-invalid**. The evaluator emits
+> **no Level-1 verdict** for that scenario and reports the withheld reasons verbatim.
+
+This is not `REJECT` — nothing was refused — and it is emphatically not `ACCEPT`. It means the
+harness or the operator inputs are wrong, and the correct response is to fix them and re-run, not
+to score the scenario. Treating it as `ACCEPT` would let a corpus shipped with a broken binding
+store report twelve green results while measuring almost nothing, which is the same class of
+failure `AD15-IR-2` was raised to prevent.
+
+A measurement-invalid scenario makes the **whole run** non-qualifying: an interop run is a claim
+about all twelve, and eleven-plus-one-unmeasured is not that claim.
+
+### 7.2 Frozen-verifier `exit 1` is not automatically `REJECT` (normative)
+
+Frozen `exit 1` means **run-invalid: no verdict was emitted**. Its causes are heterogeneous, and
+only some of them are the thing a broken-per-family scenario is testing:
+
+| Cause of frozen `exit 1` | Evaluator treatment |
+|---|---|
+| **stage-0 accepted-family schema invalidity** | Level-1 `REJECT` — *only* under the conditions below |
+| **stage-1 hash recomputation mismatch** | Level-1 `REJECT` — *only* under the conditions below |
+| unparseable or unreadable request | **`ERROR`**, no verdict |
+| unknown member in the request envelope | **`ERROR`**, no verdict |
+| `head_witness` present but `null` / non-object, or carrying an unknown member | **`ERROR`**, no verdict |
+| duplicate `(chain_id, record_id)` in a batch | **`ERROR`**, no verdict |
+| any other `exit 1` | **`ERROR`**, no verdict |
+
+`exit 1` may be read as Level-1 `REJECT` only when **both** hold:
+
+1. **the request was preflight-clean** — the evaluator constructed the envelope per §5.1, both
+   lanes produced identical envelope bytes, and the operator inputs are the bundle's own; and
+2. **the scenario's targeted predicate is stage-0 or stage-1 invalidity** — that is,
+   `IOP-B-DEC` (stage 1), `IOP-B-CTL` (stage 0) and `IOP-B-EFF` (stage 0), and no other scenario.
+
+Everything else is the evaluator's own error, not the artifact's. The distinction matters because
+a malformed request and a malformed artifact both exit 1: without this pin, an evaluator that
+built a bad envelope would score its own bug as a successful detection.
+
+**`IOP-B-EXE` does not reach `REJECT` this way.** Its target is stage 4, record-signature
+verification, which is an Authenticated-tier **failure** — a *completed* verdict, `exit 0`, class
+`AIREP-Core`, with a populated `authenticated_failures` channel. It qualifies through step 1 of
+the §7 mapping, not through an exit code. An `IOP-B-EXE` run that exits 1 is a defect in the
+fixture or the harness, never a pass.
+
 ## 8. Output and determinism
 
-One JSON object per scenario, on stdout, with: scenario id; the Level-1 verdict; the three
-predicate results; the per-artifact frozen-verifier verdicts verbatim; the asserted verifier
-digests; and the evaluator's own version.
+One JSON object per scenario, on stdout, carrying:
+
+- `scenario_id`;
+- `measurement_status` — `MEASURED` · `MEASUREMENT_INVALID` (§7.1) · `ERROR` (§7.2);
+- `level1` — the Level-1 verdict, **present only when `measurement_status` is `MEASURED`**, and
+  `null` otherwise. A scenario never carries both a verdict and a non-`MEASURED` status;
+- `predicates` — `{ "R_A": …, "R_B": …, "R_C": … }`, each `PASS` · `FAIL` · `NOT_APPLICABLE`;
+- `artifacts` — the per-artifact frozen-verifier verdicts **verbatim**, including every reason
+  channel and each invocation's exit code;
+- `withheld_reasons` — verbatim, whenever any `*_withheld` channel is non-empty;
+- `verifier_digests` — the three asserted digests from §3;
+- `request_envelope_digest` — per artifact, so the §5.1 cross-lane equality check is auditable
+  after the fact rather than only at run time;
+- `evaluator_version`.
+
+`level1: null` with a non-`MEASURED` status is the shape that keeps an unmeasured scenario
+unmeasured. An aggregator MUST NOT count it as anything; in particular a run containing any
+scenario that is not `MEASURED` is **non-qualifying** and its summary must say so rather than
+reporting "11 of 12".
 
 Runs are deterministic: identical bundle plus identical operator inputs gives byte-identical
 output, apart from nothing. Ordering of any collection in the output is by UTF-8 byte order of
 the scenario or record identifier, matching the corpus contract's existing ordering rule.
 
-Process exit: `0` when every scenario produced a Level-1 verdict; `1` when a bundle was rejected
-as invalid input; `2` for usage error; **`3` when a verifier digest assertion failed or a frozen
-verifier could not be invoked** — a run that could not measure exits distinctly from a run that
-measured and disagreed. A non-zero exit is never itself a Level-1 result.
+Process exit: `0` when **every** scenario reached `measurement_status: MEASURED` and produced a
+Level-1 verdict; `1` when a bundle was rejected as invalid input; `2` for usage error; **`3` when a
+verifier digest assertion failed, a frozen verifier could not be invoked, the two lanes produced
+differing §5.1 envelope bytes, or any scenario came back `MEASUREMENT_INVALID` or `ERROR`** — a run
+that could not measure exits distinctly from a run that measured and disagreed.
+
+A non-zero exit is never itself a Level-1 result, and `0` is never reachable while any scenario is
+unmeasured.
 
 ## 9. Provenance — extends the participation contract
 
