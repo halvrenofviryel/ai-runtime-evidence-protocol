@@ -15,11 +15,12 @@ is the point:
 
 A Decision Receipt may carry a reference to, and digest of, an external authorization decision —
 an AuthZEN Authorization API 1.0 decision, an OAuth token or delegation evidence artifact —
-including the PDP identity and, in AD-11's own wording, "the decision's own identifier"
-*(see ruling AUTHZEN-IR-1 below: AuthZEN 1.0 defines no such identifier, so this part of
-AD-11's description has no counterpart in the standard and is not a qualifying element)*. AIREP records **that** an
-authorization decision was obtained and **binds its bytes**. It never restates or reinterprets
-authorization semantics. The v0.1 `subject.principal` block with `established_by` remains the
+including the PDP identity and **any identifier or correlation token actually defined or emitted
+by the external authorization system**. For AuthZEN Authorization API 1.0 there is **no decision
+identifier**: `X-Request-ID`, where used, is an exchange/request correlation identifier and MUST
+NOT be represented as one, and AIREP MUST NOT synthesize an external decision identifier where the
+external system defines none. AIREP records **that** an authorization decision was obtained and
+**binds its bytes**. It never restates or reinterprets authorization semantics. The v0.1 `subject.principal` block with `established_by` remains the
 identity-provenance anchor.
 
 The failure mode this guards against is AIREP quietly becoming a second, weaker authorization
