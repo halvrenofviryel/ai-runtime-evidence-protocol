@@ -29,6 +29,16 @@ Optional stress vectors may be added later; they are never a precondition for qu
 
 ## 2. Lanes — both lanes cover all 12
 
+> **`AD15-IR-2` — the reference lanes are composite.** The frozen class verifiers do **not**
+> measure bundle-level reconciliation: `CLASS_VERIFIER_CONTRACT.md` §8 places TOCTOU equality,
+> reference resolution and lifecycle completeness out of scope. Three scenarios — `IOP-R-CLEAN`,
+> `IOP-R-TOCTOU`, `IOP-R-XREF` — therefore cannot be scored by a class verifier alone. The
+> "Python ref" and "Node ref" columns below mean the **reference interop evaluators** specified in
+> [`INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`](./INTEROP_REFERENCE_EVALUATOR_CONTRACT.md): two
+> separately authored programs, each composing its own frozen class verifier as a subprocess with
+> independently written reconciliation logic. The frozen verifiers are unchanged.
+> (`IOP-R-INDEP` is already a frozen stage-8 property and is delegated, not re-implemented.)
+
 All three evaluation surfaces evaluate **every** scenario. A split corpus would leave a scenario
 measured on one side only, and invites the objection that a given broken case was never actually
 run by the external implementation. AD-15's "passes under both reference verifiers **and** the

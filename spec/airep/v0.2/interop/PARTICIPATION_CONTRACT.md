@@ -70,8 +70,12 @@ audited. What is auditable is what ended up **inside** the producer. The manifes
 - the base: `v0.2.0-alpha.1` and its DOI;
 - **AIREP executable/source code copied, ported or adapted into the producer: must be `none`**;
 - normative schemas and test fixtures copied unchanged: **permitted**, listed if used;
-- the reference verifiers invoked as an external process or test oracle: **permitted**;
-  imported or vendored into the producer: **not permitted**;
+- the reference verifiers **and the two reference interop evaluators** invoked as an external
+  process or test oracle: **permitted**; imported, vendored, ported or adapted into the producer
+  or into the participant's own qualifying evaluation path: **not permitted**
+  (`AD15-IR-2`, `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` §9). Reading them is permitted;
+  reusing them means our reconciliation logic gets measured twice rather than two
+  implementations once;
 - general-purpose JCS, Ed25519 and JSON-Schema libraries: **permitted**, with dependency and
   version recorded.
 
