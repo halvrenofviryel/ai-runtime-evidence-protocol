@@ -46,6 +46,24 @@ eq("jcs escapes", jcs({ "a/b": 'q"' }), '{"a/b":"q\\""}');
 eq("jcs member order is UTF-16 code unit", jcs({ "ä": 1, z: 2 }), '{"z":2,"ä":1}');
 eq("jcs is stable across member order", jcs({ a: 1, b: 2 }), jcs({ b: 2, a: 1 }));
 
+// Independent reference: the byte string and digest below were produced OUTSIDE
+// this module, by Python's json.dumps(sort_keys=True, separators=(",", ":")),
+// which coincides with RFC 8785 for ASCII keys and integer numbers. Everything
+// else in this file recomputes expected envelope digests with the module's own
+// jcs(), so this is the one check that would catch a canonicalizer defect
+// rather than reproduce it.
+const REF_ARTIFACT = {
+  airep_version: "0.2", artifact_type: "decision", chain_id: "synth.chain",
+  record_id: "synth-a", sequence: 0,
+};
+const REF_BYTES = '{"artifact":{"airep_version":"0.2","artifact_type":"decision",'
+  + '"chain_id":"synth.chain","record_id":"synth-a","sequence":0},"related_artifacts":[]}';
+eq("jcs matches an independently produced canonical form",
+  jcs({ artifact: REF_ARTIFACT, related_artifacts: [] }), REF_BYTES);
+eq("its digest matches the independently computed one",
+  sha(Buffer.from(REF_BYTES, "utf8")),
+  "be7c67caa9483b5abb2c314646c0fab4411dcfbeed3f7f610e7405f6d6b97607");
+
 // ---------------------------------------------------------------------------
 // 2. UTF-8 byte ordering (sections 5.1 and 8.4)
 // ---------------------------------------------------------------------------
@@ -381,6 +399,37 @@ function parseOne(out) {
   const r = run(["--bundle", dir, "--bindings", outside]);
   eq("an operator input from outside the bundle is a usage error", r.code, 2);
   check("outside operator input writes nothing to stdout", r.out === "");
+}
+
+{
+  // Duplicate detection is on the (chain_id, record_id) TUPLE, not record_id
+  // alone: one record_id in two chains is legal.
+  const a = '{"record_id":"r","chain_id":"c1","artifact_type":"decision"}';
+  const b = '{"record_id":"r","chain_id":"c2","artifact_type":"control"}';
+  const dir = mkBundle("twochains", {
+    files: { "a.json": a, "b.json": b },
+    manifestExtra: { artifacts: ["a.json", "b.json"] },
+  });
+  const r = run(["--bundle", dir]);
+  check("one record_id in two chains is not a duplicate",
+    !r.err.includes("duplicate"), r.err.trim());
+
+  const dup = mkBundle("dup", {
+    files: { "a.json": a, "b.json": a.replace('"decision"', '"control"') },
+    manifestExtra: { artifacts: ["a.json", "b.json"] },
+  });
+  const r2 = run(["--bundle", dup]);
+  eq("a repeated (chain_id, record_id) tuple is ERROR", r2.code, 3);
+  check("the duplicate tuple is named", r2.err.includes("duplicate (chain_id, record_id)"), r2.err.trim());
+}
+{
+  // Clock inputs pass through as the bundle spelled them; a JSON number would
+  // have to be re-emitted, which section 5.1 forbids.
+  const dir = mkBundle("clocknumber", {
+    files: { "a.json": '{"record_id":"r","chain_id":"c","artifact_type":"decision"}' },
+    manifestExtra: { artifacts: ["a.json"], clock: { freshness_window_seconds: 3 } },
+  });
+  eq("a numeric freshness window in the manifest exits 1", run(["--bundle", dir]).code, 1);
 }
 
 // determinism (section 8.4)

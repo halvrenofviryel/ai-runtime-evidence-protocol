@@ -17,6 +17,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
 // 0. Constants
@@ -48,7 +49,10 @@ const MAX_SAFE_INT = 9007199254740991n;
 // <root>/v0.2/interop/interop_eval_node/interop_eval.mjs, the frozen Node
 // verifier at <root>/v0.2/class-verification/verifier_node_r2/. Any other
 // layout supplies --verifier / --verifier-contract.
-const HERE = path.dirname(new URL(import.meta.url).pathname);
+// fileURLToPath, not URL.pathname: the latter is percent-encoded, so a repo
+// path containing a space or a non-ASCII character would silently mis-resolve
+// both the default verifier location and the direct-invocation guard below.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_VERIFIER = path.join(
   HERE, "..", "..", "class-verification", "verifier_node_r2", "class_verifier.mjs");
 const DEFAULT_VERIFIER_CONTRACT = path.join(
@@ -381,11 +385,15 @@ export function loadManifest(bundleDir) {
       clock.now = doc.clock.now;
     }
     if (doc.clock.freshness_window_seconds !== undefined) {
-      const w = doc.clock.freshness_window_seconds;
-      if (!Number.isSafeInteger(w) || w < 0) {
-        throw new PreflightError("manifest.clock.freshness_window_seconds must be a non-negative integer");
+      // Carried as a STRING so it reaches the frozen verifier as the bundle
+      // spelled it. Parsing a JSON number and re-emitting it would be exactly
+      // the "synthesize / re-emit" that section 5.1 forbids, and two runtimes
+      // have no reason to re-spell one float identically.
+      if (typeof doc.clock.freshness_window_seconds !== "string") {
+        throw new PreflightError(
+          "manifest.clock.freshness_window_seconds must be a string, passed through unchanged");
       }
-      clock.freshnessWindow = String(w);
+      clock.freshnessWindow = doc.clock.freshness_window_seconds;
     }
   }
   let headWitness = null;
@@ -507,6 +515,30 @@ function assertVerifierDigests(verifierPath, contractPath) {
     }
   }
   return { record, failures };
+}
+
+// The evaluator reads three members of the frozen verdict as semantic input:
+// authenticated_failures, authenticated_withheld and observer_assessment. An
+// absent member would read as "no failure" / "not unknown" and silently
+// produce ACCEPT, so the frozen section 2 envelope shape is asserted rather
+// than assumed. This checks shape only -- never a reason's meaning.
+const VERDICT_ARRAYS = [
+  "authenticated_failures", "authenticated_withheld", "authenticated_caveats",
+  "witnessed_failures", "witnessed_withheld",
+];
+const VERDICT_CLASSES = ["AIREP-Core", "AIREP-Authenticated", "AIREP-Witnessed"];
+const OBSERVER_ASSESSMENTS = ["same_executor", "independent", "unknown", "not_applicable"];
+
+function verdictShapeViolation(verdict) {
+  for (const k of VERDICT_ARRAYS) {
+    if (!Array.isArray(verdict[k])) return `${k} is not an array`;
+    if (!verdict[k].every((r) => typeof r === "string")) return `${k} holds a non-string reason`;
+  }
+  if (!VERDICT_CLASSES.includes(verdict.class)) return `illegal class ${JSON.stringify(verdict.class)}`;
+  if (!OBSERVER_ASSESSMENTS.includes(verdict.observer_assessment)) {
+    return `illegal observer_assessment ${JSON.stringify(verdict.observer_assessment)}`;
+  }
+  return null;
 }
 
 function runFrozenVerifier(verifierPath, requestPath, operatorArgs) {
@@ -680,6 +712,9 @@ function evaluateBundle(flags, ctx) {
   const verifierPath = flags.verifier ?? DEFAULT_VERIFIER;
   const contractPath = flags["verifier-contract"] ?? DEFAULT_VERIFIER_CONTRACT;
   const digests = assertVerifierDigests(verifierPath, contractPath);
+  // Section 3 requires the asserted digests to be recorded in the output, so
+  // every later failure path carries them too, not only the happy path.
+  ctx.verifierDigests = digests.record;
   if (digests.failures.length > 0) {
     const err = new UnmeasurableError("ERROR",
       `frozen-verifier digest assertion failed: ${digests.failures.join("; ")}`);
@@ -736,9 +771,13 @@ function evaluateBundle(flags, ctx) {
     return { bundlePath: rel, value };
   });
   artifacts.sort((a, b) => byteCompare(a.value.record_id, b.value.record_id));
-  const recordIds = artifacts.map((a) => a.value.record_id);
-  if (new Set(recordIds).size !== recordIds.length) {
-    throw new UnmeasurableError("ERROR", "bundle carries a duplicate artifact record_id");
+  // The pinned run-identity invariant is the (chain_id, record_id) TUPLE
+  // (frozen section 2 / ruling R-10), not record_id alone: one record_id in two
+  // chains is legal, and a bare reference to it is simply ambiguous under the
+  // section 5 resolution rule, which R-A already fails closed on.
+  const tuples = artifacts.map((a) => jcs([a.value.chain_id ?? null, a.value.record_id]));
+  if (new Set(tuples).size !== tuples.length) {
+    throw new UnmeasurableError("ERROR", "bundle carries a duplicate (chain_id, record_id) tuple");
   }
 
   const headWitness = manifest.headWitness === null ? null : parsed.get(manifest.headWitness).value;
@@ -781,6 +820,11 @@ function evaluateBundle(flags, ctx) {
         if (!isPlainObject(verifierResult)) {
           throw new UnmeasurableError("ERROR",
             `frozen verifier exited 0 but did not emit a verdict object for ${primary.bundlePath}`);
+        }
+        const shape = verdictShapeViolation(verifierResult);
+        if (shape !== null) {
+          throw new UnmeasurableError("ERROR",
+            `frozen verdict violates class-verifier contract section 2 for ${primary.bundlePath}: ${shape}`);
         }
       }
       resultsByPath.set(primary.bundlePath, {
@@ -960,7 +1004,7 @@ export function main(argv) {
     }
     throw e;
   }
-  const ctx = { scenarioId: null };
+  const ctx = { scenarioId: null, verifierDigests: null };
   try {
     const result = evaluateBundle(flags, ctx);
     return emit(result);
@@ -983,7 +1027,7 @@ export function main(argv) {
         predicates: { R_A: "NOT_APPLICABLE", R_B: "NOT_APPLICABLE", R_C: "NOT_APPLICABLE" },
         artifacts: [],
         withheld_reasons: [],
-        verifier_digests: e.verifierDigests ?? null,
+        verifier_digests: e.verifierDigests ?? ctx.verifierDigests,
         evaluator_version: EVALUATOR_VERSION,
         _exit: 3,
         _diagnostic: "",
@@ -994,7 +1038,7 @@ export function main(argv) {
 }
 
 const invokedDirectly = process.argv[1]
-  && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
+  && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
 if (invokedDirectly) {
   process.exit(main(process.argv.slice(2)));
 }

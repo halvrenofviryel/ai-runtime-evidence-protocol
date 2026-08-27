@@ -43,8 +43,16 @@ no scenario bundle artifacts; corpus construction is on hold (contract §12).
 signed artifacts — a clean `ACCEPT`, the three reconciliation-negative verdicts, and
 `IOP-B-EXE`'s Authenticated-tier failure — cannot be exercised until the corpus exists. What is
 covered is the CLI/exit table, manifest verification, numeric preflight, envelope construction
-and ordering (verified against independently recomputed JCS digests), the §7.2 causal guard in
-both directions, reference resolution, all three predicates, and the Level-1 mapping order.
+and ordering, the §7.2 causal guard in both directions, reference resolution, all three
+predicates, and the Level-1 mapping order.
+
+One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
+checks recompute their expected value with this module's own `jcs()` and `byteCompare()`, so they
+prove the *pipeline* around the canonicalizer, not the canonicalizer. Exactly one check does not —
+a canonical byte string and digest produced outside this module (Python
+`json.dumps(sort_keys=True, separators=(",", ":"))`, which coincides with RFC 8785 for ASCII keys
+and integer numbers) is asserted as a literal. Envelope-byte equality is the property AD15-IR-4
+hands to the aggregate harness, and that is where it is actually measured.
 
 ## Assumed bundle manifest shape — flagged for maintainer pinning
 
@@ -63,7 +71,7 @@ was chosen to match the house style of the existing corpus manifests in this rep
     "independence_policy": "<path>",
     "revocation": "<path>"
   },
-  "clock": { "now": "<str>", "freshness_window_seconds": 0 },     // optional
+  "clock": { "now": "<str>", "freshness_window_seconds": "<str>" },  // optional; BOTH strings
   "head_witness": "<path>"                                        // optional
 }
 ```
@@ -72,6 +80,10 @@ Rules the evaluator enforces on it: unknown members are rejected; paths must be 
 relative and inside the bundle; every referenced path must be listed in `files`; a manifest that
 violates any of these exits `1`, because a manifest that cannot be trusted cannot establish
 bundle identity.
+
+`clock.freshness_window_seconds` is a **string**, not a number, so it reaches the frozen verifier
+as the bundle spelled it. Parsing a JSON number and re-emitting it would be the "synthesize /
+re-emit" §5.1 forbids, and two runtimes have no reason to re-spell one float identically.
 
 Operator inputs may be declared in the manifest, named on the command line, or both — when both,
 they must agree. A command-line operator input must live inside the bundle and be covered by the
@@ -112,3 +124,17 @@ use.
 7. **Exit 1 for an absent file after identity was established.** §8.5's exit-1 row lists "a
    required artifact absent", while the paragraph under the table says a result object is owed
    once identity is established. The table row is followed.
+8. **`predicates` on a non-`MEASURED` result.** §8.2 requires the member always, and §6.1 closes
+   its value set to three, but none of the three means "applicable and not measured". An errored
+   four-artifact `IOP-R-*` bundle therefore reports `NOT_APPLICABLE`, which is
+   indistinguishable in that member from a genuine single-artifact scenario. A fourth value, or
+   permission to omit the member when `measurement_status != MEASURED`, would close it.
+9. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
+   contract pins `--help` to exit `0` — which §8.5 here forbids, since exit `0` owes a result
+   object. Treated as a usage error (exit `2`, usage on stderr). The two lanes have no shared
+   basis to agree on this until it is pinned.
+10. **Unlisted files in the bundle directory.** §5 says the manifest "lists every file the bundle
+    ships", but does not say an evaluator must detect a file present on disk and absent from the
+    manifest. Only the manifest→disk direction is verified here. Enforcing the other direction
+    would require inventing an exemption for the manifest itself and for any incidental file
+    (a README), which is why it is recorded rather than implemented.
