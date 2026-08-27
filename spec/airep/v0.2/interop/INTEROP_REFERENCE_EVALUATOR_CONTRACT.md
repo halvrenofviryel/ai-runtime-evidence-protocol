@@ -87,7 +87,14 @@ dual class-verifier exercise established, and the same reasoning applies here.
 
 An evaluator consumes a **scenario bundle**: a directory containing the scenario's artifacts, the
 operator inputs the frozen verifier requires (`--bindings`, `--independence-policy`,
-`--revocation`, clock inputs), and a manifest naming the scenario id and the artifact files.
+`--revocation`, clock inputs), and a manifest.
+
+The manifest names the `scenario_id` and lists every file the bundle ships — artifacts and
+operator inputs alike — each with a **`sha256` over its original bytes**. The evaluator verifies
+every file against its manifest digest **before** parsing anything; a mismatch is a hard `ERROR`
+and no verdict is emitted. This is the layer that protects artifact provenance (§5.1), and it is
+what makes "the bundle's own operator-input bytes" an auditable statement rather than an
+assumption.
 
 Reference resolution inside a bundle is by v0.2 reference semantics — `record_id`, additionally
 `chain_id` when the reference carries one. **Zero matches is unresolved; more than one match is
@@ -102,8 +109,7 @@ fixed so that both lanes send the frozen verifier byte-identical evidence.
 
 For a four-artifact reconciliation bundle, evaluating artifact *A*:
 
-- `artifact` = *A* itself, **verbatim** — the exact bytes read from the bundle, never
-  re-serialized, re-ordered or normalized;
+- `artifact` = *A* as a **JSON value**, parsed from the bundle file (see the byte rule below);
 - `related_artifacts` = the **other three** artifacts of the same bundle, verbatim, **and no
   others**;
 - ordering of `related_artifacts` is **ascending UTF-8 byte order of `record_id`**, so the
@@ -117,9 +123,39 @@ Operator inputs (`--bindings`, `--independence-policy`, `--revocation`, clock in
 as the **same bytes** to every artifact in the bundle and to both lanes. An evaluator MUST NOT
 synthesize, filter, reorder or re-emit them; it passes through the files the bundle ships.
 
-Both lanes MUST produce the same envelope bytes for the same (bundle, artifact) pair. This is
-mechanically checkable and is a required pre-run check, not an aspiration: if the two envelopes
-differ, the lanes are not measuring the same evidence and the run is invalid.
+#### Byte rule — two distinct byte layers
+
+An earlier draft required the nested artifact to be carried as "exact bytes, never re-serialized"
+*and* required both lanes to emit byte-identical envelopes. Those cannot both hold: nesting a
+document inside a JSON object is a serialization, and two languages using their own serializers
+have no reason to agree. The two layers are separated instead.
+
+**Layer 1 — bundle files are immutable and hashed.** Each artifact file keeps its original bytes
+on disk, and the bundle manifest records `sha256` over those bytes. The evaluator verifies each
+file against its manifest digest before use; a mismatch is a hard `ERROR`. This is what protects
+artifact provenance, and it is the *only* place original bytes matter.
+
+**Layer 2 — the request envelope is canonical.** The evaluator parses each artifact file into a
+JSON value, assembles the closed §0 envelope from those values, and serializes it as:
+
+```
+request-envelope-bytes = RFC 8785 (JCS) canonicalization of the envelope
+request_envelope_digest = "sha256:" || lowercase-hex( SHA-256( request-envelope-bytes ) )
+```
+
+JCS is deterministic on the JSON value, so both lanes produce the same bytes from the same bundle
+without either sharing code or preserving the other's serializer quirks.
+
+**This does not weaken hash verification.** `integrity.current` is defined over
+`JCS(artifact minus current and signature)` (INTEGRITY §2), which is a function of the artifact's
+JSON *value*, not of its file bytes. Re-serializing while preserving the value therefore leaves
+every hash and signature check intact. The construction is safe for this corpus because the only
+numeric type anywhere in the v0.2 schemas is `sequence`, a non-negative integer — there is no
+floating-point value whose round-trip could differ between the two runtimes.
+
+Both lanes MUST produce the same `request_envelope_digest` for the same (bundle, artifact) pair.
+This is a required pre-run check, not an aspiration: if the digests differ, the lanes are not
+measuring the same evidence and the run is invalid.
 
 ## 6. Reconciliation predicates (normative)
 
@@ -153,10 +189,17 @@ reconcile. They are **not run through the reconciliation predicates at all**:
 |---|---|---|---|
 | `IOP-P-DEC` · `IOP-P-CTL` · `IOP-P-EXE` · `IOP-P-EFF` | `NOT_APPLICABLE` | `NOT_APPLICABLE` | `NOT_APPLICABLE` |
 | `IOP-B-DEC` · `IOP-B-CTL` · `IOP-B-EXE` · `IOP-B-EFF` | `NOT_APPLICABLE` | `NOT_APPLICABLE` | `NOT_APPLICABLE` |
-| `IOP-R-CLEAN` | evaluated | evaluated | evaluated |
-| `IOP-R-TOCTOU` | evaluated | evaluated | evaluated |
-| `IOP-R-XREF` | evaluated | evaluated | evaluated |
-| `IOP-R-INDEP` | evaluated | evaluated | evaluated |
+| `IOP-R-CLEAN` | `PASS` | `PASS` | `PASS` |
+| `IOP-R-TOCTOU` | `PASS` | **`FAIL`** | `PASS` |
+| `IOP-R-XREF` | **`FAIL`** | `PASS` | `PASS` |
+| `IOP-R-INDEP` | `PASS` | `PASS` | **`FAIL`** |
+
+**These are contract expectations, frozen here before any evaluator exists — not values read back
+out of evaluator output.** Each `IOP-R-*` fixture is built to break exactly one predicate (corpus
+contract §2.2, single target per fixture), so the expected matrix is fully determined by the
+transformation table and is stated in advance. An evaluator whose output disagrees with a cell
+above is a finding: either the implementation is wrong or the fixture is, and which one is settled
+by reading the transformation, never by amending this table to match a run.
 
 Running a reconciliation predicate against a single-artifact scenario would either fabricate a
 vacuous `PASS` — an assertion about a graph that does not exist — or force the evaluator to invent
@@ -245,40 +288,76 @@ verification, which is an Authenticated-tier **failure** — a *completed* verdi
 the §7 mapping, not through an exit code. An `IOP-B-EXE` run that exits 1 is a defect in the
 fixture or the harness, never a pass.
 
-## 8. Output and determinism
+## 8. Invocation, output and determinism
 
-One JSON object per scenario, on stdout, carrying:
+### 8.1 One invocation evaluates one bundle
+
+```
+interop-eval --bundle DIR [operator-input flags]
+```
+
+One invocation evaluates **exactly one** scenario bundle and writes **exactly one** JSON object to
+stdout. An evaluator performs **no case discovery**: it does not scan for sibling bundles, does not
+iterate a corpus directory, and never emits a partial or streaming result set.
+
+The official harness invokes each evaluator **twelve times**, once per scenario, and a **separate
+aggregate gate** enforces the run-level requirement that all twelve came back `MEASURED`. Keeping
+discovery and aggregation out of the evaluator means two authors cannot invent two different
+answers to "what counts as the corpus" or "what does partial output mean" — the failure mode that
+`AD15-IR-2` exists to prevent, in miniature.
+
+### 8.2 Result object
 
 - `scenario_id`;
 - `measurement_status` — `MEASURED` · `MEASUREMENT_INVALID` (§7.1) · `ERROR` (§7.2);
 - `level1` — the Level-1 verdict, **present only when `measurement_status` is `MEASURED`**, and
   `null` otherwise. A scenario never carries both a verdict and a non-`MEASURED` status;
 - `predicates` — `{ "R_A": …, "R_B": …, "R_C": … }`, each `PASS` · `FAIL` · `NOT_APPLICABLE`;
-- `artifacts` — the per-artifact frozen-verifier verdicts **verbatim**, including every reason
-  channel and each invocation's exit code;
+- `artifacts` — one entry per artifact in the bundle, shape pinned in §8.3;
 - `withheld_reasons` — verbatim, whenever any `*_withheld` channel is non-empty;
 - `verifier_digests` — the three asserted digests from §3;
-- `request_envelope_digest` — per artifact, so the §5.1 cross-lane equality check is auditable
-  after the fact rather than only at run time;
 - `evaluator_version`.
 
 `level1: null` with a non-`MEASURED` status is the shape that keeps an unmeasured scenario
-unmeasured. An aggregator MUST NOT count it as anything; in particular a run containing any
-scenario that is not `MEASURED` is **non-qualifying** and its summary must say so rather than
-reporting "11 of 12".
+unmeasured. An aggregator MUST NOT count it as anything.
 
-Runs are deterministic: identical bundle plus identical operator inputs gives byte-identical
-output, apart from nothing. Ordering of any collection in the output is by UTF-8 byte order of
-the scenario or record identifier, matching the corpus contract's existing ordering rule.
+### 8.3 `artifacts[]` entry (normative)
 
-Process exit: `0` when **every** scenario reached `measurement_status: MEASURED` and produced a
-Level-1 verdict; `1` when a bundle was rejected as invalid input; `2` for usage error; **`3` when a
-verifier digest assertion failed, a frozen verifier could not be invoked, the two lanes produced
-differing §5.1 envelope bytes, or any scenario came back `MEASUREMENT_INVALID` or `ERROR`** — a run
-that could not measure exits distinctly from a run that measured and disagreed.
+The earlier draft said "per-artifact frozen-verifier verdicts verbatim". That is unrepresentable
+for the cases this contract cares most about: when the frozen verifier exits 1 there **is no
+verdict** — §6.4 is explicit that no result is emitted. The entry is therefore pinned as:
 
-A non-zero exit is never itself a Level-1 result, and `0` is never reachable while any scenario is
-unmeasured.
+| Field | Type | Meaning |
+|---|---|---|
+| `artifact_ref` | object | `record_id`, and `chain_id` where the bundle carries one |
+| `request_envelope_digest` | string | `sha256:…` over the §5.1 canonical envelope bytes |
+| `verifier_exit_code` | integer | the frozen verifier's exit code, verbatim |
+| `verifier_result` | object **or `null`** | the verdict verbatim when one was emitted; **`null` whenever `verifier_exit_code` is 1**, because no verdict exists |
+| `verifier_stderr_digest` | string | `sha256:…` over the captured stderr, for audit |
+
+**`stderr` is never a source of semantic classification.** It is hashed for audit and may be
+retained alongside the run, but an evaluator MUST NOT parse it, match on it, or let its content
+influence any predicate, Level-1 verdict or `measurement_status`. Classification comes from the
+exit code and the emitted verdict only. Reading prose to decide a verdict would make the
+measurement depend on a surface neither the frozen contract nor this one pins.
+
+### 8.4 Determinism
+
+Identical bundle plus identical operator inputs gives byte-identical output. Ordering of any
+collection is by UTF-8 byte order of the relevant identifier — `record_id` for `artifacts[]` —
+matching the corpus contract's existing ordering rule.
+
+### 8.5 Process exit
+
+| Exit | Condition |
+|---|---|
+| `0` | the bundle reached `measurement_status: MEASURED` and produced a Level-1 verdict |
+| `1` | the bundle was rejected as invalid input — malformed manifest, a file failing its manifest digest, or a missing required artifact |
+| `2` | CLI usage error |
+| `3` | could not measure: a verifier digest assertion failed, a frozen verifier could not be invoked, the two lanes produced differing `request_envelope_digest` values, or the scenario came back `MEASUREMENT_INVALID` or `ERROR` |
+
+A non-zero exit is never itself a Level-1 result, and `0` is unreachable while the bundle is
+unmeasured. The twelve-of-twelve requirement lives in the aggregate gate (§8.1), not here.
 
 ## 9. Provenance — extends the participation contract
 
