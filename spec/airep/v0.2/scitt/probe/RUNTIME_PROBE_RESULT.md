@@ -33,45 +33,88 @@ with provenance enabled.
 
 ## 2. Registration — observed statuses
 
-Two paths exist, and they differ. Both were driven with a raw HTTP client, redirects **not**
-followed, so the *first* response is what is recorded.
+> **Correction (2026-08-27, maintainer-flagged).** The first version of this section reported
+> `POST /entries` → `202` and concluded that "both the project's README and upstream issue #414 are
+> stale". **That conclusion was wrong and is withdrawn.** The request carried no `api-version`, and
+> the pinned source selects behaviour on exactly that: `is_scrapi_v9()` in `app/src/util.h` returns
+> true **only** when the query contains `api-version=2026-03-26`. Without it, `operations_endpoints.h`
+> takes the branch its own comment labels "Legacy flow: 202 Accepted with CBOR body and
+> `Location: /operations/`". I measured the legacy compatibility path and drew a conclusion about
+> the versioned one. The corrected measurements are below.
 
-Payload: the project's own `test/payloads/manifest.spdx.json.sha384.digest.cose`, 4,296 bytes,
+Three request shapes were driven with a raw HTTP client, redirects **not** followed, so the *first*
+response is what is recorded. Payload throughout: the project's own
+`test/payloads/manifest.spdx.json.sha384.digest.cose`, 4,296 bytes,
 `sha256:feed68f19b4b8a5278fa1a79096caa8c9cd604eecccb71dea7a3e44112eccc90`.
 
-| Request | First response | Location | Content-Type |
+| Request target | First status | `Location` | `Content-Type` |
 |---|---|---|---|
-| `POST /entries` | **`202 Accepted`** | `/operations/2.13` | `application/cbor`, 33 bytes |
-| `POST /entries?waitForCommit=true` | **`201 Created`** | `/entries/2.14` | `application/cose`, 508 bytes — the receipt itself |
+| `/entries` — **no** `api-version` | `202 Accepted` | `/operations/2.19` | `application/cbor` |
+| `/entries?api-version=2026-03-26` | **`303 See Other`** | `/entries/2.18` | — |
+| `/entries?api-version=2026-03-26&waitForCommit=true` | **`201 Created`** | `/entries/2.16` | `application/scitt-receipt+cose` |
 
-**Both the project's README and upstream issue #414 are stale on this point.** The README's worked
-example shows `POST /entries 303` followed by `302` redirects; issue #414 asks for the `302` to
-become `202`. The observed default path already returns **`202`**, and the synchronous path returns
-**`201`** with the receipt in the body — which is exactly SCRAPI-11 §2.3.1 ("If the Transparency
-Service is able to produce a Receipt within a reasonable time, it MAY return it directly", `201
-Created`, `Location` header MUST).
+**What this actually shows.**
 
-So the compatibility picture is **better than the delta analysis projected**, and for a reason that
-document analysis could not have reached: the analysis compared SCRAPI-09 against SCRAPI-11 and
-correctly identified `303`/`302` as the draft-09 shapes, but the implementation had already moved
-past its own documentation.
+- The **versioned asynchronous** path is still **`303`**, exactly as the README's worked example
+  shows and exactly as upstream issue #414 describes. **#414 is not stale.** My earlier claim that
+  it was rested entirely on the legacy-path measurement.
+- The `202` is a **backward-compatibility flow** for clients that send no `api-version`. It is not
+  evidence that the SCRAPI async path has moved.
+- The one thing that **is** stale in the README is its `--wait-for-commit` example, which shows
+  `POST /entries?waitForCommit=true 200`. Measured here: **`201`**.
 
-**Neither the client `X-Request-ID` nor any echo of it appears in the response.** The service
-returns its own `x-ms-request-id` with an unrelated value, plus `x-ms-ccf-transaction-id`.
+**A note on the source comment.** `operations_endpoints.h` says the legacy branch exists "for
+backward compatibility with legacy clients (eg. .NET SDK) that expect `api-version=2026-03-26`",
+which reads as though that value selects legacy. The logic in `util.h` says the opposite: that
+value selects SCRAPI. The comment is misleading; the behaviour is what is recorded above.
+
+### 2.1 `W2-PROBE-IR-2` confirmation
+
+Request target, exactly as pinned by the ruling:
+
+```
+POST /entries?api-version=2026-03-26&waitForCommit=true
+Content-Type: application/cose
+```
+
+| | |
+|---|---|
+| First HTTP status | **`201 Created`** |
+| `Location` | `https://localhost:8000/entries/2.16` |
+| `Content-Type` | **`application/scitt-receipt+cose`** |
+| Receipt | 436 bytes, `sha256:b82289bbef7a93300c3a78c39825adf6f47baa6efc712f7706184103c46c46b4` |
+| Other headers | `x-ms-ccf-transaction-id: 2.16`, `x-ms-request-id: d6c6bc7517c3526a` |
+| Image | `sha256:88931df39f990673f618c2b003ddae5feed827a83d9cc68e678f0828df6bb648` — the same image, re-run, not rebuilt |
+
+The media type is the differentiator worth noting: under the versioned selector the service returns
+**`application/scitt-receipt+cose`**, the type registered by RFC 9943, rather than the bare
+`application/cose` the legacy `waitForCommit` path returned. Same status, different declared type.
+
+**`waitForCommit` is not a SCRAPI parameter.** It is this implementation's own mode selector. What
+the observation supports is therefore bounded:
+
+> On the pinned `scitt-ccf-ledger` 0.19.0 implementation, using its versioned SCITT API selector
+> together with its synchronous wait-for-commit option produced the synchronous registration
+> response shape corresponding to SCRAPI-11 §2.3.1.
+
+Nothing more general than that sentence is claimed.
 
 ## 3. Receipt and VDS identifier
 
-From the `201` response body, 508 bytes,
-`sha256:411dbdb14fc27921d043f7a75aa3e7f5927eabfd70bc5e4460a81ef57c7e07d1`:
+From the **`W2-PROBE-IR-2`** response body, 436 bytes,
+`sha256:b82289bbef7a93300c3a78c39825adf6f47baa6efc712f7706184103c46c46b4`
+(the legacy-path receipt measured earlier was 508 bytes,
+`sha256:411dbdb14fc27921d043f7a75aa3e7f5927eabfd70bc5e4460a81ef57c7e07d1`; both carry the same
+`vds` and proof type):
 
 | Field | Observed |
 |---|---|
 | COSE tag | `18` (COSE_Sign1) |
 | `alg` (1) | `-35` (ES384) |
-| CWT claims (15) | issuer `127.0.0.1:8000`, subject `scitt.ccf.signature.v1`, iat `1787859257` |
+| CWT claims (15) | issuer `127.0.0.1:8000`, subject `scitt.ccf.signature.v1`, iat `1787860661` |
 | **`vds` (395)** | **`2`** |
 | proofs (396) | present, proof type `-1` (inclusion) |
-| `ccf.v1` | `{txid: 2.15}` — an implementation-specific header outside the profile |
+| `ccf.v1` | `{txid: 2.17}` — an implementation-specific header outside the profile. Note it differs from the `Location` txid `2.16`; recorded as observed, not reconciled |
 
 **The `TBD_1` limitation is now measured, not predicted.** `draft-ietf-scitt-receipts-ccf-profile-04`
 Table 1 registers `CCF_LEDGER_SHA256` as `TBD_1` with "(requested assignment 2)". The wire carries
@@ -80,24 +123,17 @@ its verifiable data structure by a number IANA has not allocated, under either t
 individual draft or the current WG draft. The inclusion-proof label `-1` does match the draft's
 normative requirement.
 
-## 4. What this means for the gate — maintainer's call
+## 4. Gate status
 
-`W2-PROBE-IR-1` says only an observed `201 Created` qualifies, and that `202` is a finding to be
-scoped rather than a pass.
+`W2-PROBE-IR-2` is satisfied on the measurement it names: the pinned request target returned an
+observed `201 Created` with an inline receipt of the registered SCITT receipt media type.
 
-Both are present here, on two different endpoints:
+The scoping question raised in the first version of this file — "which endpoint is the minimum
+registration" — was settled by the maintainer rather than by me, and correctly: the qualifying call
+is the **versioned** one, not merely `?waitForCommit=true`. Without `api-version=2026-03-26` the
+service takes its legacy branch, which is a different code path with a different media type.
 
-- the **default** registration path returns `202` — an asynchronous operation handle;
-- the **`waitForCommit=true`** path returns `201` with the receipt inline.
-
-The question the ruling does not settle is which one is "the minimum registration". The `201` path
-is not a fallback or a workaround — it is a documented first-class variant, and it is the shape
-SCRAPI-11 §2.3.1 describes. But it is also opt-in via a query parameter, so calling it "the"
-registration path is a scoping decision, not an observation.
-
-**I have not proceeded to S1–S6.** Recommended framing, for the maintainer to accept or replace:
-the PoC pins `waitForCommit=true` as its registration call, records that the default path is
-asynchronous `202`, and claims the synchronous SCRAPI-11 §2.3.1 shape **only** for the pinned call.
+**S1–S6 has not been started.** It waits on the maintainer's gate.
 
 ## 5. Reproduction
 
