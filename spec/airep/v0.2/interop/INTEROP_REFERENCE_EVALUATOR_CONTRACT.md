@@ -110,8 +110,9 @@ fixed so that both lanes send the frozen verifier byte-identical evidence.
 For a four-artifact reconciliation bundle, evaluating artifact *A*:
 
 - `artifact` = *A* as a **JSON value**, parsed from the bundle file (see the byte rule below);
-- `related_artifacts` = the **other three** artifacts of the same bundle, verbatim, **and no
-  others**;
+- `related_artifacts` = the **other three** artifacts of the same bundle, each as a **JSON value
+  parsed from its bundle file** under the same rule as the primary, **and no others**. Original
+  bytes live only in Layer 1 (manifest provenance); nothing in the envelope is carried "verbatim";
 - ordering of `related_artifacts` is **ascending UTF-8 byte order of `record_id`**, so the
   envelope is a function of the bundle alone;
 - `head_witness` is present only where the scenario defines one, exactly as the bundle carries it.
@@ -149,13 +150,51 @@ without either sharing code or preserving the other's serializer quirks.
 **This does not weaken hash verification.** `integrity.current` is defined over
 `JCS(artifact minus current and signature)` (INTEGRITY §2), which is a function of the artifact's
 JSON *value*, not of its file bytes. Re-serializing while preserving the value therefore leaves
-every hash and signature check intact. The construction is safe for this corpus because the only
-numeric type anywhere in the v0.2 schemas is `sequence`, a non-negative integer — there is no
-floating-point value whose round-trip could differ between the two runtimes.
+every hash and signature check intact.
 
-Both lanes MUST produce the same `request_envelope_digest` for the same (bundle, artifact) pair.
-This is a required pre-run check, not an aspiration: if the digests differ, the lanes are not
-measuring the same evidence and the run is invalid.
+#### Numeric preflight (normative)
+
+An earlier draft justified this by saying the only numeric type in the v0.2 schemas is `sequence`,
+a non-negative integer. **That was a statement about the declared schema set mistaken for a
+statement about instance documents, and it is not true of AIREP artifacts.** `profiles` is the
+extension surface (AD-07) and `common.schema.json` constrains a profile value only as
+`{"type": "object"}` — its members are unconstrained, so a conforming artifact may carry a JSON
+number of any kind inside a profile. Whether the two runtimes agree on such a number is exactly
+what must not be left to the implementer.
+
+Every JSON number reachable in the assembled envelope — artifact core, profiles, operator inputs,
+`head_witness`, at any depth — MUST satisfy:
+
+- **finite and IEEE-754 representable** — no `NaN`, no infinity, no value requiring more than
+  double precision to round-trip;
+- **integers**: absolute value **≤ 2^53 − 1** (`9007199254740991`).
+
+A bundle containing any number outside this envelope is a hard **`ERROR`**, no measurement, and
+the offending JSON Pointer is reported. This is checked in preflight, before any envelope is
+assembled.
+
+The bound is compatible with the core constraint — `sequence` is a non-negative integer and cannot
+exceed it in any realistic chain — and it closes the profile hole without adding a schema
+constraint to an intentionally open surface.
+
+#### Ruling `AD15-IR-4` — cross-lane envelope equality is an aggregate gate
+
+An earlier draft made cross-lane digest equality a "required pre-run check" inside the evaluator
+and listed a lane disagreement among the evaluator's own `exit 3` conditions. **That is not
+implementable.** A single Python invocation has no access to the Node lane's digest — it cannot
+observe, let alone enforce, a property of a run it is not part of.
+
+The property is real; it belongs one level up:
+
+- each evaluator computes and emits **only its own** `request_envelope_digest`, per artifact;
+- the **official harness** compares the Python and Node digests for the same
+  `(scenario_id, artifact_ref)` pair;
+- a mismatch makes the **aggregate run invalid / non-qualifying**. It is not translated into any
+  individual evaluator's exit code, because no evaluator is in a position to detect it.
+
+Raw outputs from a run whose digests disagree may be retained as measurement records, but **no
+result from such a run counts toward qualification** — the two lanes were not evaluating the same
+evidence, so their agreement or disagreement means nothing.
 
 ## 6. Reconciliation predicates (normative)
 
@@ -347,14 +386,32 @@ Identical bundle plus identical operator inputs gives byte-identical output. Ord
 collection is by UTF-8 byte order of the relevant identifier — `record_id` for `artifacts[]` —
 matching the corpus contract's existing ordering rule.
 
-### 8.5 Process exit
+### 8.5 Process exit and stdout (normative)
 
-| Exit | Condition |
-|---|---|
-| `0` | the bundle reached `measurement_status: MEASURED` and produced a Level-1 verdict |
-| `1` | the bundle was rejected as invalid input — malformed manifest, a file failing its manifest digest, or a missing required artifact |
-| `2` | CLI usage error |
-| `3` | could not measure: a verifier digest assertion failed, a frozen verifier could not be invoked, the two lanes produced differing `request_envelope_digest` values, or the scenario came back `MEASUREMENT_INVALID` or `ERROR` |
+§8.1 says one invocation writes exactly one result object. That cannot hold unconditionally: if the
+manifest itself will not parse, even `scenario_id` is unknown, so there is nothing to write an
+object *about*. Exit code and stdout are therefore pinned together.
+
+| Exit | stdout | Condition |
+|---|---|---|
+| `0` | **exactly one** result object, `measurement_status: MEASURED`, with a Level-1 verdict | the bundle was measured |
+| `1` | **no result object** — stdout empty | bundle/manifest preflight could not be performed: manifest missing or unparseable, bundle identity unknown, a required artifact absent |
+| `2` | **no result object** — stdout empty | CLI usage error |
+| `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null` | bundle identity was parsed, but the scenario could not be measured — verifier digest assertion, frozen verifier not invocable, numeric preflight rejection, a file failing its manifest digest, withheld-when-Authenticated-expected |
+
+The dividing line is **whether bundle identity was established**. Once it is, the evaluator owes a
+result object naming the scenario it failed on; before it, it owes silence on stdout and
+diagnostics on stderr.
+
+**Diagnostics always go to stderr, and stderr is never a source of semantics** (§8.3). It is not
+parsed by the harness, does not influence any verdict, predicate or status, and is retained only
+as an audit digest.
+
+**Missing output is itself a finding.** The aggregate harness knows which twelve invocations it
+expected. An expected invocation that produces **no result object** — exit `1`, exit `2`, a crash,
+a timeout — is recorded by the harness as a **non-qualifying `ERROR`** for that scenario. Silence
+is never absence of a problem, and a run missing any of the twelve is non-qualifying regardless of
+what the other eleven said.
 
 A non-zero exit is never itself a Level-1 result, and `0` is unreachable while the bundle is
 unmeasured. The twelve-of-twelve requirement lives in the aggregate gate (§8.1), not here.
