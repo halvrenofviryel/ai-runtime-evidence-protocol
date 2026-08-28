@@ -1,7 +1,8 @@
 # Reference interop evaluator contract (AD15-IR-2)
 
-Status: **DRAFT — awaiting maintainer acceptance.** No evaluator code and no corpus bytes may be
-produced until this contract is accepted.
+Status: **ACCEPTED FOR POST-ERRATUM REMEDIATION — CORPUS CONSTRUCTION STILL HOLD.**
+Post-erratum dual remediation may proceed against this document. **Corpus bytes remain on HOLD**
+until both remediated evaluators are source-reviewed and frozen (§13).
 
 ## 1. Why this exists
 
@@ -106,8 +107,21 @@ contexts independently assumed incompatible encodings from that text, and measur
 }
 ```
 
+**The manifest file is `manifest.json`, in the bundle root.** `--bundle DIR` names the directory;
+the evaluator does not search for or accept any other name or location.
+
 - The manifest object is **closed**: exactly `manifest_version`, `scenario_id`, `files`. Any other
   member is a hard `ERROR`.
+- `files` lists **every regular file under the bundle directory, recursively, except
+  `manifest.json` itself.** Excluding it resolves the self-hash problem an earlier "every file the
+  bundle ships" reading created. A file present on disk but absent from `files` is a hard `ERROR`;
+  so is a `files[]` entry with no file on disk.
+- **Symbolic links are forbidden** anywhere under the bundle. A symlink — including one whose
+  target resolves inside the bundle — is a hard `ERROR`. A digest over a link's target is not a
+  digest over the bundle's own bytes.
+- `sha256` is **exactly 64 lowercase hexadecimal characters with no prefix** — not the
+  `"sha256:…"` form used for wire digests elsewhere in v0.2. The two encodings live at different
+  layers and are deliberately not interchangeable here.
 - Each `files[]` entry is **closed**: exactly `path`, `role`, `sha256`.
 - `role` is drawn from the closed set `artifact` · `bindings` · `independence_policy` ·
   `revocation` · `clock`.
@@ -131,6 +145,12 @@ statement rather than an assumption.
 Any other count or composition is a hard `ERROR`. **`head_witness` is absent from every official
 W1 bundle** — no scenario in this corpus defines one, and a bundle that supplies one is out of
 scope for this run rather than a new case.
+
+**Operator-input composition, official W1 bundles:** exactly one `bindings`, exactly one
+`revocation`, exactly one `independence_policy`, and **no `clock`**. Any other operator-input
+composition is a hard `ERROR`. `clock` remains a legal `role` value for future runs; it simply
+does not occur in this one, because no scenario here evaluates freshness — that is a witness-tier
+property and W1 carries no witness.
 
 Reference resolution inside a bundle is by v0.2 reference semantics — `record_id`, additionally
 `chain_id` when the reference carries one. **Zero matches is unresolved; more than one match is
@@ -410,6 +430,23 @@ fixed list, never discovered — and enforces four run-level properties no evalu
    `CLEAN` all `PASS`; `TOCTOU` fails only `R-B`; `XREF` fails only `R-A`; `INDEP` fails only
    `R-C`. A disagreement is a **finding**, resolved by reading the transformation table, never by
    amending the matrix.
+5. **Level-1 parity and expectation.** For **every** scenario: the Python and Node `level1` values
+   are equal to each other **and** equal to the frozen expectation below.
+
+   | Scenario | Expected Level-1 |
+   |---|---|
+   | `IOP-P-DEC` · `IOP-P-CTL` · `IOP-P-EXE` · `IOP-P-EFF` | `ACCEPT` |
+   | `IOP-B-DEC` · `IOP-B-CTL` · `IOP-B-EXE` · `IOP-B-EFF` | `REJECT` |
+   | `IOP-R-CLEAN` | `ACCEPT` |
+   | `IOP-R-TOCTOU` | `RECONCILIATION_MISMATCH` |
+   | `IOP-R-XREF` | `RECONCILIATION_MISMATCH` |
+   | `IOP-R-INDEP` | `INDEPENDENCE_NOT_ESTABLISHED` |
+
+   Duty 4 alone cannot catch a Level-1 disagreement on the eight single-artifact scenarios: their
+   predicates are all `NOT_APPLICABLE`, so a run where Python said `ACCEPT` and Node said `REJECT`
+   for `IOP-P-DEC` would pass every earlier duty. Level-1 **is** the qualifying semantic result, so
+   it is checked directly, both for cross-lane parity and against the corpus contract's frozen
+   expectation.
 
 A run failing any of the four is **non-qualifying as a whole**. Eleven measured scenarios plus one
 unmeasured is not a claim about twelve.
@@ -447,29 +484,44 @@ the aggregate harness, which legitimately sees both trees.
 
 A non-`MEASURED` result previously carried no machine-readable reason; the cause lived only on
 stderr, which §8.3 forbids anything from parsing. A harness therefore received `ERROR` and could
-not say why. Required shape:
+not say why.
 
-```jsonc
-{ "reason": "<closed registry value>",
-  "detail": "<short human string, never parsed>",
-  "json_pointer": "<RFC 6901>" }        // REQUIRED for numeric-preflight violations
-```
+The object is **closed**:
 
-Closed reason registry — no value outside it, and no new value without an erratum:
+| Member | Required | Notes |
+|---|---|---|
+| `reason` | **yes** | one value from the registry below, and nothing else |
+| `detail` | **yes** | short human string. Never parsed, never influences a verdict |
+| `json_pointer` | conditional | **required** for `numeric-preflight-violation`; permitted for no other reason |
 
-| `reason` | Raised when |
-|---|---|
-| `manifest-invalid` | manifest absent, unparseable, closure/sort/role violation, bad path |
-| `manifest-digest-mismatch` | a shipped file does not match its `files[]` digest |
-| `bundle-shape-invalid` | artifact count or family composition outside §5's pinned shape |
-| `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** |
-| `verifier-digest-mismatch` | a frozen digest assertion failed |
-| `verifier-not-invocable` | the frozen verifier could not be executed |
-| `verifier-run-invalid` | frozen `exit 1` outside §7.2's two qualifying conditions |
-| `authenticated-withheld` | §7.1 — an artifact expected to reach Authenticated was withheld |
+Any other member is a hard `ERROR` in its own right.
 
-`detail` is for a human reading a log. Like stderr, it is never parsed and never influences a
-verdict.
+Closed reason registry — no value outside it, and no new value without an erratum. The third
+column is the `measurement_status` that MUST accompany it, so the pairing is not left to the
+implementer:
+
+| `reason` | Raised when | `measurement_status` |
+|---|---|---|
+| `manifest-invalid` | manifest parsed and `scenario_id` usable, but closure, sort, `role`, path or digest-encoding rules are violated | `ERROR` |
+| `manifest-digest-mismatch` | a listed file's bytes do not match its `files[]` digest | `ERROR` |
+| `bundle-file-missing` | a file listed in `files[]` is not present on disk | `ERROR` |
+| `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
+| `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
+| `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
+| `verifier-digest-mismatch` | a frozen digest assertion failed | `ERROR` |
+| `verifier-not-invocable` | the frozen verifier could not be executed | `ERROR` |
+| `verifier-run-invalid` | frozen `exit 1` outside §7.2's two qualifying conditions | `ERROR` |
+| `internal-error` | an unexpected evaluator fault after bundle identity was established | `ERROR` |
+| `authenticated-withheld` | §7.1 — an artifact expected to reach Authenticated was withheld | **`MEASUREMENT_INVALID`** |
+
+**`authenticated-withheld` is the only reason that maps to `MEASUREMENT_INVALID`.** Everything else
+is `ERROR`. The distinction is real: a withheld tier means the measurement was attempted and could
+not conclude, while every other row means the run never got far enough to attempt it.
+
+`internal-error` exists so that an unexpected fault after identity is established still produces a
+result object naming the scenario, rather than a crash the harness has to infer. It is not a
+licence to swallow faults: `detail` must carry enough to locate the fault, and a run containing one
+is non-qualifying like any other non-`MEASURED` result.
 
 #### 8.2.3 `NOT_APPLICABLE` is a measured outcome
 
@@ -496,6 +548,28 @@ verdict** — §6.4 is explicit that no result is emitted. The entry is therefor
 | `verifier_result` | object **or `null`** | the verdict verbatim when one was emitted; **`null` whenever `verifier_exit_code` is 1**, because no verdict exists |
 | `verifier_stderr_digest` | string | `sha256:…` over the captured stderr, for audit |
 
+#### 8.3.1 When `artifacts[]` may be populated (normative)
+
+Every field above except `artifact_ref` is a product of an invocation. A numeric-preflight or
+frozen-digest failure occurs **before** any invocation, so those fields do not exist — and an
+implementer told to emit them anyway would have to fabricate an exit code or a digest. The ordering
+is therefore pinned:
+
+1. **The evaluator completes the whole bundle preflight first** — manifest, symlink and path rules,
+   file presence, digests, JSON parseability, bundle shape, operator-input composition, numeric
+   envelope, frozen-verifier digest assertions. **No frozen verifier is invoked until every one of
+   these has passed.**
+2. A failure during preflight is a **pre-invocation `ERROR`**: the result object carries
+   **`artifacts: []`** — an empty array, not entries with null or placeholder fields.
+3. Once invocation begins, `artifacts[]` contains an entry for **each invocation actually
+   attempted**, and only those. A bundle abandoned partway lists what was attempted and no more.
+4. In a `MEASURED` result, `artifacts[]` length MUST equal the bundle's artifact count from §5 —
+   one for a P/B scenario, four for an `IOP-R-*` scenario. A `MEASURED` result with any other count
+   is itself a defect.
+
+The rule exists so no implementer ever invents an exit code or a digest to satisfy a required
+field. An absent measurement is represented by absence.
+
 **`stderr` is never a source of semantic classification.** It is hashed for audit and may be
 retained alongside the run, but an evaluator MUST NOT parse it, match on it, or let its content
 influence any predicate, Level-1 verdict or `measurement_status`. Classification comes from the
@@ -517,13 +591,19 @@ object *about*. Exit code and stdout are therefore pinned together.
 | Exit | stdout | Condition |
 |---|---|---|
 | `0` | **exactly one** result object, `measurement_status: MEASURED`, with a Level-1 verdict | the bundle was measured |
-| `1` | **no result object** — stdout empty | bundle/manifest preflight could not be performed: manifest missing or unparseable, bundle identity unknown, a required artifact absent |
+| `1` | **no result object** — stdout empty | **bundle identity could not be established**, and only that: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
 | `2` | **no result object** — stdout empty | CLI usage error |
-| `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null` | bundle identity was parsed, but the scenario could not be measured — verifier digest assertion, frozen verifier not invocable, numeric preflight rejection, a file failing its manifest digest, withheld-when-Authenticated-expected |
+| `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
 
-The dividing line is **whether bundle identity was established**. Once it is, the evaluator owes a
-result object naming the scenario it failed on; before it, it owes silence on stdout and
-diagnostics on stderr.
+The dividing line is **whether bundle identity was established**, and nothing else. Once it is, the
+evaluator owes a result object naming the scenario it failed on; before it, it owes silence on
+stdout and diagnostics on stderr.
+
+An earlier draft put "a required artifact absent" on the exit-`1` side. That contradicted this very
+rule: if the manifest parsed and yielded a usable `scenario_id`, identity **is** established, and a
+missing file is something the evaluator can and must report against that scenario. It now exits `3`
+with `bundle-file-missing`. The exit-`1` band is exactly the three conditions under which there is
+no scenario to name.
 
 **Diagnostics always go to stderr, and stderr is never a source of semantics** (§8.3). It is not
 parsed by the harness, does not influence any verdict, predicate or status, and is retained only
@@ -615,6 +695,28 @@ since exit `0` asserts a measured result while stdout carries none.
 The pre-erratum source is **not** touched. Remediation belongs to the post-erratum Node context:
 use `fileURLToPath` or an equivalent safe conversion, and add a regression case whose path contains
 a literal space. **`exit 0` with empty stdout is unacceptable under every condition.**
+
+### Erratum 1 — final closure (2026-08-29)
+
+Five residual seams closed on top of `7a3d278`, which is preserved rather than rewritten. Each was
+a place two remediation authors could still have decided differently.
+
+| # | Seam | Closure |
+|---|---|---|
+| 1 | The manifest file itself was unnamed, and "every file the bundle ships" implied self-hashing | `manifest.json` at bundle root; `files[]` covers every regular file **except** it; symlinks forbidden; `sha256` is bare 64 lowercase hex; official W1 operator-input composition pinned with **no `clock`** |
+| 2 | Three real failures had no reason | `bundle-file-missing`, `bundle-json-invalid`, `internal-error` added; `nonmeasurement` closed; status pairing pinned — `authenticated-withheld` alone is `MEASUREMENT_INVALID` |
+| 3 | §8.5 put "required artifact absent" on the exit-`1` side, contradicting its own identity rule | exit `1` is exactly the three no-identity conditions; everything after identity is exit `3` with a named reason |
+| 4 | `artifacts[]` was mandatory but unproducible before invocation | full preflight precedes any invocation; pre-invocation `ERROR` → `artifacts: []`; afterwards only attempted invocations; `MEASURED` count must match bundle shape |
+| 5 | The aggregate gate never checked Level-1 itself | fifth duty: cross-lane Level-1 parity **and** equality with the frozen per-scenario expectation |
+
+Seam 5 is the one with teeth. The four earlier duties would have passed a run in which the two
+lanes returned opposite Level-1 verdicts for a single-artifact scenario, because its predicates are
+all `NOT_APPLICABLE` and nothing else compared the verdicts. Level-1 is the qualifying result, so
+it is now compared directly.
+
+Status also moved from `DRAFT — awaiting maintainer acceptance` to
+`ACCEPTED FOR POST-ERRATUM REMEDIATION`, so the document state matches the gate state. That is
+bookkeeping, not a semantic change.
 
 ## 13. Sequencing
 
