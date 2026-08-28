@@ -125,8 +125,8 @@ the evaluator does not search for or accept any other name or location.
 - Each `files[]` entry is **closed**: exactly `path`, `role`, `sha256`.
 - `role` is drawn from the closed set `artifact` · `bindings` · `independence_policy` ·
   `revocation` · `clock`.
-- `files` MUST be sorted ascending by `path` in UTF-8 byte order, and MUST list **every** file the
-  bundle ships. A file present on disk but absent from `files` is a hard `ERROR`.
+- `files` MUST be sorted ascending by `path` in UTF-8 byte order, and MUST list every regular file
+  under the bundle directory **except the root `manifest.json`**, exactly as defined above.
 - `path` is bundle-relative and normalized. An absolute path, a path containing a `..` segment, a
   backslash, or a **duplicate** `path` is a hard `ERROR`.
 
@@ -448,7 +448,7 @@ fixed list, never discovered — and enforces four run-level properties no evalu
    it is checked directly, both for cross-lane parity and against the corpus contract's frozen
    expectation.
 
-A run failing any of the four is **non-qualifying as a whole**. Eleven measured scenarios plus one
+A run failing any of the five is **non-qualifying as a whole**. Eleven measured scenarios plus one
 unmeasured is not a claim about twelve.
 
 ### 8.2 Result object
@@ -720,8 +720,22 @@ bookkeeping, not a semantic change.
 
 ## 13. Sequencing
 
-1. This contract is accepted.
-2. Both evaluators are authored in isolation and their sources frozen with recorded digests.
-3. Only then is corpus construction opened.
+The earlier three-step list described the *pre-erratum* authoring round, which is now complete.
+Read against today's state it is actively misleading: `8c5f444d572765a0d4a6ff966783b67ba4620d97`
+and `da22e066a6aceaa72b9bda2fb8813205120fe0ff` **are** authored and frozen, so a reader could take
+step 3 as already reached. Those two branches are provenance, not the official evaluators (§12).
+The remaining sequence is:
 
-**Corpus bytes remain on HOLD until step 3.**
+1. **This contract is canonicalized** — a maintainer pins the branch head and the contract file
+   digest as the canonical basis.
+2. **Python remediation** is authored in a fresh context, seeing only
+   `8c5f444d572765a0d4a6ff966783b67ba4620d97` and the canonical contract.
+3. **Node remediation** is authored in a fresh context, seeing only
+   `da22e066a6aceaa72b9bda2fb8813205120fe0ff` and the canonical contract.
+4. **Peer source and peer output remain unavailable throughout remediation.** The isolation that
+   made the pre-erratum round informative is not spent; it carries into this one.
+5. **Both remediated sources are independently source-reviewed and frozen**, with recorded digests.
+6. **Only then is corpus construction opened.**
+
+**Corpus bytes remain on HOLD until step 6**, matching the status line at the head of this
+document.
