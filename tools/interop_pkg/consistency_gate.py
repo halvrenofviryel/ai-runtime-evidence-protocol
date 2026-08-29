@@ -27,6 +27,15 @@ cat = Counter(c["category"] for c in cases)
 sel = (OUT / "CASE_SELECTION.md").read_text()
 readme = (OUT / "README.md").read_text()
 
+# Scan EVERY package-authored text file. M1 shipped because this gate looked only at
+# README while the same claim sat in SOURCE_BASIS.json. Normative basis and case
+# fixtures are excluded: they are frozen source, not package prose.
+ALL_TEXT = [(str(f.relative_to(OUT)), f.read_text(encoding="utf-8", errors="ignore"))
+            for f in sorted(OUT.rglob("*"))
+            if f.is_file() and f.suffix in {".md", ".json", ".jsonl", ".cff", ".txt"}
+            and "normative_basis" not in f.parts and "cases" not in f.parts]
+
+
 # 1. every CASE_SELECTION category must equal CASE_INDEX
 for c in cases:
     pid, want = c["package_case_id"], c["category"]
@@ -40,7 +49,7 @@ for c in cases:
 lex = by_id.get("CLS-LEX1")
 if lex and lex["airep_class"] is None:
     fail("CLS-LEX1 expected result has a null class; it must emit a verdict")
-for name, text in [("CASE_SELECTION.md", sel), ("README.md", readme)]:
+for name, text in ALL_TEXT:
     for m in re.finditer(r"^.*CLS-LEX1.*$", text, re.M):
         line = m.group(0)
         if re.search(r"\bindeterminate\b", line, re.I) and "not an indeterminate" not in line:
@@ -49,8 +58,7 @@ for name, text in [("CASE_SELECTION.md", sel), ("README.md", readme)]:
             fail(f"{name}: CLS-LEX1 described as emitting no verdict: {line[:90]}")
 
 # 3. no document may claim CTL1 is the only Control artifact in the release
-for name, text in [("CASE_SELECTION.md", sel), ("README.md", readme),
-                   ("START_HERE.md", (OUT / "START_HERE.md").read_text())]:
+for name, text in ALL_TEXT:
     # These must match the ASSERTION and not its correct negation, nor a sentence that
     # counts something else. A gate with false positives gets disabled, which is worse than
     # no gate: the first draft flagged "NOT the only Control artifact" and a line counting
@@ -69,8 +77,13 @@ for name, text in [("CASE_SELECTION.md", sel), ("README.md", readme),
         fail(f"{name}: unscoped 'exactly one Control' claim: {seg.strip()[:80]}")
 
 # 4. source-basis prose must not say no byte at all came from main
-if re.search(r"no byte (here )?(was|is) taken from `?main`?", readme, re.I):
-    fail("README.md: unqualified 'no byte taken from main' — package-authored files were not")
+for name, text in ALL_TEXT:
+    for m in re.finditer(r"[^.]*\bno byte\b[^.]{0,60}\bmain\b[^.]*", text, re.I):
+        seg = m.group(0)
+        if re.search(r"normative|frozen expected", seg, re.I):
+            continue          # the correctly narrowed form
+        fail(f"{name}: unqualified 'no byte from main' — package-authored files were: "
+             f"{seg.strip()[:80]}")
 
 # 5. README category totals must equal CASE_INDEX
 for k, v in cat.items():
@@ -79,14 +92,39 @@ for k, v in cat.items():
     if not re.search(rf"\|\s*{re.escape(label)}[^|]*\|\s*{v}\s*\|", readme):
         fail(f"README.md count for '{label}' does not match CASE_INDEX ({v})")
 
-# 6. report template must have exactly 18 rows, one per case
+# 6a. every vector hex field must have a matching .bin and .hex sidecar. W1/W2 shipped with
+# only suite_id because the builder iterated a hardcoded producer-vector field list.
+for vd in sorted((OUT / "bytes/vectors").iterdir()):
+    if not vd.is_dir():
+        continue
+    meta = json.loads((vd / "vector.json").read_text())
+    for field in meta["frozen_fields"]:
+        if not field.endswith("_hex"):
+            continue
+        stem = field[:-4]
+        for ext in (".bin", ".hex"):
+            if not (vd / f"{stem}{ext}").is_file():
+                fail(f"bytes/vectors/{vd.name}: {field} has no {stem}{ext} sidecar")
+
+# 6b. a submitted row must not be able to collapse the outcome dimensions
+try:
+    from jsonschema import Draft202012Validator as _DV
+    _s = json.loads((OUT / "reporting/REPORT_SCHEMA.json").read_text())
+    _base = json.loads((OUT / "reporting/REPORT_TEMPLATE.jsonl").read_text().splitlines()[0])
+    _collapsed = dict(_base, agreement="AGREE")
+    if _DV(_s).is_valid(_collapsed):
+        fail("REPORT_SCHEMA.json: a row can claim AGREE with null results — collapse is possible")
+except ImportError:
+    pass
+
+# 7. report template must have exactly 18 rows, one per case
 tmpl = [json.loads(l) for l in (OUT / "reporting/REPORT_TEMPLATE.jsonl").read_text().splitlines()]
 if len(tmpl) != len(cases):
     fail(f"REPORT_TEMPLATE.jsonl has {len(tmpl)} rows, expected {len(cases)}")
 if {t["case_id"] for t in tmpl} != {c["package_case_id"] for c in cases}:
     fail("REPORT_TEMPLATE.jsonl case_ids do not match CASE_INDEX")
 
-# 7. every template row must validate against REPORT_SCHEMA
+# 7b. every template row must validate against REPORT_SCHEMA
 schema = json.loads((OUT / "reporting/REPORT_SCHEMA.json").read_text())
 try:
     from jsonschema import Draft202012Validator

@@ -12,7 +12,12 @@
   "package_derived_files": {
     "derivation": "bytes.fromhex() of the frozen *_hex field; no recomputation",
     "files": [
-      "suite_id"
+      "jcs_claim",
+      "suite_id",
+      "witness_preimage",
+      "witness_pubkey",
+      "witness_signature",
+      "witness_tag"
     ],
     "kind": "package_derived"
   },

@@ -1,7 +1,7 @@
 {
   "annotated_tag_object_sha": "2c20ff2d6cc990cfc4ceb14a5e22ef823821635f",
   "identity_statement": "The source content is pinned by the resolved commit SHA and per-file digests. The unsigned tag does not cryptographically authenticate the author or maintainer identity.",
-  "main_may_have_advanced": "main may have advanced after this source basis; no byte in this package was taken from main.",
+  "main_may_have_advanced": "main may have advanced after this source basis. No normative source byte and no frozen expected outcome was taken from moving main. Package-authored documentation, manifests and projections were created on the packaging branch and are identified as such by provenance_kind.",
   "source_file_digests": {
     "spec/airep/v0.2/INTEGRITY.md": "2fca9a02ebd8b22807f51742278d7ddfc101e25ca6fd4fa844d6c6a537e98c11",
     "spec/airep/v0.2/class-verification/CLASS_VERIFIER_CONTRACT.md": "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",

@@ -130,19 +130,18 @@ def main() -> int:
             raise SystemExit(f"FINDING: released Python and Node vectors disagree for {vid}")
         base = f"bytes/vectors/{vid}"
         derived = []
-        for field, name in [("jcs_body_hex", "jcs_body"),
-                            ("hash_tag_hex", "hash_tag"),
-                            ("hash_preimage_hex", "hash_preimage"),
-                            ("sig_tag_hex", "sig_tag"),
-                            ("suite_id_hex", "suite_id"),
-                            ("sig_preimage_hex", "sig_preimage"),
-                            ("signature_hex", "signature"),
-                            ("producer_pubkey_hex", "producer_pubkey")]:
-            if field in v:
-                raw = bytes.fromhex(v[field])
-                write(f"{base}/{name}.bin", raw)
-                write(f"{base}/{name}.hex", (v[field] + "\n").encode())
-                derived.append(name)
+        # Every *_hex field gets a sidecar. An earlier version iterated a hardcoded list of
+        # producer-vector field names, so the witness vectors W1/W2 - whose fields are named
+        # jcs_claim_hex, witness_preimage_hex, witness_pubkey_hex, witness_signature_hex,
+        # witness_tag_hex - silently emitted only suite_id and the docs promised the rest.
+        for field in sorted(v):
+            if not field.endswith("_hex") or not isinstance(v[field], str):
+                continue
+            name = field[:-4]
+            raw = bytes.fromhex(v[field])
+            write(f"{base}/{name}.bin", raw)
+            write(f"{base}/{name}.hex", (v[field] + "\n").encode())
+            derived.append(name)
         write_json(f"{base}/vector.json", {
             "vector_id": vid,
             "provenance_kind": "frozen_release_vector",
@@ -211,8 +210,10 @@ def main() -> int:
             "The unsigned tag does not cryptographically authenticate the author or maintainer "
             "identity."),
         "main_may_have_advanced": (
-            "main may have advanced after this source basis; no byte in this package was taken "
-            "from main."),
+            "main may have advanced after this source basis. No normative source byte and no "
+            "frozen expected outcome was taken from moving main. Package-authored documentation, "
+            "manifests and projections were created on the packaging branch and are identified as "
+            "such by provenance_kind."),
         "source_file_digests": dict(sorted(src_digests.items())),
     })
     print(f"cases: {len(index)}  vectors: {len(vector_rows)}  "

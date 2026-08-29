@@ -131,8 +131,9 @@ the precise statement.
 
 The two layers are complementary rather than overlapping. The **vectors** are construction-test
 bodies — the release states they are deliberately *not* schema-conformant artifacts — and they
-exercise the byte-construction stack. The **cases** are conformant artifacts and exercise
-classification.
+exercise the byte-construction stack. The **16 verdict-emitting cases** are conformant artifacts and
+exercise classification. The two process probes are not: `PROC-UNP` ships a deliberately invalid
+38-byte request, because a verifier's behaviour on unparseable input is the thing it measures.
 
 Every per-case derivation is self-validated against a value this package did not produce: the
 derived hash preimage must SHA-256 to the artifact's own recorded `integrity.current`. All 17

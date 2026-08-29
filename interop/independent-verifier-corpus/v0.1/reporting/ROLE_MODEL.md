@@ -26,3 +26,17 @@ The conservative description, to be used unless the parties agree otherwise:
 Not "full interoperability achieved". A run of this corpus may populate the
 **author-produced-corpus / independently implemented-consumer** category. It does not establish a
 third-party AIREP producer or deployment interoperability.
+
+## What the schema enforces, and what it does not
+
+`REPORT_SCHEMA.json` makes the outcome dimensions **structurally impossible to collapse in a row
+that states an agreement verdict**: a row whose `agreement` is `AGREE` or `DISAGREE` must carry
+both result objects, must name the implementation and its digest and the input package digest, and
+a result emitting an AIREP class must carry all five reason channels.
+
+It deliberately does **not** enforce that on a blank template row — `agreement: null` with null
+results is how the shipped template validates. So the guarantee is precise: *a submitted verdict
+cannot be collapsed*, not *no document matching this schema can be empty*.
+
+The schema also cannot check that a reported value is **true**. It checks shape. Truth is what the
+run and the reviewers are for.

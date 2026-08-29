@@ -43,9 +43,16 @@ verify signatures or classify. If it passes you have the right bytes and nothing
 
 ## E. Implement the six fixed vectors first
 
-`bytes/vectors/V1`–`V4`, `W1`, `W2`. Each carries the whole chain in raw `.bin` and `.hex`:
-canonical JCS bytes, hash tag, hash preimage, expected `integrity.current`, signature tag, suite
-id, signature preimage, signature, public key.
+`bytes/vectors/V1`–`V4`, `W1`, `W2`. Every hex field of every vector has a matching raw `.bin` and
+`.hex` sidecar, and `vector.json` carries the frozen fields themselves.
+
+The two families differ, so check which you are looking at:
+
+- **`V1`–`V4` (producer/record chain)** — canonical JCS bytes, hash tag, hash preimage, expected
+  `integrity.current`, signature tag, suite id, signature preimage, signature, producer public key.
+- **`W1`, `W2` (witness chain)** — canonical claim bytes, witness tag, witness preimage, witness
+  signature, witness public key, suite id. They do **not** carry a producer record chain, because
+  they are witness vectors.
 
 Do these before any case. They isolate the byte-construction stack from classification, so if
 something is wrong you learn *which stage* is wrong. Note the release states these bodies are

@@ -1,6 +1,95 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "description": "A row that states an agreement verdict must carry both result objects. Without this, a report could claim AGREE with both results null.",
+      "if": {
+        "properties": {
+          "agreement": {
+            "enum": [
+              "AGREE",
+              "DISAGREE"
+            ]
+          }
+        },
+        "required": [
+          "agreement"
+        ]
+      },
+      "then": {
+        "properties": {
+          "expected_result": {
+            "type": "object"
+          },
+          "observed_result": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "description": "A result that emits an AIREP class must carry all five reason channels. Without this, a verdict could be reported with reason_channels null - the exact collapse this package says is not permitted.",
+      "if": {
+        "properties": {
+          "observed_result": {
+            "properties": {
+              "airep_class": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "airep_class"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "observed_result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "observed_result": {
+            "properties": {
+              "reason_channels": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "A row stating an agreement verdict must identify what produced it.",
+      "if": {
+        "properties": {
+          "agreement": {
+            "enum": [
+              "AGREE",
+              "DISAGREE"
+            ]
+          }
+        },
+        "required": [
+          "agreement"
+        ]
+      },
+      "then": {
+        "properties": {
+          "implementation_digest": {
+            "minLength": 1
+          },
+          "implementation_name": {
+            "minLength": 1
+          },
+          "input_package_digest": {
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "adjudicator": {
       "type": [
