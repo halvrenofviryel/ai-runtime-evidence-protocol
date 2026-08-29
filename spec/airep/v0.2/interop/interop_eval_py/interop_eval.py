@@ -3,13 +3,50 @@
 """AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
 Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
-``b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd``
-(sha256 ``39432fabbe643c0b45a012be442721208134f5a14a3421bf820fa4a0b8cefefa``),
+``cd7b634f46e1106aca8f228d9633150cbc111855``
+(sha256 ``fa87cb246d4bb006ca1cb6aa461252815215376d6291dfee3aa51bb79ce7b1d2``),
 alongside ``INTEROP_CORPUS_CONTRACT.md``
 (sha256 ``ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd``),
-i.e. the canonical post-Erratum-3 contracts, over the FROZEN Python class
+i.e. the canonical post-Erratum-4 contracts, over the FROZEN Python class
 verifier, which is invoked as a SUBPROCESS and is never imported, vendored or
 re-implemented (contract 3).
+
+Erratum 4 rulings carried here:
+
+  * E4-1  the help carve-out is ONE EXACT SINGLE-TOKEN INVOCATION. The
+          meta-action is ``--help`` AND NOTHING ELSE: it exits 0 with human text
+          on stdout and no result object. ``-h`` is NOT an alias -- it is a CLI
+          usage error at exit 2 -- and ``--help`` combined with any other
+          argument is a usage error too, because only the LONE help invocation
+          is carved out. Help text content and byte length are NOT a parity
+          requirement. This SUPERSEDES E3-4's "exactly one flag wide", which was
+          ambiguous enough that two lanes measurably diverged on ``-h``;
+  * E4-2  the identity boundary is a DIRECT READ of ``DIR/manifest.json``, not
+          an enumeration of the bundle first. All five of these are identity not
+          established -> exit 1, stdout empty, no result object: the bundle root
+          cannot be accessed; ``DIR/manifest.json`` is not found; it is found but
+          cannot be opened or read; its bytes do not parse as strict JSON; no
+          registered ``scenario_id`` can be obtained. A root manifest that
+          cannot be read NEVER yields ``bundle-file-unreadable`` -- a reason
+          belongs to a result object, and there is no scenario to name one
+          after;
+  * E4-3  ``bundle-directory-unreadable`` joins the closed registry -> ERROR,
+          exit 3. After identity is established, a bundle traversal that cannot
+          complete because a directory cannot be enumerated is THAT reason and
+          not ``manifest-invalid``: the latter says the layout is WRONG, this
+          says the layout could not be MEASURED. Enumeration succeeding but a
+          listed file being absent remains ``bundle-file-missing``; a listed
+          regular file whose bytes cannot be read remains
+          ``bundle-file-unreadable``;
+  * E4-4  ruling ``AD15-IR-7``: duplicate semantic IDs are NOT preflight
+          invalidity. There is no bundle-wide preflight gate on duplicate
+          ``record_id`` or duplicate ``(chain_id, record_id)``. Such artifacts
+          still reach frozen stage evaluation, and a reference lookup yielding
+          more than one match is ambiguous under R-A and the frozen resolution
+          semantics. This evaluator never picks one and never synthesizes an ID.
+          Frozen ``R-10`` is an invariant on the BATCH verifier's own emitted
+          verdict set and is not widened into a bundle preflight. The ruling
+          CONFIRMS the removal already carried here under A6.
 
 Erratum 3 rulings carried here:
 
@@ -38,7 +75,9 @@ Erratum 3 rulings carried here:
   * E3-4  ``--help`` is a CLI META-ACTION, not an evaluation: exit 0, human
           text on stdout, NO result object, ``--bundle`` not required, and the
           contract-8.5 exit table does not apply to it. Every other CLI usage
-          error remains exit 2, and the carve-out is exactly one flag wide.
+          error remains exit 2. Its "exactly one flag wide" phrasing is
+          SUPERSEDED by E4-1 above, which pins the carve-out to one exact
+          single-token invocation.
 
 Erratum 2 rulings carried here:
 
@@ -99,9 +138,12 @@ Exit codes (contract 8.5) -- the dividing line is whether bundle identity was
 established, and nothing else:
 
   0  exactly one result object, ``measurement_status: MEASURED``, Level-1 verdict
-  1  stdout empty -- ``manifest.json`` absent, not parseable as strict JSON, or
-     carrying no usable ``scenario_id`` from the registered twelve
-  2  stdout empty -- CLI usage error
+  1  stdout empty -- bundle identity could not be established under contract
+     5's direct-read identity boundary, and only that (E4-2): bundle root
+     inaccessible; root ``manifest.json`` absent; present but unopenable or
+     unreadable; not parseable as strict JSON; no registered ``scenario_id``
+  2  stdout empty -- CLI usage error, which includes every help spelling and
+     combination except the lone ``--help`` meta-action (E4-1)
   3  exactly one result object, MEASUREMENT_INVALID or ERROR, ``level1: null``,
      ``predicates: null``, ``nonmeasurement`` populated
 
@@ -168,14 +210,19 @@ conforming official W1 bundle.
       definition.
 
       Removed with it: the pre-erratum preflight rejection of a bundle carrying
-      two artifacts with the SAME ``record_id``. Nothing in the contract pins
-      such a rule; ``bundle-shape-invalid`` is defined (8.2.2) as artifact
+      two artifacts with the SAME ``record_id``. That removal was a reading of
+      contract 5 and 8.2.2 -- ``bundle-shape-invalid`` is defined as artifact
       count, family composition or operator-input composition, none of which a
-      duplicate ``record_id`` is; and contract 5 pins the opposite treatment
-      explicitly -- "more than one match is ambiguous and fails closed. An
-      evaluator MUST NOT pick one" -- which is R-A's job and is unreachable if
-      preflight has already made a second match impossible. The duplicate is
-      therefore left for R-A to report as a FAIL.
+      duplicate ``record_id`` is, while contract 5 pins the opposite treatment
+      explicitly -- and Erratum 4 has now CONFIRMED it as ruling ``AD15-IR-7``,
+      so it is contract-backed rather than inferred. There is no bundle-wide
+      preflight gate on a duplicate ``record_id`` or a duplicate
+      ``(chain_id, record_id)``: such artifacts reach frozen stage evaluation,
+      and the duplicate is left for R-A to report as a FAIL under the frozen
+      resolution semantics ("more than one match is ambiguous and fails closed.
+      An evaluator MUST NOT pick one"). Frozen ``R-10`` binds the BATCH
+      verifier's own emitted verdict set and is not widened into a bundle rule;
+      this evaluator submits each artifact as a separate request.
 
   A7  CLOSED by ruling ``W1-CORPUS-IR-1`` in ``INTEROP_CORPUS_CONTRACT.md``.
       Contract 5 pins bundle FAMILY COMPOSITION, which can only be checked by
@@ -188,9 +235,10 @@ conforming official W1 bundle.
       check is therefore kept exactly as it is, and the collision is closed on
       the corpus side where it belongs.
 
-  A8  Duplicate manifest object members are unpinned. Contract 8.5 pins exit 1
-      to exactly three conditions, and a duplicated member is still parseable as
-      strict JSON (RFC 8259 permits it), so identity IS established. Both
+  A8  Duplicate manifest object members are unpinned. Contract 5's direct-read
+      identity boundary pins exit 1 to exactly five conditions (E4-2), and a
+      duplicated member is still parseable as strict JSON (RFC 8259 permits it)
+      and still yields a registered ``scenario_id``, so identity IS established. Both
       runtimes decode duplicates last-wins by default, so identity is taken from
       the decoded value and the duplicate is then reported as
       ``manifest-invalid`` at exit 3 under E2-1's manifest-rule surface. The
@@ -219,15 +267,21 @@ conforming official W1 bundle.
       The surface stays unreachable from the aggregate harness, which performs
       exactly twelve ``--bundle`` invocations (8.1) and never invokes it.
 
-      RESIDUAL, recorded rather than assumed: E3-4 says the carve-out "is
-      exactly one flag wide" and names ``--help``. The narrow reading is taken
-      literally -- ``--help`` is the ONLY spelling that exits 0 without a result
-      object. The ``-h`` alias is therefore not registered and option-prefix
-      abbreviation is disabled, so ``-h``, ``--hel`` and every other spelling
-      are ordinary CLI usage errors at exit 2. A peer lane reading "one flag
-      wide" as a statement about the exit-0 licence rather than about spellings
-      could legitimately keep an alias; nothing in an official run can observe
-      the difference, since the harness never invokes help at all.
+      The residual recorded here is CLOSED by Erratum 4 (E4-1). "Exactly one
+      flag wide" was ambiguous, and the two lanes measurably diverged on it --
+      one reading it as a statement about SPELLINGS and refusing ``-h``, the
+      other as a statement about the EXIT-0 LICENCE and accepting it. The
+      carve-out is now one exact single-token invocation: ``--help`` alone.
+
+      This lane's ``-h`` behaviour is CONFIRMED (it was already exit 2), and its
+      handling of ``--help`` COMBINED WITH OTHER ARGUMENTS is CORRECTED AGAINST
+      the pre-erratum construction: registering ``--help`` as an argparse
+      ``action="help"`` made ``--help --bundle DIR`` exit 0 with a help screen,
+      whereas E4-1 makes only the LONE invocation a meta-action. ``--help`` is
+      therefore no longer registered as an option at all; it is matched in
+      ``main`` as an exact whole-argv equality, and every other argv reaching
+      the parser with ``--help`` in it fails as an unrecognised argument at
+      exit 2. Help text content and byte length are not a parity requirement.
 
   A12 The FROZEN verdict envelope (frozen contract 2) is shape-checked before a
       verdict is trusted -- required members, the closed ``class`` set, the five
@@ -237,23 +291,27 @@ conforming official W1 bundle.
       Frozen 2 does not declare the envelope closed, so an unknown member is
       deliberately tolerated.
 
-  A13 OPEN -- reported, behaviour unchanged. E3-2 bounds the four filesystem
-      reasons over a LISTED FILE, and two nearby I/O failures fall outside all
-      four rows:
+  A13 CLOSED by Erratum 4. Both limbs were reported OPEN here because E3-2
+      bounds its four filesystem reasons over a LISTED FILE and neither I/O
+      failure was one:
 
-        (i)  a DIRECTORY under the bundle that cannot be enumerated. It is not
-             a listed file and not a permitted regular file, so no E3-2 row
-             fits; it is also not strictly a rule VIOLATION, only an inability
-             to check one. Reported as ``manifest-invalid``, this lane's
-             pre-erratum behaviour, because the "files[] lists every regular
-             file" rule provably cannot be established for that subtree;
-        (ii) the root ``manifest.json`` PRESENT but unreadable. It is excluded
-             from ``files[]`` by contract 5, so no bundle-file reason can name
-             it, and contract 8.5 enumerates the exit-1 band as absent /
-             unparseable / no usable ``scenario_id``. None of the three is a
-             literal match, but exit 3 is impossible -- there is no scenario to
-             name -- so exit 1 is the only self-consistent band and is what this
-             lane emits.
+        (i)  CLOSED by E4-3, AGAINST this lane's pre-erratum mapping. A
+             DIRECTORY under the bundle that cannot be enumerated was reported
+             as ``manifest-invalid``, with the discomfort recorded here that it
+             is not strictly a rule VIOLATION, only an inability to check one.
+             The registry now carries ``bundle-directory-unreadable`` for
+             exactly that, and the distinction is the one this entry was
+             groping for: ``manifest-invalid`` says the layout is WRONG, the new
+             reason says the layout could not be MEASURED;
+        (ii) CLOSED by E4-2, CONFIRMING this lane's construction. The root
+             ``manifest.json`` PRESENT but unreadable is exit 1 with no result
+             object -- the identity boundary is a direct read, and being
+             unopenable or unreadable is now one of its five enumerated
+             conditions. The contract also pins the corollary this entry
+             reasoned to independently: a root manifest that cannot be read
+             NEVER yields ``bundle-file-unreadable``, because a reason belongs
+             to a result object and there is no scenario to name one after.
+             Unreadable and absent are genuinely indistinguishable here.
 """
 from __future__ import annotations
 
@@ -268,7 +326,10 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.2"   # post-Erratum-3 (AD15-IR-6, E3-2..E3-4)
+EVALUATOR_VERSION = "0.2.3"   # post-Erratum-4 (E4-1..E4-4, AD15-IR-7)
+
+#: Contract 8.5 / E4-1: the CLI meta-action is this EXACT argv and no other.
+HELP_INVOCATION = ["--help"]
 
 # --------------------------------------------------------------------------
 # JCS (RFC 8785) canonicalizer -- loaded from the REPOSITORY, not from PyPI,
@@ -392,6 +453,7 @@ REASON_STATUS: Dict[str, str] = {
     "manifest-digest-mismatch": ERROR,
     "bundle-file-missing": ERROR,
     "bundle-file-unreadable": ERROR,
+    "bundle-directory-unreadable": ERROR,
     "bundle-json-invalid": ERROR,
     "bundle-shape-invalid": ERROR,
     "numeric-preflight-violation": ERROR,
@@ -420,8 +482,11 @@ class UsageError(Exception):
 class BundleIdentityError(Exception):
     """Bundle identity could not be established -> exit 1, stdout empty.
 
-    Exactly the three contract-8.5 conditions: ``manifest.json`` absent, not
-    parseable as strict JSON, or carrying no usable ``scenario_id``.
+    Exactly the five conditions of contract 5's DIRECT-READ identity boundary
+    (E4-2), which contract 8.5's exit-1 row now points at rather than restates:
+    the bundle root cannot be accessed; ``DIR/manifest.json`` is not found; it
+    is found but cannot be opened or read; its bytes do not parse as strict
+    JSON; or no registered ``scenario_id`` can be obtained from it.
     """
 
 
@@ -607,12 +672,21 @@ class Manifest:
 def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
     """Establish bundle identity, or raise ``BundleIdentityError`` (exit 1).
 
-    Contract 8.5 pins the exit-1 band to exactly three conditions:
-    ``manifest.json`` absent, not parseable as strict JSON, or carrying no
-    usable ``scenario_id`` from the registered twelve. Everything downstream of
-    this function is exit 3 with a named reason -- including a duplicated
-    manifest member, which is parseable strict JSON and therefore does NOT
-    withhold identity (ambiguity A8).
+    THE IDENTITY BOUNDARY IS A DIRECT READ (Erratum 4, E4-2). Identity comes
+    from reading the bytes of ``DIR/manifest.json`` DIRECTLY -- the bundle is
+    NOT enumerated first, and nothing here touches any other path. All five of
+    the following are identity not established -> exit 1, stdout empty, no
+    result object: the bundle root cannot be accessed; ``DIR/manifest.json`` is
+    not found; it is found but cannot be opened or read; its bytes do not parse
+    as strict JSON; no registered ``scenario_id`` can be obtained from it. The
+    first three all surface as ``OSError`` from the one ``open`` below, which is
+    why they need no separate probe: an inaccessible root, an absent file and an
+    unreadable file are indistinguishable to this evaluator precisely because
+    none of them yields an identity.
+
+    Everything downstream of this function is exit 3 with a named reason --
+    including a duplicated manifest member, which is parseable strict JSON and
+    therefore does NOT withhold identity (ambiguity A8).
 
     NO MANIFEST DISCOVERY IS PERFORMED (Erratum 3, E3-3). Identity comes only
     from ``manifest.json`` at the bundle ROOT; nothing else is looked for under
@@ -635,11 +709,14 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
         with open(path, "rb") as handle:
             raw = handle.read()
     except OSError as exc:
-        # Absent is the contract-8.5 exit-1 condition. Present-but-unreadable is
-        # recorded ambiguity A13(ii): the root manifest is excluded from
-        # ``files[]``, so no bundle-file reason can name it, and exit 3 is
-        # impossible because there is no scenario to name. Exit 1 is the only
-        # self-consistent band.
+        # E4-2: root inaccessible, manifest absent, and manifest present but
+        # unopenable or unreadable are three of the five identity conditions and
+        # all exit 1. A ROOT MANIFEST THAT CANNOT BE READ NEVER YIELDS
+        # `bundle-file-unreadable`: the root manifest is excluded from `files[]`
+        # by contract 5, and more fundamentally a reason belongs to a result
+        # object, of which there is none here because there is no scenario to
+        # name one after. This closes recorded ambiguity A13(ii) in favour of
+        # what this lane already did.
         raise BundleIdentityError("manifest unreadable at %s: %s" % (path, exc))
     recorder = _DuplicateRecorder()
     try:
@@ -756,22 +833,46 @@ def scan_bundle(bundle_dir: str) -> List[str]:
     Symbolic links are forbidden ANYWHERE under the bundle -- including one
     whose target resolves inside it -- because a digest over a link's target is
     not a digest over the bundle's own bytes.
+
+    Runs only AFTER identity is established (E4-2): the manifest is read
+    directly and this traversal never contributes to identity. A traversal that
+    cannot complete is ``bundle-directory-unreadable`` (E4-3), never a layout
+    reason.
     """
     found: List[str] = []
 
     def walk(directory: str, prefix: str) -> None:
+        # E4-3: enumeration failure is NOT a layout violation. `manifest-invalid`
+        # says the layout is WRONG; this says the layout could not be MEASURED,
+        # which is a different true thing about the bundle. Permission denied,
+        # an I/O error, or any other failure to enumerate a directory -- and
+        # equally a failure to determine the KIND of an entry it yielded, since
+        # traversal has not completed until that is known -- is
+        # `bundle-directory-unreadable` at exit 3.
         try:
-            entries = sorted(os.scandir(directory), key=lambda e: byte_key(e.name))
+            entries = scan_directory(directory)
         except OSError as exc:
-            raise _bad_manifest("bundle directory %s unreadable: %s" % (directory, exc))
+            raise NonMeasurement(
+                "bundle-directory-unreadable",
+                "bundle traversal could not complete: directory %r could not be "
+                "enumerated: %s" % (prefix or ".", exc))
         for entry in entries:
             rel = entry.name if not prefix else prefix + "/" + entry.name
-            if entry.is_symlink():
+            try:
+                is_link = entry.is_symlink()
+                is_dir = entry.is_dir(follow_symlinks=False)
+                is_file = entry.is_file(follow_symlinks=False)
+            except OSError as exc:
+                raise NonMeasurement(
+                    "bundle-directory-unreadable",
+                    "bundle traversal could not complete: the kind of %r could "
+                    "not be determined: %s" % (rel, exc))
+            if is_link:
                 raise _bad_manifest("bundle carries a symbolic link at %r" % rel)
-            if entry.is_dir(follow_symlinks=False):
+            if is_dir:
                 walk(entry.path, rel)
                 continue
-            if not entry.is_file(follow_symlinks=False):
+            if not is_file:
                 raise _bad_manifest(
                     "bundle carries a non-regular, non-directory entry at %r" % rel)
             if rel == MANIFEST_FILENAME:
@@ -781,6 +882,17 @@ def scan_bundle(bundle_dir: str) -> List[str]:
     walk(bundle_dir, "")
     found.sort(key=byte_key)
     return found
+
+
+def scan_directory(directory: str) -> List[os.DirEntry]:
+    """Enumerate one directory, raising ``OSError`` verbatim.
+
+    A named seam, so the E4-3 boundary between `bundle-directory-unreadable` and
+    the layout reasons can be exercised deterministically rather than only
+    through filesystem permissions, which are not portable.
+    """
+    with os.scandir(directory) as scan:
+        return sorted(scan, key=lambda e: byte_key(e.name))
 
 
 def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]:
@@ -1609,18 +1721,16 @@ def build_parser() -> argparse.ArgumentParser:
                      "(INTEROP_REFERENCE_EVALUATOR_CONTRACT.md). One invocation "
                      "evaluates exactly one scenario bundle and writes at most "
                      "one JSON result object to stdout."),
-        # E3-4: `--help` is a CLI META-ACTION, not an evaluation -- exit 0,
-        # human text on stdout, NO result object, `--bundle` not required, and
-        # the contract-8.5 exit table does not apply to it. The carve-out is
-        # "exactly one flag wide", so it is registered by that one spelling
-        # only: the `-h` alias is not added and prefix abbreviation is off, which
-        # leaves every other spelling an ordinary usage error at exit 2 (A11).
+        # E4-1: the help carve-out is ONE EXACT SINGLE-TOKEN INVOCATION, so
+        # `--help` is deliberately NOT registered as an option at all. It is
+        # recognised in `main` only when it is the whole of argv; reaching the
+        # parser with `--help` anywhere in it therefore fails as an unrecognised
+        # argument, which is the exit-2 usage error the ruling requires. The
+        # `-h` alias is likewise absent and prefix abbreviation is off, so `-h`
+        # and `--hel` are ordinary usage errors too (A11).
         add_help=False,
         allow_abbrev=False,
     )
-    parser.add_argument(
-        "--help", action="help",
-        help="show this help and exit 0 without producing a result object")
     parser.add_argument("--bundle")
     # Accepted only as a consistency assertion against the manifest roles (A1).
     parser.add_argument("--bindings")
@@ -1632,9 +1742,19 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[List[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
-    # argparse exits 2 on any usage error, and 0 via the `--help` meta-action
-    # after writing the help screen to stdout (E3-4). Both raise SystemExit and
-    # bypass everything below, so no result object is ever written for either.
+    # E4-1: the meta-action is the SINGLE-TOKEN INVOCATION `--help` AND NOTHING
+    # ELSE. "Exactly one flag wide" proved ambiguous and two lanes measurably
+    # diverged on it, so the test is now an exact argv equality rather than a
+    # membership test: `--help` exits 0 with human text and no result object;
+    # `-h` is NOT an alias and is a usage error; and `--help` combined with any
+    # other argument is a usage error too, because only the LONE help
+    # invocation is carved out. Help text content and byte length are not a
+    # parity requirement, so nothing here pins what is printed.
+    if argv == HELP_INVOCATION:
+        parser.print_help()
+        return 0
+    # argparse exits 2 on any usage error, raising SystemExit and bypassing
+    # everything below, so no result object is ever written for one.
     args = parser.parse_args(argv)
 
     try:
