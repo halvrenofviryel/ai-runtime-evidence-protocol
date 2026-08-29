@@ -619,7 +619,7 @@ The file-level distinctions are unaffected: enumeration succeeding but a listed 
 remains `bundle-file-missing`, and a listed regular file whose bytes cannot be read remains
 `bundle-file-unreadable`.
 
-**Filesystem failures are four distinct reasons, not one (Erratum 3).** An earlier registry had no
+**Listed-file failures are four distinct reasons, not one (Erratum 3).** An earlier registry had no
 row for a file that exists and is readable-in-principle but cannot actually be read, so it was
 reported as `bundle-file-missing` — which says something false about the bundle. The boundary is
 exact:
@@ -761,7 +761,7 @@ object *about*. Exit code and stdout are therefore pinned together.
 | Exit | stdout | Condition |
 |---|---|---|
 | `0` | **exactly one** result object, `measurement_status: MEASURED`, with a Level-1 verdict | the bundle was measured |
-| `1` | **no result object** — stdout empty | **bundle identity could not be established**, and only that: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
+| `1` | **no result object** — stdout empty | **bundle identity could not be established under §5's direct-read identity boundary — and only that** (bundle root inaccessible · root `manifest.json` absent · present but unopenable or unreadable · not parseable as strict JSON · no registered `scenario_id` obtainable) |
 | `2` | **no result object** — stdout empty | CLI usage error |
 | `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
 
