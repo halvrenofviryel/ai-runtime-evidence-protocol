@@ -1,65 +1,92 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""AIREP v0.2 Python reference interop evaluator (AD15-IR-2).
+"""AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
-Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` sections 5-8 over the
-FROZEN Python class verifier, which is invoked as a SUBPROCESS and never
-imported, vendored or re-implemented (contract section 3).
+Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
+``930b9457db00c1d66e2d355f59a6cf5811d52d3a``
+(sha256 ``ea705ec2b8775a37aa4bdbf387a5eb5295c0e8bd8a000ad443104c3a24a6c63a``)
+over the FROZEN Python class verifier, which is invoked as a SUBPROCESS and is
+never imported, vendored or re-implemented (contract 3).
 
 Composition, in the contract's own order:
 
-  * section 5    manifest verification (per-file sha256) BEFORE anything is parsed;
-  * section 5.1  numeric preflight, then the closed section-0 request envelope,
-                 serialized with RFC 8785 (JCS); ``request_envelope_digest`` is
-                 taken over exactly those bytes;
-  * section 3    frozen-verifier digest assertion before use;
-  * section 6    the three reconciliation predicates R-A / R-B / R-C, with the
-                 section 6.1 applicability matrix;
-  * section 7    the Level-1 mapping, in the pinned order, plus 7.1
-                 (``authenticated_withheld`` => MEASUREMENT_INVALID) and 7.2
-                 (the causal guard on frozen ``exit 1``);
-  * section 8    one bundle per invocation, one JSON result object, and the
-                 8.5 exit/stdout table.
+  * section 5    ``manifest.json`` at the bundle root, pinned encoding; symlinks
+                 forbidden; every listed file digest-verified BEFORE parsing;
+  * section 5.1  the closed section-0 request envelope, RFC 8785 (JCS)
+                 serialized; ``request_envelope_digest`` over exactly those
+                 bytes; numeric preflight on integral VALUE, not JSON spelling;
+  * section 3    frozen-verifier digest assertion before use -- THIS LANE ONLY;
+  * section 6    R-A / R-B / R-C, with the section 6.1 applicability matrix;
+  * section 7    the Level-1 mapping, plus 7.1 (``authenticated_withheld`` =>
+                 MEASUREMENT_INVALID) and 7.2 (the causal guard on frozen
+                 ``exit 1``);
+  * section 8    one bundle per invocation, one JSON result object, full
+                 preflight before any invocation, and the 8.5 exit/stdout table.
 
-Deliberately NOT implemented, per ruling ``AD15-IR-4``: cross-lane envelope
-digest comparison. A single Python invocation cannot observe the Node lane's
-digest; the comparison belongs to the aggregate harness. This evaluator emits
-only its own ``request_envelope_digest`` per artifact.
+Deliberately NOT implemented:
 
-Exit codes (contract 8.5):
+  * cross-lane envelope-digest equality (ruling ``AD15-IR-4``, contract 5.1 and
+    8.1 duty 2). A single Python invocation cannot observe the peer lane's
+    digest. It is an aggregate-harness gate and is not part of the 7.2
+    preflight-clean condition;
+  * the peer lane's verifier digest. Contract 8.2.1: it "does not appear in
+    evaluator output at all", not even as an unasserted carried constant. This
+    file therefore does not name it;
+  * ``head_witness``. Contract 5 pins it absent from every official W1 bundle,
+    and the closed manifest ``role`` set has no value that could carry one, so
+    the envelope never gains the member;
+  * clock inputs. Contract 5 pins official W1 operator-input composition as
+    exactly one ``bindings``, one ``revocation``, one ``independence_policy``
+    and NO ``clock``.
+
+Exit codes (contract 8.5) -- the dividing line is whether bundle identity was
+established, and nothing else:
+
   0  exactly one result object, ``measurement_status: MEASURED``, Level-1 verdict
-  1  no result object, stdout empty -- manifest missing/unparseable, bundle
-     identity unknown, a manifest-listed file absent
-  2  no result object, stdout empty -- CLI usage error
-  3  exactly one result object, MEASUREMENT_INVALID or ERROR, ``level1: null``
+  1  stdout empty -- ``manifest.json`` absent, not parseable as strict JSON, or
+     carrying no usable ``scenario_id`` from the registered twelve
+  2  stdout empty -- CLI usage error
+  3  exactly one result object, MEASUREMENT_INVALID or ERROR, ``level1: null``,
+     ``predicates: null``, ``nonmeasurement`` populated
 
-stdlib only. Diagnostics go to stderr and are never a source of semantics
-(contract 8.3, 8.5).
+stdlib only; no third-party dependency is added. Diagnostics go to stderr and
+are never a source of semantics (contract 8.3, 8.5).
 
 -----------------------------------------------------------------------------
-UNPINNED INPUT SURFACES -- read this before changing anything below.
+RECORDED AMBIGUITIES -- resolved in the direction the contract determines, and
+reported rather than buried. None of them can change the measured result of a
+conforming official W1 bundle.
 
-The contract fixes what the manifest MEANS (section 5: it names the
-``scenario_id`` and lists every file the bundle ships, each with a sha256 over
-its original bytes) but pins no member names for it, and corpus bytes are on
-HOLD, so no manifest exists to read.  ``load_manifest`` therefore accepts the
-three shapes that express exactly that meaning and nothing more, and it is the
-single function to change if the corpus lands on a different spelling:
+  A1  Contract 8.1 shows ``interop-eval --bundle DIR [operator-input flags]``,
+      but contract 5 pins the operator inputs as bundle members addressed by
+      the closed ``role`` set, and 5.1 says the evaluator "passes through the
+      files the bundle ships". Role-derivation is the determinate reading and
+      is what this evaluator uses. The three flags are still accepted, but
+      ONLY as a consistency assertion: each must resolve to the same file the
+      role already selected, or it is a usage error. A flag can therefore never
+      change what is measured.
 
-    {"scenario_id": "...", "files": {"<relpath>": "<64 hex>"}}
-    {"scenario_id": "...", "files": {"<relpath>": {"sha256": "<64 hex>"}}}
-    {"scenario_id": "...", "files": [{"path": "<relpath>", "sha256": "<64 hex>"}]}
+  A2  Numeric-preflight JSON Pointers are rooted at the DOCUMENT carrying the
+      offending number, with the bundle-relative path in ``detail``. Contract
+      5.1 defines the number set by envelope reachability but names operator
+      inputs in the same breath, and operator inputs are not envelope members,
+      so no envelope-rooted pointer can address them. No harness duty (8.1)
+      compares ``json_pointer`` across lanes.
 
-Two further surfaces are unpinned and are handled structurally rather than by
-inventing manifest metadata:
+  A3  The closed reason registry (8.2.2) has no row for a symlink under the
+      bundle, an on-disk file absent from ``files[]``, or duplicate object
+      members in the manifest. All three are section-5 file-set/path rules, so
+      they are reported as ``manifest-invalid``.
 
-  * WHICH listed files are artifacts -- decided by structure (a JSON object
-    carrying ``airep_version`` "0.2" and a known ``artifact_type``), not by a
-    manifest role field. Every listed file is still digest-verified.
-  * WHICH file carries a ``head_witness`` -- named by ``--head-witness``. None
-    of the twelve scenarios defines one.
+  A4  The registry has no row for the frozen verifier exiting 0 with
+      unparseable stdout, or exiting 2. Neither is ``verifier-not-invocable``
+      (it executed) nor ``verifier-run-invalid`` (that row is scoped to exit 1),
+      so both are reported as ``internal-error``.
 
-These are recorded as findings in the authoring report, not resolved here.
+  A5  Contract 8.2 lists ``withheld_reasons`` as a result member and qualifies
+      it "whenever any ``*_withheld`` channel is non-empty". It is emitted
+      unconditionally, as ``[]`` when nothing is withheld, so the object shape
+      is fixed.
 """
 from __future__ import annotations
 
@@ -71,9 +98,9 @@ import os
 import subprocess
 import sys
 import tempfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.1.0"
+EVALUATOR_VERSION = "0.2.0"
 
 # --------------------------------------------------------------------------
 # JCS (RFC 8785) canonicalizer -- loaded from the REPOSITORY, not from PyPI,
@@ -111,41 +138,70 @@ jcs = _load_repo_jcs()
 
 
 # --------------------------------------------------------------------------
-# Frozen inputs (contract 3)
+# Frozen inputs (contract 3, 8.2.1) -- THIS LANE ONLY
 # --------------------------------------------------------------------------
 
 CLASS_VERIFICATION_RELPATH = (os.pardir, os.pardir, "class-verification")
 
-#: The three digests contract 3 pins, keyed exactly as its table names them.
-#: They are recorded in every result object (contract 8.2).
-FROZEN_DIGESTS: Dict[str, str] = {
-    "verifier_py/class_verifier.py":
-        "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc",
-    "verifier_node_r2/class_verifier.mjs":
-        "e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
-    "CLASS_VERIFIER_CONTRACT.md":
-        "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
-}
-
 #: Contract 3: "the Python evaluator invokes only verifier_py". Crossing the
-#: lanes is forbidden, so this lane recomputes and compares only the two frozen
-#: files it actually uses. The Node row is carried from the contract table as
-#: the contract's own statement of that file's digest; it is NOT asserted here,
-#: because asserting it would require this lane to reach into the other lane's
-#: tree. Contract 8.2 says "the three asserted digests from section 3" while
-#: contract 3 scopes assertion to "before use" -- flagged as a finding, not
-#: silently resolved.
-ASSERTED_BY_THIS_LANE: Tuple[str, ...] = (
-    "verifier_py/class_verifier.py",
-    "CLASS_VERIFIER_CONTRACT.md",
+#: lanes is forbidden, so this lane knows -- and emits (8.2.1) -- exactly two
+#: digests, both of which it recomputes itself. The peer lane's verifier digest
+#: is deliberately absent from this file and from every result object.
+FROZEN_VERIFIER_RELPATH = ("verifier_py", "class_verifier.py")
+FROZEN_CONTRACT_RELPATH = ("CLASS_VERIFIER_CONTRACT.md",)
+
+FROZEN_VERIFIER_SHA256 = \
+    "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc"
+FROZEN_CONTRACT_SHA256 = \
+    "7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885"
+
+
+# --------------------------------------------------------------------------
+# Scenario registry and bundle shape (contract 5, 6.1, 8.5)
+# --------------------------------------------------------------------------
+
+#: The registered twelve. A manifest naming anything else carries "no usable
+#: scenario_id" and is contract-8.5 exit 1.
+SINGLE_ARTIFACT_FAMILY: Dict[str, str] = {
+    "IOP-P-DEC": "decision",
+    "IOP-P-CTL": "control",
+    "IOP-P-EXE": "execution",
+    "IOP-P-EFF": "effect",
+    "IOP-B-DEC": "decision",
+    "IOP-B-CTL": "control",
+    "IOP-B-EXE": "execution",
+    "IOP-B-EFF": "effect",
+}
+RECONCILIATION_SCENARIOS = (
+    "IOP-R-CLEAN", "IOP-R-TOCTOU", "IOP-R-XREF", "IOP-R-INDEP",
 )
+SCENARIO_IDS = frozenset(SINGLE_ARTIFACT_FAMILY) | frozenset(RECONCILIATION_SCENARIOS)
 
 ARTIFACT_TYPES = ("decision", "control", "execution", "effect")
-WIRE_VERSION = "0.2"
 
-#: Contract 7.2: frozen ``exit 1`` may be read as Level-1 REJECT only for these
-#: scenarios (stage-0 / stage-1 invalidity targets), and no other.
-EXIT1_REJECT_SCENARIOS = frozenset({"IOP-B-DEC", "IOP-B-CTL", "IOP-B-EFF"})
+MANIFEST_FILENAME = "manifest.json"
+MANIFEST_VERSION = "1"
+MANIFEST_MEMBERS = frozenset({"manifest_version", "scenario_id", "files"})
+FILE_ENTRY_MEMBERS = frozenset({"path", "role", "sha256"})
+ROLES = ("artifact", "bindings", "independence_policy", "revocation", "clock")
+
+#: Official W1 operator-input composition (contract 5): exactly one each of
+#: these, and no ``clock``.
+REQUIRED_OPERATOR_ROLES = ("bindings", "independence_policy", "revocation")
+
+#: role -> frozen class-verifier flag.
+OPERATOR_FLAG = {
+    "bindings": "--bindings",
+    "independence_policy": "--independence-policy",
+    "revocation": "--revocation",
+}
+
+HEX_DIGITS = frozenset("0123456789abcdef")
+
+
+# --------------------------------------------------------------------------
+# Vocabulary
+# --------------------------------------------------------------------------
 
 PASS = "PASS"
 FAIL = "FAIL"
@@ -160,35 +216,79 @@ REJECT = "REJECT"
 RECONCILIATION_MISMATCH = "RECONCILIATION_MISMATCH"
 INDEPENDENCE_NOT_ESTABLISHED = "INDEPENDENCE_NOT_ESTABLISHED"
 
+#: Closed reason registry (contract 8.2.2). The value is the
+#: ``measurement_status`` that MUST accompany the reason, so the pairing is not
+#: left to this implementation.
+REASON_STATUS: Dict[str, str] = {
+    "manifest-invalid": ERROR,
+    "manifest-digest-mismatch": ERROR,
+    "bundle-file-missing": ERROR,
+    "bundle-json-invalid": ERROR,
+    "bundle-shape-invalid": ERROR,
+    "numeric-preflight-violation": ERROR,
+    "verifier-digest-mismatch": ERROR,
+    "verifier-not-invocable": ERROR,
+    "verifier-run-invalid": ERROR,
+    "internal-error": ERROR,
+    "authenticated-withheld": MEASUREMENT_INVALID,
+}
+
+#: Contract 7.2: frozen ``exit 1`` may be read as Level-1 REJECT only for these
+#: scenarios (stage-0 / stage-1 invalidity targets), and no other.
+EXIT1_REJECT_SCENARIOS = frozenset({"IOP-B-DEC", "IOP-B-CTL", "IOP-B-EFF"})
+
 MAX_SAFE_INTEGER = 9007199254740991  # 2**53 - 1
 
 
+# --------------------------------------------------------------------------
+# Exceptions -- one per band of the contract-8.5 exit table
+# --------------------------------------------------------------------------
+
 class UsageError(Exception):
-    """CLI usage error -> exit 2, stdout empty (contract 8.5)."""
+    """CLI usage error -> exit 2, stdout empty."""
 
 
 class BundleIdentityError(Exception):
-    """Bundle identity could not be established -> exit 1, stdout empty."""
+    """Bundle identity could not be established -> exit 1, stdout empty.
 
-
-class Unmeasurable(Exception):
-    """Identity known, scenario not measurable -> exit 3 with a result object.
-
-    ``status`` is MEASUREMENT_INVALID or ERROR (contract 8.5).
+    Exactly the three contract-8.5 conditions: ``manifest.json`` absent, not
+    parseable as strict JSON, or carrying no usable ``scenario_id``.
     """
 
-    def __init__(self, status: str, detail: str,
+
+class NonMeasurement(Exception):
+    """Identity established, scenario not measured -> exit 3 with a result object.
+
+    ``reason`` is a value from the closed registry; ``measurement_status`` is
+    taken FROM that registry rather than chosen here, so the pairing cannot
+    drift (contract 8.2.2).
+    """
+
+    def __init__(self, reason: str, detail: str,
+                 json_pointer: Optional[str] = None,
                  withheld_reasons: Optional[List[dict]] = None,
                  artifacts: Optional[List[dict]] = None) -> None:
         super().__init__(detail)
-        self.status = status
+        if reason not in REASON_STATUS:
+            raise KeyError("reason %r is outside the closed registry" % reason)
+        if (json_pointer is not None) != (reason == "numeric-preflight-violation"):
+            raise ValueError(
+                "json_pointer is mandatory for numeric-preflight-violation and "
+                "permitted for no other reason")
+        self.reason = reason
         self.detail = detail
+        self.json_pointer = json_pointer
+        self.status = REASON_STATUS[reason]
         self.withheld_reasons = withheld_reasons or []
+        #: Contract 8.3.1: an empty array before any invocation; afterwards, an
+        #: entry for each invocation actually attempted and only those.
         self.artifacts = artifacts or []
-        #: Stamped by ``evaluate_bundle`` once the manifest has been parsed, so
-        #: the exit-3 result object can name the scenario it failed on without
-        #: re-reading the manifest (contract 8.5).
+        #: Stamped once the manifest has yielded a usable scenario_id, so the
+        #: exit-3 object can name the scenario it failed on (contract 8.5).
         self.scenario_id: Optional[str] = None
+        #: Contract 8.2.1: the two digests THIS lane recomputed, whenever they
+        #: were recomputed at all. Never a value this lane did not measure.
+        self.verifier_digests: Dict[str, str] = {}
 
 
 # --------------------------------------------------------------------------
@@ -208,9 +308,9 @@ def pointer_escape(token: str) -> str:
     return token.replace("~", "~0").replace("/", "~1")
 
 
-def record_sort_key(record_id: str) -> bytes:
+def byte_key(text: str) -> bytes:
     """Ascending UTF-8 byte order (contract 5.1, 8.4)."""
-    return record_id.encode("utf-8")
+    return text.encode("utf-8")
 
 
 def dump_json(obj: Any) -> str:
@@ -221,22 +321,43 @@ def warn(message: str) -> None:
     sys.stderr.write(message.rstrip("\n") + "\n")
 
 
+def _reject_constant(token: str) -> Any:
+    raise ValueError("strict JSON forbids the literal %s" % token)
+
+
+def _reject_duplicate_members(pairs: Sequence[Tuple[str, Any]]) -> dict:
+    seen: Dict[str, Any] = {}
+    for key, value in pairs:
+        if key in seen:
+            raise _DuplicateMember(key)
+        seen[key] = value
+    return seen
+
+
+class _DuplicateMember(Exception):
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self.key = key
+
+
 # --------------------------------------------------------------------------
 # Numeric preflight (contract 5.1)
 # --------------------------------------------------------------------------
 
 def numeric_preflight(value: Any, base_pointer: str = "") -> Optional[Tuple[str, str]]:
-    """Walk ``value`` and return ``(json_pointer, reason)`` for the first number
-    outside the pinned envelope, or ``None`` when every number is admissible.
+    """Return ``(json_pointer, detail)`` for the first inadmissible number, or
+    ``None`` when every number in ``value`` is admissible.
 
-    Pinned checks, in the contract's own words:
+    Pinned checks:
 
       * finite and IEEE-754 representable -- no NaN, no infinity;
-      * integers: absolute value <= 2**53 - 1.
+      * integer-VALUED numbers: absolute value <= 2**53 - 1.
 
-    "Integer" is taken as JSON integer SYNTAX, which is what ``json`` decodes to
-    ``int``; a number written with a fraction or exponent decodes to ``float``
-    and is checked only for finiteness. That reading is recorded as a finding.
+    The bound is on the MATHEMATICAL VALUE, not on JSON spelling. ``1e20``
+    decodes to a float whose value is integral, so it is rejected; ``1.5`` is
+    not integer-valued and is judged only by the finiteness rule. Reading the
+    bound as a syntax rule would let ``1e20`` through in one lane and not the
+    other, which is precisely the divergence this preflight prevents.
     """
     stack: List[Tuple[str, Any]] = [(base_pointer, value)]
     while stack:
@@ -245,16 +366,18 @@ def numeric_preflight(value: Any, base_pointer: str = "") -> Optional[Tuple[str,
             continue                      # bool is not a JSON number
         if isinstance(node, int):
             if abs(node) > MAX_SAFE_INTEGER:
-                return pointer, "integer magnitude exceeds 2**53-1"
+                return pointer, "integer-valued number exceeds 2**53-1 in magnitude"
             continue
         if isinstance(node, float):
-            # json decodes NaN/Infinity/-Infinity, and overflowing exponents
-            # (1e400) decode to inf; both are rejected here.
+            # json decodes NaN/Infinity/-Infinity, and an overflowing exponent
+            # (1e400) decodes to inf; both are rejected here.
             if node != node or node in (float("inf"), float("-inf")):
                 return pointer, "number is not finite"
+            if node.is_integer() and abs(node) > MAX_SAFE_INTEGER:
+                return pointer, "integer-valued number exceeds 2**53-1 in magnitude"
             continue
         if isinstance(node, dict):
-            for key in sorted(node, key=lambda k: k.encode("utf-8"), reverse=True):
+            for key in sorted(node, key=byte_key, reverse=True):
                 stack.append((pointer + "/" + pointer_escape(key), node[key]))
             continue
         if isinstance(node, list):
@@ -264,105 +387,335 @@ def numeric_preflight(value: Any, base_pointer: str = "") -> Optional[Tuple[str,
 
 
 # --------------------------------------------------------------------------
-# Bundle manifest (contract 5)
+# Manifest (contract 5) -- identity band, then structural band
 # --------------------------------------------------------------------------
 
+class FileEntry:
+    __slots__ = ("path", "role", "sha256")
+
+    def __init__(self, path: str, role: str, sha256: str) -> None:
+        self.path = path
+        self.role = role
+        self.sha256 = sha256
+
+
 class Manifest:
-    def __init__(self, scenario_id: str, files: Dict[str, str]) -> None:
+    def __init__(self, scenario_id: str, entries: List[FileEntry]) -> None:
         self.scenario_id = scenario_id
-        self.files = files            # relative path -> lowercase hex sha256
+        self.entries = entries
+
+    def by_role(self, role: str) -> List[FileEntry]:
+        return [e for e in self.entries if e.role == role]
 
 
-def _normalize_files(raw: Any) -> Dict[str, str]:
-    files: Dict[str, str] = {}
+def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str]:
+    """Establish bundle identity, or raise ``BundleIdentityError`` (exit 1).
 
-    def put(path: Any, digest: Any) -> None:
-        if not isinstance(path, str) or not path:
-            raise BundleIdentityError("manifest file entry has no usable path")
-        if not isinstance(digest, str):
-            raise BundleIdentityError("manifest entry %r has no sha256 string" % path)
-        digest = digest[7:] if digest.startswith("sha256:") else digest
-        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
-            raise BundleIdentityError(
-                "manifest entry %r has a malformed sha256 %r" % (path, digest))
-        if path in files:
-            raise BundleIdentityError("manifest lists %r twice" % path)
-        files[path] = digest
-
-    if isinstance(raw, dict):
-        for path, entry in raw.items():
-            if isinstance(entry, dict):
-                put(path, entry.get("sha256"))
-            else:
-                put(path, entry)
-    elif isinstance(raw, list):
-        for entry in raw:
-            if not isinstance(entry, dict):
-                raise BundleIdentityError("manifest files array holds a non-object")
-            put(entry.get("path"), entry.get("sha256"))
-    else:
-        raise BundleIdentityError("manifest 'files' is neither an object nor an array")
-    if not files:
-        raise BundleIdentityError("manifest lists no files")
-    return files
-
-
-def load_manifest(bundle_dir: str) -> Manifest:
-    """Read and parse the bundle manifest.
-
-    Every failure here is a contract-8.5 ``exit 1``: without a parsed manifest
-    there is no ``scenario_id``, so there is nothing to write a result object
-    about.
+    Contract 8.5 pins the exit-1 band to exactly three conditions:
+    ``manifest.json`` absent, not parseable as strict JSON, or carrying no
+    usable ``scenario_id`` from the registered twelve. Everything downstream of
+    this function is exit 3 with a named reason.
     """
-    path = os.path.join(bundle_dir, "manifest.json")
+    path = os.path.join(bundle_dir, MANIFEST_FILENAME)
     try:
         with open(path, "rb") as handle:
             raw = handle.read()
     except OSError as exc:
         raise BundleIdentityError("manifest unreadable at %s: %s" % (path, exc))
     try:
-        doc = json.loads(raw.decode("utf-8"))
+        doc = json.loads(
+            raw.decode("utf-8"),
+            parse_constant=_reject_constant,
+            object_pairs_hook=_reject_duplicate_members,
+        )
+    except _DuplicateMember:
+        # Parsed as a document but carries an ambiguous member. Identity is not
+        # trustworthy from an ambiguous object, so this stays in the exit-1
+        # band rather than naming a scenario read out of a duplicated key.
+        raise BundleIdentityError(
+            "manifest carries duplicate object members; identity is ambiguous")
     except (UnicodeDecodeError, ValueError) as exc:
-        raise BundleIdentityError("manifest is not parseable JSON: %s" % exc)
+        raise BundleIdentityError("manifest is not parseable as strict JSON: %s" % exc)
     if not isinstance(doc, dict):
         raise BundleIdentityError("manifest is not a JSON object")
     scenario_id = doc.get("scenario_id")
-    if not isinstance(scenario_id, str) or not scenario_id:
-        raise BundleIdentityError("manifest carries no usable scenario_id")
-    if "files" not in doc:
-        raise BundleIdentityError("manifest carries no 'files' member")
-    return Manifest(scenario_id, _normalize_files(doc["files"]))
+    if not isinstance(scenario_id, str) or scenario_id not in SCENARIO_IDS:
+        raise BundleIdentityError(
+            "manifest carries no usable scenario_id from the registered twelve")
+    return doc, scenario_id
 
 
-def verify_manifest(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]:
-    """Verify every listed file against its manifest digest BEFORE parsing.
+def _bad_manifest(detail: str) -> NonMeasurement:
+    return NonMeasurement("manifest-invalid", detail)
 
-    A listed file that is absent is contract-8.5 ``exit 1`` ("a required
-    artifact absent"); a file present with the wrong digest is a hard ERROR at
-    ``exit 3`` ("a file failing its manifest digest").
+
+def validate_manifest(doc: dict, scenario_id: str) -> Manifest:
+    """Apply the pinned manifest encoding (contract 5). Failures are
+    ``manifest-invalid`` at exit 3 -- identity is already established.
     """
-    contents: Dict[str, bytes] = {}
-    for relpath in sorted(manifest.files, key=lambda p: p.encode("utf-8")):
-        full = os.path.normpath(os.path.join(bundle_dir, relpath))
-        if os.path.relpath(full, bundle_dir).startswith(os.pardir):
-            raise BundleIdentityError("manifest path %r escapes the bundle" % relpath)
-        try:
-            with open(full, "rb") as handle:
-                data = handle.read()
-        except OSError:
-            raise BundleIdentityError("manifest lists %r but it is absent" % relpath)
-        actual = sha256_hex(data)
-        if actual != manifest.files[relpath]:
-            raise Unmeasurable(
-                ERROR,
-                "manifest digest mismatch for %s: expected %s, measured %s"
-                % (relpath, manifest.files[relpath], actual))
-        contents[relpath] = data
-    return contents
+    extra = sorted(set(doc) - MANIFEST_MEMBERS)
+    if extra:
+        raise _bad_manifest("manifest carries unknown member(s): %s" % ", ".join(extra))
+    missing = sorted(MANIFEST_MEMBERS - set(doc))
+    if missing:
+        raise _bad_manifest("manifest is missing member(s): %s" % ", ".join(missing))
+    if doc["manifest_version"] != MANIFEST_VERSION:
+        raise _bad_manifest(
+            "manifest_version is %r, not the string %r"
+            % (doc["manifest_version"], MANIFEST_VERSION))
+    raw_files = doc["files"]
+    if not isinstance(raw_files, list):
+        raise _bad_manifest("files is not an array")
+    if not raw_files:
+        raise _bad_manifest("files is empty")
+
+    entries: List[FileEntry] = []
+    seen: Dict[str, None] = {}
+    for index, raw in enumerate(raw_files):
+        if not isinstance(raw, dict):
+            raise _bad_manifest("files[%d] is not an object" % index)
+        unknown = sorted(set(raw) - FILE_ENTRY_MEMBERS)
+        if unknown:
+            raise _bad_manifest(
+                "files[%d] carries unknown member(s): %s" % (index, ", ".join(unknown)))
+        absent = sorted(FILE_ENTRY_MEMBERS - set(raw))
+        if absent:
+            raise _bad_manifest(
+                "files[%d] is missing member(s): %s" % (index, ", ".join(absent)))
+        path, role, digest = raw["path"], raw["role"], raw["sha256"]
+        if not isinstance(path, str) or not path:
+            raise _bad_manifest("files[%d].path is not a non-empty string" % index)
+        _validate_manifest_path(index, path)
+        if path in seen:
+            raise _bad_manifest("files lists path %r more than once" % path)
+        seen[path] = None
+        if role not in ROLES:
+            raise _bad_manifest("files[%d].role %r is outside the closed set" % (index, role))
+        if not isinstance(digest, str) or len(digest) != 64 \
+                or any(c not in HEX_DIGITS for c in digest):
+            raise _bad_manifest(
+                "files[%d].sha256 is not exactly 64 lowercase hex characters "
+                "with no prefix" % index)
+        entries.append(FileEntry(path, role, digest))
+
+    paths = [e.path for e in entries]
+    if paths != sorted(paths, key=byte_key):
+        raise _bad_manifest("files is not sorted ascending by path in UTF-8 byte order")
+    return Manifest(scenario_id, entries)
+
+
+def _validate_manifest_path(index: int, path: str) -> None:
+    if "\\" in path:
+        raise _bad_manifest("files[%d].path %r contains a backslash" % (index, path))
+    if path.startswith("/") or os.path.isabs(path):
+        raise _bad_manifest("files[%d].path %r is absolute" % (index, path))
+    segments = path.split("/")
+    for segment in segments:
+        if segment == "":
+            raise _bad_manifest(
+                "files[%d].path %r is not normalized (empty segment)" % (index, path))
+        if segment == ".":
+            raise _bad_manifest(
+                "files[%d].path %r is not normalized ('.' segment)" % (index, path))
+        if segment == os.pardir:
+            raise _bad_manifest(
+                "files[%d].path %r contains a '..' segment" % (index, path))
+    if path == MANIFEST_FILENAME:
+        raise _bad_manifest(
+            "files lists the root %s, which it must exclude" % MANIFEST_FILENAME)
 
 
 # --------------------------------------------------------------------------
-# Frozen-verifier digest assertion (contract 3)
+# Bundle file set (contract 5)
+# --------------------------------------------------------------------------
+
+def scan_bundle(bundle_dir: str) -> List[str]:
+    """Return every regular file under ``bundle_dir``, bundle-relative, except
+    the root ``manifest.json``.
+
+    Symbolic links are forbidden ANYWHERE under the bundle -- including one
+    whose target resolves inside it -- because a digest over a link's target is
+    not a digest over the bundle's own bytes.
+    """
+    found: List[str] = []
+
+    def walk(directory: str, prefix: str) -> None:
+        try:
+            entries = sorted(os.scandir(directory), key=lambda e: byte_key(e.name))
+        except OSError as exc:
+            raise _bad_manifest("bundle directory %s unreadable: %s" % (directory, exc))
+        for entry in entries:
+            rel = entry.name if not prefix else prefix + "/" + entry.name
+            if entry.is_symlink():
+                raise _bad_manifest("bundle carries a symbolic link at %r" % rel)
+            if entry.is_dir(follow_symlinks=False):
+                walk(entry.path, rel)
+                continue
+            if not entry.is_file(follow_symlinks=False):
+                raise _bad_manifest(
+                    "bundle carries a non-regular, non-directory entry at %r" % rel)
+            if rel == MANIFEST_FILENAME:
+                continue
+            found.append(rel)
+
+    walk(bundle_dir, "")
+    found.sort(key=byte_key)
+    return found
+
+
+def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]:
+    """File-set correspondence, then per-file digest verification, BEFORE
+    anything is parsed (contract 5).
+    """
+    on_disk = scan_bundle(bundle_dir)
+    listed = {e.path for e in manifest.entries}
+    unlisted = [p for p in on_disk if p not in listed]
+    if unlisted:
+        raise _bad_manifest(
+            "bundle carries file(s) absent from files[]: %s" % ", ".join(unlisted))
+    present = set(on_disk)
+    for entry in manifest.entries:
+        if entry.path not in present:
+            raise NonMeasurement(
+                "bundle-file-missing",
+                "files[] lists %r but no such regular file is present" % entry.path)
+
+    contents: Dict[str, bytes] = {}
+    for entry in manifest.entries:
+        full = os.path.join(bundle_dir, *entry.path.split("/"))
+        try:
+            with open(full, "rb") as handle:
+                data = handle.read()
+        except OSError as exc:
+            raise NonMeasurement(
+                "bundle-file-missing", "%r could not be read: %s" % (entry.path, exc))
+        measured = sha256_hex(data)
+        if measured != entry.sha256:
+            raise NonMeasurement(
+                "manifest-digest-mismatch",
+                "%r: manifest says %s, bundle bytes measure %s"
+                % (entry.path, entry.sha256, measured))
+        contents[entry.path] = data
+    return contents
+
+
+def parse_bundle_files(manifest: Manifest, contents: Dict[str, bytes]) -> Dict[str, Any]:
+    """Parse every listed file. NaN / Infinity are left for the numeric
+    preflight, which reports them with the mandatory JSON Pointer.
+    """
+    parsed: Dict[str, Any] = {}
+    for entry in manifest.entries:
+        try:
+            parsed[entry.path] = json.loads(contents[entry.path].decode("utf-8"))
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise NonMeasurement(
+                "bundle-json-invalid", "%r is not parseable JSON: %s" % (entry.path, exc))
+    return parsed
+
+
+# --------------------------------------------------------------------------
+# Bundle shape (contract 5)
+# --------------------------------------------------------------------------
+
+class Artifact:
+    __slots__ = ("path", "value", "record_id", "chain_id", "artifact_type")
+
+    def __init__(self, path: str, value: dict) -> None:
+        self.path = path
+        self.value = value
+        self.record_id = value["record_id"]
+        self.chain_id = value.get("chain_id")
+        self.artifact_type = value["artifact_type"]
+
+    @property
+    def ref(self) -> Dict[str, str]:
+        ref: Dict[str, str] = {"record_id": self.record_id}
+        if isinstance(self.chain_id, str):
+            ref["chain_id"] = self.chain_id
+        return ref
+
+
+def _bad_shape(detail: str) -> NonMeasurement:
+    return NonMeasurement("bundle-shape-invalid", detail)
+
+
+def build_artifacts(manifest: Manifest, parsed: Dict[str, Any]) -> List[Artifact]:
+    """Bundle shape, pinned by contract 5, keyed on the scenario the manifest
+    names -- not guessed from what the files happen to look like.
+    """
+    scenario_id = manifest.scenario_id
+    entries = manifest.by_role("artifact")
+
+    expected = 1 if scenario_id in SINGLE_ARTIFACT_FAMILY else 4
+    if len(entries) != expected:
+        raise _bad_shape(
+            "%s requires exactly %d artifact(s); the bundle carries %d"
+            % (scenario_id, expected, len(entries)))
+
+    artifacts: List[Artifact] = []
+    for entry in entries:
+        value = parsed[entry.path]
+        if not isinstance(value, dict):
+            raise _bad_shape("artifact %r is not a JSON object" % entry.path)
+        record_id = value.get("record_id")
+        artifact_type = value.get("artifact_type")
+        if not isinstance(record_id, str) or not record_id:
+            raise _bad_shape("artifact %r carries no usable record_id" % entry.path)
+        if artifact_type not in ARTIFACT_TYPES:
+            raise _bad_shape(
+                "artifact %r carries artifact_type %r, outside the four families"
+                % (entry.path, artifact_type))
+        chain_id = value.get("chain_id")
+        if chain_id is not None and not isinstance(chain_id, str):
+            raise _bad_shape("artifact %r carries a non-string chain_id" % entry.path)
+        artifacts.append(Artifact(entry.path, value))
+
+    if scenario_id in SINGLE_ARTIFACT_FAMILY:
+        family = SINGLE_ARTIFACT_FAMILY[scenario_id]
+        if artifacts[0].artifact_type != family:
+            raise _bad_shape(
+                "%s requires the single artifact of the %s family; the bundle "
+                "carries a %s" % (scenario_id, family, artifacts[0].artifact_type))
+    else:
+        present = sorted(a.artifact_type for a in artifacts)
+        if present != sorted(ARTIFACT_TYPES):
+            raise _bad_shape(
+                "%s requires exactly one each of Decision, Control, Execution and "
+                "Effect; the bundle carries %s" % (scenario_id, ", ".join(present)))
+
+    ids = [a.record_id for a in artifacts]
+    if len(set(ids)) != len(ids):
+        raise _bad_shape("the bundle carries two artifacts with the same record_id")
+
+    artifacts.sort(key=lambda a: byte_key(a.record_id))
+    return artifacts
+
+
+def check_operator_composition(manifest: Manifest) -> Dict[str, FileEntry]:
+    """Official W1 composition: exactly one ``bindings``, exactly one
+    ``revocation``, exactly one ``independence_policy``, and NO ``clock``.
+
+    ``clock`` remains a legal ``role`` for future runs; it simply does not occur
+    in this one, because no scenario here evaluates freshness.
+    """
+    clocks = manifest.by_role("clock")
+    if clocks:
+        raise _bad_shape(
+            "official W1 bundles carry no clock input; the bundle carries %d"
+            % len(clocks))
+    selected: Dict[str, FileEntry] = {}
+    for role in REQUIRED_OPERATOR_ROLES:
+        found = manifest.by_role(role)
+        if len(found) != 1:
+            raise _bad_shape(
+                "official W1 bundles carry exactly one %s input; the bundle "
+                "carries %d" % (role, len(found)))
+        selected[role] = found[0]
+    return selected
+
+
+# --------------------------------------------------------------------------
+# Frozen-verifier digest assertion (contract 3, 8.2.1)
 # --------------------------------------------------------------------------
 
 def class_verification_dir() -> str:
@@ -370,103 +723,80 @@ def class_verification_dir() -> str:
         os.path.dirname(os.path.abspath(__file__)), *CLASS_VERIFICATION_RELPATH))
 
 
-def assert_frozen_digests() -> None:
-    """Recompute and compare the frozen files THIS lane uses. Mismatch is a hard
-    ERROR: the run is not valid and no Level-1 verdict is emitted (contract 3).
+def frozen_verifier_path() -> str:
+    return os.path.join(class_verification_dir(), *FROZEN_VERIFIER_RELPATH)
+
+
+def frozen_contract_path() -> str:
+    return os.path.join(class_verification_dir(), *FROZEN_CONTRACT_RELPATH)
+
+
+FROZEN_FILES = (
+    ("class_verifier", frozen_verifier_path, FROZEN_VERIFIER_SHA256),
+    ("class_verifier_contract", frozen_contract_path, FROZEN_CONTRACT_SHA256),
+)
+
+
+def measure_frozen_digests() -> Tuple[Dict[str, str], Optional[str]]:
+    """Recompute the two frozen files THIS lane uses.
+
+    Returns the ``verifier_digests`` object (contract 8.2.1) built from values
+    this lane actually measured -- never a carried constant -- together with the
+    first mismatch detail, or ``None`` when both match. The comparison is turned
+    into a verdict by ``assert_frozen_digests`` at its pinned position in the
+    contract-8.3.1 preflight order; measuring early only lets a result object
+    report what was measured.
     """
-    base = class_verification_dir()
-    for name in ASSERTED_BY_THIS_LANE:
-        path = os.path.join(base, *name.split("/"))
+    measured: Dict[str, str] = {}
+    problem: Optional[str] = None
+    for key, path_of, expected in FROZEN_FILES:
+        path = path_of()
         try:
             with open(path, "rb") as handle:
-                measured = sha256_hex(handle.read())
+                actual = sha256_hex(handle.read())
         except OSError as exc:
-            raise Unmeasurable(ERROR, "frozen file %s unreadable: %s" % (name, exc))
-        if measured != FROZEN_DIGESTS[name]:
-            raise Unmeasurable(
-                ERROR,
-                "frozen digest assertion failed for %s: expected %s, measured %s"
-                % (name, FROZEN_DIGESTS[name], measured))
-
-
-def frozen_verifier_path() -> str:
-    return os.path.join(class_verification_dir(), "verifier_py", "class_verifier.py")
-
-
-# --------------------------------------------------------------------------
-# Artifacts
-# --------------------------------------------------------------------------
-
-class Artifact:
-    def __init__(self, relpath: str, value: dict) -> None:
-        self.relpath = relpath
-        self.value = value
-        self.record_id = value["record_id"]
-        self.chain_id = value.get("chain_id")
-        self.artifact_type = value["artifact_type"]
-
-    @property
-    def ref(self) -> dict:
-        ref: Dict[str, str] = {"record_id": self.record_id}
-        if isinstance(self.chain_id, str):
-            ref["chain_id"] = self.chain_id
-        return ref
-
-
-def looks_like_artifact(value: Any) -> bool:
-    return (
-        isinstance(value, dict)
-        and value.get("airep_version") == WIRE_VERSION
-        and value.get("artifact_type") in ARTIFACT_TYPES
-        and isinstance(value.get("record_id"), str)
-    )
-
-
-def collect_artifacts(contents: Dict[str, bytes], skip: List[str]) -> List[Artifact]:
-    """Classify manifest-listed files structurally (see the module docstring)."""
-    artifacts: List[Artifact] = []
-    for relpath in sorted(contents, key=lambda p: p.encode("utf-8")):
-        if relpath in skip:
+            if problem is None:
+                problem = ("frozen file %s is unreadable, so its digest cannot be "
+                           "asserted: %s" % (path, exc))
             continue
-        try:
-            value = json.loads(contents[relpath].decode("utf-8"))
-        except (UnicodeDecodeError, ValueError):
-            continue                      # not an artifact; still digest-verified
-        if looks_like_artifact(value):
-            artifacts.append(Artifact(relpath, value))
-    artifacts.sort(key=lambda a: record_sort_key(a.record_id))
-    return artifacts
+        measured[key] = "sha256:" + actual
+        if actual != expected and problem is None:
+            problem = ("%s: contract pins %s, the tree measures %s"
+                       % (path, expected, actual))
+    return measured, problem
 
 
-def by_type(artifacts: List[Artifact], artifact_type: str) -> List[Artifact]:
-    return [a for a in artifacts if a.artifact_type == artifact_type]
+def assert_frozen_digests(problem: Optional[str]) -> None:
+    """A digest mismatch is a hard ERROR: the run is not valid and no Level-1
+    verdict is emitted (contract 3).
+    """
+    if problem is not None:
+        raise NonMeasurement("verifier-digest-mismatch", problem)
 
 
 # --------------------------------------------------------------------------
 # Request envelope (contract 5.1)
 # --------------------------------------------------------------------------
 
-def build_envelope(primary: Artifact, artifacts: List[Artifact],
-                   head_witness: Optional[dict]) -> dict:
+def build_envelope(primary: Artifact, artifacts: List[Artifact]) -> dict:
     """The closed section-0 envelope for ``primary``.
 
     ``related_artifacts`` is the OTHER artifacts of the same bundle and no
     others, ascending by UTF-8 byte order of ``record_id``; for a
-    single-artifact scenario it is the empty array -- present, never absent.
+    single-artifact scenario it is the EMPTY ARRAY -- present, never absent.
+    ``head_witness`` is never added: contract 5 pins it absent from every
+    official W1 bundle and the closed role set cannot express one.
     """
-    related = [a for a in artifacts if a is not primary]
-    related.sort(key=lambda a: record_sort_key(a.record_id))
-    envelope: Dict[str, Any] = {
+    related = sorted((a for a in artifacts if a is not primary),
+                     key=lambda a: byte_key(a.record_id))
+    return {
         "artifact": primary.value,
         "related_artifacts": [a.value for a in related],
     }
-    if head_witness is not None:
-        envelope["head_witness"] = head_witness
-    return envelope
 
 
 def envelope_bytes(envelope: dict) -> bytes:
-    """RFC 8785 canonical bytes; ``request_envelope_digest`` is taken over these."""
+    """RFC 8785 canonical bytes; ``request_envelope_digest`` is over exactly these."""
     return jcs.canonicalize(envelope)
 
 
@@ -474,8 +804,7 @@ def envelope_bytes(envelope: dict) -> bytes:
 # Frozen-verifier invocation (contract 3: subprocess, never imported)
 # --------------------------------------------------------------------------
 
-def invoke_frozen_verifier(request: bytes, operator_flags: List[str]
-                           ) -> Tuple[int, bytes, bytes]:
+def invoke_frozen_verifier(request: bytes, flags: List[str]) -> Tuple[int, bytes, bytes]:
     """Run the frozen Python class verifier on one request envelope.
 
     Nothing is written into the frozen tree: the request lives in a temporary
@@ -486,11 +815,12 @@ def invoke_frozen_verifier(request: bytes, operator_flags: List[str]
         request_path = os.path.join(workdir, "request.json")
         with open(request_path, "wb") as handle:
             handle.write(request)
-        argv = [sys.executable, verifier, "--request", request_path] + operator_flags
+        argv = [sys.executable, verifier, "--request", request_path] + list(flags)
         try:
             completed = subprocess.run(argv, capture_output=True, check=False)
         except OSError as exc:
-            raise Unmeasurable(ERROR, "frozen verifier not invocable: %s" % exc)
+            raise NonMeasurement(
+                "verifier-not-invocable", "frozen verifier could not be executed: %s" % exc)
     return completed.returncode, completed.stdout, completed.stderr
 
 
@@ -498,7 +828,7 @@ def invoke_frozen_verifier(request: bytes, operator_flags: List[str]
 # Reconciliation predicates (contract 6)
 # --------------------------------------------------------------------------
 
-def resolve_reference(reference: dict, artifacts: List[Artifact]) -> str:
+def resolve_reference(reference: Any, artifacts: List[Artifact]) -> str:
     """v0.2 reference semantics: match ``record_id``, additionally ``chain_id``
     when the reference carries one. Zero matches is unresolved; more than one is
     ambiguous and fails closed. An evaluator MUST NOT pick one (contract 5).
@@ -511,8 +841,7 @@ def resolve_reference(reference: dict, artifacts: List[Artifact]) -> str:
     chain_id = reference.get("chain_id")
     matches = [
         a for a in artifacts
-        if a.record_id == record_id
-        and (chain_id is None or a.chain_id == chain_id)
+        if a.record_id == record_id and (chain_id is None or a.chain_id == chain_id)
     ]
     if len(matches) == 1:
         return "resolved"
@@ -529,7 +858,13 @@ REFERENCE_EDGES = {
 
 
 def predicate_r_a(artifacts: List[Artifact]) -> Tuple[str, List[str]]:
-    """R-A -- every cross-artifact reference in the bundle resolves uniquely."""
+    """R-A -- every cross-artifact reference in the bundle resolves uniquely.
+
+    Unique reference resolution AND NOTHING MORE (contract 6, confirmed at
+    erratum): there is deliberately no check that a ``decision_ref`` resolves to
+    an artifact of the Decision family. Adding one would be a stricter, unpinned
+    predicate; bundle shape already fixes family composition.
+    """
     problems: List[str] = []
     for artifact in artifacts:
         for member in REFERENCE_EDGES.get(artifact.artifact_type, ()):
@@ -540,47 +875,50 @@ def predicate_r_a(artifacts: List[Artifact]) -> Tuple[str, List[str]]:
 
 
 def predicate_r_b(artifacts: List[Artifact]) -> Tuple[str, List[str]]:
-    """R-B -- Control ``authorized_action_digest`` vs Execution
-    ``executed_action_digest``, compared as EXACT strings. Both are
+    """R-B -- the Control's ``authorized_action_digest`` and the Execution's
+    ``executed_action_digest``, compared as EXACT STRINGS. Both are
     ``sha256_digest`` by schema, so no normalization, case folding or re-hashing
     is performed.
     """
-    controls = by_type(artifacts, "control")
-    executions = by_type(artifacts, "execution")
-    if len(controls) != 1 or len(executions) != 1:
-        raise Unmeasurable(
-            ERROR,
-            "R-B needs exactly one Control and one Execution; bundle carries "
-            "%d and %d" % (len(controls), len(executions)))
-    authorized = controls[0].value.get("authorized_action_digest")
-    executed = executions[0].value.get("executed_action_digest")
-    if isinstance(authorized, str) and isinstance(executed, str) and authorized == executed:
+    control = _sole(artifacts, "control")
+    execution = _sole(artifacts, "execution")
+    authorized = control.value.get("authorized_action_digest")
+    executed = execution.value.get("executed_action_digest")
+    if isinstance(authorized, str) and isinstance(executed, str) \
+            and authorized == executed:
         return PASS, []
     return FAIL, ["authorized %r != executed %r" % (authorized, executed)]
 
 
-def predicate_r_c(artifacts: List[Artifact], verdicts: Dict[str, Optional[dict]]
-                  ) -> Tuple[str, List[str]]:
+def predicate_r_c(artifacts: List[Artifact],
+                  verdicts: Dict[str, Optional[dict]]) -> Tuple[str, List[str]]:
     """R-C -- independence, TAKEN FROM the frozen verifier's
-    ``observer_assessment`` for the Effect and never re-derived here (contract
-    6: re-implementing it would create a second, unpinned definition).
-
-    An Effect whose wire ``observer_relationship`` is ``independent`` while the
-    frozen output reports an effective assessment of ``unknown`` fails.
+    ``observer_assessment`` for the Effect and never re-derived here: that is a
+    frozen stage-8 property, and re-implementing it would create a second,
+    unpinned definition (contract 6).
     """
-    effects = by_type(artifacts, "effect")
-    if len(effects) != 1:
-        raise Unmeasurable(
-            ERROR, "R-C needs exactly one Effect; bundle carries %d" % len(effects))
-    effect = effects[0]
+    effect = _sole(artifacts, "effect")
     verdict = verdicts.get(effect.record_id)
     if not isinstance(verdict, dict):
-        raise Unmeasurable(ERROR, "R-C has no frozen verdict for the Effect")
+        raise NonMeasurement(
+            "internal-error",
+            "R-C has no frozen verdict for the Effect %r" % effect.record_id)
     wire = effect.value.get("observer_relationship")
     effective = verdict.get("observer_assessment")
     if wire == "independent" and effective == "unknown":
         return FAIL, ["wire observer_relationship 'independent', effective 'unknown'"]
     return PASS, []
+
+
+def _sole(artifacts: List[Artifact], artifact_type: str) -> Artifact:
+    found = [a for a in artifacts if a.artifact_type == artifact_type]
+    if len(found) != 1:
+        # Unreachable: bundle shape already pinned exactly one of each.
+        raise NonMeasurement(
+            "internal-error",
+            "expected exactly one %s after shape validation, found %d"
+            % (artifact_type, len(found)))
+    return found[0]
 
 
 # --------------------------------------------------------------------------
@@ -603,234 +941,190 @@ def map_level1(reject: bool, predicates: Dict[str, str]) -> str:
 # --------------------------------------------------------------------------
 
 def build_result(scenario_id: str, status: str, level1: Optional[str],
-                 predicates: Dict[str, str], artifacts: List[dict],
-                 withheld_reasons: List[dict]) -> dict:
+                 predicates: Optional[Dict[str, str]],
+                 nonmeasurement: Optional[dict], artifacts: List[dict],
+                 withheld_reasons: List[dict],
+                 verifier_digests: Dict[str, str]) -> dict:
     return {
         "scenario_id": scenario_id,
         "measurement_status": status,
         "level1": level1,
         "predicates": predicates,
+        "nonmeasurement": nonmeasurement,
         "artifacts": artifacts,
         "withheld_reasons": withheld_reasons,
-        "verifier_digests": dict(FROZEN_DIGESTS),
+        "verifier_digests": verifier_digests,
         "evaluator_version": EVALUATOR_VERSION,
     }
 
 
-def na_predicates() -> Dict[str, str]:
-    return {"R_A": NOT_APPLICABLE, "R_B": NOT_APPLICABLE, "R_C": NOT_APPLICABLE}
+def nonmeasurement_object(exc: NonMeasurement) -> dict:
+    """The closed contract-8.2.2 object. ``json_pointer`` appears only for
+    ``numeric-preflight-violation``, where it is mandatory.
+    """
+    obj = {"reason": exc.reason, "detail": exc.detail}
+    if exc.json_pointer is not None:
+        obj["json_pointer"] = exc.json_pointer
+    return obj
 
 
 # --------------------------------------------------------------------------
 # Evaluation
 # --------------------------------------------------------------------------
 
-def operator_flags(args, bundle_dir: str, manifest: Manifest) -> Tuple[List[str], List[str]]:
-    """Build the pass-through operator-input flags for the frozen verifier.
+def evaluate_bundle(args, invoke=None) -> dict:
+    """Evaluate exactly one bundle and return the MEASURED result object.
 
-    File-valued inputs are passed BY PATH, unchanged: contract 5.1 forbids an
-    evaluator from synthesizing, filtering, reordering or re-emitting them. Each
-    must be the bundle's own -- inside the bundle and covered by the manifest --
-    which is what makes "the bundle's own operator-input bytes" auditable rather
-    than assumed (contract 5).
+    Raises ``BundleIdentityError`` (exit 1), ``UsageError`` (exit 2) or
+    ``NonMeasurement`` (exit 3). ``invoke`` is the frozen-verifier subprocess
+    seam, resolved from the module global when not supplied so that tests can
+    substitute a stub and exercise the mapping without any corpus bytes.
     """
-    flags: List[str] = []
-    consumed: List[str] = []
-    for flag, value in (("--bindings", args.bindings),
-                        ("--independence-policy", args.independence_policy),
-                        ("--revocation", args.revocation)):
-        if value is None:
-            continue
-        relpath = _bundle_relpath(value, bundle_dir, manifest)
-        consumed.append(relpath)
-        flags += [flag, os.path.normpath(os.path.join(bundle_dir, relpath))]
-    # Clock inputs are literal operator values on the frozen CLI, not documents;
-    # they are forwarded verbatim.
-    if args.now is not None:
-        flags += ["--now", args.now]
-    if args.freshness_window is not None:
-        flags += ["--freshness-window", args.freshness_window]
-    return flags, consumed
-
-
-def _bundle_relpath(value: str, bundle_dir: str, manifest: Manifest) -> str:
-    full = os.path.normpath(value if os.path.isabs(value)
-                            else os.path.join(bundle_dir, value))
-    relpath = os.path.relpath(full, bundle_dir)
-    if relpath.startswith(os.pardir):
-        raise Unmeasurable(
-            ERROR, "operator input %s is outside the bundle" % value)
-    if relpath not in manifest.files:
-        raise Unmeasurable(
-            ERROR, "operator input %s is not covered by the manifest" % relpath)
-    return relpath
-
-
-def evaluate_bundle(args, invoke=invoke_frozen_verifier) -> Tuple[int, dict]:
-    """Evaluate exactly one bundle. Returns ``(exit_code, result_object)``.
-
-    ``invoke`` is the frozen-verifier subprocess seam; tests substitute a stub so
-    that no corpus bytes are required to exercise the mapping.
-    """
+    if invoke is None:
+        invoke = invoke_frozen_verifier
     bundle_dir = os.path.abspath(args.bundle)
-    if not os.path.isdir(bundle_dir):
-        raise BundleIdentityError("bundle directory %s does not exist" % bundle_dir)
-
-    manifest = load_manifest(bundle_dir)                       # exit 1 on failure
-    scenario_id = manifest.scenario_id
+    doc, scenario_id = load_manifest_identity(bundle_dir)   # exit-1 band ends here
+    verifier_digests, digest_problem = measure_frozen_digests()
     try:
-        return _evaluate_verified(args, bundle_dir, manifest, invoke)
-    except Unmeasurable as exc:
+        return _evaluate(args, bundle_dir, doc, scenario_id, invoke,
+                         verifier_digests, digest_problem)
+    except NonMeasurement as exc:
         # Identity IS established from here on, so the caller owes a result
         # object naming the scenario it failed on (contract 8.5).
         exc.scenario_id = scenario_id
+        exc.verifier_digests = verifier_digests
         raise
 
 
-def _evaluate_verified(args, bundle_dir: str, manifest: Manifest,
-                       invoke) -> Tuple[int, dict]:
-    """Everything downstream of a parsed manifest."""
-    scenario_id = manifest.scenario_id
-    contents = verify_manifest(bundle_dir, manifest)           # before any parsing
+def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
+              verifier_digests: Dict[str, str], digest_problem: Optional[str]) -> dict:
+    # ---- contract 8.3.1 step 1: the WHOLE preflight, before any invocation ---
+    manifest = validate_manifest(doc, scenario_id)
+    contents = verify_bundle_files(bundle_dir, manifest)
+    parsed = parse_bundle_files(manifest, contents)
+    artifacts = build_artifacts(manifest, parsed)
+    operator_entries = check_operator_composition(manifest)
+    _assert_operator_flags_consistent(args, bundle_dir, operator_entries)
 
-    assert_frozen_digests()                                    # contract 3
-
-    flags, consumed = operator_flags(args, bundle_dir, manifest)
-
-    head_witness = None
-    if args.head_witness is not None:
-        hw_rel = _bundle_relpath(args.head_witness, bundle_dir, manifest)
-        consumed.append(hw_rel)
-        try:
-            head_witness = json.loads(contents[hw_rel].decode("utf-8"))
-        except (UnicodeDecodeError, ValueError) as exc:
-            raise Unmeasurable(ERROR, "head_witness file %s is not parseable JSON: %s"
-                               % (hw_rel, exc))
-
-    artifacts = collect_artifacts(contents, consumed)
-    if not artifacts:
-        raise Unmeasurable(ERROR, "bundle carries no AIREP v0.2 artifact")
-
-    # Contract 6.1 applicability is structural: a single-artifact scenario has no
-    # bundle graph, no Control/Execution pair and no observer relationship, so it
-    # is not run through the predicates at all. The only other shape the contract
-    # defines is the four-artifact reconciliation bundle.
-    single = len(artifacts) == 1
-    if not single:
-        types = sorted(a.artifact_type for a in artifacts)
-        if types != sorted(ARTIFACT_TYPES):
-            raise Unmeasurable(
-                ERROR,
-                "bundle is neither single-artifact nor a four-artifact "
-                "reconciliation bundle; carries %s" % ", ".join(types))
-
-    # ---- numeric preflight, before any envelope is assembled (contract 5.1) --
-    for artifact in artifacts:
-        offending = numeric_preflight(artifact.value)
+    for entry in manifest.entries:
+        offending = numeric_preflight(parsed[entry.path])
         if offending is not None:
-            raise Unmeasurable(
-                ERROR, "numeric preflight rejected %s at JSON Pointer %r: %s"
-                % (artifact.relpath, offending[0] or "", offending[1]))
-    if head_witness is not None:
-        offending = numeric_preflight(head_witness)
-        if offending is not None:
-            raise Unmeasurable(
-                ERROR, "numeric preflight rejected head_witness at JSON Pointer "
-                "%r: %s" % (offending[0] or "", offending[1]))
-    for relpath in consumed:
-        try:
-            document = json.loads(contents[relpath].decode("utf-8"))
-        except (UnicodeDecodeError, ValueError):
-            continue          # the frozen verifier owns operator-input parsing
-        offending = numeric_preflight(document)
-        if offending is not None:
-            raise Unmeasurable(
-                ERROR, "numeric preflight rejected operator input %s at JSON "
-                "Pointer %r: %s" % (relpath, offending[0] or "", offending[1]))
+            pointer, why = offending
+            raise NonMeasurement(
+                "numeric-preflight-violation",
+                "%s (%s): %s" % (entry.path, entry.role, why),
+                json_pointer=pointer)
+
+    assert_frozen_digests(digest_problem)
+
+    flags: List[str] = []
+    for role in REQUIRED_OPERATOR_ROLES:
+        entry = operator_entries[role]
+        flags += [OPERATOR_FLAG[role],
+                  os.path.join(bundle_dir, *entry.path.split("/"))]
 
     # ---- one frozen-verifier invocation per artifact ------------------------
     entries: List[dict] = []
     verdicts: Dict[str, Optional[dict]] = {}
-    exit_codes: Dict[str, int] = {}
     for artifact in artifacts:
-        request = envelope_bytes(build_envelope(artifact, artifacts, head_witness))
-        code, stdout, stderr = invoke(request, flags)
+        request = envelope_bytes(build_envelope(artifact, artifacts))
+        try:
+            code, stdout, stderr = invoke(request, flags)
+        except NonMeasurement as exc:
+            # The invocation was never completed, so it contributes no entry: an
+            # absent measurement is represented by absence, never by a fabricated
+            # exit code or digest (contract 8.3.1).
+            exc.artifacts = entries
+            raise
         verdict: Optional[dict] = None
         if code == 0:
             try:
                 verdict = json.loads(stdout.decode("utf-8"))
             except (UnicodeDecodeError, ValueError) as exc:
-                raise Unmeasurable(
-                    ERROR, "frozen verifier exited 0 with unparseable stdout for "
-                    "%s: %s" % (artifact.record_id, exc))
+                raise NonMeasurement(
+                    "internal-error",
+                    "frozen verifier exited 0 for %s but stdout is not parseable "
+                    "JSON: %s" % (artifact.record_id, exc),
+                    artifacts=entries)
             if not isinstance(verdict, dict):
-                raise Unmeasurable(
-                    ERROR, "frozen verifier emitted a non-object verdict for %s"
-                    % artifact.record_id)
+                raise NonMeasurement(
+                    "internal-error",
+                    "frozen verifier exited 0 for %s but stdout is not a JSON "
+                    "object" % artifact.record_id,
+                    artifacts=entries)
         entries.append({
             "artifact_ref": artifact.ref,
             "request_envelope_digest": digest_str(request),
             "verifier_exit_code": code,
-            # contract 8.3: null whenever the exit code is 1, because no verdict
+            # Contract 8.3: null whenever the exit code is 1, because no verdict
             # exists. stderr is hashed for audit and NEVER parsed for semantics.
             "verifier_result": verdict,
             "verifier_stderr_digest": digest_str(stderr),
         })
         verdicts[artifact.record_id] = verdict
-        exit_codes[artifact.record_id] = code
 
-    entries.sort(key=lambda e: record_sort_key(e["artifact_ref"]["record_id"]))
-
-    # ---- contract 7.2: the causal guard on frozen exit 1 --------------------
-    # Reaching this point means the request was preflight-clean in every sense
-    # this lane can observe: the manifest verified, the numeric preflight
-    # passed, the envelope was built per 5.1, and the operator inputs are the
-    # bundle's own. The clause "both lanes produced identical envelope bytes" is
-    # NOT observable from a single Python invocation and is the aggregate
-    # harness's gate under ruling AD15-IR-4; it is flagged, not silently
-    # reinterpreted.
-    for record_id, code in sorted(exit_codes.items(), key=lambda kv: record_sort_key(kv[0])):
+    # ---- contract 7.2: the causal guard on a non-zero frozen exit -----------
+    # Reaching this point means the request was preflight-clean in the sense 7.2
+    # requires: the manifest verified, the numeric preflight passed, the envelope
+    # was built per 5.1, and the operator inputs are the bundle's own.
+    # Cross-lane envelope equality is NOT part of this condition and never was
+    # implementable here -- it is an aggregate-harness gate (AD15-IR-4, 8.1).
+    for entry in entries:
+        code = entry["verifier_exit_code"]
+        record_id = entry["artifact_ref"]["record_id"]
         if code == 0:
             continue
-        if code == 1 and scenario_id in EXIT1_REJECT_SCENARIOS:
-            continue                       # a targeted stage-0 / stage-1 failure
-        raise Unmeasurable(
-            ERROR,
-            "frozen verifier exit %d for %s is the evaluator's own error under "
-            "contract 7.2, not the artifact's" % (code, record_id),
+        if code == 1:
+            if scenario_id in EXIT1_REJECT_SCENARIOS:
+                continue                   # a targeted stage-0 / stage-1 failure
+            raise NonMeasurement(
+                "verifier-run-invalid",
+                "frozen verifier exit 1 for %s under %s is outside the two "
+                "contract-7.2 conditions, so it is this evaluator's error rather "
+                "than the artifact's" % (record_id, scenario_id),
+                artifacts=entries)
+        raise NonMeasurement(
+            "internal-error",
+            "frozen verifier exited %d for %s; only 0 and 1 are classifiable"
+            % (code, record_id),
             artifacts=entries)
 
     # ---- contract 8.2 withheld_reasons, contract 7.1 ------------------------
     withheld_reasons: List[dict] = []
-    authenticated_withheld_seen = False
+    authenticated_withheld = False
     for entry in entries:
         verdict = entry["verifier_result"]
         if not isinstance(verdict, dict):
             continue
-        auth = verdict.get("authenticated_withheld") or []
-        wit = verdict.get("witnessed_withheld") or []
+        auth = list(verdict.get("authenticated_withheld") or [])
+        wit = list(verdict.get("witnessed_withheld") or [])
         if auth or wit:
             withheld_reasons.append({
                 "artifact_ref": entry["artifact_ref"],
-                "authenticated_withheld": list(auth),
-                "witnessed_withheld": list(wit),
+                "authenticated_withheld": auth,
+                "witnessed_withheld": wit,
             })
         if auth:
-            authenticated_withheld_seen = True
+            authenticated_withheld = True
 
-    if authenticated_withheld_seen:
+    if authenticated_withheld:
         # Contract 7.1: withheld is the ABSENCE of a measurement. Not REJECT --
         # nothing was refused -- and emphatically not ACCEPT.
-        raise Unmeasurable(
-            MEASUREMENT_INVALID,
-            "a non-empty authenticated_withheld channel makes this scenario "
-            "measurement-invalid (contract 7.1)",
+        raise NonMeasurement(
+            "authenticated-withheld",
+            "a non-empty authenticated_withheld channel makes %s "
+            "measurement-invalid (contract 7.1)" % scenario_id,
             withheld_reasons=withheld_reasons,
             artifacts=entries)
 
     # ---- predicates (contract 6, 6.1) ---------------------------------------
-    predicates = na_predicates()
-    if not single:
+    if scenario_id in SINGLE_ARTIFACT_FAMILY:
+        # A single-artifact scenario has no bundle graph, no Control/Execution
+        # pair and no observer relationship: it is not run through the
+        # predicates at all. NOT_APPLICABLE is a MEASURED outcome (8.2.3).
+        predicates = {"R_A": NOT_APPLICABLE, "R_B": NOT_APPLICABLE,
+                      "R_C": NOT_APPLICABLE}
+    else:
         r_a, why_a = predicate_r_a(artifacts)
         r_b, why_b = predicate_r_b(artifacts)
         r_c, why_c = predicate_r_c(artifacts, verdicts)
@@ -844,66 +1138,102 @@ def _evaluate_verified(args, bundle_dir: str, manifest: Manifest,
     # ---- Level-1 mapping (contract 7) ---------------------------------------
     reject = False
     for entry in entries:
-        verdict = entry["verifier_result"]
         if entry["verifier_exit_code"] == 1:
             reject = True                  # invalid: no class at all
             continue
+        verdict = entry["verifier_result"]
         if isinstance(verdict, dict) and (verdict.get("authenticated_failures") or []):
             reject = True                  # definitive Authenticated-tier failure
 
     level1 = map_level1(reject, predicates)
-    result = build_result(scenario_id, MEASURED, level1, predicates, entries,
-                          withheld_reasons)
-    return 0, result
+
+    # Contract 8.3.1 rule 4: a MEASURED result's artifacts[] length MUST equal
+    # the bundle's artifact count from section 5.
+    if len(entries) != len(artifacts):
+        raise NonMeasurement(
+            "internal-error",
+            "MEASURED result would carry %d artifact entries for a %d-artifact "
+            "bundle" % (len(entries), len(artifacts)),
+            artifacts=entries)
+
+    return build_result(scenario_id, MEASURED, level1, predicates, None, entries,
+                        withheld_reasons, verifier_digests)
+
+
+def _assert_operator_flags_consistent(args, bundle_dir: str,
+                                      selected: Dict[str, FileEntry]) -> None:
+    """Ambiguity A1: the operator-input flags are accepted, but only as an
+    assertion that they name the file the manifest ``role`` already selected. A
+    flag can never change what is measured.
+    """
+    supplied = (("bindings", args.bindings),
+                ("independence_policy", args.independence_policy),
+                ("revocation", args.revocation))
+    for role, value in supplied:
+        if value is None:
+            continue
+        expected = os.path.realpath(
+            os.path.join(bundle_dir, *selected[role].path.split("/")))
+        given = os.path.realpath(
+            value if os.path.isabs(value) else os.path.join(os.getcwd(), value))
+        if given != expected:
+            raise UsageError(
+                "%s names %s, but the bundle manifest selects %s for role %r; "
+                "operator inputs are the bundle's own (contract 5.1)"
+                % (OPERATOR_FLAG[role], given, expected, role))
 
 
 # --------------------------------------------------------------------------
 # CLI (contract 8.1, 8.5)
 # --------------------------------------------------------------------------
 
-def main(argv: Optional[List[str]] = None) -> int:
-    argv = list(sys.argv[1:] if argv is None else argv)
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="interop_eval.py",
         description=("AIREP v0.2 Python reference interop evaluator "
                      "(INTEROP_REFERENCE_EVALUATOR_CONTRACT.md). One invocation "
-                     "evaluates exactly one scenario bundle."),
+                     "evaluates exactly one scenario bundle and writes at most "
+                     "one JSON result object to stdout."),
         add_help=True,
     )
     parser.add_argument("--bundle")
+    # Accepted only as a consistency assertion against the manifest roles (A1).
     parser.add_argument("--bindings")
     parser.add_argument("--independence-policy", dest="independence_policy")
     parser.add_argument("--revocation")
-    parser.add_argument("--now")
-    parser.add_argument("--freshness-window", dest="freshness_window")
-    parser.add_argument("--head-witness", dest="head_witness")
+    return parser
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    parser = build_parser()
     args = parser.parse_args(argv)   # argparse exits 2 on usage errors, 0 on --help
 
     try:
         if args.bundle is None:
             raise UsageError("--bundle is required")
-        code, result = evaluate_bundle(args)
+        result = evaluate_bundle(args)
     except UsageError as exc:
         warn("usage error: %s" % exc)
         return 2
     except BundleIdentityError as exc:
-        # Bundle identity was never established: silence on stdout (contract 8.5).
-        warn("bundle preflight: %s" % exc)
+        # Identity was never established: silence on stdout (contract 8.5).
+        warn("bundle identity: %s" % exc)
         return 1
-    except Unmeasurable as exc:
-        warn("%s: %s" % (exc.status.lower(), exc.detail))
+    except NonMeasurement as exc:
+        warn("%s: %s" % (exc.reason, exc.detail))
         if exc.scenario_id is None:
-            # Unreachable by construction: Unmeasurable is only raised
-            # downstream of a parsed manifest. Fail closed rather than emit a
-            # result object with an invented identity.
+            # Unreachable by construction: NonMeasurement is only raised
+            # downstream of an established identity. Fail closed rather than
+            # emit a result object with an invented identity.
             warn("no bundle identity for an exit-3 result object")
             return 1
         sys.stdout.write(dump_json(build_result(
-            exc.scenario_id, exc.status, None, na_predicates(),
-            exc.artifacts, exc.withheld_reasons)))
+            exc.scenario_id, exc.status, None, None, nonmeasurement_object(exc),
+            exc.artifacts, exc.withheld_reasons, exc.verifier_digests)))
         return 3
     sys.stdout.write(dump_json(result))
-    return code
+    return 0
 
 
 if __name__ == "__main__":
