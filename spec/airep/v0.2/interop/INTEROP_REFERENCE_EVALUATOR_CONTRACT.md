@@ -422,11 +422,26 @@ positive Level-1 result.
 
 In an **official run** every operator input is complete by construction: the binding store
 resolves all four producer identities (`INTEROP_CORPUS_CONTRACT.md` §2.3), the revocation snapshot
-is present and well-formed, and the suite is registered. So for any artifact the scenario expects
-to reach `AIREP-Authenticated`:
+is present and well-formed, and the suite is registered.
 
-> a **non-empty `authenticated_withheld`** channel ⇒ **measurement-invalid**. The evaluator emits
-> **no Level-1 verdict** for that scenario and reports the withheld reasons verbatim.
+**The rule is scenario-independent (Erratum 5).** An earlier draft said "for any artifact the
+scenario expects to reach `AIREP-Authenticated`" — which presumes a per-scenario expected-tier table
+**no evaluator has, and none should have**: consulting an expected-outcome oracle is exactly what a
+measuring instrument must not do. The rule needs no such table:
+
+> On the mandatory W1 surface, **any emitted frozen-verifier verdict carrying a non-empty
+> `authenticated_withheld` channel makes the scenario `MEASUREMENT_INVALID`, regardless of scenario
+> id.** The evaluator emits no Level-1 verdict and reports the withheld reasons verbatim.
+
+This is sound because of how the mandatory twelve are built: operator inputs are complete by
+construction; no mandatory scenario targets Authenticated-withheld behaviour; stage-0 and stage-1
+invalid artifacts emit no verdict at all and are handled by §7.2; and `IOP-B-EXE` targets a
+definitive `authenticated_failures`, not a withheld channel. On this surface an
+`authenticated_withheld` result therefore means the **measurement infrastructure or the operator
+inputs failed** — it is never a scenario's semantic outcome.
+
+**This does not extend to `witnessed_withheld`.** W1 carries no witness, so `no-witness-supplied`
+is an ordinary diagnostic surface, not a measurement failure.
 
 This is not `REJECT` — nothing was refused — and it is emphatically not `ACCEPT`. It means the
 harness or the operator inputs are wrong, and the correct response is to fix them and re-run, not
@@ -540,6 +555,34 @@ unmeasured is not a claim about twelve.
 
 #### 8.2.1 `verifier_digests` — own lane only
 
+**Frozen-identity preflight order, pinned (Erratum 5).** §8.2.1 required *exactly two*
+self-recomputed entries, and the contract separately requires a frozen-identity assertion. When a
+frozen file cannot be read those two demands conflict: a digest that cannot be computed cannot be
+emitted, and no implementer may fabricate one. The order is therefore fixed:
+
+1. bundle identity is established by the §5 direct read of the root manifest;
+2. **immediately afterwards, before any other post-identity preflight**, the evaluator reads its
+   own frozen identity pair and computes SHA-256 over each — its own class verifier, and the frozen
+   `CLASS_VERIFIER_CONTRACT.md`;
+3. if **either cannot be read** → exit `3`, `nonmeasurement.reason = frozen-identity-unreadable`,
+   **`verifier_digests: null`**, `artifacts: []`;
+4. if both are read, the exact two-entry `verifier_digests` object is built from the **recomputed**
+   values;
+5. if a recomputed value does not match its expected pin → `verifier-digest-mismatch`, and the
+   **actual recomputed two-entry `verifier_digests` is retained** — a reader needs to see what was
+   actually there, not what was expected;
+6. only then does bundle traversal and the remaining preflight begin.
+
+Because step 2 precedes all other post-identity work, **every other post-identity result carries a
+populated `verifier_digests`**, and no implementation ever emits a placeholder.
+
+> `verifier_digests`: an exact two-entry object after a successful frozen-identity read;
+> **`null` only for `frozen-identity-unreadable`**.
+
+This also clarifies why the aggregate cross-lane verifier-identity duty is meaningful only over
+qualifying measured runs: a run that could not read its own frozen identity has no digests to
+compare.
+
 An earlier draft said "the three asserted digests from §3". That is unsatisfiable: §3 forbids a
 lane from touching the other lane's verifier, so no evaluator can assert a digest it is not
 permitted to read. Both isolated authors hit this independently.
@@ -582,6 +625,8 @@ implementer:
 | `bundle-file-missing` | a file listed in `files[]` is not present on disk | `ERROR` |
 | `bundle-file-unreadable` | a listed file exists and is a permitted regular file, but its bytes cannot be read | `ERROR` |
 | `bundle-directory-unreadable` | after identity is established, bundle traversal cannot complete because a directory cannot be enumerated | `ERROR` |
+| `bundle-entry-uninspectable` | a directory entry name was obtained, but its filesystem kind could not be determined | `ERROR` |
+| `frozen-identity-unreadable` | the evaluator's own frozen verifier or frozen class contract could not be read, so its digest cannot be recomputed | `ERROR` |
 | `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
 | `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
 | `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
@@ -603,6 +648,24 @@ The reason covers **all** of:
 
 **Directories are containers only.** A directory is normal under a bundle and is never itself a
 `files[]` entry. No new reason code is added for any of the above.
+
+**The filesystem taxonomy is complete (Erratum 5).** Erratum 3 separated the listed-file cases and
+Erratum 4 separated enumeration; one gap remained between them — an entry whose **name** was
+obtained but whose **kind** could not be determined. Calling that `manifest-invalid` asserts the
+layout is wrong when that is precisely what could not be established, and
+`bundle-directory-unreadable` does not fit either, because enumeration *succeeded*. The full
+boundary, in order of what was actually learned:
+
+| What happened | Reason |
+|---|---|
+| entry name obtained, but no-follow kind inspection (`lstat` or equivalent) could not complete | **`bundle-entry-uninspectable`** — exit `3`, `artifacts: []` |
+| kind determined: a symlink or a forbidden non-regular object | `manifest-invalid` |
+| kind determined: a directory, but it cannot be enumerated | `bundle-directory-unreadable` |
+| kind determined: a regular file, but its bytes cannot be read | `bundle-file-unreadable` |
+
+Each row says only what was actually learned, and stops there. Reporting a layout violation when
+the layout could not be inspected is the same error as reporting a missing file when the medium was
+merely unreadable.
 
 **Enumeration failure is not a layout violation (Erratum 4).** Once a usable manifest and
 `scenario_id` exist, the evaluator traverses the bundle. If that traversal cannot complete —
@@ -765,6 +828,26 @@ object *about*. Exit code and stdout are therefore pinned together.
 | `2` | **no result object** — stdout empty | CLI usage error |
 | `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
 
+#### Ruling `AD15-IR-8` — identity establishment is monotonic
+
+Once the root `manifest.json` bytes have been read successfully, parsed as strict JSON, and yielded
+a registered `scenario_id`, **bundle identity is established**. No later filesystem, traversal or
+preflight failure can retroactively unestablish it.
+
+This resolves an overlap E4-2 and E4-3 created between them. E4-2 lists "the bundle root itself
+cannot be accessed" as an exit-`1` identity condition; E4-3 makes an unenumerable directory after
+identity `bundle-directory-unreadable` at exit `3`. On POSIX those meet in exactly one place:
+
+> **Worked case — bundle directory mode `0o111`.** Traverse permission lets
+> `open(DIR/manifest.json)` succeed while `readdir(DIR)` fails `EACCES`. The manifest read
+> succeeded and yielded a registered `scenario_id`, so identity **was** established. The result is
+> **`bundle-directory-unreadable`, exit `3`** — not exit 1.
+
+Both isolated lanes reached this independently and were measured returning identical results on the
+same bundle. That is convergence under a rule, which is stronger than convergence from silence —
+but it is **development evidence, not official parity.** Official parity does not exist until the
+corpus runs.
+
 #### `--help` is a CLI meta-action, not an evaluation (Erratum 3)
 
 The exit table above governs **evaluation invocations**. `--help` is not one, and an earlier draft
@@ -803,8 +886,11 @@ stdout and diagnostics on stderr.
 An earlier draft put "a required artifact absent" on the exit-`1` side. That contradicted this very
 rule: if the manifest parsed and yielded a usable `scenario_id`, identity **is** established, and a
 missing file is something the evaluator can and must report against that scenario. It now exits `3`
-with `bundle-file-missing`. The exit-`1` band is exactly the three conditions under which there is
-no scenario to name.
+with `bundle-file-missing`. **The exit-`1` band is exactly the identity-not-established condition
+defined by §5's direct-read identity boundary and summarized in the table above.**
+
+*(That sentence used to restate the condition count, and drifted when the count changed. It is the
+third restated list in this contract to do so. Where a rule already exists, reference it.)*
 
 **Diagnostics always go to stderr, and stderr is never a source of semantics** (§8.3). It is not
 parsed by the harness, does not influence any verdict, predicate or status, and is retained only
@@ -1025,33 +1111,62 @@ under both keys depending on which was primary. Both lanes now make `record_id` 
 reverse of `artifact_path` rank, so the test cannot pass under the wrong key. A test that passes
 with and without the fix is not a test.
 
+### Erratum 5 — record (2026-08-29)
+
+Raised by the last remediation round. Both candidates are frozen as evidence, not identities:
+
+| Lane | r1 | **r2** |
+|---|---|---|
+| Python | `0d05975caacd4624e201c67b0f7ccd0abf648d26` | `8af0227344ee64cb5053454a6661d5f3c4e6453b` |
+| Node | `c801d5058c5538de0fd0fb414a68041538806f0e` | `7c873428f54d2707d414492eeb931e565a3f04bc` |
+
+| # | Change | Raised by |
+|---|---|---|
+| E5-1 | `AD15-IR-8` — identity establishment is monotonic; the `0o111` case is `bundle-directory-unreadable` at exit 3 | **both lanes; measured identical** |
+| E5-2 | the stale "three conditions" restatement replaced by a reference to §5 | Python |
+| E5-3 | `bundle-entry-uninspectable` — the last gap in the filesystem taxonomy | Python |
+| E5-4 | `frozen-identity-unreadable`, nullable `verifier_digests`, and a pinned frozen-identity preflight order | Python |
+| E5-5 | §7.1's expected-tier dependency removed; the rule is scenario-independent | Python |
+
+**On E5-1's evidential weight.** Both lanes resolved the `0o111` overlap identically and were
+*measured* doing so on the same bundle. That is convergence **under a rule** — §8.5's dividing-line
+sentence — which is stronger than the convergence-from-silence recorded in Erratum 4. It remains
+**development evidence, not official parity**; official parity does not exist until the corpus runs.
+
+**On E5-5.** The removed wording required the evaluator to know what a scenario *expected*. A
+measuring instrument that consults an expected-outcome oracle is not measuring. The replacement
+needs no table and is sound on this surface only because the mandatory twelve are built so that an
+`authenticated_withheld` result can only mean the infrastructure failed.
+
+**On E5-2, and the pattern behind it.** This is the third restated list in this contract to drift
+from the rule it restated — §13's step numbering, the §8.5 exit-1 row, and now the exit-1 band
+sentence. Each was written to help a reader and each became a second source of truth. Where a rule
+already exists, reference it.
+
+**No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
+
 ## 13. Sequencing
 
-The final micro-remediation round is complete and both candidates are frozen as
-**post-Erratum-3 final candidates (r1)** — `0d05975caacd4624e201c67b0f7ccd0abf648d26` (Python) and
-`c801d5058c5538de0fd0fb414a68041538806f0e` (Node), on refs `w1/interop-eval-py-final-r1` and
-`w1/interop-eval-node-final-r1`.
-
-**The `w1/interop-eval-py-final` and `w1/interop-eval-node-final` refs are deliberately unused.**
-They are reserved for the post-Erratum-4 official candidates. The earlier `-official` refs, which
-now hold evidence rather than identities, are likewise never rewritten — every naming decision in
-this chain preserves what actually happened rather than tidying it.
+The last remediation round is complete. Both candidates are frozen as **post-Erratum-4 candidates
+(r2)** on `w1/interop-eval-py-final-r2` and `w1/interop-eval-node-final-r2`. The
+`w1/interop-eval-py-final` and `w1/interop-eval-node-final` refs remain **reserved and unused**, as
+do every earlier `-official` and `-r1` ref — no ref in this chain is ever rewritten or deleted.
 
 Remaining sequence:
 
-1. **Erratum 4 is source-reviewed and canonicalized** — the maintainer pins a new head plus the
-   evaluator-contract and corpus-contract digests.
-2. **Python last remediation** in a fresh isolated context: only its own r1 head
-   `0d05975caacd4624e201c67b0f7ccd0abf648d26` plus the new canonical contracts, on
-   `w1/interop-eval-py-final`.
-3. **Node last remediation** in a fresh isolated context: only its own r1 head
-   `c801d5058c5538de0fd0fb414a68041538806f0e` plus the new canonical contracts, on
-   `w1/interop-eval-node-final`.
+1. **Erratum 5 is source-reviewed and canonicalized** — the maintainer pins a new head and the
+   evaluator-contract digest. The corpus contract is unchanged and keeps its existing digest.
+2. **Python closure remediation** in a fresh isolated context: only `8af0227344ee64cb5053454a6661d5f3c4e6453b`
+   plus the new canonical contracts, on `w1/interop-eval-py-final`.
+3. **Node closure remediation** in a fresh isolated context: only `7c873428f54d2707d414492eeb931e565a3f04bc`
+   plus the new canonical contracts, on `w1/interop-eval-node-final`.
 4. **Peer material remains invisible** throughout.
-5. **The canonical contract lineage is merged into each branch**, no squash or rewrite.
+5. **The canonical lineage is merged into each branch**, no squash or rewrite.
 6. Tests and source review.
 7. **Official Python and Node evaluator identities are frozen.**
 8. **Only then is corpus construction opened.**
+
+Step 2 and 3 are deliberately narrow: five closures, each with a pinned discrimination test.
 
 **Corpus bytes remain on HOLD through step 7. Step 8 is the only point at which corpus
 construction opens, matching the status line at the head of this document.**
