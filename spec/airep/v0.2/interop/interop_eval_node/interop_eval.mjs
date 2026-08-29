@@ -2,7 +2,7 @@
 // AIREP v0.2 reference interop evaluator -- Node lane.
 //
 // Implements INTEROP_REFERENCE_EVALUATOR_CONTRACT.md (AD15-IR-2), canonical
-// post-Erratum-3 basis b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd, sections 5-8.
+// post-Erratum-4 basis cd7b634f46e1106aca8f228d9633150cbc111855, sections 5-8.
 // The contract's own sha256 is recorded in README.md and deliberately not here:
 // every 64-hex literal in this file is a frozen-verifier digest this lane
 // asserts, and the self-test requires that set to be exactly two (section
@@ -32,7 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // 0. Constants
 // ---------------------------------------------------------------------------
 
-const EVALUATOR_VERSION = "interop_eval_node/0.2.2";
+const EVALUATOR_VERSION = "interop_eval_node/0.2.3";
 
 // The registered twelve (section 8.1). A manifest whose scenario_id is not one
 // of these carries "no usable scenario_id" and therefore establishes no bundle
@@ -90,9 +90,26 @@ const DEFAULT_VERIFIER_CONTRACT = path.join(
 // exit 2: CLI usage error. No result object; stdout stays empty.
 class UsageError extends Error {}
 
-// exit 1: bundle identity could not be established, and only that -- manifest
-// absent, unparseable, or carrying no usable scenario_id from the registered
-// twelve. No result object; stdout stays empty. There is no scenario to name.
+// exit 1: bundle identity could not be established, and only that. No result
+// object; stdout stays empty. There is no scenario to name.
+//
+// Erratum 4 (E4-2) makes the boundary a DIRECT READ and enumerates it. Identity
+// comes from reading the bytes of DIR/manifest.json directly -- never from
+// enumerating the bundle first -- and every one of these five is identity not
+// established:
+//
+//   1. the bundle root itself cannot be accessed;
+//   2. DIR/manifest.json is not found;
+//   3. it is found but cannot be opened or read;
+//   4. its bytes do not parse as strict JSON;
+//   5. no registered scenario_id can be obtained from it.
+//
+// A root manifest that cannot be read NEVER yields bundle-file-unreadable. That
+// reason names a file listed in files[], from which the root manifest is
+// deliberately excluded -- but more fundamentally a reason belongs to a result
+// object, and here there is no scenario to name one after. Unreadable and
+// absent are genuinely indistinguishable TO THE EVALUATOR at this point,
+// because neither yields an identity.
 class IdentityError extends Error {}
 
 // exit 3: bundle identity WAS established but the scenario could not be
@@ -121,6 +138,21 @@ const REASON_STATUS = Object.freeze({
   "manifest-digest-mismatch": "ERROR",
   "bundle-file-missing": "ERROR",
   "bundle-file-unreadable": "ERROR",
+  // Erratum 4 (E4-3). Enumeration failure is NOT a layout violation. Once a
+  // usable manifest and scenario_id exist the evaluator traverses the bundle;
+  // if that traversal cannot complete -- permission denied, an I/O error, any
+  // other failure to enumerate a directory -- the reason is this one, and it is
+  // deliberately NOT manifest-invalid. manifest-invalid says the layout is
+  // WRONG; this says the layout could not be MEASURED. Saying "the layout
+  // violates a rule" about a faulty medium is as false as saying "the file is
+  // missing" was, which is the shape Erratum 3 closed one level down. This lane
+  // recorded exactly that discomfort as open ambiguity 5 rather than inventing
+  // a registry row; the erratum closed it with a dedicated row.
+  //
+  // The file-level distinctions are unaffected: enumeration succeeding but a
+  // listed file being absent is still bundle-file-missing, and a listed regular
+  // file whose bytes will not read is still bundle-file-unreadable.
+  "bundle-directory-unreadable": "ERROR",
   "bundle-json-invalid": "ERROR",
   "bundle-shape-invalid": "ERROR",
   "numeric-preflight-violation": "ERROR",
@@ -428,13 +460,34 @@ export function checkBundlePath(p) {
 // bundle identity is not established, so the answer is exit 1 with empty
 // stdout, never manifest-invalid -- that reason would require an identity this
 // evaluator does not have. The single path.join below IS the whole lookup.
+//
+// THE IDENTITY BOUNDARY IS A DIRECT READ (Erratum 4, E4-2). The readFileSync
+// below is the FIRST filesystem operation the evaluator performs on the bundle:
+// nothing is enumerated, stat-ed or listed beforehand, and walkBundle() does
+// not run until this function has returned a usable scenario_id. That ordering
+// is what makes all five listed conditions collapse into one IdentityError
+// band -- an inaccessible bundle root, an absent manifest and an unreadable
+// manifest all surface here as the same failed read, and the contract says they
+// are indistinguishable to the evaluator precisely because none of them yields
+// an identity to name a reason against. Introducing a pre-read existence or
+// enumeration check would split that band and produce a reason where the
+// contract requires silence.
 export function loadManifest(bundleDir, onIdentity = null) {
   const manifestPath = path.join(bundleDir, MANIFEST_NAME);
   let text;
   try {
     text = fs.readFileSync(manifestPath, "utf8");
   } catch (e) {
-    throw new IdentityError(`${MANIFEST_NAME} absent or unreadable at ${manifestPath}: ${e.message}`);
+    // Conditions 1-3 of the E4-2 enumeration arrive here as one failed read:
+    // an inaccessible bundle root (ENOTDIR, EACCES on the directory), an absent
+    // manifest (ENOENT) and a present-but-unopenable manifest (EACCES, EIO).
+    // They are deliberately NOT separated into distinct reasons -- there is no
+    // scenario to name a reason against, and bundle-file-unreadable in
+    // particular is wrong here because the root manifest is never a files[]
+    // entry. The errno is carried on stderr for the operator, where it has no
+    // semantics.
+    throw new IdentityError(
+      `${MANIFEST_NAME} could not be read at ${manifestPath}: ${e.message}`);
   }
   let doc;
   try {
@@ -522,6 +575,12 @@ export function loadManifest(bundleDir, onIdentity = null) {
 // containers only and are never files[] entries -- a directory under the bundle
 // is normal and is simply descended.
 //
+// Erratum 4 (E4-3) removes ONE condition from that reading: a directory that
+// cannot be ENUMERATED is bundle-directory-unreadable, not manifest-invalid.
+// The walk below is reached only after identity is established, so every
+// failure inside it owes a result object naming the scenario either way; what
+// the erratum fixes is which true thing that object says.
+//
 // Erratum 3 REMOVED "a manifest with the wrong name or location" from that
 // enumeration, and nothing here replaces it. The condition was unimplementable:
 // naming it requires a scenario_id, and a bundle with no root manifest.json has
@@ -539,8 +598,14 @@ export function walkBundle(bundleDir) {
     try {
       dirents = fs.readdirSync(abs, { withFileTypes: true });
     } catch (e) {
-      throw new NonMeasurement("manifest-invalid",
-        `bundle directory unreadable at ${rel === "" ? "." : rel}: ${e.message}`);
+      // Erratum 4 (E4-3). Identity is already established -- loadManifest ran
+      // first and read DIR/manifest.json DIRECTLY -- so what failed here is the
+      // measurement of the layout, not the layout itself. bundle-file-missing
+      // would be false (nothing is known to be absent) and manifest-invalid
+      // would be false (no rule is known to be broken); only the enumeration
+      // failed, and that now has its own registry row.
+      throw new NonMeasurement("bundle-directory-unreadable",
+        `bundle traversal could not enumerate ${rel === "" ? "the bundle root" : rel}: ${e.message}`);
     }
     for (const d of dirents) {
       const childRel = rel === "" ? d.name : `${rel}/${d.name}`;
@@ -586,12 +651,25 @@ export function walkBundle(bundleDir) {
 // way -- usage text to stderr, exit 2 -- because the pre-erratum contract made
 // exit 0 unsatisfiable for a help screen. That resolution is superseded.
 //
-// The carve-out is EXACTLY ONE FLAG WIDE. Every other CLI usage error is still
-// exit 2 with empty stdout, and the "exit 0 never has empty stdout" invariant
-// still binds every evaluation invocation -- see the process-exit guard at the
-// foot of this file, which is now keyed on stdout actually carrying bytes
-// rather than on a result object specifically, so it defends --help and an
-// evaluation alike without being weakened for either.
+// Erratum 4 (E4-1) pins the width of that carve-out, because "exactly one flag
+// wide" proved ambiguous: two isolated lanes read it differently and measurably
+// diverged, one treating it as a statement about SPELLINGS and refusing -h, the
+// other as a statement about the EXIT-0 LICENCE and accepting it. This lane was
+// the one that accepted -h. The contract now says which:
+//
+//   * the meta-action is the SINGLE-TOKEN INVOCATION `--help`, and nothing else;
+//   * `-h` is NOT an alias -- it is a CLI usage error: exit 2, no result object;
+//   * `--help` alongside ANY other argument is not a meta-action either. Only
+//     the lone help invocation is carved out;
+//   * help text content and byte length are not a parity requirement. The two
+//     lanes may print different help and nothing compares it.
+//
+// Every other CLI usage error remains exit 2 with empty stdout, and the "exit 0
+// never has empty stdout" invariant still binds every evaluation invocation --
+// see the process-exit guard at the foot of this file. That guard stays keyed
+// on INVOCATION KIND rather than on stdout in general, so narrowing the help
+// spelling here does not weaken what an EVALUATION exiting 0 must satisfy: it
+// must still have written a result object, exactly as before Erratum 3.
 
 const USAGE = `interop_eval.mjs - AIREP v0.2 reference interop evaluator (Node lane)
 
@@ -614,9 +692,11 @@ Exit codes for an evaluation invocation (contract section 8.5):
   2  no result object   - CLI usage error
   3  one result object  - MEASUREMENT_INVALID or ERROR, level1 and predicates null
 
---help is a CLI meta-action, not an evaluation: it exits 0, prints this text,
-evaluates nothing, emits no result object, and does not require --bundle. The
-exit table above does not apply to it.
+--help, given alone as the ONLY argument, is a CLI meta-action rather than an
+evaluation: it exits 0, prints this text, evaluates nothing, emits no result
+object, and does not require --bundle. The exit table above does not apply to
+it. -h is not an alias for it, and --help alongside any other argument is not
+the meta-action; both are ordinary usage errors and exit 2.
 `;
 
 const FLAG_FOR_ROLE = {
@@ -625,20 +705,34 @@ const FLAG_FOR_ROLE = {
   revocation: "--revocation",
 };
 
-// Returns { flags, help }. The whole argv is parsed even when --help is
-// present, so a genuine usage error alongside it is still an exit-2 usage error
-// -- the carve-out is one flag wide and is not a way to launder a bad command
-// line into exit 0. Only the --bundle requirement is lifted, because Erratum 3
-// says in terms that --help does not require it.
-export function parseArgs(argv) {
-  const flags = {
+function emptyFlags() {
+  return {
     bundle: null, bindings: null, "independence-policy": null, revocation: null,
     verifier: null, "verifier-contract": null,
   };
-  let help = false;
+}
+
+// Returns { flags, help }.
+//
+// Erratum 4 (E4-1): the meta-action is ONE EXACT INVOCATION, not one concept.
+// It is recognised before the option loop and only when argv is precisely the
+// single token `--help`. Everything else -- `-h`, `--help --bundle DIR`,
+// `--bundle DIR --help`, `--help junk`, `--help --help` -- falls through into
+// the ordinary loop, where `--help` is simply not a known option and `-h` is
+// simply not an option at all. Both therefore exit 2 with empty stdout, which
+// is what the erratum requires, and neither needs a special case to do so.
+//
+// This is a narrowing of this lane's previous behaviour, which accepted `-h` as
+// an alias and let `--help` anywhere in argv win. Only the --bundle requirement
+// is lifted for the meta-action, because the contract says in terms that
+// --help does not require it.
+export function parseArgs(argv) {
+  if (argv.length === 1 && argv[0] === "--help") {
+    return { flags: emptyFlags(), help: true };
+  }
+  const flags = emptyFlags();
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--help" || a === "-h") { help = true; continue; }
     if (!a.startsWith("--")) throw new UsageError(`unexpected argument: ${a}`);
     const name = a.slice(2);
     if (!(name in flags)) throw new UsageError(`unknown option: ${a}`);
@@ -646,8 +740,8 @@ export function parseArgs(argv) {
     if (flags[name] !== null) throw new UsageError(`option ${a} given more than once`);
     flags[name] = argv[++i];
   }
-  if (!help && flags.bundle === null) throw new UsageError("--bundle is required");
-  return { flags, help };
+  if (flags.bundle === null) throw new UsageError("--bundle is required");
+  return { flags, help: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -820,6 +914,12 @@ function runFrozenVerifier(verifierPath, requestPath, operatorArgs) {
 // v0.2 reference semantics: match on record_id, additionally on chain_id when
 // the reference carries one. Zero matches is unresolved; more than one is
 // ambiguous. Both fail closed; the evaluator never picks one.
+//
+// AD15-IR-7 (Erratum 4, E4-4) makes this the ONLY place duplicate semantic IDs
+// are judged. There is no preflight gate on them, so a bundle carrying two
+// artifacts with the same record_id reaches frozen stage evaluation intact and
+// an actual reference into that pair lands on the "ambiguous" branch below --
+// a reconciliation finding, not the evaluator's refusal to look.
 export function resolveRef(ref, artifacts) {
   if (!isPlainObject(ref) || typeof ref.record_id !== "string") {
     return { state: "unresolved", matches: 0 };
@@ -1064,6 +1164,25 @@ function preflight(flags, ctx) {
   }
 
   // ---- bundle shape -------------------------------------------------------
+  // Ruling AD15-IR-7 (Erratum 4, E4-4): there is NO bundle-wide preflight gate
+  // on duplicate record_id or duplicate (chain_id, record_id), and none may be
+  // added here. artifact_path is each artifact's total harness identity
+  // (AD15-IR-5, AD15-IR-6), so duplicated semantic IDs cannot make a bundle
+  // unidentifiable. Artifacts carrying them still go to frozen stage
+  // evaluation; if a real reference lookup then produces more than one match,
+  // R-A and the frozen resolution semantics treat it as AMBIGUOUS and fail
+  // closed -- see resolveRef(). A preflight gate would make that predicate
+  // unreachable, converting a genuine reconciliation finding into this
+  // evaluator's own refusal.
+  //
+  // Frozen R-10 is a different surface: it makes a duplicate
+  // (chain_id, record_id) in the BATCH VERIFIER'S OWN emitted verdict set
+  // run-invalid. This evaluator submits each artifact as a separate request, so
+  // that batch invariant does not generalize into a bundle-wide semantic
+  // preflight and must not be widened into one.
+  //
+  // The checks below are the section 5 SHAPE rules only -- artifact count and
+  // family composition -- and neither reads record_id.
   const artifactEntries = manifest.entries.filter((e) => e.role === "artifact");
   const wantArtifacts = scenarioArtifactCount(manifest.scenarioId);
   if (artifactEntries.length !== wantArtifacts) {
@@ -1464,11 +1583,14 @@ export function main(argv) {
     throw e;
   }
 
-  // Erratum 3: a CLI meta-action, taken before anything is evaluated. Exit 0,
-  // help to stdout, no result object, no bundle touched. The section 8.5 exit
-  // table does not apply here, and the official aggregate harness never
-  // invokes this path. Written with the same synchronous full-write used for a
-  // result object, so a help screen cannot be truncated on a pipe either.
+  // Erratum 3, narrowed by Erratum 4 (E4-1): a CLI meta-action, reachable only
+  // from the single-token invocation `--help`, taken before anything is
+  // evaluated. Exit 0, help to stdout, no result object, no bundle touched. The
+  // section 8.5 exit table does not apply here, and the official aggregate
+  // harness never invokes this path. Written with the same synchronous
+  // full-write used for a result object, so a help screen cannot be truncated
+  // on a pipe either. Help CONTENT is not a cross-lane parity requirement, so
+  // nothing downstream depends on these bytes.
   if (parsed.help) {
     metaAction = true;
     writeStdoutSync(USAGE);

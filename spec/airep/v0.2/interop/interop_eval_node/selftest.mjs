@@ -323,24 +323,37 @@ function parseMeta(name, argv) {
     return null;
   }
 }
+// E4-1. The carve-out is ONE EXACT INVOCATION, not one concept: the lone token
+// `--help` and nothing else. Both halves are asserted, because each alone is
+// satisfiable by a wrong implementation -- a lane that refuses everything would
+// pass the negatives, and a lane that accepts everything would pass the
+// positive.
 {
   const h = parseMeta("--help", ["--help"]);
   if (h) {
-    eq("--help parses as the meta-action", h.help, true);
+    eq("--help alone parses as the meta-action", h.help, true);
     check("--help does not require --bundle", h.flags.bundle === null);
   }
-  const sh = parseMeta("-h", ["-h"]);
-  if (sh) eq("-h is the same meta-action", sh.help, true);
 }
 eq("an ordinary invocation is not the meta-action",
   parseArgs(["--bundle", "d"]).help, false);
-// The carve-out is exactly ONE FLAG WIDE: --help does not launder a bad command
-// line into the meta-action. Without this control, "--help wins" would silently
-// turn every usage error into exit 0.
+// -h is NOT an alias (E4-1). This lane previously accepted it; the erratum
+// records that acceptance as one half of a MEASURED cross-lane divergence, and
+// pins the other reading.
+usageRejects("-h is not an alias for the meta-action", ["-h"]);
+usageRejects("-h is rejected alongside a valid --bundle", ["--bundle", "d", "-h"]);
+// --help combined with ANY other argument is not the meta-action (E4-1) --
+// including combinations where every other argument is perfectly valid, which
+// is the case a "--help wins" reading would let through.
 usageRejects("--help does not excuse an unknown option", ["--help", "--nope", "x"]);
 usageRejects("--help does not excuse a positional argument", ["--help", "junk"]);
 usageRejects("--help does not excuse a repeated option",
   ["--help", "--bundle", "a", "--bundle", "b"]);
+usageRejects("--help alongside a VALID --bundle is not the meta-action",
+  ["--help", "--bundle", "d"]);
+usageRejects("--bundle before --help is not the meta-action either",
+  ["--bundle", "d", "--help"]);
+usageRejects("--help twice is not the meta-action", ["--help", "--help"]);
 // Clock flags are gone: no official W1 bundle carries a clock input.
 usageRejects("--now is not an accepted option", ["--bundle", "d", "--now", "z"]);
 usageRejects("--freshness-window is not an accepted option", ["--bundle", "d", "--freshness-window", "1"]);
@@ -419,23 +432,23 @@ for (const [name, args] of [
 // --- E3-4 discrimination: --help exits 0, prints help, emits NO result object
 // The four properties are asserted separately, because three of them held under
 // the superseded exit-2 resolution too and only the conjunction discriminates.
-for (const flag of ["--help", "-h"]) {
-  const r = run([flag]);
-  eq(`${flag} exits 0`, r.code, 0);
-  check(`${flag} writes human-readable help to stdout`,
+{
+  const r = run(["--help"]);
+  eq("--help exits 0", r.code, 0);
+  check("--help writes human-readable help to stdout",
     r.out.length > 0 && /--bundle/.test(r.out), JSON.stringify(r.out.slice(0, 120)));
   // "No result JSON object" is the load-bearing half: exit 0 on an EVALUATION
   // asserts a MEASURED result, and a help screen must not be mistakable for one.
   let parsedAsJson = true;
   try { JSON.parse(r.out); } catch { parsedAsJson = false; }
-  check(`${flag} emits no result JSON object`, !parsedAsJson, r.out.slice(0, 200));
+  check("--help emits no result JSON object", !parsedAsJson, r.out.slice(0, 200));
   // Not a regex on field names -- the help text legitimately DOCUMENTS
   // measurement_status in its exit table, so that probe would fail on correct
   // output. The property that matters is that stdout is not a result object.
-  check(`${flag} output is not a JSON object at all`,
+  check("--help output is not a JSON object at all",
     r.out.trimStart()[0] !== "{", r.out.slice(0, 200));
   // It does not require --bundle, and it touches no bundle at all.
-  check(`${flag} needs no --bundle`, r.code === 0);
+  check("--help needs no --bundle", r.code === 0);
 }
 // The exit-0 invariant guard must not have fired: it is keyed on invocation
 // kind, so a meta-action satisfying it via stdout does NOT relax what an
@@ -444,6 +457,49 @@ for (const flag of ["--help", "-h"]) {
   const r = run(["--help"]);
   check("--help does not trip the exit-0 invariant guard",
     !/internal invariant violated/.test(r.err), r.err.slice(0, 200));
+}
+
+// --- E4-1 discrimination: the meta-action is ONE EXACT INVOCATION -----------
+// "Exactly one flag wide" was ambiguous and two isolated lanes measurably
+// diverged on it; THIS lane accepted -h. The erratum pins the other reading, so
+// the discriminating cases are asserted at the process level too, not only
+// through parseArgs: exit code, empty stdout, and the absence of help text are
+// three separable properties and a wrong implementation can satisfy some.
+{
+  const good = mkBundle("e41-help-probe");
+  const notMeta = [
+    ["-h alone", ["-h"]],
+    ["-h alongside a valid bundle", ["--bundle", good, "-h"]],
+    ["--help with a VALID --bundle", ["--help", "--bundle", good]],
+    ["a valid --bundle before --help", ["--bundle", good, "--help"]],
+    ["--help twice", ["--help", "--help"]],
+    ["--help with a positional", ["--help", "junk"]],
+  ];
+  for (const [label, args] of notMeta) {
+    const r = run(args);
+    // Exit 2 specifically. Not 0 (the superseded meta-action reading), and not
+    // 1 or 3 (which would mean the bundle was touched at all).
+    eq(`${label} is a usage error, exit 2`, r.code, 2);
+    check(`${label} writes nothing to stdout`, r.out === "", JSON.stringify(r.out.slice(0, 200)));
+    // The load-bearing negative: no help text leaked to stdout. Under the
+    // superseded reading each of these printed the usage screen and exited 0.
+    check(`${label} prints no help screen on stdout`,
+      !/--independence-policy/.test(r.out), r.out.slice(0, 200));
+  }
+  // Control: the bundle used above is a REAL, identifiable bundle, so the
+  // exit-2 results above are attributable to the argument vector and not to a
+  // broken bundle. Without this the whole block could pass while measuring
+  // nothing but a bad --bundle value.
+  {
+    const r = run(["--bundle", good]);
+    check("control: the probe bundle is identifiable, so exit 2 above is about the argv",
+      r.code === 3 || r.code === 0, `bare --bundle gave exit ${r.code}`);
+    check("control: the probe bundle names its scenario", /IOP-P-DEC/.test(r.out), r.out.slice(0, 200));
+  }
+  // Help CONTENT and byte length are explicitly NOT a parity requirement
+  // (E4-1), so nothing here compares them across lanes or pins a length. The
+  // only property asserted of the help text is that it exists and is not a
+  // result object, which is checked above.
 }
 
 // --- exit 1: bundle identity never established, and ONLY that --------------
@@ -1228,6 +1284,301 @@ for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manif
   if (v) {
     check("it is caught as an ordinary unlisted file, not as a rival manifest",
       /MANIFEST\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 14d. Erratum 4 / E4-2 -- the identity boundary is a DIRECT READ
+// ---------------------------------------------------------------------------
+// Identity comes from reading the bytes of DIR/manifest.json directly, never
+// from enumerating the bundle first. All five listed conditions are identity
+// NOT established: exit 1, stdout empty, no result object -- and therefore no
+// reason code, because a reason belongs to a result object and there is no
+// scenario to name one after.
+//
+// The two conditions that discriminate an enumerate-first implementation are
+// (1) an inaccessible bundle ROOT and (3) a manifest that is present but
+// unreadable: an evaluator that listed the bundle before reading the manifest
+// would raise a registry reason for the first, and could reach for
+// bundle-file-unreadable on the second. Both are asserted with a control that
+// the condition was really produced, and skipped rather than faked otherwise.
+{
+  const cases = [];
+
+  // (1) the bundle root itself cannot be accessed.
+  {
+    const dir = path.join(tmp, "e42-root-denied");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "manifest.json"),
+      JSON.stringify({ manifest_version: "1", scenario_id: "IOP-P-DEC", files: [] }));
+    let denied = false;
+    try {
+      fs.chmodSync(dir, 0o000);
+      try { fs.readFileSync(path.join(dir, "manifest.json")); } catch { denied = true; }
+    } catch { /* chmod unsupported here */ }
+    if (!denied) {
+      console.log("SKIPPED: E4-2 inaccessible bundle root -- this process can read through a "
+        + "0o000 directory (root, or a filesystem that ignores chmod)");
+      try { fs.chmodSync(dir, 0o755); } catch { /* best effort */ }
+    } else {
+      check("control: the bundle root really is inaccessible before the assertion counts", denied);
+      cases.push(["an inaccessible bundle root", dir, () => fs.chmodSync(dir, 0o755)]);
+    }
+  }
+
+  // (2) DIR/manifest.json is not found.
+  {
+    const dir = path.join(tmp, "e42-absent");
+    fs.mkdirSync(dir, { recursive: true });
+    cases.push(["an absent root manifest", dir, null]);
+  }
+
+  // (3) present, but cannot be opened or read. This is the case the erratum
+  //     names explicitly: it must NOT become bundle-file-unreadable.
+  {
+    const dir = path.join(tmp, "e42-unreadable");
+    fs.mkdirSync(dir, { recursive: true });
+    const mf = path.join(dir, "manifest.json");
+    fs.writeFileSync(mf, JSON.stringify({ manifest_version: "1", scenario_id: "IOP-P-DEC", files: [] }));
+    let denied = false;
+    try {
+      fs.chmodSync(mf, 0o000);
+      try { fs.readFileSync(mf); } catch { denied = true; }
+    } catch { /* chmod unsupported here */ }
+    if (!denied) {
+      console.log("SKIPPED: E4-2 unreadable root manifest -- this process can read a 0o000 file");
+      try { fs.chmodSync(mf, 0o644); } catch { /* best effort */ }
+    } else {
+      check("control: the root manifest really is unreadable before the assertion counts", denied);
+      cases.push(["a present but unreadable root manifest", dir, () => fs.chmodSync(mf, 0o644)]);
+    }
+  }
+
+  // (4) bytes do not parse as strict JSON.
+  {
+    const dir = path.join(tmp, "e42-nonjson");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "manifest.json"), "{ not json");
+    cases.push(["a root manifest that is not strict JSON", dir, null]);
+  }
+
+  // (5) no registered scenario_id can be obtained.
+  {
+    const dir = path.join(tmp, "e42-noscenario");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "manifest.json"),
+      JSON.stringify({ manifest_version: "1", scenario_id: "NOT-A-SCENARIO", files: [] }));
+    cases.push(["a root manifest with no registered scenario_id", dir, null]);
+  }
+
+  for (const [label, dir, restore] of cases) {
+    const r = run(["--bundle", dir]);
+    eq(`${label}: exits 1`, r.code, 1);
+    check(`${label}: stdout is empty`, r.out === "", JSON.stringify(r.out.slice(0, 200)));
+    // No result object means no reason code. bundle-file-unreadable in
+    // particular must never appear: the root manifest is not a files[] entry,
+    // and there is no scenario to name a reason against.
+    check(`${label}: emits no registry reason at all`,
+      !/bundle-file-unreadable|bundle-file-missing|bundle-directory-unreadable|manifest-invalid|nonmeasurement/
+        .test(r.out), r.out.slice(0, 200));
+    check(`${label}: not exit 3`, r.code !== 3, `exit ${r.code}`);
+    if (restore) restore();
+  }
+  check("the E4-2 enumeration was exercised over at least four of its five conditions",
+    cases.length >= 4, `${cases.length} conditions producible on this platform`);
+}
+
+// ---------------------------------------------------------------------------
+// 14e. Erratum 4 / E4-3 -- bundle-directory-unreadable is its own reason
+// ---------------------------------------------------------------------------
+// After identity is established, a bundle traversal that cannot enumerate a
+// directory is bundle-directory-unreadable, exit 3. Deliberately NOT
+// manifest-invalid: that reason says the layout is WRONG, this one says the
+// layout could not be MEASURED. This lane recorded exactly that discomfort as
+// open ambiguity 5 and reported manifest-invalid rather than inventing a row;
+// the erratum closed it with a dedicated one.
+{
+  const dir = mkBundle("e43-dir-denied");
+  const sub = path.join(dir, "artifacts");
+  let denied = false;
+  try {
+    fs.chmodSync(sub, 0o000);
+    try { fs.readdirSync(sub); } catch { denied = true; }
+  } catch { /* chmod unsupported here */ }
+  if (!denied) {
+    console.log("SKIPPED: bundle-directory-unreadable -- this process can enumerate a 0o000 "
+      + "directory (root, or a filesystem that ignores chmod); the condition cannot be produced");
+    try { fs.chmodSync(sub, 0o755); } catch { /* best effort */ }
+  } else {
+    check("control: the directory really cannot be enumerated before the assertion counts", denied);
+    const vDir = expectNonMeasured("an unenumerable directory under the bundle", dir,
+      "bundle-directory-unreadable");
+    if (vDir) {
+      check("the detail names enumeration, not a layout rule",
+        /enumerate/i.test(vDir.nonmeasurement.detail), vDir.nonmeasurement.detail);
+      check("it does not claim the layout is wrong",
+        !/violat|not closed|must be sorted/i.test(vDir.nonmeasurement.detail),
+        vDir.nonmeasurement.detail);
+      // Identity WAS established, so the result object names the scenario --
+      // which is the whole reason this is exit 3 and not exit 1.
+      eq("the scenario is named", vDir.scenario_id, "IOP-P-DEC");
+    }
+    fs.chmodSync(sub, 0o755);
+
+    // THE DISCRIMINATION: the new reason is distinct from all three neighbours
+    // it could have been collapsed into. Each of the four is produced here and
+    // the set is required to be pairwise distinct -- a collapse fails this even
+    // though every individual assertion above would still pass.
+    const vLayout = expectNonMeasured("a genuine layout violation, for contrast",
+      mkBundle("e43-contrast-layout", { mutate: (m) => { m.files.reverse(); } }), "manifest-invalid");
+    const vMissing = expectNonMeasured("a genuinely absent listed file, for contrast",
+      mkBundle("e43-contrast-missing", {
+        mutate: (m) => {
+          m.files.push({ path: "zz-ghost.json", role: "artifact", sha256: "0".repeat(64) });
+          m.files.sort((a, b) => byteCompare(a.path, b.path));
+        },
+      }), "bundle-file-missing");
+    let vUnread = null;
+    {
+      const d2 = mkBundle("e43-contrast-unreadable");
+      const target = path.join(d2, "artifacts", "a.json");
+      let fdenied = false;
+      try {
+        fs.chmodSync(target, 0o000);
+        try { fs.readFileSync(target); } catch { fdenied = true; }
+      } catch { /* chmod unsupported */ }
+      if (fdenied) {
+        vUnread = expectNonMeasured("a listed regular file that cannot be read, for contrast",
+          d2, "bundle-file-unreadable");
+        fs.chmodSync(target, 0o644);
+      }
+    }
+    const observed = [vDir, vLayout, vMissing, vUnread]
+      .filter((x) => x !== null && x !== undefined).map((x) => x.nonmeasurement.reason);
+    eq("directory-unreadable, layout-invalid, file-missing and file-unreadable are distinct",
+      observed.length, new Set(observed).size);
+    check("the boundary was exercised over at least three neighbouring conditions",
+      observed.length >= 3, show(observed));
+    check("an unenumerable directory is NOT reported as manifest-invalid",
+      vDir === null || vDir.nonmeasurement.reason !== "manifest-invalid",
+      vDir && vDir.nonmeasurement.reason);
+  }
+}
+// Negative control: a readable nested directory is a container and produces no
+// directory reason at all. Without this, an implementation that returned
+// bundle-directory-unreadable for every directory would pass the block above.
+{
+  const dir = mkBundle("e43-dir-readable", {
+    artifacts: {
+      "artifacts/nested/deep/a.json": '{"record_id":"r","chain_id":"c","artifact_type":"decision"}',
+    },
+  });
+  const r = run(["--bundle", dir]);
+  check("a readable nested directory never yields bundle-directory-unreadable",
+    !/bundle-directory-unreadable/.test(r.out), r.out.slice(0, 300));
+}
+
+// ---------------------------------------------------------------------------
+// 14f. Erratum 4 / E4-4 (AD15-IR-7) -- duplicate semantic IDs are NOT preflight
+//      invalidity
+// ---------------------------------------------------------------------------
+// No bundle-wide preflight gate on duplicate record_id or duplicate
+// (chain_id, record_id). artifact_path is each artifact's total harness
+// identity, so duplicated semantic IDs cannot make a bundle unidentifiable.
+// Such artifacts still go to frozen stage evaluation; if a real reference
+// lookup then produces more than one match, R-A and the frozen resolution
+// semantics treat it as AMBIGUOUS. The evaluator never picks one and never
+// synthesizes an ID.
+//
+// Frozen R-10 is a different surface -- a batch verifier's own emitted verdict
+// set -- and must not be widened into a bundle preflight rule.
+
+// The predicate side, as a pure function: duplicates are resolved as ambiguous,
+// never picked. This is where the condition is SUPPOSED to be judged.
+{
+  const dup = [
+    { bundlePath: "artifacts/a.json", value: { record_id: "same", chain_id: "c" } },
+    { bundlePath: "artifacts/b.json", value: { record_id: "same", chain_id: "c" } },
+    { bundlePath: "artifacts/c.json", value: { record_id: "other", chain_id: "c" } },
+  ];
+  const r = resolveRef({ record_id: "same" }, dup);
+  eq("a reference matching two artifacts is ambiguous", r.state, "ambiguous");
+  eq("both matches are counted", r.matches, 2);
+  check("no match is picked", r.target === undefined);
+  eq("a chain-qualified reference to a duplicated pair is still ambiguous",
+    resolveRef({ record_id: "same", chain_id: "c" }, dup).state, "ambiguous");
+  eq("a unique reference in the same bundle still resolves",
+    resolveRef({ record_id: "other" }, dup).state, "resolved");
+}
+
+// The preflight side, end to end: a four-artifact bundle in which two artifacts
+// share both record_id and chain_id must NOT be refused before invocation.
+{
+  const art = (type, rid) => JSON.stringify({
+    airep_version: "0.2", artifact_type: type, chain_id: "synth.chain",
+    record_id: rid, sequence: 0,
+  });
+  const dir = mkBundle("e44-duplicate-ids", {
+    scenarioId: "IOP-R-CLEAN",
+    artifacts: {
+      "artifacts/1-dec.json": art("decision", "synth-duplicate"),
+      "artifacts/2-ctl.json": art("control", "synth-duplicate"),
+      "artifacts/3-exe.json": art("execution", "synth-exe"),
+      "artifacts/4-eff.json": art("effect", "synth-eff"),
+    },
+  });
+  const r = run(["--bundle", dir]);
+  eq("a bundle with duplicate semantic IDs still produces a result object", r.code, 3);
+  if (r.code === 3) {
+    const v = parseOne("duplicate semantic IDs", r.out);
+    // THE DISCRIMINATION. A duplicate-record_id preflight gate would have to
+    // raise one of these before any verifier was invoked; none of them may
+    // appear. bundle-shape-invalid is the one a gate would most naturally use,
+    // because it is where family composition is already checked.
+    const PREFLIGHT_REASONS = [
+      "manifest-invalid", "manifest-digest-mismatch", "bundle-file-missing",
+      "bundle-file-unreadable", "bundle-directory-unreadable", "bundle-json-invalid",
+      "bundle-shape-invalid", "numeric-preflight-violation",
+    ];
+    check("duplicate semantic IDs are not a preflight refusal",
+      !PREFLIGHT_REASONS.includes(v.nonmeasurement.reason),
+      `reason was ${v.nonmeasurement.reason}`);
+    // Reaching frozen evaluation is the positive half: a gate would leave
+    // artifacts[] empty (section 8.3.1 step 2, pre-invocation ERROR).
+    check("the bundle reached frozen stage evaluation rather than being refused",
+      v.artifacts.length > 0,
+      `artifacts[] had ${v.artifacts.length} entries, reason ${v.nonmeasurement.reason}`);
+    if (v.artifacts.length > 0) {
+      eq("every artifact was submitted, including the duplicated pair", v.artifacts.length, 4);
+      // Nothing was renamed, deduplicated or synthesized: both entries carry
+      // the same record_id verbatim, keyed by their own artifact_path.
+      const dupRefs = v.artifacts
+        .filter((a) => a.artifact_ref !== null && a.artifact_ref.record_id === "synth-duplicate")
+        .map((a) => a.artifact_path);
+      eq("both duplicated artifacts appear, keyed by artifact_path",
+        dupRefs, ["artifacts/1-dec.json", "artifacts/2-ctl.json"]);
+    }
+  }
+  // Control: the identical bundle with UNIQUE ids behaves the same way, so the
+  // assertions above are about the absence of a gate and not about some other
+  // property of this fixture.
+  {
+    const uniq = mkBundle("e44-unique-ids", {
+      scenarioId: "IOP-R-CLEAN",
+      artifacts: {
+        "artifacts/1-dec.json": art("decision", "synth-dec"),
+        "artifacts/2-ctl.json": art("control", "synth-ctl"),
+        "artifacts/3-exe.json": art("execution", "synth-exe"),
+        "artifacts/4-eff.json": art("effect", "synth-eff"),
+      },
+    });
+    const ru = run(["--bundle", uniq]);
+    eq("control: the same bundle with unique ids exits the same way", ru.code, r.code);
+    if (ru.code === 3 && r.code === 3) {
+      eq("control: and reaches the same band",
+        JSON.parse(ru.out).nonmeasurement.reason, JSON.parse(r.out).nonmeasurement.reason);
+    }
   }
 }
 

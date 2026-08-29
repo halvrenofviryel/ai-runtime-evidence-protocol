@@ -4,20 +4,21 @@ The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored
 in isolation from the Python lane: no shared reconciliation code, no shared helper, no port, and
 no sight of the peer lane's source or output.
 
-Contract basis: the canonical post-Erratum-3 head
-`b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd`, with both canonical contracts asserted before any
+Contract basis: the canonical post-Erratum-4 head
+`cd7b634f46e1106aca8f228d9633150cbc111855`, with both canonical contracts asserted before any
 source was edited:
 
 | File | sha256 |
 |---|---|
-| `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` | `39432fabbe643c0b45a012be442721208134f5a14a3421bf820fa4a0b8cefefa` |
+| `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` | `fa87cb246d4bb006ca1cb6aa461252815215376d6291dfee3aa51bb79ce7b1d2` |
 | `INTEROP_CORPUS_CONTRACT.md` | `ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd` |
 
 Lineage, frozen as evidence and never rewritten: `da22e066a6aceaa72b9bda2fb8813205120fe0ff`
 (pre-Erratum-1), `801a1dc1a056ab65e20d735c83cf04a28c1fb45d` (Erratum-2 candidate),
-`4b14328d67ea36f7657db8b3b4765bf3e187e639` (pre-Erratum-3 micro-remediation candidate). None of
-those is an official evaluator identity; the ref named `w1/interop-eval-node-official` predates
-its demotion to evidence, which is why this final lane lives on `w1/interop-eval-node-final`.
+`4b14328d67ea36f7657db8b3b4765bf3e187e639` (pre-Erratum-3 micro-remediation candidate),
+`c801d5058c5538de0fd0fb414a68041538806f0e` (post-Erratum-3 final candidate, r1). None of those is
+an official evaluator identity; the ref named `w1/interop-eval-node-official` predates its
+demotion to evidence, which is why this lane lives on `w1/interop-eval-node-final`.
 
 ```
 node interop_eval.mjs --bundle DIR
@@ -36,14 +37,20 @@ The dividing line is **whether bundle identity was established**, and nothing el
 | Exit | stdout | Condition |
 |---|---|---|
 | `0` | one result object, `MEASURED`, `level1` populated | the bundle was measured |
-| `1` | empty | bundle identity could not be established: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
+| `1` | empty | bundle identity could not be established under §5's **direct-read** identity boundary, and only that (Erratum 4): the bundle root cannot be accessed · `manifest.json` is not found · it is found but cannot be opened or read · its bytes do not parse as strict JSON · no registered `scenario_id` can be obtained |
 | `2` | empty | CLI usage error |
 | `3` | one result object, `MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | identity established, scenario not measured |
 
 `--help` is outside this table entirely (Erratum 3): it is a **CLI meta-action, not an
 evaluation** — exit `0`, human-readable help on stdout, no result object, no `--bundle` required,
-and the aggregate harness never invokes it. The carve-out is exactly one flag wide; every other
-CLI usage error is still exit `2` with empty stdout.
+and the aggregate harness never invokes it.
+
+Erratum 4 pins how wide that carve-out is: **one exact invocation, not one concept.** The
+meta-action is the **single-token invocation `--help` and nothing else**. `-h` is **not** an alias
+— it is a CLI usage error, exit `2`, no result object. `--help` alongside any other argument,
+however valid that argument is, is likewise a usage error at exit `2`. Help text content and byte
+length are **not** a parity requirement, so nothing compares them across lanes. Every other CLI
+usage error remains exit `2` with empty stdout.
 
 Diagnostics go to stderr, carry no semantics, and are never parsed — by this program or by the
 harness. Frozen-verifier stderr is hashed for audit only.
@@ -146,8 +153,9 @@ reference resolution, all three predicates, the Level-1 mapping order, the Errat
 (§14 bundle layout, §15 both frozen-run bands, and `AD15-IR-5` identity and ordering inside §13),
 the four Erratum 3 rulings (`AD15-IR-6` envelope ordering and the `record_id`-less artifact in
 §13, the four-way filesystem reason boundary in §14b, no-manifest-discovery in §14c, and the
-`--help` meta-action in §10/§11), and **both** `NODE-IMP-1` routes (§12 path, §16 pipe
-truncation).
+`--help` meta-action in §10/§11), the four Erratum 4 rulings (the narrowed help carve-out in
+§10/§11, the direct-read identity boundary in §14d, `bundle-directory-unreadable` in §14e, and
+`AD15-IR-7` in §14f), and **both** `NODE-IMP-1` routes (§12 path, §16 pipe truncation).
 
 Several of those sections carry their own controls, because a regression that cannot fail proves
 nothing: §16 first measures that the buggy write pattern really does truncate on this platform;
@@ -160,9 +168,17 @@ assertion is allowed to count, and skips rather than fakes where the platform ca
 condition; and §14c uses a byte-for-byte *valid* manifest under a wrong name, so it discriminates
 discovery rather than mere absence.
 
-Beyond those in-suite controls, each Erratum 3 fix was **mutation-tested**: the fix was reverted
-in turn and the corresponding checks confirmed to fail. A test that passes both with and without
-the fix measures nothing, and that is not assumed here.
+§14d skips rather than fakes each permission-dependent identity condition, and asserts a control
+that the condition was really produced first; §14e does the same for the unenumerable directory
+and then requires `bundle-directory-unreadable`, `manifest-invalid`, `bundle-file-missing` and
+`bundle-file-unreadable` to be **pairwise distinct**, with a negative control that a *readable*
+nested directory yields no directory reason at all; §14f pairs the duplicate-`record_id` bundle
+with an otherwise identical unique-`record_id` control, so the assertion is about the absence of a
+gate rather than about some other property of the fixture.
+
+Beyond those in-suite controls, each Erratum 3 and Erratum 4 fix was **mutation-tested**: the fix
+was reverted in turn and the corresponding checks confirmed to fail. A test that passes both with
+and without the fix measures nothing, and that is not assumed here.
 
 One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
 checks recompute their expected value with this module's own `jcs()` and `byteCompare()`, so they
@@ -184,6 +200,15 @@ result is exit `1` with empty stdout, never `manifest-invalid` — that reason w
 `scenario_id` the evaluator does not have. A wrongly-named or misplaced file sitting *beside* a
 valid root manifest needs no special rule: it is an unlisted regular file, or a listed entry with
 an invalid `role`, and the ordinary layout rules make it `manifest-invalid`.
+
+**The identity boundary is a direct read** (Erratum 4). That `readFileSync` is the *first*
+filesystem operation performed on the bundle: nothing is enumerated, stat-ed or listed beforehand,
+and `walkBundle()` does not run until a usable `scenario_id` exists. That ordering is what makes
+an inaccessible bundle root, an absent manifest and an unreadable manifest collapse into the same
+exit-`1` band — they are indistinguishable *to the evaluator* precisely because none of them
+yields an identity to name a reason against. **A root manifest that cannot be read never yields
+`bundle-file-unreadable`:** the root manifest is not a `files[]` entry, and a reason belongs to a
+result object that has no scenario to be about.
 
 ```jsonc
 {
@@ -292,7 +317,7 @@ invented**, which is why those changes are small; the other two corrected behavi
 | **E3-1** (`AD15-IR-6`) | `related_artifacts` now ordered by `artifact_path`. `compareByRecordId` deleted; the deliberate two-comparator split is **collapsed on purpose**. Closes recorded ambiguity 3. |
 | **E3-2** | New reason `bundle-file-unreadable`. A listed file that is present and a permitted regular file but whose bytes will not read is no longer reported as `bundle-file-missing` — which said something false about the bundle. A definite `ENOENT` still means missing. |
 | **E3-3** | The Erratum-2 enumeration comment no longer lists "a manifest with the wrong name or location" under `manifest-invalid`. No manifest discovery is performed and none was: the lookup is a single `path.join(bundleDir, "manifest.json")`. A bundle whose only manifest-shaped file is wrongly named exits `1` with empty stdout. |
-| **E3-4** | `--help` is a CLI meta-action: exit `0`, help on stdout, no result object, no `--bundle` required. Closes recorded ambiguity 6, which this lane had resolved the other way because the pre-erratum §8.5 made exit `0` unsatisfiable for a help screen. |
+| **E3-4** | `--help` is a CLI meta-action: exit `0`, help on stdout, no result object, no `--bundle` required. Closes recorded ambiguity 7, which this lane had resolved the other way because the pre-erratum §8.5 made exit `0` unsatisfiable for a help screen. |
 
 Each ruling has a self-test that **discriminates it specifically** — verified by reverting each
 fix in turn and confirming the corresponding checks fail, rather than by assuming the tests have
@@ -300,11 +325,45 @@ teeth. The `NODE-IMP-1` regressions (both routes) are preserved unchanged and st
 including the control that measures the buggy async-write-then-exit pattern actually truncating on
 the host platform.
 
+## Erratum 4 — what changed in this lane
+
+Four rulings landed. Two changed behaviour here, one changed a reason code, and one **confirmed**
+that a gate this lane never had must never be added.
+
+| Ruling | Change here |
+|---|---|
+| **E4-1** help carve-out | The meta-action is now the **single-token invocation `--help`** and nothing else. `-h` is no longer an alias and is an ordinary usage error at exit `2`; `--help` alongside any other argument is likewise exit `2`. Help content is explicitly not a parity requirement, so nothing asserts its bytes. |
+| **E4-2** identity boundary | No behavioural change — the lookup was already a direct read of `DIR/manifest.json` before anything was enumerated — but the five conditions are now enumerated in the source and each is regressed, including the two that discriminate an enumerate-first implementation. |
+| **E4-3** `bundle-directory-unreadable` | New registry row. A directory that cannot be enumerated after identity is established is no longer reported as `manifest-invalid`. Closes recorded ambiguity 5. |
+| **E4-4** / `AD15-IR-7` | No change: this lane has never carried a duplicate-`record_id` preflight gate. The ruling is now regressed so one cannot be added silently, and `resolveRef` — where the condition belongs — is asserted to report **ambiguous** rather than picking a match. |
+
+**E4-1 is the one with a measured cost.** The erratum records a real cross-lane divergence on
+`-h`: one lane refused it, one accepted it, both from the same sentence. **This lane was the one
+that accepted it.** That divergence is unreachable by the official harness, which never invokes
+help, so it would never have made a run non-qualifying — but it was still two implementations
+behaving differently under a rule both had read, which is exactly what the isolated-lane exercise
+exists to surface.
+
+**E4-3 closes an ambiguity this lane recorded rather than invented.** The pre-Erratum-4 source
+reported `manifest-invalid` for an unenumerable directory and said in the same comment that this
+was arguably the same shape Erratum 3 had just closed one level down — "the layout violates a
+rule" is as questionable a thing to say about a faulty medium as "the file is missing" was.
+Resolving it unilaterally would have meant adding a registry row, which needs an erratum. It got
+one.
+
+**The `NODE-IMP-1` regressions are preserved unchanged and still pass**, both routes, including
+the control that measures the buggy async-write-then-exit pattern actually truncating on this
+platform. E4-1 narrows *what counts as the meta-action*, and the process-exit invariant guard is
+keyed on **invocation kind** rather than on stdout in general, so narrowing the help spelling did
+not weaken what an evaluation exiting `0` must satisfy: it must still have written a result
+object.
+
 ## Recorded ambiguities — not resolved here
 
-Erratum 2 closed three of the eight this lane carried, and Erratum 3 closed two more (3 and 7
-below, struck through). Erratum 3 also surfaced one new one (5). These five remain, recorded
-rather than invented, and each is marked at the point of use in the source.
+Erratum 2 closed three of the eight this lane carried, Erratum 3 closed two more (3 and 7 below,
+struck through) while surfacing a new one (5), and Erratum 4 closed that one in turn. **Four
+remain**, recorded rather than invented, and each is marked at the point of use in the source. No
+new ambiguity was found this round.
 
 1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
    strings but not what to emit when the assertion has not yet run, or when a file could not be
@@ -328,14 +387,11 @@ rather than invented, and each is marked at the point of use in the source.
    *after* identity. Before it there is no scenario to name, so the exit-`1` band applies, per
    §8.5's statement that the dividing line is whether identity was established and nothing else.
    The enumeration in the exit-`1` row does not list this case.
-5. **An unreadable bundle DIRECTORY.** E3-2 bounds the four filesystem reasons for a **listed
-   file**. A directory is never a `files[]` entry, so none of the four covers a directory under
-   the bundle that cannot be `readdir`-ed. This lane reports `manifest-invalid`, on the Erratum-2
-   reading that the reason covers the whole bundle-layout surface and that layout closure cannot
-   be established without the listing. **Recorded because it is arguably the same shape E3-2
-   closed, one level up**: "the layout violates a rule" is as questionable a thing to say about a
-   faulty medium as "the file is missing" was. Not resolved here — resolving it would mean adding
-   a registry row, which needs an erratum.
+5. ~~**An unreadable bundle DIRECTORY.**~~ **CLOSED by E4-3.** The concern recorded here — that
+   reporting `manifest-invalid` for a faulty medium is the same shape E3-2 closed one level down —
+   was upheld, and the peer lane recorded the same discomfort independently. The registry now
+   carries `bundle-directory-unreadable`, which says the layout could not be *measured* rather
+   than that it is *wrong*. The file-level distinctions are unchanged.
 6. **Duplicate member names inside `manifest.json`.** "not parseable as strict JSON" is not pinned
    to reject them. `JSON.parse` keeps the last occurrence, as most JSON libraries do, so the
    closure check sees one member. This is left as the library default deliberately: tightening it
