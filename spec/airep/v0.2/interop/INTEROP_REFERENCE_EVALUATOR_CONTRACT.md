@@ -926,19 +926,32 @@ semantics to R-C would mean accepting malformed frozen output as ordinary semant
 
 ## 13. Sequencing
 
-Steps 1–3 of the previous list are complete: the contract was canonicalized, and both lanes were
-remediated in fresh isolated contexts from their own pre-erratum lineages. Those remediation heads
-are frozen as evidence, not as official evaluators. The remaining sequence is:
+Everything through the Erratum-2 micro-remediation round is complete. Both lanes were remediated in
+fresh isolated contexts and their candidates are frozen as **pre-Erratum-3 micro-remediation
+evidence** — `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` (Python) and
+`4b14328d67ea36f7657db8b3b4765bf3e187e639` (Node). Neither is an official evaluator identity.
 
-1. **Erratum 2 is source-reviewed** and a new canonical head plus contract digest is pinned.
-2. **Python micro-remediation** in a fresh context: its own remediation candidate
-   `57c4a113…` plus the new canonical contract, nothing else.
-3. **Node micro-remediation** in a fresh context: its own remediation candidate
-   `801a1dc1…` plus the new canonical contract, nothing else.
+**Branch naming, so the record stays legible.** Those two candidates live on refs named
+`w1/interop-eval-py-official` and `w1/interop-eval-node-official`. That naming predates their
+demotion to evidence and is now misleading, but the refs are **not rewritten or deleted** — the
+history stays as it happened. The final official identities therefore take **new** refs,
+`w1/interop-eval-py-final` and `w1/interop-eval-node-final`, so evidence and identity are never
+confused by a name.
+
+The remaining sequence:
+
+1. **Erratum 3 is source-reviewed and canonicalized** — the maintainer pins a new head plus the
+   **evaluator-contract** digest and the **corpus-contract** digest.
+2. **Python final micro-remediation** in a fresh context: only
+   `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` plus the new canonical contracts, on
+   `w1/interop-eval-py-final`.
+3. **Node final micro-remediation** in a fresh context: only
+   `4b14328d67ea36f7657db8b3b4765bf3e187e639` plus the new canonical contracts, on
+   `w1/interop-eval-node-final`.
 4. **Peer material remains invisible** throughout, as in every prior round.
-5. **The new canonical contract branch is merged into each official evaluator branch** once code
-   remediation is done — so a reviewer opening a final frozen branch finds the exact official
-   contract beside the evaluator, not a superseded one.
+5. **The new canonical contract lineage is merged into each final evaluator branch**, so a reviewer
+   opening a frozen branch finds the exact canonical contracts beside the evaluator rather than a
+   superseded one.
 6. Test and source review.
 7. **Official Python and Node evaluator identities are frozen.**
 8. **Only then is corpus construction opened.**
