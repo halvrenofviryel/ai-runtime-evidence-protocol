@@ -312,6 +312,36 @@ conforming official W1 bundle.
              NEVER yields ``bundle-file-unreadable``, because a reason belongs
              to a result object and there is no scenario to name one after.
              Unreadable and absent are genuinely indistinguishable here.
+
+  A14 OPEN -- reported rather than resolved silently. E4-3 scopes
+      ``bundle-directory-unreadable`` to a directory that "cannot be
+      enumerated", and 8.2.2's ``manifest-invalid`` enumeration covers the
+      entry-KIND conditions (symlink, non-regular non-directory object). Neither
+      names the case in between: enumeration SUCCEEDS, yields an entry, and then
+      the entry's KIND cannot be determined because the stat fails.
+
+      This lane reports it as ``bundle-directory-unreadable``, because E4-3's
+      own reasoning is about a faulty MEDIUM rather than a wrong LAYOUT -- "the
+      layout could not be measured" -- and a kind that cannot be read is the
+      same shape as a directory that cannot be listed. That is an INFERENCE from
+      E4-3's rationale, NOT a reading of its words, and a peer lane inferring
+      ``manifest-invalid`` from 8.2.2's enumeration instead would be equally
+      defensible. The divergence changes ``nonmeasurement.reason`` without
+      changing any Level-1 value, which is the Erratum-2 gap-2 shape that no
+      aggregate duty can observe -- so it is recorded here for a ruling rather
+      than presented as settled. It cannot arise in an official W1 run, whose
+      bundles are built by the harness on a sound medium.
+
+  A15 OPEN -- reported, behaviour unchanged. Contract 8.2.1 says each evaluator
+      emits "exactly two entries", and also that both are values "it recomputed
+      itself" and never "a carried-forward constant". When a frozen file cannot
+      be READ, those two requirements conflict: the digest cannot be recomputed,
+      so emitting two entries would require fabricating one. This lane omits the
+      unmeasurable entry, so ``verifier_digests`` may carry one entry on the
+      ``verifier-digest-mismatch`` / unreadable path. Fabricating a digest is
+      the worse failure, and 8.2.1's "never a value this lane did not measure"
+      is the stronger of the two clauses, but the arity is stated
+      unconditionally and a peer lane could read it that way.
 """
 from __future__ import annotations
 
@@ -699,15 +729,17 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
 
     A SYMLINKED root manifest is deliberately NOT diverted here. E2-1 enumerates
     "a forbidden symlink anywhere under the bundle" under ``manifest-invalid``,
-    and 8.5 pins the exit-1 band to exactly three conditions of which "present
-    but a link" is not one. Identity is therefore taken from the link's target
-    and ``scan_bundle`` reports the symlink as ``manifest-invalid`` at exit 3,
-    so the harness receives a result object naming the scenario.
+    and the E4-2 identity boundary is a DIRECT READ: a link whose target opens
+    and parses yields an identity, so none of the five conditions is met and the
+    exit-1 band is not entered. Identity is therefore taken from the link's
+    target and ``scan_bundle`` reports the symlink as ``manifest-invalid`` at
+    exit 3, so the harness receives a result object naming the scenario. (The
+    argument previously rested on the exit-1 band being "exactly three
+    conditions"; that count is superseded, the conclusion is not.)
     """
     path = os.path.join(bundle_dir, MANIFEST_FILENAME)
     try:
-        with open(path, "rb") as handle:
-            raw = handle.read()
+        raw = read_manifest_bytes(path)
     except OSError as exc:
         # E4-2: root inaccessible, manifest absent, and manifest present but
         # unopenable or unreadable are three of the five identity conditions and
@@ -734,6 +766,17 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
         raise BundleIdentityError(
             "manifest carries no usable scenario_id from the registered twelve")
     return doc, scenario_id, recorder.duplicates
+
+
+def read_manifest_bytes(path: str) -> bytes:
+    """Read the ROOT manifest, raising ``OSError`` verbatim.
+
+    A named seam, so E4-2's third identity condition -- present but unopenable
+    or unreadable -- can be exercised deterministically rather than only through
+    filesystem permissions, which are not portable.
+    """
+    with open(path, "rb") as handle:
+        return handle.read()
 
 
 def _bad_manifest(detail: str) -> NonMeasurement:
@@ -763,8 +806,14 @@ def validate_manifest(doc: dict, scenario_id: str,
     raw_files = doc["files"]
     if not isinstance(raw_files, list):
         raise _bad_manifest("files is not an array")
-    if not raw_files:
-        raise _bad_manifest("files is empty")
+    # An EMPTY `files` array is deliberately NOT rejected here. Contract 5 pins
+    # closure, sort, `role`, `path` and digest encoding, and nowhere requires
+    # `files` to be non-empty, so a `manifest-invalid` rule of this lane's own
+    # invention would put two conforming lanes on different
+    # `nonmeasurement.reason` values for the same bundle without changing any
+    # Level-1 value -- the Erratum-2 gap-2 shape that no aggregate duty can see.
+    # Bundle shape owns it instead: zero artifacts fails the contract-5 count
+    # for every scenario group, as `bundle-shape-invalid`.
 
     entries: List[FileEntry] = []
     seen: Dict[str, None] = {}
@@ -859,10 +908,9 @@ def scan_bundle(bundle_dir: str) -> List[str]:
         for entry in entries:
             rel = entry.name if not prefix else prefix + "/" + entry.name
             try:
-                is_link = entry.is_symlink()
-                is_dir = entry.is_dir(follow_symlinks=False)
-                is_file = entry.is_file(follow_symlinks=False)
+                is_link, is_dir, is_file = entry_kind(entry)
             except OSError as exc:
+                # RECORDED AMBIGUITY A14 -- not a pinned rule. See the register.
                 raise NonMeasurement(
                     "bundle-directory-unreadable",
                     "bundle traversal could not complete: the kind of %r could "
@@ -893,6 +941,19 @@ def scan_directory(directory: str) -> List[os.DirEntry]:
     """
     with os.scandir(directory) as scan:
         return sorted(scan, key=lambda e: byte_key(e.name))
+
+
+def entry_kind(entry: os.DirEntry) -> Tuple[bool, bool, bool]:
+    """Classify one enumerated entry as ``(symlink, directory, regular file)``,
+    raising ``OSError`` verbatim.
+
+    A named seam for recorded ambiguity A14: on Linux these normally answer from
+    the cached ``d_type`` and never touch the disk, so the failure path is not
+    otherwise reachable in a test.
+    """
+    return (entry.is_symlink(),
+            entry.is_dir(follow_symlinks=False),
+            entry.is_file(follow_symlinks=False))
 
 
 def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]:
@@ -1498,14 +1559,23 @@ def evaluate_bundle(args, invoke=None) -> dict:
     # exit-1 band ends here
     doc, scenario_id, duplicates = load_manifest_identity(bundle_dir)
     verifier_digests, digest_problem = measure_frozen_digests()
+    # Contract 8.3.1 rule 3: once invocation begins, `artifacts[]` carries an
+    # entry for each invocation ACTUALLY ATTEMPTED. The list is owned here so
+    # that a fault raised anywhere downstream -- including the generic net
+    # below, which is outside `_evaluate`'s frame -- still reports what was
+    # attempted, rather than the `artifacts: []` that asserts a pre-invocation
+    # failure which did not happen.
+    entries: List[dict] = []
     try:
         return _evaluate(args, bundle_dir, doc, scenario_id, duplicates, invoke,
-                         verifier_digests, digest_problem)
+                         verifier_digests, digest_problem, entries)
     except NonMeasurement as exc:
         # Identity IS established from here on, so the caller owes a result
         # object naming the scenario it failed on (contract 8.5).
         exc.scenario_id = scenario_id
         exc.verifier_digests = verifier_digests
+        if not exc.artifacts:
+            exc.artifacts = list(entries)
         raise
     except (UsageError, BundleIdentityError):
         raise
@@ -1519,12 +1589,14 @@ def evaluate_bundle(args, invoke=None) -> dict:
             "unexpected %s in the evaluator: %s" % (type(exc).__name__, exc))
         wrapped.scenario_id = scenario_id
         wrapped.verifier_digests = verifier_digests
+        wrapped.artifacts = list(entries)
         raise wrapped from exc
 
 
 def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
               duplicates: Sequence[str], invoke,
-              verifier_digests: Dict[str, str], digest_problem: Optional[str]) -> dict:
+              verifier_digests: Dict[str, str], digest_problem: Optional[str],
+              entries: List[dict]) -> dict:
     # ---- contract 8.3.1 step 1: the WHOLE preflight, before any invocation ---
     manifest = validate_manifest(doc, scenario_id, duplicates)
     contents = verify_bundle_files(bundle_dir, manifest)
@@ -1551,7 +1623,7 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
                   os.path.join(bundle_dir, *entry.path.split("/"))]
 
     # ---- one frozen-verifier invocation per artifact ------------------------
-    entries: List[dict] = []
+    # `entries` is owned by the caller (contract 8.3.1 rule 3); it is empty here.
     verdicts: Dict[str, Optional[dict]] = {}
     for artifact in artifacts:
         request = envelope_bytes(build_envelope(artifact, artifacts))

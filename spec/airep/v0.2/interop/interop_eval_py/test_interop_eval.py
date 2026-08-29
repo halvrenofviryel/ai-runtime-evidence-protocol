@@ -220,6 +220,19 @@ class ManifestIdentityBand(BundleCase):
     """Contract 5's DIRECT-READ identity boundary (E4-2): exit 1 is EXACTLY the
     five listed conditions and no others, and identity is taken by reading
     ``DIR/manifest.json`` directly rather than by enumerating the bundle first.
+
+    HONESTY NOTE. Most of the E4-2 cases below are CONFIRMATIONS, not proofs of
+    a fix: this lane already behaved this way, and they pass against the
+    pre-erratum source too. Erratum 4's own method note -- "a test that passes
+    with and without the fix is not a test" -- means they must not be read as
+    evidence that E4-2 changed anything here. What they do is bind behaviour
+    that was previously INFERRED (recorded ambiguity A13(ii)) to a rule that is
+    now pinned, so a later regression fails. The two cases that genuinely
+    discriminate against something are
+    ``test_identity_is_read_directly_and_not_via_enumeration`` (fails if
+    identity is taken by enumerating first) and
+    ``test_unreadable_root_manifest_is_exit_1_not_a_result_object`` (fails if a
+    reason code is minted for the root manifest).
     """
 
     def assert_no_identity(self, bundle):
@@ -347,26 +360,54 @@ class ManifestIdentityBand(BundleCase):
         self.assertEqual(code, 3)                       # NOT the exit-1 band
         self.assertEqual(json.loads(out)["scenario_id"], "IOP-P-DEC")
 
-    def test_the_exit_1_band_is_exactly_the_five_conditions(self):
-        """Stated as one enumeration so a future widening cannot pass silently.
-        Each entry differs from the others in exactly one respect.
+    def test_the_exit_1_band_covers_all_five_conditions(self):
+        """One case per E4-2 condition, each differing from the others in
+        exactly one respect, so the enumeration is genuinely five wide rather
+        than one condition spelled several ways. Condition 3 is driven through
+        the ``open`` seam so it does not depend on mode-bit enforcement.
         """
+        # 1 -- the bundle root itself cannot be accessed (ENOTDIR)
         root_is_file = os.path.join(self.root, "five-root-file")
         with open(root_is_file, "wb") as handle:
             handle.write(b"x")
-        absent_root = os.path.join(self.root, "five-absent")
+        self.assert_no_identity(root_is_file)
+
+        # 2 -- DIR/manifest.json is not found
         empty_root = os.path.join(self.root, "five-empty")
         os.makedirs(empty_root)
-        unparseable = write_bundle(self.root, "IOP-P-DEC",
-                                   {"artifacts/d.json": DECISION},
-                                   manifest_overrides=lambda m: b"{not json")
-        for bundle in (root_is_file, absent_root, empty_root, unparseable):
-            self.assert_no_identity(bundle)
-        no_scenario = write_bundle(
+        self.assert_no_identity(empty_root)
+
+        # 3 -- found, but cannot be opened or read
+        unreadable = write_bundle(self.root, "IOP-P-DEC",
+                                  {"artifacts/d.json": DECISION})
+        original = ev.read_manifest_bytes
+        self.addCleanup(setattr, ev, "read_manifest_bytes", original)
+        ev.read_manifest_bytes = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EIO, "Input/output error", path))
+        self.assert_no_identity(unreadable)
+        ev.read_manifest_bytes = original
+
+        # 4 -- bytes do not parse as strict JSON
+        self.assert_no_identity(write_bundle(
+            self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+            manifest_overrides=lambda m: b"{not json"))
+
+        # 5 -- no registered scenario_id can be obtained
+        self.assert_no_identity(write_bundle(
             self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
             manifest_overrides=lambda m: {k: v for k, v in m.items()
-                                          if k != "scenario_id"})
-        self.assert_no_identity(no_scenario)
+                                          if k != "scenario_id"}))
+
+    def test_a_bundle_outside_the_band_is_not_exit_1(self):
+        """The negative half: a fault AFTER identity is established must leave
+        the exit-1 band, or the enumeration above would be satisfied by an
+        evaluator that simply exits 1 for everything.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              drop_from_disk=("artifacts/d.json",))
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 3)
+        self.assertEqual(json.loads(out)["scenario_id"], "IOP-P-DEC")
 
 
 class ManifestEncoding(BundleCase):
@@ -449,6 +490,20 @@ class ManifestEncoding(BundleCase):
             return m
         self.assertEqual(self.bad(override).reason, "manifest-invalid")
 
+    def test_an_empty_files_array_is_bundle_shape_invalid_not_manifest_invalid(self):
+        """Contract 5 pins closure, sort, `role`, `path` and digest encoding, and
+        nowhere requires `files` to be non-empty. Rejecting it as
+        `manifest-invalid` was this lane's own invention and is removed: zero
+        artifacts fails the contract-5 count, which is what `bundle-shape-invalid`
+        is defined over. The distinction is invisible to every aggregate duty --
+        neither reason changes a Level-1 value -- which is exactly why it must
+        not be left to the implementer.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {}, operator={},
+                              manifest_files=[])
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-shape-invalid")
+
     def test_files_must_exclude_the_root_manifest(self):
         def override(m):
             m["files"].insert(0, {"path": "manifest.json", "role": "artifact",
@@ -527,9 +582,10 @@ class ManifestEncoding(BundleCase):
 
     def test_a_symlinked_root_manifest_is_manifest_invalid_at_exit_3(self):
         """E2-1 puts "a forbidden symlink ANYWHERE under the bundle" under
-        manifest-invalid, and 8.5 pins exit 1 to three conditions of which
-        "present but a link" is not one. Identity is established from the
-        target, then the symlink is reported against the named scenario.
+        manifest-invalid, and the E4-2 identity boundary is a direct read: a
+        link whose target opens and parses yields an identity, so none of the
+        five exit-1 conditions is met. Identity is established from the target,
+        then the symlink is reported against the named scenario.
         """
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
         real = os.path.join(self.root, "elsewhere.json")
@@ -1102,6 +1158,25 @@ class ResultShape(BundleCase):
         ids = [e["artifact_ref"]["record_id"] for e in entries]
         self.assertNotEqual(ids, sorted(ids, key=lambda s: s.encode("utf-8")))
 
+    def test_a_post_invocation_internal_fault_lists_what_was_attempted(self):
+        """Contract 8.3.1 rule 3: "once invocation begins, artifacts[] contains
+        an entry for each invocation ACTUALLY ATTEMPTED, and only those." An
+        `artifacts: []` here would assert a pre-invocation failure that did not
+        happen -- four invocations completed before the fault.
+        """
+        bundle = write_bundle(self.root, "IOP-R-CLEAN", four_artifacts())
+        original = ev.map_level1
+        self.addCleanup(setattr, ev, "map_level1", original)
+        ev.map_level1 = lambda reject, predicates: (_ for _ in ()).throw(
+            RuntimeError("synthetic fault after the invocation loop"))
+        code, out, _ = self.run_cli(bundle, stub=StubVerifier())
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["nonmeasurement"]["reason"], "internal-error")
+        self.assertEqual(len(result["artifacts"]), 4)
+        self.assertEqual([e["artifact_path"] for e in result["artifacts"]],
+                         sorted(e["artifact_path"] for e in result["artifacts"]))
+
     def test_pre_invocation_error_emits_an_empty_artifacts_array(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION},
                               drop_from_disk=("artifacts/a.json",))
@@ -1577,7 +1652,12 @@ class ArtifactPathIdentity(BundleCase):
         self.assertTrue(entry["request_envelope_digest"].startswith("sha256:"))
 
     def test_a_duplicate_record_id_is_r_a_s_business_not_a_preflight_rule(self):
-        """Ruling ``AD15-IR-7`` (E4-4). Contract 5 pins the treatment of
+        """Ruling ``AD15-IR-7`` (E4-4). CONFIRMATION, not a fix: the preflight
+        gate was already removed under A6, so this passes against the
+        pre-erratum source too. E4-4 makes the removal contract-backed rather
+        than inferred; the test binds it so a reinstated gate fails.
+
+        Contract 5 pins the treatment of
         multiple matches: "more than one match is ambiguous and fails closed. An
         evaluator MUST NOT pick one." A preflight uniqueness rule would make
         that rule unreachable, converting a genuine reconciliation finding into
@@ -1852,6 +1932,19 @@ class DirectoryEnumerationBoundary(BundleCase):
         return write_bundle(self.root, "IOP-P-DEC",
                             {"artifacts/d.json": DECISION}, **kwargs)
 
+    def fresh_artifact(self, name, **kwargs):
+        """A one-artifact bundle under its OWN root.
+
+        ``write_bundle`` materializes into ``<root>/bundle`` and reuses it, so
+        two cases sharing a root contaminate each other -- an extra file written
+        for one case is still on disk for the next and reports as an unlisted
+        file. Any test comparing several bundle conditions must isolate them.
+        """
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        return write_bundle(root, "IOP-P-DEC",
+                            {"artifacts/d.json": DECISION}, **kwargs)
+
     def deny_enumeration(self, errno_value=errno.EACCES):
         """Replace the enumeration seam so the boundary is exercised
         deterministically rather than through filesystem permissions, which are
@@ -1917,10 +2010,11 @@ class DirectoryEnumerationBoundary(BundleCase):
         here an on-disk file `files[]` does not list -- stays `manifest-invalid`,
         while an unenumerable directory does not.
         """
-        layout = self.one_artifact(extra_disk_files={"artifacts/stray.json": b"{}"})
+        layout = self.fresh_artifact(
+            "layout", extra_disk_files={"artifacts/stray.json": b"{}"})
         self.assertEqual(self.nonmeasurement(layout).reason, "manifest-invalid")
         self.deny_enumeration()
-        self.assertEqual(self.nonmeasurement(self.one_artifact()).reason,
+        self.assertEqual(self.nonmeasurement(self.fresh_artifact("denied")).reason,
                          "bundle-directory-unreadable")
 
     def test_it_is_distinct_from_the_two_listed_file_reasons(self):
@@ -1928,10 +2022,11 @@ class DirectoryEnumerationBoundary(BundleCase):
         `bundle-file-missing`; a listed regular file whose bytes cannot be read
         stays `bundle-file-unreadable`. Neither is displaced by E4-3.
         """
-        missing = self.one_artifact(drop_from_disk=("artifacts/d.json",))
+        missing = self.fresh_artifact("missing",
+                                      drop_from_disk=("artifacts/d.json",))
         self.assertEqual(self.nonmeasurement(missing).reason, "bundle-file-missing")
 
-        unreadable = self.one_artifact()
+        unreadable = self.fresh_artifact("unreadable")
         original = ev.read_bundle_file
         self.addCleanup(setattr, ev, "read_bundle_file", original)
         ev.read_bundle_file = lambda path: (_ for _ in ()).throw(
@@ -1939,12 +2034,58 @@ class DirectoryEnumerationBoundary(BundleCase):
         self.assertEqual(self.nonmeasurement(unreadable).reason,
                          "bundle-file-unreadable")
 
-    def test_the_four_reasons_are_pairwise_distinct(self):
-        """Stated as one assertion so a future collapse cannot pass silently."""
-        self.assertEqual(
-            len({"bundle-directory-unreadable", "manifest-invalid",
-                 "bundle-file-missing", "bundle-file-unreadable"}), 4)
+    def test_the_four_reasons_are_observed_pairwise_distinct(self):
+        """Four DIFFERENT bundle conditions must yield four DIFFERENT reasons.
+
+        Asserting that four string literals differ would be true whatever the
+        evaluator did; these four values are read back out of four evaluations,
+        so a collapse in the mapping fails here.
+        """
+        observed = {}
+
+        layout = self.fresh_artifact(
+            "c1", extra_disk_files={"artifacts/stray.json": b"{}"})
+        observed["layout wrong"] = self.nonmeasurement(layout).reason
+
+        missing = self.fresh_artifact("c2", drop_from_disk=("artifacts/d.json",))
+        observed["listed file absent"] = self.nonmeasurement(missing).reason
+
+        unreadable = self.fresh_artifact("c3")
+        original_read = ev.read_bundle_file
+        self.addCleanup(setattr, ev, "read_bundle_file", original_read)
+        ev.read_bundle_file = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EIO, "Input/output error", path))
+        observed["listed file unreadable"] = self.nonmeasurement(unreadable).reason
+        ev.read_bundle_file = original_read
+
+        self.deny_enumeration()
+        observed["directory unenumerable"] = self.nonmeasurement(
+            self.fresh_artifact("c4")).reason
+
+        self.assertEqual(observed, {
+            "layout wrong": "manifest-invalid",
+            "listed file absent": "bundle-file-missing",
+            "listed file unreadable": "bundle-file-unreadable",
+            "directory unenumerable": "bundle-directory-unreadable"})
+        self.assertEqual(len(set(observed.values())), 4)
         self.assertEqual(ev.REASON_STATUS["bundle-directory-unreadable"], "ERROR")
+
+    def test_an_undeterminable_entry_kind_is_recorded_ambiguity_a14(self):
+        """A14. Enumeration SUCCEEDS and yields an entry whose KIND then cannot
+        be determined -- a case E4-3's words do not name and 8.2.2's
+        manifest-invalid enumeration does not cover either. This lane infers
+        `bundle-directory-unreadable` from E4-3's faulty-medium rationale. The
+        test exists so the inference is visible and a maintainer ruling that
+        goes the other way changes a test rather than passing silently.
+        """
+        bundle = self.one_artifact()
+        original = ev.entry_kind
+        self.addCleanup(setattr, ev, "entry_kind", original)
+        ev.entry_kind = lambda entry: (_ for _ in ()).throw(
+            OSError(errno.EIO, "Input/output error", entry.path))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-directory-unreadable")
+        self.assertIn("kind of", exc.detail)
 
     def test_no_frozen_verifier_is_invoked(self):
         """Traversal is preflight, and contract 8.3.1 forbids any invocation
@@ -2042,10 +2183,13 @@ class HelpMetaAction(BundleCase):
         return code, out.getvalue(), err.getvalue()
 
     def test_help_exits_0_with_help_text_and_no_result_object(self):
+        """E4-1 makes help CONTENT a non-requirement, so nothing here asserts
+        what the screen says -- only that something human-readable is written
+        and that it is not a result object.
+        """
         code, out, _ = self.run_argv(["--help"])
         self.assertEqual(code, 0)
         self.assertTrue(out.strip())                     # human-readable text
-        self.assertIn("--bundle", out)
         with self.assertRaises(ValueError):              # NOT a result object
             json.loads(out)
 
@@ -2084,7 +2228,11 @@ class HelpMetaAction(BundleCase):
         self.assertEqual(self.run_argv(["--help", "--bundle", "x"])[0], 2)
 
     def test_h_is_not_an_alias(self):
-        """`-h` is a CLI usage error: exit 2, NO result object -- and no help
+        """CONFIRMATION, not a fix: this lane already refused `-h`, so the case
+        passes against the pre-erratum source. E4-1 settles which of the two
+        defensible readings is correct -- the other lane read the same sentence
+        the other way and exited 0 -- so the behaviour is now pinned rather than
+        chosen. `-h` is a CLI usage error: exit 2, NO result object, and no help
         screen either, since it is not the meta-action.
         """
         code, out, _ = self.run_argv(["-h"])
