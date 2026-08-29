@@ -110,6 +110,17 @@ contexts independently assumed incompatible encodings from that text, and measur
 **The manifest file is `manifest.json`, in the bundle root.** `--bundle DIR` names the directory;
 the evaluator does not search for or accept any other name or location.
 
+**No manifest discovery is performed (Erratum 3).** If the bundle root has no `manifest.json`, the
+evaluator does **not** look for a manifest under some other name or in some other directory. Bundle
+identity is not established, so the result is **exit 1 with empty stdout** — never
+`manifest-invalid`, which would require an identity the evaluator does not have. An earlier draft
+listed "a manifest with the wrong name or location" under `manifest-invalid`; that was
+unimplementable, because §8.5 already routes exactly that condition to exit 1.
+
+A wrongly-named or misplaced file sitting *beside* a valid root `manifest.json` needs no special
+rule: it is an unlisted regular file, or a listed entry with an invalid `role`, and the ordinary
+layout rules make it `manifest-invalid`.
+
 - The manifest object is **closed**: exactly `manifest_version`, `scenario_id`, `files`. Any other
   member is a hard `ERROR`.
 - `files` lists **every regular file under the bundle directory, recursively, except
@@ -169,9 +180,9 @@ For a four-artifact reconciliation bundle, evaluating artifact *A*:
 - `related_artifacts` = the **other three** artifacts of the same bundle, each as a **JSON value
   parsed from its bundle file** under the same rule as the primary, **and no others**. Original
   bytes live only in Layer 1 (manifest provenance); nothing in the envelope is carried "verbatim";
-- ordering of `related_artifacts` is **ascending UTF-8 byte order of `record_id`**, so the
-  envelope is a function of the bundle alone;
-- `head_witness` is present only where the scenario defines one, exactly as the bundle carries it.
+- `related_artifacts` consists of **every other artifact in that bundle**, ordered by ascending
+  UTF-8 byte order of its **manifest-relative `artifact_path`** (`AD15-IR-6`), so the envelope is a
+  function of the bundle alone
 
 For a single-artifact scenario (the four positives and the four broken-per-family cases),
 `related_artifacts` is the **empty array** — not absent, not populated with unrelated artifacts.
@@ -179,6 +190,33 @@ For a single-artifact scenario (the four positives and the four broken-per-famil
 Operator inputs (`--bindings`, `--independence-policy`, `--revocation`, clock inputs) are passed
 as the **same bytes** to every artifact in the bundle and to both lanes. An evaluator MUST NOT
 synthesize, filter, reorder or re-emit them; it passes through the files the bundle ships.
+
+#### Ruling `AD15-IR-6` — envelope ordering is `artifact_path` too
+
+An earlier draft ordered `related_artifacts` by `record_id`. `AD15-IR-5` had already made
+`record_id` optional for result identity, so a bundle containing an artifact with no usable
+`record_id` had **no defined envelope at all** — and therefore no defined
+`request_envelope_digest`, which is what aggregate duty 2 compares. Two isolated remediation
+contexts found this independently and resolved it differently: one sorted such an artifact under an
+empty key, the other refused to build the envelope. Both were defensible; neither was
+cross-lane safe.
+
+Ordering is now `artifact_path` everywhere a harness needs an identity:
+
+| Surface | Key |
+|---|---|
+| result identity (`artifacts[]` entry) | `artifact_path` |
+| `artifacts[]` ordering | `artifact_path` |
+| aggregate cross-lane comparison | `(scenario_id, artifact_path)` |
+| **request-envelope `related_artifacts` ordering** | **`artifact_path`** |
+
+`artifact_path` always exists — the manifest lists every file — so the envelope is always defined.
+
+`record_id` remains **only** the AIREP semantic reference-resolution key. **R-A is untouched.**
+
+The consequence this ruling exists to secure: an artifact with a missing `record_id` genuinely
+reaches frozen stage 0, rather than being turned into either a fabricated ordering or the
+evaluator's own preflight failure. Both prior resolutions are superseded.
 
 #### Byte rule — two distinct byte layers
 
@@ -505,6 +543,7 @@ implementer:
 | `manifest-invalid` | manifest parsed and `scenario_id` usable, but any **bundle-layout or manifest rule** is violated — see the enumeration below | `ERROR` |
 | `manifest-digest-mismatch` | a listed file's bytes do not match its `files[]` digest | `ERROR` |
 | `bundle-file-missing` | a file listed in `files[]` is not present on disk | `ERROR` |
+| `bundle-file-unreadable` | a listed file exists and is a permitted regular file, but its bytes cannot be read | `ERROR` |
 | `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
 | `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
 | `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
@@ -522,11 +561,26 @@ The reason covers **all** of:
 - a **regular file on disk that `files[]` does not list**;
 - a `files[]` entry whose target is **not a permitted file kind**;
 - a **FIFO, socket, device or any other non-regular, non-directory object** under the bundle;
-- a manifest with the **wrong name or location** (it is `manifest.json` at the bundle root);
 - manifest **closure, sort, `role`, `path` or digest-encoding** violations.
 
 **Directories are containers only.** A directory is normal under a bundle and is never itself a
 `files[]` entry. No new reason code is added for any of the above.
+
+**Filesystem failures are four distinct reasons, not one (Erratum 3).** An earlier registry had no
+row for a file that exists and is readable-in-principle but cannot actually be read, so it was
+reported as `bundle-file-missing` — which says something false about the bundle. The boundary is
+exact:
+
+| Condition | Reason |
+|---|---|
+| path absent, or a definite `ENOENT` on read | `bundle-file-missing` |
+| file present, permitted regular-file kind, but open/read fails or I/O errors | **`bundle-file-unreadable`** |
+| bytes read successfully but do not parse as JSON | `bundle-json-invalid` |
+| bytes read successfully but the digest does not match | `manifest-digest-mismatch` |
+
+Each says a different true thing about what went wrong. Collapsing them loses the distinction a
+reader needs to know whether the bundle is incomplete, the medium is faulty, or the content is
+wrong.
 
 **`authenticated-withheld` is the only reason that maps to `MEASUREMENT_INVALID`.** Everything else
 is `ERROR`. The distinction is real: a withheld tier means the measurement was attempted and could
@@ -657,6 +711,24 @@ object *about*. Exit code and stdout are therefore pinned together.
 | `1` | **no result object** — stdout empty | **bundle identity could not be established**, and only that: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
 | `2` | **no result object** — stdout empty | CLI usage error |
 | `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
+
+#### `--help` is a CLI meta-action, not an evaluation (Erratum 3)
+
+The exit table above governs **evaluation invocations**. `--help` is not one, and an earlier draft
+made it unsatisfiable: §8.5's exit-0 row demands a `MEASURED` result object, while a help screen
+obviously emits none. The frozen class-verifier contract carries the same carve-out for the same
+reason.
+
+- `--help` exits **`0`**;
+- it may write human-readable help to stdout;
+- it produces **no result JSON object**;
+- it does **not** require `--bundle`;
+- the §8.5 evaluation exit table **does not apply to it**;
+- the official aggregate harness never invokes it.
+
+Every other CLI usage error remains exit `2`. This carve-out is exactly one flag wide: it is not a
+general licence for exit 0 without a result object, and the "exit 0 never has empty stdout"
+invariant continues to bind every evaluation invocation.
 
 The dividing line is **whether bundle identity was established**, and nothing else. Once it is, the
 evaluator owes a result object naming the scenario it failed on; before it, it owes silence on
@@ -815,6 +887,42 @@ lanes disagreed underneath.
 found a second route to the same failure — an async `process.stdout.write` followed by
 `process.exit()` can truncate on a pipe. Both must stay closed in the official Node evaluator, with
 the pipe-backed stdout regression retained alongside the literal-space path regression.
+
+### Erratum 3 — record (2026-08-29)
+
+Raised by two isolated **micro-remediation** contexts working from their own Erratum-2 candidates
+plus the canonical contract. Both candidates are frozen as **pre-Erratum-3 micro-remediation
+evidence** — not official evaluator identities:
+
+| Lane | Erratum-2 candidate | Micro-remediation candidate |
+|---|---|---|
+| Python | `57c4a113883098ac7d5b033e16aed7f74f2e876f` | `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` |
+| Node | `801a1dc1a056ab65e20d735c83cf04a28c1fb45d` | `4b14328d67ea36f7657db8b3b4765bf3e187e639` |
+
+| # | Change | Raised by |
+|---|---|---|
+| E3-1 | `AD15-IR-6` — `related_artifacts` ordering moves to `artifact_path` | **both lanes, divergent resolutions** |
+| E3-2 | `bundle-file-unreadable` added; the four filesystem reasons bounded exactly | Python |
+| E3-3 | manifest wrong-name/location removed from `manifest-invalid`; no discovery is performed | Python |
+| E3-4 | `--help` pinned as a CLI meta-action outside the evaluation exit table | Python |
+| — | `W1-CORPUS-IR-1` in the corpus contract | Python |
+
+**On what E3-1 would have cost.** Both lanes stayed green on their own tests while resolving the
+same gap differently — one sorted an unidentifiable artifact under an empty key, the other refused
+to build the envelope. That is **not** a green qualification hiding a disagreement: differing
+`related_artifacts` order changes `request_envelope_digest`, and aggregate duty 2 compares exactly
+that. The real cost would have been a **first official run going non-qualifying on contract
+ambiguity** rather than on anything either implementation did wrong. The distinction matters,
+because Erratum 2's gap 2 *was* invisible to all five duties — it changed neither envelope bytes
+nor Level-1 — and these two failures are not the same shape.
+
+Both lanes also independently found and fixed the same real bug unprompted: a `files[]` entry whose
+target exists but is the wrong kind was returning `bundle-file-missing`, when nothing is missing.
+
+**`observer_assessment` needs no erratum and the open item is closed.** The frozen verdict envelope
+makes it a required member over a closed enum, so an exit-0 result lacking it is a wrong-shape
+frozen result, which Erratum 2 already routes to `verifier-run-invalid`. Adding missing-value
+semantics to R-C would mean accepting malformed frozen output as ordinary semantic input.
 
 ## 13. Sequencing
 
