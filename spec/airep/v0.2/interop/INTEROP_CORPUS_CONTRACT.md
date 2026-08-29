@@ -289,6 +289,28 @@ completeness of the scenario set beyond its 12 mandatory members; truth of any r
 evidence; nor, on its own, satisfaction of AD-15 — clauses (3) for SCITT (AD-10) and AuthZEN
 (AD-11) are separate workstreams W2 and W3.
 
+### Ruling `W1-CORPUS-IR-1` — family identity is a harness precondition
+
+The evaluator's bundle preflight checks the pinned family composition — one artifact of the named
+family for a P/B scenario, exactly one each of Decision, Control, Execution and Effect for an
+`IOP-R-*` scenario. That check runs **before** the frozen verifier is invoked. So a fixture whose
+mutation target is `artifact_type` would be rejected as `bundle-shape-invalid` at preflight and
+never reach the stage-0 detection it was built to exercise — scoring a genuine detection as the
+harness's own failure.
+
+> **All twelve official W1 fixtures MUST retain a usable, schema-consistent `artifact_type`
+> sufficient for the pinned bundle-family composition check. `artifact_type` MUST NOT be the
+> mutation target of a mandatory W1 scenario.**
+
+This changes nothing about the current twelve. Their mutations target hash recomputation, schema
+closure, record-signature verification, the observer-relationship enum, and the three reconciliation
+predicates — none touches `artifact_type`. The ruling exists so that a later builder cannot widen
+the scenario set into this collision by accident.
+
+A future `artifact_type` negative test is legitimate, but it does not enter the mandatory twelve. It
+becomes a separate process/stress vector with its own harness treatment, because the preflight that
+protects the reconciliation fixtures is exactly what such a test would need bypassed.
+
 ## 7. Decided
 
 Both questions previously open here are closed and folded into the sections above:
