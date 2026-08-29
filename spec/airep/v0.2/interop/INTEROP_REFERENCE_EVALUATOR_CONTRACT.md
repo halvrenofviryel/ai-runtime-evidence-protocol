@@ -452,6 +452,25 @@ failure `AD15-IR-2` was raised to prevent.
 A measurement-invalid scenario makes the **whole run** non-qualifying: an interop run is a claim
 about all twelve, and eleven-plus-one-unmeasured is not that claim.
 
+#### Ruling `AD15-IR-10` — run validity precedes tier withheld
+
+§7.1 and §7.2 can both be live on the same bundle: one artifact may exit `0` carrying a non-empty
+`authenticated_withheld` channel while another produces a non-permitted exit or a malformed result.
+Both are pinned to exit `3`, but the contract never said which `measurement_status` wins.
+
+> §7.1 is evaluated **only after** every artifact invocation in the scenario has passed the §7.2
+> process- and result-shape guard. Where an `ERROR`-class process or run invalidity and an
+> `authenticated_withheld` channel are both present on the same bundle, the **`ERROR` outcome is
+> reported**.
+
+This is not precedence for its own sake. A verifier that misbehaved *as a process* cannot be
+trusted to have produced a meaningful withheld channel either, so reporting `MEASUREMENT_INVALID`
+would attribute the failure to the tier when it belongs to the run.
+
+**Both current lanes already do this** — source review found each applying the §7.2 guard before
+scanning for withheld channels. No behavioural change is required; this pins an ordering that was
+convergent but unstated.
+
 ### 7.2 Frozen-verifier `exit 1` is not automatically `REJECT` (normative)
 
 Frozen `exit 1` means **run-invalid: no verdict was emitted**. Its causes are heterogeneous, and
@@ -658,7 +677,7 @@ boundary, in order of what was actually learned:
 
 | What happened | Reason |
 |---|---|
-| entry name obtained, but no-follow kind inspection (`lstat` or equivalent) could not complete | **`bundle-entry-uninspectable`** — exit `3`, `artifacts: []` |
+| entry name obtained, but no-follow kind inspection could not complete (`AD15-IR-9`) | **`bundle-entry-uninspectable`** — exit `3`, `artifacts: []` |
 | kind determined: a symlink or a forbidden non-regular object | `manifest-invalid` |
 | kind determined: a directory, but it cannot be enumerated | `bundle-directory-unreadable` |
 | kind determined: a regular file, but its bytes cannot be read | `bundle-file-unreadable` |
@@ -666,6 +685,39 @@ boundary, in order of what was actually learned:
 Each row says only what was actually learned, and stops there. Reporting a layout violation when
 the layout could not be inspected is the same error as reporting a missing file when the medium was
 merely unreadable.
+
+#### Ruling `AD15-IR-9` — entry kind requires authoritative no-follow metadata
+
+The first row above originally said the inspection was `lstat` **or equivalent**. Two isolated
+lanes read "or equivalent" differently and were *measured* emitting different reasons for the same
+filesystem state, so the reading is now pinned.
+
+A type hint obtained **during enumeration** — `d_type` from `readdir`, `Dirent.isFile()`,
+`os.DirEntry.is_file()` and their equivalents — is **not kind evidence on its own**. Those APIs may
+answer from a value the directory read happened to carry, without performing any metadata lookup on
+the entry itself, and they can only answer that way on filesystems that populate it.
+
+> For **every** enumerated entry the evaluator MUST perform a separate no-follow metadata lookup —
+> `lstat`, `fstatat(..., AT_SYMLINK_NOFOLLOW)`, `statx` with the no-follow flag, or a platform API
+> guaranteeing the same semantics. Where that lookup cannot complete, the reason is
+> **`bundle-entry-uninspectable`**.
+
+**The measured divergence.** Given a bundle directory that is readable but not searchable (mode
+`0o444`) holding one file, the two lanes were measured as follows. The Node lane ignores the
+`Dirent` and calls `lstat` per entry; that call fails `EACCES`, giving `bundle-entry-uninspectable`.
+The Python lane's kind inspection returned `(is_symlink=False, is_dir=False, is_file=True)` from the
+cached `d_type` **without raising**, so `bundle-entry-uninspectable` was not reached at that point.
+Same bundle, same kernel, two different reasons.
+
+**Why the enumeration-time hint loses.** It asserts a kind that was never established. Worse, it
+makes the reason reachable only on filesystems that *omit* `d_type`, so a conforming evaluator's
+output would depend on the medium the corpus happens to sit on rather than on the bundle itself. A
+determinism rule that holds on `ext4` and fails where the kernel returns `DT_UNKNOWN` is not a
+determinism rule.
+
+This is a **cross-platform determinism defect, not a semantic one** — no mandatory scenario's
+Level-1 value changes. It blocks official identity freeze all the same: two reference evaluators
+measured on the same contract-defined input surface must not emit different reasons for it.
 
 **Enumeration failure is not a layout violation (Erratum 4).** Once a usable manifest and
 `scenario_id` exist, the evaluator traverses the bundle. If that traversal cannot complete —
@@ -787,6 +839,22 @@ is therefore pinned:
 
 The rule exists so no implementer ever invents an exit code or a digest to satisfy a required
 field. An absent measurement is represented by absence.
+
+#### Ruling `AD15-IR-11` — a spawn failure produces no `artifacts[]` entry
+
+Step 3 says `artifacts[]` carries an entry for each invocation **actually attempted**, while the
+field list above makes `verifier_exit_code`, `verifier_result` and `verifier_stderr_digest` products
+of a process attempt. A spawn that fails is an attempt in the ordinary sense of the word yet
+produces none of the three, so the two sentences could be read against each other. Both isolated
+lanes raised it and both resolved it the same way; that resolution is now the rule.
+
+> **"Attempted" means a process attempt that produced a concrete process result.** Where the frozen
+> verifier cannot be spawned at all (`verifier-not-invocable`), the current artifact contributes
+> **no** `artifacts[]` entry. Entries for invocations that completed earlier in the same bundle are
+> retained.
+
+No implementer fabricates an exit code, a verdict or a stderr digest for a process that never ran.
+It is step 2's empty array applied one step later in the sequence.
 
 #### Ruling `AD15-IR-5` — the manifest path is the total result identity
 
@@ -1155,28 +1223,86 @@ already exists, reference it.
 
 **No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
 
+### Erratum 6 — record (2026-08-29)
+
+Raised by the closure remediation round. Both candidates are frozen as evidence, not identities:
+
+| Lane | r2 | **r3 (closure)** |
+|---|---|---|
+| Python | `8af0227344ee64cb5053454a6661d5f3c4e6453b` | `41516a292bf07b4c7875c2e370dd2fcb1396a20a` |
+| Node | `7c873428f54d2707d414492eeb931e565a3f04bc` | `809c610840a841531ade33fb077d29afb49343f0` |
+
+| # | Change | Raised by |
+|---|---|---|
+| E6-1 | `AD15-IR-9` — an enumeration-time type hint is not kind evidence; a no-follow metadata lookup is mandatory | **measured divergence between the lanes** |
+| E6-2 | `AD15-IR-10` — §7.2 run validity is evaluated before §7.1 tier withheld | Node raised; both lanes already conform |
+| E6-3 | `AD15-IR-11` — a spawn failure contributes no `artifacts[]` entry; "attempted" means a concrete process result | **both lanes; identical resolution** |
+
+**On E6-1, the only blocker.** Erratum 5's convergences were reached *from the contract text*. This
+one is the reverse: the lanes diverged, and the divergence was visible only because it was measured
+on a constructed filesystem state rather than argued from source. "`lstat` **or equivalent**" read
+as one rule to one lane and a different rule to the other, and neither reading was unreasonable.
+The defect is in the contract, not in either implementation.
+
+It is also the first W1 defect that is not about semantics. No Level-1 value moves. What moves is
+whether two conforming evaluators produce the same reason for the same input — and on a
+cross-platform surface, "the same input" has to include the filesystem underneath it.
+
+**On E6-3, and what it says about the process.** Both lanes reached the same resolution
+independently, and both flagged the ambiguity rather than resolving it silently. That is what the
+participation contract asks for, and it is why this ruling is a confirmation rather than a choice
+between two candidate readings.
+
+**Evidence narrowing — Node selftest counts.** The Node selftest skips its live frozen-verifier
+block when `verifier_node_r2/node_modules` is not materialized, and its summary reports only
+`X/Y checks passed`, with skipped blocks absent from both numbers. Earlier Node green counts
+therefore attest only to the checks that actually executed:
+
+> **`NODE INTEROP SELFTEST COUNTS — PARTIAL WHERE LIVE VERIFIER DEPS WERE NOT MATERIALIZED`**
+
+This invalidates no prior W1 step: no `-official`, `-r1` or `-r2` ref was ever an official evaluator
+identity, and `MEASURED END-TO-END PATH` has never been claimed. It narrows what those counts prove.
+The r3 Node candidate materialized the dependencies before measuring, which is how the gap
+surfaced — 668 reported green while 81 further checks, including the `AD15-IR-6` fixture, were
+`NOT_MEASURED` rather than passing. §13 step 5 closes the class.
+
+**No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
+
 ## 13. Sequencing
 
-The last remediation round is complete. Both candidates are frozen as **post-Erratum-4 candidates
-(r2)** on `w1/interop-eval-py-final-r2` and `w1/interop-eval-node-final-r2`. The
-`w1/interop-eval-py-final` and `w1/interop-eval-node-final` refs remain **reserved and unused**, as
-do every earlier `-official` and `-r1` ref — no ref in this chain is ever rewritten or deleted.
+The closure remediation round is complete. Both candidates are frozen as **post-Erratum-5 closure
+candidates (r3)** on `w1/interop-eval-py-final-r3` and `w1/interop-eval-node-final-r3`. Every
+earlier `-official`, `-r1` and `-r2` ref is frozen alongside them — no ref in this chain is ever
+rewritten or deleted.
+
+`w1/interop-eval-py-final` and `w1/interop-eval-node-final` hold the same commits as the r3 refs and
+are **not** official identities. They are not moved again: the post-Erratum-6 candidates take new
+refs, so no reader has to work out which commit a given ref meant at a given time.
 
 Remaining sequence:
 
-1. **Erratum 5 is source-reviewed and canonicalized** — the maintainer pins a new head and the
+1. **Erratum 6 is source-reviewed and canonicalized** — the maintainer pins a new head and the
    evaluator-contract digest. The corpus contract is unchanged and keeps its existing digest.
-2. **Python closure remediation** in a fresh isolated context: only `8af0227344ee64cb5053454a6661d5f3c4e6453b`
-   plus the new canonical contracts, on `w1/interop-eval-py-final`.
-3. **Node closure remediation** in a fresh isolated context: only `7c873428f54d2707d414492eeb931e565a3f04bc`
-   plus the new canonical contracts, on `w1/interop-eval-node-final`.
-4. **Peer material remains invisible** throughout.
-5. **The canonical lineage is merged into each branch**, no squash or rewrite.
-6. Tests and source review.
-7. **Official Python and Node evaluator identities are frozen.**
-8. **Only then is corpus construction opened.**
+2. **Python remediation** in a fresh isolated context: only `41516a292bf07b4c7875c2e370dd2fcb1396a20a`
+   plus the new canonical contracts, on `w1/interop-eval-py-freeze`. Behavioural change: an explicit
+   no-follow metadata lookup per enumerated entry (`AD15-IR-9`), with a discrimination test.
+3. **Node remediation** in a fresh isolated context: only `809c610840a841531ade33fb077d29afb49343f0`
+   plus the new canonical contracts, on `w1/interop-eval-node-freeze`. `AD15-IR-9` requires no
+   evaluator behavioural change in this lane; the round covers contract-alignment tests and selftest
+   hardening.
+4. **Both lanes carry explicit tests** for the `AD15-IR-10` ordering and the `AD15-IR-11`
+   spawn-failure behaviour, whether or not their current code already conforms. A rule that holds by
+   accident is not tested.
+5. **The Node selftest must not report success while silently skipping a mandatory block.** The
+   official summary carries `passed / failed / skipped`, and in the default mode `skipped > 0` exits
+   non-zero. A developer-only opt-in may permit skips; the official evidence command may not use it.
+6. **Peer material remains invisible** throughout.
+7. **The canonical lineage is merged into each branch**, no squash or rewrite.
+8. Tests and source review.
+9. **Official Python and Node evaluator identities are frozen.**
+10. **Only then is corpus construction opened.**
 
-Step 2 and 3 are deliberately narrow: five closures, each with a pinned discrimination test.
+Step 2 is the only behavioural change in this round; steps 3-5 are alignment and instrumentation.
 
-**Corpus bytes remain on HOLD through step 7. Step 8 is the only point at which corpus
+**Corpus bytes remain on HOLD through step 9. Step 10 is the only point at which corpus
 construction opens, matching the status line at the head of this document.**
