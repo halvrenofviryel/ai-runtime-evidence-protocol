@@ -1,0 +1,3 @@
+Package content is derived from the AI Runtime Evidence Protocol repository.
+Specification text and schemas: Apache-2.0 and CC-BY-4.0 as published there.
+See the source repository LICENSE and LICENSE-CC-BY-4.0.txt at the pinned commit.

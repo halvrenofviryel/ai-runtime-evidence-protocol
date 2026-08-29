@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adjudicator": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agreement": {
+      "enum": [
+        "AGREE",
+        "DISAGREE",
+        "NOT_RUN",
+        "CANNOT_RUN",
+        null
+      ]
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "contribution_kind": {
+      "description": "e.g. 'independent verifier run against an author-produced, release-pinned AIREP corpus'",
+      "type": "string"
+    },
+    "corpus_digest": {
+      "description": "sha256 of the distributed archive",
+      "type": "string"
+    },
+    "corpus_name": {
+      "const": "AIREP v0.2 Independent-Verifier Corpus"
+    },
+    "corpus_version": {
+      "const": "0.1"
+    },
+    "does_not_establish": {
+      "type": "string"
+    },
+    "expected_result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "expected_results_visible_before_implementation": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "finding_classification": {
+      "enum": [
+        "none",
+        "corpus_defect",
+        "expected_result_defect",
+        "implementation_defect",
+        "specification_ambiguity",
+        "capability_gap",
+        "undetermined",
+        null
+      ]
+    },
+    "implementation_author": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "implementation_digest": {
+      "description": "commit or package digest",
+      "type": "string"
+    },
+    "implementation_name": {
+      "type": "string"
+    },
+    "implementation_source": {
+      "type": "string"
+    },
+    "independent_reproducer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "input_package_digest": {
+      "type": "string"
+    },
+    "inspected_first_party_verifier_code": {
+      "description": "recorded by the implementer; nobody else can record it for them",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "normative_text_used": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "observed_result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "originator": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reconstruction_stages_attempted": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_bytes": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "class_produced": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "hash_preimage": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "matched_integrity_current": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "parsed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "reason_channels_produced": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "references_resolved": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "signature_preimage": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "signature_verified": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "report_schema_version": {
+      "const": "1"
+    },
+    "vouches_for": {
+      "description": "exactly what this signer personally performed or checked",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "report_schema_version",
+    "corpus_name",
+    "corpus_version",
+    "corpus_digest",
+    "case_id",
+    "contribution_kind",
+    "implementation_name",
+    "implementation_source",
+    "implementation_digest",
+    "normative_text_used",
+    "inspected_first_party_verifier_code",
+    "expected_results_visible_before_implementation",
+    "input_package_digest",
+    "reconstruction_stages_attempted",
+    "observed_result",
+    "expected_result",
+    "agreement",
+    "finding_classification",
+    "does_not_establish",
+    "originator",
+    "implementation_author",
+    "independent_reproducer",
+    "adjudicator",
+    "vouches_for"
+  ],
+  "title": "AIREP independent-verifier run report row",
+  "type": "object"
+}

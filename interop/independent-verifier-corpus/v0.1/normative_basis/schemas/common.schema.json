@@ -1,0 +1,265 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.2/schemas/common.schema.json",
+ "title": "AIREP v0.2 common definitions",
+ "$comment": "Shared $defs only — NOT a standalone artifact validator (design contract ODQ-3). Family entry schemas own their top-level closure. Every constraint here expresses the accepted ARTIFACT_SCHEMA_DESIGN contract or a carried v0.1-lineage constraint; none is an implementation invention.",
+ "$defs": {
+  "sha256_digest": {
+   "type": "string",
+   "pattern": "^sha256:[0-9a-f]{64}$",
+   "description": "A digest, written as sha256: followed by 64 lowercase hex characters (ODQ-11)."
+  },
+  "signature_value": {
+   "type": "string",
+   "pattern": "^[0-9a-f]{128}$",
+   "description": "64-byte Ed25519 signature as 128 lowercase hex characters (maintainer wire-encoding decision)."
+  },
+  "namespaced_id": {
+   "type": "string",
+   "pattern": "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$",
+   "description": "Namespaced identifier: lowercase ASCII, at least two dot-separated segments, each starting with a letter (final-hardening grammar)."
+  },
+  "timestamp_utc": {
+   "type": "string",
+   "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]{1,9})?Z$",
+   "description": "Structural pattern only (ODQ-6); Gregorian calendar validity is semantic validation, not schema."
+  },
+  "sequence": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 9007199254740991,
+   "description": "Monotonic ordering within the chain; parsed-value constraint only (ODQ-13)."
+  },
+  "string_array": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "principal": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "established_by"
+   ],
+   "description": "On whose authority the decision was taken. v0.1 member vocabulary and established_by semantics retained; v0.2 closure applied; established_by required when principal is present (ODQ-4).",
+   "properties": {
+    "human": {
+     "type": "string"
+    },
+    "service": {
+     "type": "string"
+    },
+    "session": {
+     "type": "string"
+    },
+    "scope": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "established_by": {
+     "type": "string",
+     "enum": [
+      "asserted_by_caller",
+      "verified_credential",
+      "mutual_tls",
+      "platform_attested",
+      "out_of_band_signature",
+      "not_established"
+     ]
+    },
+    "attestation_ref": {
+     "type": "string"
+    }
+   }
+  },
+  "subject": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "producer",
+    "timestamp_utc"
+   ],
+   "properties": {
+    "producer": {
+     "type": "string"
+    },
+    "timestamp_utc": {
+     "$ref": "common.schema.json#/$defs/timestamp_utc"
+    },
+    "runtime": {
+     "type": "string"
+    },
+    "principal": {
+     "$ref": "common.schema.json#/$defs/principal"
+    }
+   }
+  },
+  "scope": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "covers",
+    "does_not_cover"
+   ],
+   "description": "Scope honesty (v0.1 lineage; does_not_cover stays mandatory).",
+   "properties": {
+    "covers": {
+     "$ref": "common.schema.json#/$defs/string_array"
+    },
+    "does_not_cover": {
+     "$ref": "common.schema.json#/$defs/string_array"
+    }
+   }
+  },
+  "signature": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "alg",
+    "value"
+   ],
+   "properties": {
+    "alg": {
+     "type": "string",
+     "minLength": 1,
+     "description": "Informative label only; MUST NOT drive verification (frozen INTEGRITY 3.2; ODQ-7 — deliberately no enum)."
+    },
+    "value": {
+     "$ref": "common.schema.json#/$defs/signature_value"
+    }
+   }
+  },
+  "integrity": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "previous",
+    "current",
+    "signature"
+   ],
+   "properties": {
+    "previous": {
+     "$ref": "common.schema.json#/$defs/sha256_digest"
+    },
+    "current": {
+     "$ref": "common.schema.json#/$defs/sha256_digest"
+    },
+    "signature": {
+     "$ref": "common.schema.json#/$defs/signature"
+    }
+   }
+  },
+  "profiles": {
+   "type": "object",
+   "propertyNames": {
+    "$ref": "common.schema.json#/$defs/namespaced_id"
+   },
+   "additionalProperties": {
+    "type": "object"
+   },
+   "description": "The ONLY extension surface (AD-07). Keys are namespaced identifiers; values are profile-owned objects."
+  },
+  "evidence_item": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "type",
+    "ref",
+    "resolvable",
+    "content_hash"
+   ],
+   "properties": {
+    "type": {
+     "enum": [
+      "retrieval",
+      "tool_call",
+      "memory",
+      "policy",
+      "human_approval",
+      "external_url",
+      "eval",
+      "other"
+     ]
+    },
+    "ref": {
+     "type": "string"
+    },
+    "resolvable": {
+     "type": "boolean"
+    },
+    "content_hash": {
+     "$ref": "common.schema.json#/$defs/sha256_digest"
+    }
+   },
+   "description": "v0.1-lineage evidence pointer; content_hash schema-required on every item (ODQ-9)."
+  },
+  "evidence_array": {
+   "type": "array",
+   "items": {
+    "$ref": "common.schema.json#/$defs/evidence_item"
+   }
+  },
+  "artifact_ref": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "record_id"
+   ],
+   "properties": {
+    "record_id": {
+     "type": "string"
+    },
+    "chain_id": {
+     "type": "string"
+    }
+   },
+   "description": "Cross-artifact reference (ODQ-10): global record_id, optionally qualified by chain_id; never a bare sequence."
+  },
+  "artifact_core": {
+   "type": "object",
+   "$comment": "Open fragment by design: top-level closure is owned by each family entry schema via unevaluatedProperties (ODQ-3).",
+   "required": [
+    "airep_version",
+    "artifact_type",
+    "chain_id",
+    "record_id",
+    "sequence",
+    "subject",
+    "scope",
+    "integrity"
+   ],
+   "properties": {
+    "airep_version": {
+     "const": "0.2"
+    },
+    "artifact_type": {
+     "type": "string"
+    },
+    "chain_id": {
+     "type": "string"
+    },
+    "record_id": {
+     "type": "string"
+    },
+    "sequence": {
+     "$ref": "common.schema.json#/$defs/sequence"
+    },
+    "subject": {
+     "$ref": "common.schema.json#/$defs/subject"
+    },
+    "scope": {
+     "$ref": "common.schema.json#/$defs/scope"
+    },
+    "integrity": {
+     "$ref": "common.schema.json#/$defs/integrity"
+    },
+    "profiles": {
+     "$ref": "common.schema.json#/$defs/profiles"
+    }
+   }
+  }
+ }
+}

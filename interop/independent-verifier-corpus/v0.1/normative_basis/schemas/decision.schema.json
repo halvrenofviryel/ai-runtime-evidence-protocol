@@ -1,0 +1,111 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.2/schemas/decision.schema.json",
+ "title": "AIREP v0.2 Decision Receipt",
+ "$comment": "Mechanical expression of the accepted ARTIFACT_SCHEMA_DESIGN contract; no implementation-invented constraints. Top-level closure via unevaluatedProperties (2020-12): common core properties are evaluated through the allOf, family members here; anything else is rejected.",
+ "type": "object",
+ "allOf": [
+  {
+   "$ref": "common.schema.json#/$defs/artifact_core"
+  }
+ ],
+ "properties": {
+  "artifact_type": {
+   "const": "decision"
+  },
+  "input": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "input_ref",
+    "input_digest"
+   ],
+   "properties": {
+    "input_ref": {
+     "type": "string"
+    },
+    "input_digest": {
+     "$ref": "common.schema.json#/$defs/sha256_digest"
+    },
+    "digest_projection": {
+     "$ref": "common.schema.json#/$defs/namespaced_id",
+     "description": "Optional named projection (AD-06): absent = input_digest binds the full governed-input bytes; present = it binds the named projection rule's output. Rule existence and digest provenance are semantic-verifier work."
+    }
+   }
+  },
+  "claim": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "assertion",
+    "basis"
+   ],
+   "properties": {
+    "assertion": {
+     "type": "string"
+    },
+    "basis": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1
+    }
+   }
+  },
+  "directive": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "verb",
+    "policy_basis"
+   ],
+   "properties": {
+    "verb": {
+     "enum": [
+      "release",
+      "block",
+      "defer",
+      "redact",
+      "escalate_to_human",
+      "kill"
+     ]
+    },
+    "policy_basis": {
+     "$ref": "common.schema.json#/$defs/string_array"
+    }
+   }
+  },
+  "output": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "result_ref",
+    "result_digest"
+   ],
+   "properties": {
+    "result_ref": {
+     "type": "string"
+    },
+    "result_digest": {
+     "$ref": "common.schema.json#/$defs/sha256_digest"
+    },
+    "redacted": {
+     "type": "boolean",
+     "$comment": "v0.1 default:false deliberately dropped (maintainer): no default in any hashed core field."
+    }
+   }
+  },
+  "evidence": {
+   "$ref": "common.schema.json#/$defs/evidence_array"
+  }
+ },
+ "required": [
+  "input",
+  "claim",
+  "directive",
+  "output",
+  "evidence"
+ ],
+ "unevaluatedProperties": false
+}
