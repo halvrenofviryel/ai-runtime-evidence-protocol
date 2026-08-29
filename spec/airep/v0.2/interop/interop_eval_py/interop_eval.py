@@ -3,21 +3,52 @@
 """AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
 Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
-``b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278``
-(sha256 ``42e350d09b28cb79a7e59f91fe55af96968925bf8615c8818f5c45d42c2b2fa2``),
-i.e. the canonical post-Erratum-2 contract, over the FROZEN Python class
+``b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd``
+(sha256 ``39432fabbe643c0b45a012be442721208134f5a14a3421bf820fa4a0b8cefefa``),
+alongside ``INTEROP_CORPUS_CONTRACT.md``
+(sha256 ``ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd``),
+i.e. the canonical post-Erratum-3 contracts, over the FROZEN Python class
 verifier, which is invoked as a SUBPROCESS and is never imported, vendored or
 re-implemented (contract 3).
+
+Erratum 3 rulings carried here:
+
+  * E3-1  ruling ``AD15-IR-6``: ``related_artifacts`` is ordered by ascending
+          UTF-8 byte order of the MANIFEST-RELATIVE ``artifact_path``, not of
+          ``record_id``. ``artifact_path`` always exists, so the request
+          envelope -- and with it the ``request_envelope_digest`` harness duty 2
+          compares -- is always defined. The pre-erratum resolution here (fail a
+          multi-artifact bundle closed when an artifact carried no usable
+          ``record_id``) is SUPERSEDED: such an artifact now reaches frozen
+          stage 0. ``record_id`` remains ONLY the AIREP semantic
+          reference-resolution key and R-A is untouched;
+  * E3-2  ``bundle-file-unreadable`` joins the closed registry, and the four
+          filesystem reasons are bounded exactly -- path absent or a definite
+          ``ENOENT`` on read is ``bundle-file-missing``; present, a permitted
+          regular file, but open/read fails or errors is
+          ``bundle-file-unreadable``; bytes read but unparseable is
+          ``bundle-json-invalid``; bytes read but the digest disagrees is
+          ``manifest-digest-mismatch``;
+  * E3-3  "a manifest with the wrong name or location" is REMOVED from
+          ``manifest-invalid``. NO manifest discovery is performed: identity
+          comes only from ``manifest.json`` at the bundle root, and its absence
+          is exit 1 with empty stdout. A wrongly-named or misplaced file BESIDE
+          a valid root manifest needs no special rule -- it is an unlisted
+          regular file, or a listed entry with an invalid ``role``;
+  * E3-4  ``--help`` is a CLI META-ACTION, not an evaluation: exit 0, human
+          text on stdout, NO result object, ``--bundle`` not required, and the
+          contract-8.5 exit table does not apply to it. Every other CLI usage
+          error remains exit 2, and the carve-out is exactly one flag wide.
 
 Erratum 2 rulings carried here:
 
   * E2-1  every bundle-layout violation is ``manifest-invalid`` -- forbidden
           symlinks, an on-disk regular file ``files[]`` does not list, a
           ``files[]`` entry whose target is not a permitted file kind, a FIFO /
-          socket / device or other non-regular non-directory object, a manifest
-          at the wrong name or location, and the manifest closure / sort /
-          ``role`` / ``path`` / digest-encoding rules. Directories are
-          containers only and are never ``files[]`` entries;
+          socket / device or other non-regular non-directory object, and the
+          manifest closure / sort / ``role`` / ``path`` / digest-encoding rules.
+          Directories are containers only and are never ``files[]`` entries.
+          E3-3 removed the wrong-name/location clause from this surface;
   * E2-2  every abnormal frozen run is ``verifier-run-invalid`` -- a
           non-qualifying ``exit 1``, ``exit 2`` or any other impermissible exit,
           ``exit 0`` with empty stdout, ``exit 0`` with non-strict-JSON stdout,
@@ -124,55 +155,38 @@ conforming official W1 bundle.
       is fixed. Its per-entry shape is unpinned; ``artifact_path`` is used as
       the identity there too, for consistency with ``AD15-IR-5``.
 
-  A6  OPEN -- reported, not resolved by invention. Contract 5.1 pins
-      ``related_artifacts`` ordering as "ascending UTF-8 byte order of
-      ``record_id``", and ``AD15-IR-5`` now permits an artifact with no usable
-      ``record_id``. For a MULTI-artifact bundle carrying such an artifact the
-      envelope ordering is therefore UNDEFINED, and with it the
-      ``request_envelope_digest`` that harness duty 2 compares across lanes.
-      ``AD15-IR-5`` moved ``artifacts[]`` ordering to ``artifact_path`` but left
-      5.1's envelope ordering on ``record_id``, so the gap is real.
+  A6  CLOSED by Erratum 3, AGAINST this lane's pre-erratum resolution. The
+      pre-erratum contract ordered ``related_artifacts`` by ``record_id`` while
+      ``AD15-IR-5`` had already made ``record_id`` optional, so a multi-artifact
+      bundle carrying an unidentifiable artifact had no defined envelope. This
+      lane failed such a bundle CLOSED as ``bundle-shape-invalid`` rather than
+      invent an order; ruling ``AD15-IR-6`` now keys the envelope on
+      ``artifact_path``, which always exists, so the envelope is always defined
+      and the fail-closed path is REMOVED. Both defects this lane recorded under
+      that resolution are thereby settled: the artifact reaches frozen stage 0
+      as ``AD15-IR-5`` requires, and no registry row is used outside its own
+      definition.
 
-      It is unreachable in the official W1 corpus -- the four ``IOP-R-*``
-      fixtures are built individually sound (contract 7, step-1 rationale) and
-      every single-artifact scenario has ``related_artifacts: []``, which needs
-      no ordering. This lane therefore FAILS CLOSED rather than choosing an
-      order a peer lane could choose differently: a multi-artifact bundle with
-      an unidentifiable artifact is ``bundle-shape-invalid``. A single-artifact
-      bundle is unaffected and a missing ``record_id`` reaches the frozen
-      stage-0 evaluation it belongs to, exactly as ``AD15-IR-5`` requires.
+      Removed with it: the pre-erratum preflight rejection of a bundle carrying
+      two artifacts with the SAME ``record_id``. Nothing in the contract pins
+      such a rule; ``bundle-shape-invalid`` is defined (8.2.2) as artifact
+      count, family composition or operator-input composition, none of which a
+      duplicate ``record_id`` is; and contract 5 pins the opposite treatment
+      explicitly -- "more than one match is ambiguous and fails closed. An
+      evaluator MUST NOT pick one" -- which is R-A's job and is unreachable if
+      preflight has already made a second match impossible. The duplicate is
+      therefore left for R-A to report as a FAIL.
 
-      TWO KNOWN DEFECTS IN THIS RESOLUTION, stated rather than hidden, both of
-      which an erratum should settle:
-
-        (i)  ``AD15-IR-5``'s consequence sentence is UNQUALIFIED -- "a missing
-             ``record_id`` now reaches the frozen stage-0 evaluation it belongs
-             to, instead of being converted into the evaluator's own preflight
-             failure". Failing the multi-artifact case closed IS such a
-             conversion, so this resolution honours 5.1 at the cost of
-             contradicting AD15-IR-5 for that case. The two cannot both hold
-             while 5.1 keys envelope order on a field AD15-IR-5 made optional;
-        (ii) ``bundle-shape-invalid`` is defined (8.2.2) as "artifact count,
-             family composition or operator-input composition outside section
-             5". A missing ``record_id`` is none of those three, so the reason
-             emitted is outside its own registry row. No row describes this
-             case, the registry is closed, and 8.2.2 forbids adding one without
-             an erratum -- so the nearest row is used under protest.
-
-      Unreachable in a schema-valid corpus: ``common.schema.json`` makes
-      ``record_id`` required on artifact core, so only a stage-0-rejected
-      artifact can lack one, and those are the single-artifact ``IOP-B-*``
-      scenarios where no ordering is needed.
-
-  A7  OPEN -- reported. Contract 5 pins bundle FAMILY COMPOSITION, which can
-      only be checked by reading ``artifact_type``. An artifact broken at stage 0
-      hard enough to lose its ``artifact_type`` would therefore be converted
-      into this evaluator's own ``bundle-shape-invalid`` preflight failure --
-      the same class of defect ``AD15-IR-5`` closed for ``record_id``. The
-      difference is that ``record_id`` was needed only for RESULT IDENTITY,
-      while ``artifact_type`` is needed for a genuinely pinned PREFLIGHT rule,
-      so the composition check is kept. Unreachable for the official corpus,
-      whose ``IOP-B-*`` transformations target a single field each.
+  A7  CLOSED by ruling ``W1-CORPUS-IR-1`` in ``INTEROP_CORPUS_CONTRACT.md``.
+      Contract 5 pins bundle FAMILY COMPOSITION, which can only be checked by
+      reading ``artifact_type``, so an artifact broken at stage 0 hard enough to
+      lose its ``artifact_type`` would be converted into this evaluator's own
+      ``bundle-shape-invalid`` preflight failure. The corpus contract now makes
+      the precondition explicit rather than incidental: all twelve official W1
+      fixtures MUST retain a usable, schema-consistent ``artifact_type``, and it
+      MUST NOT be the mutation target of a mandatory scenario. The composition
+      check is therefore kept exactly as it is, and the collision is closed on
+      the corpus side where it belongs.
 
   A8  Duplicate manifest object members are unpinned. Contract 8.5 pins exit 1
       to exactly three conditions, and a duplicated member is still parseable as
@@ -182,30 +196,38 @@ conforming official W1 bundle.
       ``manifest-invalid`` at exit 3 under E2-1's manifest-rule surface. The
       pre-erratum reading put this in the exit-1 band, which contradicted 8.5.
 
-  A9  A listed file that is present and of a permitted kind but UNREADABLE has
-      no registry row. It is not a layout violation, not an external subprocess
-      failure, and not this evaluator's own fault. It is reported as
-      ``bundle-file-missing`` -- the file is not available as bundle bytes --
-      which is this lane's pre-erratum behaviour, retained rather than changed.
+  A9  CLOSED by Erratum 3 (E3-2), AGAINST this lane's pre-erratum mapping. A
+      listed file that is present and of a permitted kind but UNREADABLE had no
+      registry row and was reported here as ``bundle-file-missing``, which says
+      something false about the bundle. ``bundle-file-unreadable`` now exists
+      and the boundary is exact: path absent, or a definite ``ENOENT`` on read,
+      is ``bundle-file-missing``; anything else that fails at open or read time
+      is ``bundle-file-unreadable``.
 
-  A10 "A manifest with the wrong name or location" is listed under
-      ``manifest-invalid``, whose registry row requires the manifest to have
-      parsed with a usable ``scenario_id`` first. The two are reconciled by
-      construction: identity comes only from ``manifest.json`` at the bundle
-      root (absent => exit 1, contract 8.5), so a manifest placed anywhere else
-      is just a regular file under the bundle and is caught either as an
-      unlisted on-disk file or by the closed ``role`` set. No separate code path
-      is needed and none is invented.
+  A10 CLOSED by Erratum 3 (E3-3), CONFIRMING this lane's construction. "A
+      manifest with the wrong name or location" is no longer listed under
+      ``manifest-invalid``, and no manifest discovery is performed: identity
+      comes only from ``manifest.json`` at the bundle root, whose absence is
+      exit 1 (contract 8.5). A manifest placed anywhere else is an ordinary
+      regular file under the bundle and is caught as an unlisted on-disk file or
+      by the closed ``role`` set. No separate code path exists and none is
+      invented.
 
-  A11 OPEN -- reported. ``--help`` exits 0 while writing usage text, not a
-      result object. Contract 8.5's exit-0 row is stated unconditionally
-      ("exactly one result object, ``measurement_status: MEASURED``, with a
-      Level-1 verdict") and carves out no help case, where the FROZEN class
-      verifier's own contract 6.4 explicitly does carve one out. So either this
-      contract inherits that carve-out silently or ``--help`` is out of band.
-      Behaviour is left as the ecosystem norm rather than invented away; the
-      surface is unreachable from the aggregate harness, which performs exactly
-      twelve ``--bundle`` invocations (8.1).
+  A11 CLOSED by Erratum 3 (E3-4). ``--help`` is a CLI meta-action, not an
+      evaluation: exit 0, human-readable text on stdout, no result object,
+      ``--bundle`` not required, and the contract-8.5 exit table does not apply.
+      The surface stays unreachable from the aggregate harness, which performs
+      exactly twelve ``--bundle`` invocations (8.1) and never invokes it.
+
+      RESIDUAL, recorded rather than assumed: E3-4 says the carve-out "is
+      exactly one flag wide" and names ``--help``. The narrow reading is taken
+      literally -- ``--help`` is the ONLY spelling that exits 0 without a result
+      object. The ``-h`` alias is therefore not registered and option-prefix
+      abbreviation is disabled, so ``-h``, ``--hel`` and every other spelling
+      are ordinary CLI usage errors at exit 2. A peer lane reading "one flag
+      wide" as a statement about the exit-0 licence rather than about spellings
+      could legitimately keep an alias; nothing in an official run can observe
+      the difference, since the harness never invokes help at all.
 
   A12 The FROZEN verdict envelope (frozen contract 2) is shape-checked before a
       verdict is trusted -- required members, the closed ``class`` set, the five
@@ -214,10 +236,29 @@ conforming official W1 bundle.
       frozen decision is recomputed and no checked value influences a predicate.
       Frozen 2 does not declare the envelope closed, so an unknown member is
       deliberately tolerated.
+
+  A13 OPEN -- reported, behaviour unchanged. E3-2 bounds the four filesystem
+      reasons over a LISTED FILE, and two nearby I/O failures fall outside all
+      four rows:
+
+        (i)  a DIRECTORY under the bundle that cannot be enumerated. It is not
+             a listed file and not a permitted regular file, so no E3-2 row
+             fits; it is also not strictly a rule VIOLATION, only an inability
+             to check one. Reported as ``manifest-invalid``, this lane's
+             pre-erratum behaviour, because the "files[] lists every regular
+             file" rule provably cannot be established for that subtree;
+        (ii) the root ``manifest.json`` PRESENT but unreadable. It is excluded
+             from ``files[]`` by contract 5, so no bundle-file reason can name
+             it, and contract 8.5 enumerates the exit-1 band as absent /
+             unparseable / no usable ``scenario_id``. None of the three is a
+             literal match, but exit 3 is impossible -- there is no scenario to
+             name -- so exit 1 is the only self-consistent band and is what this
+             lane emits.
 """
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import importlib.util
 import json
@@ -227,7 +268,7 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.1"   # post-Erratum-2 result shape (AD15-IR-5)
+EVALUATOR_VERSION = "0.2.2"   # post-Erratum-3 (AD15-IR-6, E3-2..E3-4)
 
 # --------------------------------------------------------------------------
 # JCS (RFC 8785) canonicalizer -- loaded from the REPOSITORY, not from PyPI,
@@ -350,6 +391,7 @@ REASON_STATUS: Dict[str, str] = {
     "manifest-invalid": ERROR,
     "manifest-digest-mismatch": ERROR,
     "bundle-file-missing": ERROR,
+    "bundle-file-unreadable": ERROR,
     "bundle-json-invalid": ERROR,
     "bundle-shape-invalid": ERROR,
     "numeric-preflight-violation": ERROR,
@@ -572,10 +614,14 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
     manifest member, which is parseable strict JSON and therefore does NOT
     withhold identity (ambiguity A8).
 
-    Identity comes only from ``manifest.json`` at the bundle ROOT. A manifest
-    at any other name or location is not consulted; it is an ordinary regular
-    file under the bundle and is caught by the file-set or ``role`` rules
-    (ambiguity A10).
+    NO MANIFEST DISCOVERY IS PERFORMED (Erratum 3, E3-3). Identity comes only
+    from ``manifest.json`` at the bundle ROOT; nothing else is looked for under
+    any other name or in any other directory. Its absence is exit 1 -- never
+    ``manifest-invalid``, which would require an identity this evaluator does
+    not have. A wrongly-named or misplaced file sitting BESIDE a valid root
+    manifest needs no rule of its own: it is an unlisted regular file, or a
+    listed entry with an invalid ``role``, and the ordinary layout rules make it
+    ``manifest-invalid`` at exit 3.
 
     A SYMLINKED root manifest is deliberately NOT diverted here. E2-1 enumerates
     "a forbidden symlink anywhere under the bundle" under ``manifest-invalid``,
@@ -589,6 +635,11 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
         with open(path, "rb") as handle:
             raw = handle.read()
     except OSError as exc:
+        # Absent is the contract-8.5 exit-1 condition. Present-but-unreadable is
+        # recorded ambiguity A13(ii): the root manifest is excluded from
+        # ``files[]``, so no bundle-file reason can name it, and exit 3 is
+        # impossible because there is no scenario to name. Exit 1 is the only
+        # self-consistent band.
         raise BundleIdentityError("manifest unreadable at %s: %s" % (path, exc))
     recorder = _DuplicateRecorder()
     try:
@@ -771,14 +822,23 @@ def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]
     for entry in manifest.entries:
         full = os.path.join(bundle_dir, *entry.path.split("/"))
         try:
-            with open(full, "rb") as handle:
-                data = handle.read()
+            data = read_bundle_file(full)
         except OSError as exc:
-            # Ambiguity A9: present and of a permitted kind, but unreadable. No
-            # registry row fits; the pre-erratum mapping is retained rather than
-            # a new one invented.
+            # Erratum 3 (E3-2) bounds the four filesystem reasons exactly. The
+            # file was present and of a permitted kind a moment ago -- scan and
+            # the presence check have both run -- so a definite ENOENT here is a
+            # file that went away and is still `bundle-file-missing`; every
+            # other open/read failure is `bundle-file-unreadable`, which says
+            # the true thing: the medium failed, the bundle is not incomplete.
+            if getattr(exc, "errno", None) == errno.ENOENT:
+                raise NonMeasurement(
+                    "bundle-file-missing",
+                    "files[] lists %r but it is no longer present: %s"
+                    % (entry.path, exc))
             raise NonMeasurement(
-                "bundle-file-missing", "%r could not be read: %s" % (entry.path, exc))
+                "bundle-file-unreadable",
+                "%r is present and a permitted regular file, but its bytes "
+                "could not be read: %s" % (entry.path, exc))
         measured = sha256_hex(data)
         if measured != entry.sha256:
             raise NonMeasurement(
@@ -787,6 +847,17 @@ def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]
                 % (entry.path, entry.sha256, measured))
         contents[entry.path] = data
     return contents
+
+
+def read_bundle_file(full_path: str) -> bytes:
+    """Read one listed bundle file, raising ``OSError`` verbatim.
+
+    A named seam, so the E3-2 boundary between ``bundle-file-missing`` and
+    ``bundle-file-unreadable`` can be exercised deterministically rather than
+    only through filesystem permissions, which are not portable.
+    """
+    with open(full_path, "rb") as handle:
+        return handle.read()
 
 
 def parse_bundle_files(manifest: Manifest, contents: Dict[str, bytes]) -> Dict[str, Any]:
@@ -892,23 +963,16 @@ def build_artifacts(manifest: Manifest, parsed: Dict[str, Any]) -> List[Artifact
                 "%s requires exactly one each of Decision, Control, Execution and "
                 "Effect; the bundle carries %s" % (scenario_id, ", ".join(present)))
 
-    ids = [a.record_id for a in artifacts if a.record_id is not None]
-    if len(set(ids)) != len(ids):
-        raise _bad_shape("the bundle carries two artifacts with the same record_id")
-
-    if len(artifacts) > 1 and any(a.record_id is None for a in artifacts):
-        # Ambiguity A6, failed closed. Contract 5.1 orders `related_artifacts`
-        # by record_id, so a multi-artifact bundle carrying an unidentifiable
-        # artifact has no defined envelope and therefore no defined
-        # request_envelope_digest for harness duty 2 to compare. Choosing an
-        # order here is exactly the cross-lane divergence the dual exercise
-        # exists to catch, so no order is chosen.
-        unidentified = sorted(a.path for a in artifacts if a.record_id is None)
-        raise _bad_shape(
-            "%s carries %d artifacts, of which %s have no usable record_id; "
-            "contract 5.1 orders related_artifacts by record_id, so the request "
-            "envelope is undefined for this bundle (recorded ambiguity A6)"
-            % (scenario_id, len(artifacts), ", ".join(repr(p) for p in unidentified)))
+    # AD15-IR-6 (E3-1) REMOVED the two record_id preconditions that stood here.
+    # A multi-artifact bundle carrying an artifact with no usable record_id is
+    # no longer failed closed: the envelope now orders on artifact_path, which
+    # always exists, so the envelope -- and the request_envelope_digest harness
+    # duty 2 compares -- is always defined, and the artifact reaches the frozen
+    # stage-0 evaluation it belongs to. A duplicate record_id is likewise not a
+    # preflight rule: contract 5 pins it as R-A's business ("more than one match
+    # is ambiguous and fails closed"), which a preflight rejection would make
+    # unreachable, and 8.2.2 confines `bundle-shape-invalid` to artifact count,
+    # family composition and operator-input composition. See recorded A6.
 
     # AD15-IR-5 / contract 8.4: result ordering is UTF-8 byte order of
     # artifact_path, which always exists -- not of record_id, which may not.
@@ -1006,20 +1070,23 @@ def assert_frozen_digests(problem: Optional[str]) -> None:
 def build_envelope(primary: Artifact, artifacts: List[Artifact]) -> dict:
     """The closed section-0 envelope for ``primary``.
 
-    ``related_artifacts`` is the OTHER artifacts of the same bundle and no
-    others, ascending by UTF-8 byte order of ``record_id``; for a
-    single-artifact scenario it is the EMPTY ARRAY -- present, never absent.
-    ``head_witness`` is never added: contract 5 pins it absent from every
-    official W1 bundle and the closed role set cannot express one.
+    ``related_artifacts`` is EVERY OTHER artifact of the same bundle and no
+    others, ascending by UTF-8 byte order of the MANIFEST-RELATIVE
+    ``artifact_path`` (ruling ``AD15-IR-6``); for a single-artifact scenario it
+    is the EMPTY ARRAY -- present, never absent. ``head_witness`` is never
+    added: contract 5 pins it absent from every official W1 bundle and the
+    closed role set cannot express one.
 
-    Envelope ordering stays on ``record_id``: ``AD15-IR-5`` moved ``artifacts[]``
-    ordering to ``artifact_path`` and left contract 5.1 untouched. Every related
-    artifact reaching here has a usable ``record_id`` -- a single-artifact bundle
-    has no related artifacts at all, and ``build_artifacts`` fails a
-    multi-artifact bundle closed when one is missing (ambiguity A6).
+    Ordering keys on ``artifact_path`` because it ALWAYS exists -- the manifest
+    lists every file -- so the envelope, and with it the
+    ``request_envelope_digest`` harness duty 2 compares, is always defined even
+    when an artifact carries no usable ``record_id``. ``record_id`` remains only
+    the AIREP semantic reference-resolution key (R-A); the manifest path never
+    participates in that resolution. The path is the ORDERING key only: it is
+    not a member of the envelope, which carries artifact values alone.
     """
     related = sorted((a for a in artifacts if a is not primary),
-                     key=lambda a: byte_key(a.record_id or ""))
+                     key=lambda a: byte_key(a.path))
     return {
         "artifact": primary.value,
         "related_artifacts": [a.value for a in related],
@@ -1542,8 +1609,18 @@ def build_parser() -> argparse.ArgumentParser:
                      "(INTEROP_REFERENCE_EVALUATOR_CONTRACT.md). One invocation "
                      "evaluates exactly one scenario bundle and writes at most "
                      "one JSON result object to stdout."),
-        add_help=True,
+        # E3-4: `--help` is a CLI META-ACTION, not an evaluation -- exit 0,
+        # human text on stdout, NO result object, `--bundle` not required, and
+        # the contract-8.5 exit table does not apply to it. The carve-out is
+        # "exactly one flag wide", so it is registered by that one spelling
+        # only: the `-h` alias is not added and prefix abbreviation is off, which
+        # leaves every other spelling an ordinary usage error at exit 2 (A11).
+        add_help=False,
+        allow_abbrev=False,
     )
+    parser.add_argument(
+        "--help", action="help",
+        help="show this help and exit 0 without producing a result object")
     parser.add_argument("--bundle")
     # Accepted only as a consistency assertion against the manifest roles (A1).
     parser.add_argument("--bindings")
@@ -1555,7 +1632,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[List[str]] = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     parser = build_parser()
-    args = parser.parse_args(argv)   # argparse exits 2 on usage errors, 0 on --help
+    # argparse exits 2 on any usage error, and 0 via the `--help` meta-action
+    # after writing the help screen to stdout (E3-4). Both raise SystemExit and
+    # bypass everything below, so no result object is ever written for either.
+    args = parser.parse_args(argv)
 
     try:
         if args.bundle is None:

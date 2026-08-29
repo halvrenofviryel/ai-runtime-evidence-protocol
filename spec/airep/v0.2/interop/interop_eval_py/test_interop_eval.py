@@ -13,6 +13,7 @@ Run:  python3 -m unittest discover -s spec/airep/v0.2/interop/interop_eval_py
 from __future__ import annotations
 
 import contextlib
+import errno
 import hashlib
 import io
 import json
@@ -618,28 +619,112 @@ class Envelope(BundleCase):
             self.assertNotIn("head_witness", envelope)
             self.assertEqual(set(envelope), {"artifact", "related_artifacts"})
 
-    def test_related_artifacts_are_the_other_three_sorted_by_record_id(self):
-        bundle = write_bundle(self.root, "IOP-R-CLEAN", four_artifacts())
+    def test_related_artifacts_are_the_other_three_sorted_by_artifact_path(self):
+        """Ruling ``AD15-IR-6``: the ordering key is the manifest-relative
+        ``artifact_path``, not ``record_id``. The two disagree here on purpose --
+        the paths sort d < e < f < g while the record_ids sort in the reverse
+        direction -- so an implementation still keying on ``record_id`` produces
+        the opposite order and fails.
+        """
+        arts = {
+            "artifacts/d.json": artifact("z-decision", "decision"),
+            "artifacts/e.json": artifact("y-control", "control",
+                                         decision_ref={"record_id": "z-decision"},
+                                         authorized_action_digest="sha256:" + "11" * 32),
+            "artifacts/f.json": artifact("x-execution", "execution",
+                                         decision_ref={"record_id": "z-decision"},
+                                         executed_action_digest="sha256:" + "11" * 32),
+            "artifacts/g.json": artifact("w-effect", "effect",
+                                         decision_ref={"record_id": "z-decision"},
+                                         execution_ref={"record_id": "x-execution"},
+                                         observer_relationship="independent"),
+        }
+        by_record = {a["record_id"]: path for path, a in arts.items()}
+        bundle = write_bundle(self.root, "IOP-R-CLEAN", arts)
         stub = StubVerifier()
         self.evaluate(bundle, stub)
+        self.assertEqual(len(stub.calls), 4)
         for record_id, envelope, _ in stub.calls:
             related = [a["record_id"] for a in envelope["related_artifacts"]]
             self.assertEqual(len(related), 3)
             self.assertNotIn(record_id, related)
-            self.assertEqual(related, sorted(related, key=lambda s: s.encode("utf-8")))
+            paths = [by_record[r] for r in related]
+            self.assertEqual(paths, sorted(paths, key=lambda s: s.encode("utf-8")))
+            # The record_id order is the REVERSE, so this is a discriminating
+            # assertion and not a coincidence of the fixture.
+            self.assertNotEqual(
+                related, sorted(related, key=lambda s: s.encode("utf-8")))
 
-    def test_digest_is_a_function_of_the_bundle_not_of_the_file_layout(self):
+    def test_an_artifact_without_a_record_id_still_orders_deterministically(self):
+        """``AD15-IR-6``'s reason for existing: an artifact with no usable
+        ``record_id`` no longer leaves the envelope undefined. It is ordered by
+        its path like every other member, and it REACHES frozen stage 0 instead
+        of becoming this evaluator's own preflight failure.
+        """
+        arts = four_artifacts()
+        del arts["artifacts/effect.json"]["record_id"]
+        bundle = write_bundle(self.root, "IOP-R-CLEAN", arts)
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)
+
+        # Stage 0 was reached for all four, the unidentifiable one included.
+        self.assertEqual(len(stub.calls), 4)
+        self.assertIn(None, [c[0] for c in stub.calls])
+        self.assertEqual(result["measurement_status"], "MEASURED")
+
+        # `artifacts/effect.json` sorts third of four by path, so the artifact
+        # with no record_id occupies a DEFINED slot in every other envelope.
+        expected = ["artifacts/control.json", "artifacts/decision.json",
+                    "artifacts/effect.json", "artifacts/execution.json"]
+        for record_id, envelope, _ in stub.calls:
+            related = envelope["related_artifacts"]
+            self.assertEqual(len(related), 3)
+            # No record_id is synthesized to fill the gap: when the primary is
+            # one of the three identified artifacts, exactly one RELATED member
+            # still carries no record_id at all.
+            without = [a for a in related if "record_id" not in a]
+            self.assertEqual(len(without), 0 if record_id is None else 1)
+        # And the digest is reproducible: a second evaluation of the same bundle
+        # yields the same per-path envelope digests.
+        again = self.evaluate(bundle, StubVerifier())
+        self.assertEqual([e["artifact_path"] for e in result["artifacts"]], expected)
+        self.assertEqual(
+            {e["artifact_path"]: e["request_envelope_digest"] for e in result["artifacts"]},
+            {e["artifact_path"]: e["request_envelope_digest"] for e in again["artifacts"]})
+
+    def test_digest_is_a_function_of_the_bundle_and_of_nothing_else(self):
         """Contract 5.1: the envelope is "a function of the bundle alone".
 
-        The manifest MUST be path-sorted, so files[] order cannot be varied
-        directly -- varying the PATHS varies the manifest order instead. The two
-        bundles below carry the same four artifact VALUES at paths whose sort
-        order is reversed, so each artifact occupies a different manifest slot.
-        The per-artifact envelope digest must be unchanged, because the envelope
-        contains artifact values and never paths.
+        ``AD15-IR-6`` moved the ordering key to ``artifact_path``, so the
+        manifest paths are now part of what the envelope is a function of -- they
+        are still part of the BUNDLE, and nothing outside it participates. Two
+        materializations of the same bundle at different absolute locations, run
+        from different working directories, must therefore agree exactly.
 
-        The earlier version of this test built the same bundle twice and could
-        not have failed.
+        The earlier version of this test asserted the opposite -- that varying
+        the paths left the digests unchanged -- which was true only while the
+        ordering keyed on ``record_id``.
+        """
+        arts = four_artifacts()
+        root_b = tempfile.mkdtemp(prefix="airep interop test elsewhere ")
+        self.addCleanup(shutil.rmtree, root_b, ignore_errors=True)
+        first = self.evaluate(write_bundle(self.root, "IOP-R-CLEAN", arts))
+        cwd = os.getcwd()
+        os.chdir(root_b)
+        try:
+            second = self.evaluate(write_bundle(root_b, "IOP-R-CLEAN", arts))
+        finally:
+            os.chdir(cwd)
+        by_path = lambda r: {e["artifact_path"]: e["request_envelope_digest"]
+                             for e in r["artifacts"]}
+        self.assertEqual(by_path(first), by_path(second))
+
+    def test_renaming_the_paths_changes_the_envelope_because_order_changes(self):
+        """The other half of ``AD15-IR-6``, asserted rather than assumed: the
+        ordering key is the path, so a bundle whose artifacts sit at paths in the
+        opposite sort order produces a DIFFERENT related_artifacts order and
+        therefore different envelope bytes. This is the observation that
+        distinguishes path-ordering from record_id-ordering.
         """
         arts = four_artifacts()
         forward = {
@@ -658,13 +743,9 @@ class Envelope(BundleCase):
         self.addCleanup(shutil.rmtree, root_b, ignore_errors=True)
         first = self.evaluate(write_bundle(self.root, "IOP-R-CLEAN", forward))
         second = self.evaluate(write_bundle(root_b, "IOP-R-CLEAN", reversed_layout))
-
-        # The manifest slot each artifact occupies genuinely differs.
-        self.assertNotEqual([e["artifact_path"] for e in first["artifacts"]],
-                            [e["artifact_path"] for e in second["artifacts"]])
         by_record = lambda r: {e["artifact_ref"]["record_id"]:
                                e["request_envelope_digest"] for e in r["artifacts"]}
-        self.assertEqual(by_record(first), by_record(second))
+        self.assertNotEqual(by_record(first), by_record(second))
 
     def test_digest_is_over_the_jcs_bytes(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
@@ -970,10 +1051,15 @@ class ResultShape(BundleCase):
     def test_every_registry_reason_maps_to_a_declared_status(self):
         self.assertEqual(set(ev.REASON_STATUS), {
             "manifest-invalid", "manifest-digest-mismatch", "bundle-file-missing",
-            "bundle-json-invalid", "bundle-shape-invalid",
+            "bundle-file-unreadable", "bundle-json-invalid", "bundle-shape-invalid",
             "numeric-preflight-violation", "verifier-digest-mismatch",
             "verifier-not-invocable", "verifier-run-invalid", "internal-error",
             "authenticated-withheld"})
+
+    def test_only_authenticated_withheld_is_measurement_invalid(self):
+        invalid = {r for r, st in ev.REASON_STATUS.items() if st != "ERROR"}
+        self.assertEqual(invalid, {"authenticated-withheld"})
+        self.assertEqual(ev.REASON_STATUS["bundle-file-unreadable"], "ERROR")
 
     def test_reason_outside_the_registry_is_refused(self):
         with self.assertRaises(KeyError):
@@ -1386,17 +1472,39 @@ class ArtifactPathIdentity(BundleCase):
         result = self.evaluate(bundle)
         self.assertEqual(result["predicates"]["R_A"], "FAIL")
 
-    def test_multi_artifact_bundle_without_record_id_fails_closed(self):
-        """Recorded ambiguity A6. Contract 5.1 orders related_artifacts by
-        record_id, so such a bundle has no defined envelope. No order is chosen.
+    def test_multi_artifact_bundle_without_record_id_reaches_stage_0(self):
+        """``AD15-IR-6`` SUPERSEDES this lane's pre-erratum resolution, which
+        failed such a bundle closed as ``bundle-shape-invalid`` because contract
+        5.1 then ordered ``related_artifacts`` by ``record_id``. The envelope now
+        orders on ``artifact_path``, so it is defined, and the artifact must
+        reach the frozen verifier rather than become a preflight failure.
         """
         arts = four_artifacts()
         del arts["artifacts/effect.json"]["record_id"]
         bundle = write_bundle(self.root, "IOP-R-CLEAN", arts)
-        exc = self.nonmeasurement(bundle)
-        self.assertEqual(exc.reason, "bundle-shape-invalid")
-        self.assertIn("artifacts/effect.json", exc.detail)
-        self.assertEqual(exc.artifacts, [])       # failed in preflight
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)             # no NonMeasurement
+        self.assertEqual(result["measurement_status"], "MEASURED")
+        self.assertEqual(len(stub.calls), 4)
+        entry = [e for e in result["artifacts"]
+                 if e["artifact_path"] == "artifacts/effect.json"][0]
+        self.assertIsNone(entry["artifact_ref"])
+        self.assertEqual(entry["verifier_exit_code"], 0)
+        self.assertTrue(entry["request_envelope_digest"].startswith("sha256:"))
+
+    def test_a_duplicate_record_id_is_r_a_s_business_not_a_preflight_rule(self):
+        """Contract 5 pins the treatment of multiple matches: "more than one
+        match is ambiguous and fails closed. An evaluator MUST NOT pick one."
+        A preflight uniqueness rule would make that rule unreachable, and
+        ``bundle-shape-invalid`` (8.2.2) is confined to artifact count, family
+        composition and operator-input composition -- none of which this is.
+        """
+        arts = four_artifacts(execution={"record_id": "a-decision"})
+        bundle = write_bundle(self.root, "IOP-R-XREF", arts)
+        result = self.evaluate(bundle)                   # measured, not refused
+        self.assertEqual(result["measurement_status"], "MEASURED")
+        self.assertEqual(result["predicates"]["R_A"], "FAIL")
+        self.assertEqual(result["level1"], "RECONCILIATION_MISMATCH")
 
     def test_withheld_reasons_are_identified_by_artifact_path(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
@@ -1480,6 +1588,233 @@ class OutputEncoding(BundleCase):
         self.assertEqual(result["scenario_id"], "IOP-P-DEC")
         self.assertEqual(result["artifacts"][0]["artifact_ref"]["record_id"],
                          "a-decisiön")
+
+
+# --------------------------------------------------------------------------
+# Erratum 3, E3-2 -- the four filesystem reasons are bounded exactly
+# --------------------------------------------------------------------------
+
+class FilesystemReasonBoundary(BundleCase):
+    """Missing, unreadable, unparseable and digest-mismatched are FOUR distinct
+    reasons over the same listed file. Collapsing any pair loses the distinction
+    a reader needs to know whether the bundle is incomplete, the medium is
+    faulty, or the content is wrong.
+
+    Each case below differs from the others in exactly one respect, so the four
+    assertions genuinely discriminate rather than merely co-occurring.
+    """
+
+    def one_artifact(self, **kwargs):
+        return write_bundle(self.root, "IOP-P-DEC",
+                            {"artifacts/d.json": DECISION}, **kwargs)
+
+    def test_absent_from_disk_is_bundle_file_missing(self):
+        exc = self.nonmeasurement(
+            self.one_artifact(drop_from_disk=("artifacts/d.json",)))
+        self.assertEqual(exc.reason, "bundle-file-missing")
+
+    def test_present_but_unreadable_is_bundle_file_unreadable(self):
+        """The row Erratum 3 added: the file IS there and IS a permitted regular
+        file, so nothing is missing -- the bytes simply cannot be read. The
+        pre-erratum code reported `bundle-file-missing` here, which said
+        something false about the bundle.
+        """
+        if os.geteuid() == 0:
+            self.skipTest("running as root: mode bits do not deny a read")
+        bundle = self.one_artifact()
+        target = os.path.join(bundle, "artifacts", "d.json")
+        os.chmod(target, 0)
+        self.addCleanup(os.chmod, target, 0o600)
+        try:
+            with open(target, "rb"):
+                self.skipTest("this filesystem does not enforce mode bits")
+        except PermissionError:
+            pass
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-file-unreadable")
+        self.assertEqual(exc.status, "ERROR")
+        self.assertIn("artifacts/d.json", exc.detail)
+
+    def test_read_error_that_is_definitely_enoent_stays_missing(self):
+        """The boundary is on the errno, not on which call failed: a definite
+        ENOENT at read time is still `bundle-file-missing`.
+        """
+        bundle = self.one_artifact()
+        original = ev.read_bundle_file
+        self.addCleanup(setattr, ev, "read_bundle_file", original)
+        ev.read_bundle_file = lambda path: (_ for _ in ()).throw(
+            OSError(errno.ENOENT, "No such file or directory", path))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-file-missing")
+
+    def test_io_error_at_read_time_is_unreadable_not_missing(self):
+        """Deterministic counterpart to the chmod case, so the discrimination
+        does not depend on filesystem permissions being enforced.
+        """
+        bundle = self.one_artifact()
+        original = ev.read_bundle_file
+        self.addCleanup(setattr, ev, "read_bundle_file", original)
+        ev.read_bundle_file = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EIO, "Input/output error", path))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-file-unreadable")
+
+    def test_read_but_unparseable_is_bundle_json_invalid(self):
+        bundle = write_bundle(
+            self.root, "IOP-P-DEC", {},
+            raw_files={"artifacts/d.json": (b"{ not json", "artifact")})
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-json-invalid")
+
+    def test_read_but_digest_disagrees_is_manifest_digest_mismatch(self):
+        def rewrite(manifest):
+            manifest["files"][0]["sha256"] = "0" * 64
+            return manifest
+        exc = self.nonmeasurement(self.one_artifact(manifest_overrides=rewrite))
+        self.assertEqual(exc.reason, "manifest-digest-mismatch")
+
+    def test_the_four_reasons_are_pairwise_distinct(self):
+        """Stated as one assertion so a future collapse cannot pass silently."""
+        self.assertEqual(
+            len({"bundle-file-missing", "bundle-file-unreadable",
+                 "bundle-json-invalid", "manifest-digest-mismatch"}), 4)
+        for reason in ("bundle-file-missing", "bundle-file-unreadable",
+                       "bundle-json-invalid", "manifest-digest-mismatch"):
+            self.assertEqual(ev.REASON_STATUS[reason], "ERROR")
+
+    def test_a_wrong_kind_target_is_still_a_layout_violation(self):
+        """Erratum 3 did not move this: a files[] entry whose target exists but
+        is a directory is `manifest-invalid`, because nothing is missing and
+        nothing was unreadable -- the LAYOUT is wrong.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              drop_from_disk=("artifacts/d.json",))
+        os.makedirs(os.path.join(bundle, "artifacts", "d.json"))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "manifest-invalid")
+
+
+# --------------------------------------------------------------------------
+# Erratum 3, E3-3 -- no manifest discovery is performed
+# --------------------------------------------------------------------------
+
+class NoManifestDiscovery(BundleCase):
+    def build_without_root_manifest(self, other_name):
+        """A bundle whose only manifest sits under some OTHER name or location."""
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        root_manifest = os.path.join(bundle, "manifest.json")
+        moved = os.path.join(bundle, *other_name.split("/"))
+        os.makedirs(os.path.dirname(moved), exist_ok=True)
+        os.rename(root_manifest, moved)
+        return bundle
+
+    def test_wrongly_named_manifest_alone_is_exit_1_with_no_result_object(self):
+        """E3-3: identity is not established, so there is no scenario to name.
+        It is NOT `manifest-invalid`, which would require the identity the
+        evaluator does not have.
+        """
+        bundle = self.build_without_root_manifest("bundle_manifest.json")
+        code, out, err = self.run_cli(bundle, stub=StubVerifier())
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        self.assertTrue(err.strip())          # diagnostics go to stderr only
+
+    def test_misplaced_manifest_alone_is_exit_1_with_no_result_object(self):
+        bundle = self.build_without_root_manifest("meta/manifest.json")
+        code, out, _ = self.run_cli(bundle, stub=StubVerifier())
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+
+    def test_no_other_name_or_location_is_ever_opened(self):
+        """"The evaluator does not search for or accept any other name or
+        location." Asserted by observation, not by reading the source: every
+        path the evaluator opens is recorded, and only the bundle root
+        manifest.json is among them.
+        """
+        bundle = self.build_without_root_manifest("bundle_manifest.json")
+        opened = []
+        import builtins
+        original = builtins.open
+        def recording_open(file, *a, **kw):
+            opened.append(str(file))
+            return original(file, *a, **kw)
+        builtins.open = recording_open
+        try:
+            code, out, _ = self.run_cli(bundle, stub=StubVerifier())
+        finally:
+            builtins.open = original
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+        under_bundle = [p for p in opened if p.startswith(bundle)]
+        self.assertEqual(under_bundle, [os.path.join(bundle, "manifest.json")])
+
+    def test_a_second_manifest_beside_a_valid_root_one_is_an_ordinary_file(self):
+        """E3-3's other half: a wrongly-named file BESIDE a valid root manifest
+        needs no special rule. It is an unlisted regular file, so the ordinary
+        layout rules make it `manifest-invalid` at exit 3 -- identity IS
+        established, so a result object naming the scenario is owed.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              extra_disk_files={"MANIFEST.json": b"{}"})
+        code, out, _ = self.run_cli(bundle, stub=StubVerifier())
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["nonmeasurement"]["reason"], "manifest-invalid")
+
+
+# --------------------------------------------------------------------------
+# Erratum 3, E3-4 -- --help is a CLI meta-action, not an evaluation
+# --------------------------------------------------------------------------
+
+class HelpMetaAction(BundleCase):
+    def run_argv(self, argv):
+        """Drive main() with a verbatim argv, catching argparse's SystemExit."""
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                code = ev.main(list(argv))
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else 1
+        return code, out.getvalue(), err.getvalue()
+
+    def test_help_exits_0_with_help_text_and_no_result_object(self):
+        code, out, _ = self.run_argv(["--help"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.strip())                     # human-readable text
+        self.assertIn("--bundle", out)
+        with self.assertRaises(ValueError):              # NOT a result object
+            json.loads(out)
+
+    def test_help_does_not_require_bundle(self):
+        code, out, err = self.run_argv(["--help"])
+        self.assertEqual(code, 0)
+        self.assertNotIn("--bundle is required", err)
+        self.assertNotIn("measurement_status", out)
+
+    def test_the_exit_0_invariant_still_binds_every_evaluation_invocation(self):
+        """The carve-out is not a general licence for exit 0 without a result
+        object: an EVALUATION that exits 0 still owes exactly one.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        code, out, _ = self.run_cli(bundle, stub=StubVerifier())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["measurement_status"], "MEASURED")
+
+    def test_every_other_usage_error_is_still_exit_2(self):
+        for argv in (["--not-a-flag"], ["--bundle"], [], ["-h"], ["--hel"],
+                     ["--help=1"]):
+            code, out, _ = self.run_argv(argv)
+            self.assertEqual(code, 2, argv)
+            self.assertEqual(out, "", argv)
+
+    def test_the_carve_out_is_exactly_one_flag_wide(self):
+        """A11's residual, asserted so the narrow reading is visible rather than
+        implicit: `--help` is the only spelling that exits 0 without a result
+        object. A maintainer widening the carve-out changes this test.
+        """
+        self.assertEqual(self.run_argv(["--help"])[0], 0)
+        self.assertEqual(self.run_argv(["-h"])[0], 2)
 
 
 if __name__ == "__main__":
