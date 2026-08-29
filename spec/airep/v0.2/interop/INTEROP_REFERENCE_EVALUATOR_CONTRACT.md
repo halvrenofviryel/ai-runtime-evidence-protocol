@@ -250,7 +250,7 @@ The property is real; it belongs one level up:
 
 - each evaluator computes and emits **only its own** `request_envelope_digest`, per artifact;
 - the **official harness** compares the Python and Node digests for the same
-  `(scenario_id, artifact_ref)` pair;
+  **`(scenario_id, artifact_path)`** pair (key updated by `AD15-IR-5`);
 - a mismatch makes the **aggregate run invalid / non-qualifying**. It is not translated into any
   individual evaluator's exit code, because no evaluator is in a position to detect it.
 
@@ -420,7 +420,7 @@ fixed list, never discovered — and enforces four run-level properties no evalu
 1. **Completeness.** All twelve invocations returned `measurement_status: MEASURED`. A missing
    result object, a crash, a non-zero exit or a timeout is recorded as a **non-qualifying
    `ERROR`** for that scenario. Silence is never read as success.
-2. **Cross-lane envelope equality** (`AD15-IR-4`). For every `(scenario_id, artifact_ref)`, the
+2. **Cross-lane envelope equality** (`AD15-IR-4`). For every **`(scenario_id, artifact_path)`** (`AD15-IR-5`), the
    Python and Node `request_envelope_digest` values are equal. A mismatch makes the run
    non-qualifying; it is never translated into any evaluator's exit code.
 3. **Cross-lane verifier identity.** Each lane asserted its own frozen verifier digest (§8.2.1)
@@ -502,21 +502,58 @@ implementer:
 
 | `reason` | Raised when | `measurement_status` |
 |---|---|---|
-| `manifest-invalid` | manifest parsed and `scenario_id` usable, but closure, sort, `role`, path or digest-encoding rules are violated | `ERROR` |
+| `manifest-invalid` | manifest parsed and `scenario_id` usable, but any **bundle-layout or manifest rule** is violated — see the enumeration below | `ERROR` |
 | `manifest-digest-mismatch` | a listed file's bytes do not match its `files[]` digest | `ERROR` |
 | `bundle-file-missing` | a file listed in `files[]` is not present on disk | `ERROR` |
 | `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
 | `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
 | `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
 | `verifier-digest-mismatch` | a frozen digest assertion failed | `ERROR` |
-| `verifier-not-invocable` | the frozen verifier could not be executed | `ERROR` |
-| `verifier-run-invalid` | frozen `exit 1` outside §7.2's two qualifying conditions | `ERROR` |
+| `verifier-not-invocable` | the frozen verifier process could not be spawned or executed **at all** | `ERROR` |
+| `verifier-run-invalid` | the frozen verifier ran but did not produce a process/result shape the frozen contract permits — see the enumeration below | `ERROR` |
 | `internal-error` | an unexpected evaluator fault after bundle identity was established | `ERROR` |
 | `authenticated-withheld` | §7.1 — an artifact expected to reach Authenticated was withheld | **`MEASUREMENT_INVALID`** |
+
+**`manifest-invalid` covers the whole bundle-layout surface (Erratum 2).** Both isolated
+remediation contexts independently reached this reading; it is now normative rather than inferred.
+The reason covers **all** of:
+
+- a **forbidden symlink** anywhere under the bundle;
+- a **regular file on disk that `files[]` does not list**;
+- a `files[]` entry whose target is **not a permitted file kind**;
+- a **FIFO, socket, device or any other non-regular, non-directory object** under the bundle;
+- a manifest with the **wrong name or location** (it is `manifest.json` at the bundle root);
+- manifest **closure, sort, `role`, `path` or digest-encoding** violations.
+
+**Directories are containers only.** A directory is normal under a bundle and is never itself a
+`files[]` entry. No new reason code is added for any of the above.
 
 **`authenticated-withheld` is the only reason that maps to `MEASUREMENT_INVALID`.** Everything else
 is `ERROR`. The distinction is real: a withheld tier means the measurement was attempted and could
 not conclude, while every other row means the run never got far enough to attempt it.
+
+**`verifier-run-invalid` covers every abnormal frozen run (Erratum 2).** The two remediation
+contexts diverged here — one reached for `internal-error`, the other for `verifier-run-invalid` —
+so the reading is pinned rather than left to the implementer. It means:
+
+> the frozen verifier process **started successfully**, but the invocation did not produce one of
+> the process/result shapes the frozen contract permits.
+
+Specifically:
+
+- `exit 1` that is **not** a qualifying stage-0/stage-1 case under §7.2;
+- `exit 2`, or any other exit the frozen contract does not permit for that invocation;
+- `exit 0` with **empty** stdout;
+- `exit 0` whose stdout is **not parseable as strict JSON**;
+- `exit 0` carrying a **malformed, multiple, or wrong-shape** result instead of the single expected
+  verdict object.
+
+**`verifier-not-invocable` is now narrower**: it is only for a process that could not be spawned or
+executed at all.
+
+**`internal-error` is now narrower**: it is only for the evaluator's **own** unexpected internal
+fault. An external subprocess protocol failure is never `internal-error`. Keeping these apart is
+the point — one says the thing we invoked misbehaved, the other says we did.
 
 `internal-error` exists so that an unexpected fault after identity is established still produces a
 result object naming the scenario, rather than a crash the harness has to infer. It is not a
@@ -542,7 +579,8 @@ verdict** — §6.4 is explicit that no result is emitted. The entry is therefor
 
 | Field | Type | Meaning |
 |---|---|---|
-| `artifact_ref` | object | `record_id`, and `chain_id` where the bundle carries one |
+| `artifact_path` | string, **required** | the artifact's manifest-relative path. This is the entry's identity |
+| `artifact_ref` | object **or `null`** | the structured reference when a usable `record_id` exists; **`null`** when it does not |
 | `request_envelope_digest` | string | `sha256:…` over the §5.1 canonical envelope bytes |
 | `verifier_exit_code` | integer | the frozen verifier's exit code, verbatim |
 | `verifier_result` | object **or `null`** | the verdict verbatim when one was emitted; **`null` whenever `verifier_exit_code` is 1**, because no verdict exists |
@@ -570,6 +608,30 @@ is therefore pinned:
 The rule exists so no implementer ever invents an exit code or a digest to satisfy a required
 field. An absent measurement is represented by absence.
 
+#### Ruling `AD15-IR-5` — the manifest path is the total result identity
+
+An earlier draft made `artifact_ref` required and ordered `artifacts[]` by `record_id`. That binds
+**result identity** to a **semantic wire field**, and the two are not the same thing. An artifact
+that must be rejected at stage 0 may have no usable `record_id` at all — so an evaluator would have
+had to **fabricate a semantic identity** simply to name the thing it rejected. Fabricating identity
+to report a rejection is exactly backwards.
+
+- `artifact_path` is **required** and is the entry's identity. It always exists: the manifest lists
+  every file.
+- `artifact_ref` is the structured reference when a usable `record_id` exists, and **`null`** when
+  it does not.
+- **An evaluator MUST NOT synthesize a `record_id`.** Ever, for any reason.
+- `artifacts[]` ordering is by **UTF-8 byte order of `artifact_path`**.
+- The aggregate cross-lane envelope comparison key is **`(scenario_id, artifact_path)`**, not
+  `(scenario_id, artifact_ref)`.
+
+**R-A is unchanged.** Actual AIREP cross-reference resolution still uses `record_id`, additionally
+`chain_id` where the reference carries one. The manifest path is **harness and result identity
+only — it is not wire semantics** and never participates in reference resolution.
+
+The consequence that matters: a missing `record_id` now reaches the frozen stage-0 evaluation it
+belongs to, instead of being converted into the evaluator's own preflight failure.
+
 **`stderr` is never a source of semantic classification.** It is hashed for audit and may be
 retained alongside the run, but an evaluator MUST NOT parse it, match on it, or let its content
 influence any predicate, Level-1 verdict or `measurement_status`. Classification comes from the
@@ -579,8 +641,9 @@ measurement depend on a surface neither the frozen contract nor this one pins.
 ### 8.4 Determinism
 
 Identical bundle plus identical operator inputs gives byte-identical output. Ordering of any
-collection is by UTF-8 byte order of the relevant identifier — `record_id` for `artifacts[]` —
-matching the corpus contract's existing ordering rule.
+collection is by UTF-8 byte order of the relevant identifier — **`artifact_path`** for
+`artifacts[]` (`AD15-IR-5`; it was `record_id`, which an artifact rejected at stage 0 may not
+have) — matching the corpus contract's existing ordering rule.
 
 ### 8.5 Process exit and stdout (normative)
 
@@ -718,24 +781,59 @@ Status also moved from `DRAFT — awaiting maintainer acceptance` to
 `ACCEPTED FOR POST-ERRATUM REMEDIATION`, so the document state matches the gate state. That is
 bookkeeping, not a semantic change.
 
+### Erratum 2 — record (2026-08-29)
+
+Raised by **two isolated post-erratum remediation contexts**, working from their own pre-erratum
+lineages plus the canonical contract, neither able to see the other. Both are frozen as
+**pre-Erratum-2 remediation evidence** — they are *not* official evaluator identities:
+
+| Lane | Pre-erratum lineage | Remediation candidate |
+|---|---|---|
+| Python | `8c5f444d572765a0d4a6ff966783b67ba4620d97` | `57c4a113883098ac7d5b033e16aed7f74f2e876f` |
+| Node | `da22e066a6aceaa72b9bda2fb8813205120fe0ff` | `801a1dc1a056ab65e20d735c83cf04a28c1fb45d` |
+
+**What the round established, stated exactly:**
+
+> Two isolated remediation contexts independently surfaced the same two residual specification
+> gaps; one gap produced divergent implementation choices before measurement.
+
+That is **not** "implementation independence proven" and **not** parity evidence. Official parity
+does not exist until the corpus runs.
+
+| # | Gap | Both lanes? | Outcome |
+|---|---|---|---|
+| 1 | bundle-layout failures had no registry row | yes — **same** resolution | `manifest-invalid`, now enumerated normatively |
+| 2 | abnormal frozen runs had no registry row | yes — **divergent** resolutions (`internal-error` vs `verifier-run-invalid`) | `verifier-run-invalid`, pinned |
+| 3 | `artifacts[]` required a semantic `record_id` an unidentifiable artifact may lack | Node only | `AD15-IR-5` |
+
+Gap 2 is the one this round existed to catch. Both lanes were internally consistent and would have
+passed their own tests; they would have disagreed on `nonmeasurement.reason` for a frozen `exit 2`
+**without changing any Level-1 verdict**, so all five aggregate duties would have passed while the
+lanes disagreed underneath.
+
+**`NODE-IMP-1`** remains an implementation defect, not a contract one. The Node context additionally
+found a second route to the same failure — an async `process.stdout.write` followed by
+`process.exit()` can truncate on a pipe. Both must stay closed in the official Node evaluator, with
+the pipe-backed stdout regression retained alongside the literal-space path regression.
+
 ## 13. Sequencing
 
-The earlier three-step list described the *pre-erratum* authoring round, which is now complete.
-Read against today's state it is actively misleading: `8c5f444d572765a0d4a6ff966783b67ba4620d97`
-and `da22e066a6aceaa72b9bda2fb8813205120fe0ff` **are** authored and frozen, so a reader could take
-step 3 as already reached. Those two branches are provenance, not the official evaluators (§12).
-The remaining sequence is:
+Steps 1–3 of the previous list are complete: the contract was canonicalized, and both lanes were
+remediated in fresh isolated contexts from their own pre-erratum lineages. Those remediation heads
+are frozen as evidence, not as official evaluators. The remaining sequence is:
 
-1. **This contract is canonicalized** — a maintainer pins the branch head and the contract file
-   digest as the canonical basis.
-2. **Python remediation** is authored in a fresh context, seeing only
-   `8c5f444d572765a0d4a6ff966783b67ba4620d97` and the canonical contract.
-3. **Node remediation** is authored in a fresh context, seeing only
-   `da22e066a6aceaa72b9bda2fb8813205120fe0ff` and the canonical contract.
-4. **Peer source and peer output remain unavailable throughout remediation.** The isolation that
-   made the pre-erratum round informative is not spent; it carries into this one.
-5. **Both remediated sources are independently source-reviewed and frozen**, with recorded digests.
-6. **Only then is corpus construction opened.**
+1. **Erratum 2 is source-reviewed** and a new canonical head plus contract digest is pinned.
+2. **Python micro-remediation** in a fresh context: its own remediation candidate
+   `57c4a113…` plus the new canonical contract, nothing else.
+3. **Node micro-remediation** in a fresh context: its own remediation candidate
+   `801a1dc1…` plus the new canonical contract, nothing else.
+4. **Peer material remains invisible** throughout, as in every prior round.
+5. **The new canonical contract branch is merged into each official evaluator branch** once code
+   remediation is done — so a reviewer opening a final frozen branch finds the exact official
+   contract beside the evaluator, not a superseded one.
+6. Test and source review.
+7. **Official Python and Node evaluator identities are frozen.**
+8. **Only then is corpus construction opened.**
 
 **Corpus bytes remain on HOLD until step 6**, matching the status line at the head of this
 document.
