@@ -4,9 +4,11 @@ The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored
 in isolation from the Python lane: no shared reconciliation code, no shared helper, no port, and
 no sight of the peer lane's source or output.
 
-Contract basis for this remediation: commit `930b9457db00c1d66e2d355f59a6cf5811d52d3a`,
-`INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` sha256
-`ea705ec2b8775a37aa4bdbf387a5eb5295c0e8bd8a000ad443104c3a24a6c63a`.
+Contract basis: the canonical post-Erratum-2 head
+`b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278`, `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` sha256
+`42e350d09b28cb79a7e59f91fe55af96968925bf8615c8818f5c45d42c2b2fa2`, asserted before any source
+was edited. Pre-Erratum-2 remediation lineage: `801a1dc1a056ab65e20d735c83cf04a28c1fb45d`, frozen
+as evidence and not rewritten.
 
 ```
 node interop_eval.mjs --bundle DIR
@@ -33,31 +35,11 @@ Diagnostics go to stderr, carry no semantics, and are never parsed — by this p
 harness. Frozen-verifier stderr is hashed for audit only.
 
 **`exit 0` with empty stdout is unacceptable under every condition** (`NODE-IMP-1`). Three
-mechanisms hold that line: direct-invocation detection that cannot be defeated by percent-encoding
-(§ below), a synchronous complete write of the result object rather than an async
-`process.stdout.write` that a subsequent `process.exit()` could truncate, and a process-exit
-invariant that converts a silent zero into exit `3` with a diagnostic.
-
-## `NODE-IMP-1` — the recorded defect and what closes it
-
-`new URL(import.meta.url).pathname` is percent-encoded. On a repository path containing a literal
-space (or `#`, or any non-ASCII character) the direct-invocation guard compared an encoded string
-against a decoded one, evaluated false, and the program exited `0` with empty stdout — the one
-output the §8.5 table cannot defend against, since exit `0` asserts a measured result while stdout
-carries none.
-
-`isDirectInvocation()` now tests three ways, and a failure of any one is not a failure of the
-guard:
-
-1. `pathToFileURL(process.argv[1]).href === import.meta.url` — both sides are produced by Node's
-   own URL machinery, so their escaping is symmetric by construction. This is the comparison the
-   original defect had backwards.
-2. `path.resolve(argv[1])` against `fileURLToPath(import.meta.url)` — decoded on both sides.
-3. `fs.realpathSync` of both — catches a symlinked or otherwise differently spelled entry point.
-
-`selftest.mjs` §12 runs the evaluator from directories named `dir with space`,
-`dir#with#hash`, `dizin ünlü` and `dir with  two  spaces`, asserting the full exit/stdout table in
-each and asserting directly that no invocation exits `0` with empty stdout.
+mechanisms hold that line: direct-invocation detection that cannot be defeated by percent-encoding,
+a synchronous complete write of the result object rather than an async `process.stdout.write` that
+a subsequent `process.exit()` could truncate, and a process-exit invariant that converts a silent
+zero into exit `3` with a diagnostic. Both defect routes and their regressions are set out under
+[`NODE-IMP-1` — both routes](#node-imp-1--both-routes-and-how-each-is-regressed) below.
 
 ## Frozen verifier
 
@@ -86,6 +68,27 @@ preflight is a pre-invocation `ERROR` carrying `artifacts: []` — an empty arra
 with placeholder fields. Once invocation begins, `artifacts[]` carries an entry for each
 invocation that produced an exit code, and no more.
 
+### Two orderings, deliberately not the same function (`AD15-IR-5`)
+
+| Layer | Ordered by | Pinned in |
+|---|---|---|
+| `artifacts[]` result entries | UTF-8 byte order of **`artifact_path`** | §8.3.1, §8.4 |
+| `related_artifacts` inside a request envelope | UTF-8 byte order of **`record_id`** | §5.1, **unchanged** |
+
+`AD15-IR-5` moved *result identity* to the manifest path; it did **not** touch §5.1. Collapsing
+the two into one comparator would change the request-envelope bytes and break the cross-lane
+envelope equality the aggregate harness checks (`AD15-IR-4`), so `compareByPath` and
+`compareByRecordId` are separate functions and the self-test asserts them against a four-artifact
+fixture whose path order and `record_id` order **disagree**. R-A is unchanged: reference
+resolution still matches on `record_id`, additionally `chain_id` where carried. The manifest path
+is harness and result identity only — never wire semantics.
+
+`artifact_path` is required and always exists, because the manifest lists every file.
+`artifact_ref` is an object when a usable `record_id` exists and **`null`** when it does not.
+**No `record_id` is ever synthesized**, for any reason: an artifact that must be rejected at
+stage 0 now reaches that stage-0 evaluation instead of being converted into this evaluator's own
+preflight failure.
+
 ## Running
 
 ```
@@ -104,8 +107,15 @@ signed, bound artifacts — a clean `ACCEPT`, the three reconciliation-negative 
 covered is the CLI/exit table, the pinned manifest encoding, bundle and operator-input shape, the
 numeric preflight including its mandatory JSON Pointer, the closed `nonmeasurement` registry and
 its status pairing, envelope construction and ordering, the §7.2 causal guard in both directions,
-reference resolution, all three predicates, the Level-1 mapping order, and the `NODE-IMP-1` path
-regression.
+reference resolution, all three predicates, the Level-1 mapping order, the Erratum 2 rulings
+(§14 bundle layout, §15 both frozen-run bands, and `AD15-IR-5` identity and ordering inside §13),
+and **both** `NODE-IMP-1` routes (§12 path, §16 pipe truncation).
+
+Two of those sections carry their own controls, because a regression that cannot fail proves
+nothing: §16 first measures that the buggy write pattern really does truncate on this platform,
+and §13's four-artifact fixture is built so `artifact_path` order and `record_id` order
+**disagree** — otherwise no check there could tell `AD15-IR-5` from the §5.1 rule it must leave
+alone.
 
 One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
 checks recompute their expected value with this module's own `jcs()` and `byteCompare()`, so they
@@ -149,10 +159,78 @@ The optional operator-input flags are **assertions**, not substitutions: each mu
 bundle's own file already carrying that role, and a disagreement is a usage error. There is no
 route by which foreign operator bytes reach the frozen verifier.
 
+## Erratum 2 — what changed in this lane
+
+Three rulings landed on this evaluator. Each replaced a place where this lane had recorded an
+open ambiguity rather than inventing a resolution, which is why the changes are small.
+
+| Ruling | Was (recorded as ambiguity) | Now |
+|---|---|---|
+| **E2-1** bundle layout | `manifest-invalid` chosen by this lane, flagged as "a dedicated reason would be clearer" | normative: `manifest-invalid` covers the whole bundle-layout surface, enumerated |
+| **E2-2** abnormal frozen runs | `verifier-run-invalid` chosen by this lane, flagged as "no other registry value fits" | normative: `verifier-run-invalid`; `verifier-not-invocable` narrowed to *could not be spawned at all*; `internal-error` narrowed to *this evaluator's own fault* |
+| **E2-3** / `AD15-IR-5` | `artifact_ref` assumed a `record_id`; this lane omitted the member and sorted under an empty key | `artifact_path` required and is the identity; `artifact_ref` is `object \| null`; ordering by `artifact_path` |
+
+**One behavioural change came out of E2-1**, not merely a wording change: a `files[]` entry whose
+target is present on disk but is **the wrong kind** — a directory above all — was previously
+reported as `bundle-file-missing`. Nothing is missing in that case, so it is now
+`manifest-invalid`. A `files[]` entry with nothing on disk at all remains `bundle-file-missing`;
+the enumeration did not swallow that row, and the self-test asserts both directions.
+
+**E2-2 changed the process band.** `spawnSync` reports an unspawnable binary *and* a process that
+started and was then killed through the same `error` member, so a classifier keyed on `error`
+puts both in one band — the collapse E2-2 forbids. The discriminator is `pid`, and the shapes were
+**measured on this runtime rather than assumed**: a spawn that never happened returns `pid 0` with
+`ENOENT`, while a process killed for exceeding `maxBuffer` (`ENOBUFS`), one killed by a timeout
+(`ETIMEDOUT`) and one killed by a signal all carry a real pid. Those three started, so they moved
+from `verifier-not-invocable` to `verifier-run-invalid`.
+
+Both bands are now pure exported functions (`classifyProcessShape`, `classifyVerdictStdout`).
+That is not tidiness: reaching a misbehaving stub verifier *through* the evaluator is impossible
+by design, because the frozen digest assertion runs first and rejects any stub, so the bands would
+otherwise be untestable.
+
+## `NODE-IMP-1` — both routes, and how each is regressed
+
+The erratum records two independent routes to the same forbidden output, **exit `0` with empty or
+incomplete stdout**. Both are closed, and each has a regression that is demonstrably able to catch
+it.
+
+1. **Literal-space path** (§12). `new URL(import.meta.url).pathname` is percent-encoded, so on a
+   repository path containing a literal space — or `#`, or any non-ASCII character — the
+   direct-invocation guard compared an encoded string against a decoded one, evaluated false, and
+   the program did nothing at all.
+
+   `isDirectInvocation()` now tests three ways, and a failure of any one is not a failure of the
+   guard:
+
+   1. `pathToFileURL(process.argv[1]).href === import.meta.url` — both sides are produced by
+      Node's own URL machinery, so their escaping is symmetric by construction. This is the
+      comparison the original defect had backwards.
+   2. `path.resolve(argv[1])` against `fileURLToPath(import.meta.url)` — decoded on both sides.
+   3. `fs.realpathSync` of both — catches a symlinked or otherwise differently spelled entry
+      point.
+
+   §12 runs the evaluator from directories named `dir with space`, `dir#with#hash`, `dizin ünlü`
+   and `dir with  two  spaces`, asserting the full exit/stdout table in each and asserting
+   directly that no invocation exits `0` with empty stdout.
+2. **Pipe-backed truncation** (§16). `process.stdout.write` is asynchronous on a pipe, so a
+   following `process.exit()` truncates or drops the payload. Closed by `writeStdoutSync` looping
+   on `fs.writeSync`, and by the entry point setting `process.exitCode` rather than calling
+   `process.exit()`.
+
+§16 opens with a **control**: it first measures that the *buggy* pattern really does truncate on
+the host platform. On this machine 2,000,000 bytes arrive as 219,264 with exit `0`. Without that
+control a green truncation regression would prove nothing, so if the platform ever stops
+exhibiting the defect the section reports itself as unable to discriminate instead of passing
+quietly.
+
+**`exit 0` with empty stdout remains unacceptable under every condition**, and the process-exit
+invariant converts a silent zero into exit `3` with a diagnostic.
+
 ## Recorded ambiguities — not resolved here
 
-The erratum closed the ten ambiguities the pre-erratum lineage carried. These are what remains,
-recorded rather than invented. Each is marked at the point of use in the source.
+Erratum 2 closed three of the eight this lane carried. These six remain, recorded rather than
+invented, and each is marked at the point of use in the source.
 
 1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
    strings but not what to emit when the assertion has not yet run, or when a file could not be
@@ -160,15 +238,21 @@ recorded rather than invented. Each is marked at the point of use in the source.
    **observed** digest (not the pinned one) when it has, and `null` for an individual member whose
    file was unreadable. A `null` records "not computed"; emitting the pinned constant would assert
    something that was never measured.
-2. **No registry reason for a bundle-layout violation.** §8.2.2's registry has no value for a
-   symlink under the bundle, a regular file on disk absent from `files[]`, or a non-regular file
-   (fifo, socket, device). All three are §5 bundle/manifest rules, so they are raised as
-   `manifest-invalid` with the cause named in `detail`. A dedicated reason would be clearer.
-3. **An invocation attempted but never spawned.** §8.3.1 says `artifacts[]` carries an entry for
+2. **An invocation attempted but never spawned.** §8.3.1 says `artifacts[]` carries an entry for
    each invocation attempted, but every field except `artifact_ref` is a product of an invocation.
    A spawn that produced no exit code has no representable entry, so it is omitted and named in
    `nonmeasurement.detail` — following that section's own rule that no implementer invents an exit
-   code, and its principle that absence is represented by absence.
+   code, and its principle that absence is represented by absence. E2-2 narrowed the reason for
+   this case to `verifier-not-invocable` but did not pin the `artifacts[]` shape.
+3. **`related_artifacts` ordering when an artifact carries no usable `record_id`.** This is the
+   residue of the old ambiguity 6 after `AD15-IR-5`. That ruling moved *result* identity and
+   ordering to `artifact_path`, but §5.1 still orders the **envelope**'s `related_artifacts` by
+   `record_id`, and it does not say what to do when one is absent. This lane sorts such an
+   artifact under an empty key with `artifact_path` as a deterministic tiebreak. The choice is
+   **not** cross-lane safe on its own — a peer lane could tiebreak differently and produce
+   different envelope bytes — but it cannot arise in an official W1 bundle, because a four-artifact
+   `IOP-R-*` fixture is built to be individually sound. Recorded rather than resolved, because
+   resolving it would mean amending §5.1.
 4. **An unexpected fault before identity is established.** `internal-error` is defined as a fault
    *after* identity. Before it there is no scenario to name, so the exit-`1` band applies, per
    §8.5's statement that the dividing line is whether identity was established and nothing else.
@@ -177,19 +261,7 @@ recorded rather than invented. Each is marked at the point of use in the source.
    to reject them. `JSON.parse` keeps the last occurrence, as most JSON libraries do, so the
    closure check sees one member. This is left as the library default deliberately: tightening it
    unilaterally would be a rule the peer lane has no reason to share.
-6. **An artifact with no usable `record_id`.** Ordering (§8.4) and `artifact_ref` (§8.3) both
-   assume one. Rather than refusing to evaluate such a bundle, the member is omitted from
-   `artifact_ref` and the artifact sorts under an empty key with `path` as a deterministic
-   tiebreak. Refusing would score a genuine stage-0 detection as this evaluator's own fault, which
-   is the inversion §7.2 exists to prevent. In an official bundle the tiebreak never fires.
-7. **A frozen exit code that is neither `0` nor `1`, and a frozen `exit 0` carrying no usable
-   verdict.** §8.2.2's `verifier-run-invalid` row names only "frozen `exit 1` outside §7.2's two
-   qualifying conditions", and §7.2's table enumerates only causes of `exit 1`. A frozen `exit 2`
-   (its CLI/config-error band), any other non-zero code, and an `exit 0` whose stdout is not a
-   shape-valid verdict object all leave the run invalid with no verdict, so they are raised as
-   `verifier-run-invalid` with the cause in `detail`. No other registry value fits, and inventing
-   one would need an erratum.
-8. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
+6. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
    contract pins `--help` to exit `0` — which §8.5 here forbids, since exit `0` owes a result
    object. Treated as a usage error (exit `2`, usage text on stderr). The two lanes have no shared
    basis to agree on this until it is pinned.

@@ -18,7 +18,14 @@ import {
   jcs, byteCompare, decodeDecimal, checkNumberToken, scanJsonNumbers,
   checkBundlePath, resolveRef, predicateRA, predicateRB, predicateRC, mapLevel1,
   verdictShapeViolation, isDirectInvocation, parseArgs,
+  classifyProcessShape, classifyVerdictStdout, writeStdoutSync,
 } from "./interop_eval.mjs";
+
+// Section 8.3 entry shape, with artifact_path REQUIRED (AD15-IR-5).
+const ARTIFACT_MEMBERS = [
+  "artifact_path", "artifact_ref", "request_envelope_digest",
+  "verifier_exit_code", "verifier_result", "verifier_stderr_digest",
+];
 
 // NODE-IMP-1: fileURLToPath, never new URL(import.meta.url).pathname. The old
 // spelling percent-encoded this very path, so the self-test could not find the
@@ -775,6 +782,34 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
     }
   }
 
+  // --- AD15-IR-5: an artifact with NO usable record_id --------------------
+  // The consequence the ruling exists for: a missing record_id must reach the
+  // frozen stage-0 evaluation it belongs to, instead of being converted into
+  // this evaluator's own preflight failure -- and nothing may be synthesized to
+  // fill the identity field.
+  {
+    const noId = '{"airep_version":"0.2","artifact_type":"decision","chain_id":"synth.chain"}';
+    const dir = mkBundle("live-norecordid", {
+      scenarioId: "IOP-P-DEC",
+      artifacts: { "artifacts/a.json": noId },
+    });
+    const r = run(["--bundle", dir]);
+    eq("an artifact with no record_id is still evaluated, not refused", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("no record_id", r.out);
+      eq("it reaches the frozen verifier rather than a preflight failure",
+        v.nonmeasurement.reason, "verifier-run-invalid");
+      eq("exactly one invocation was attempted", v.artifacts.length, 1);
+      eq("artifact_path is present and is the entry's identity",
+        v.artifacts[0].artifact_path, "artifacts/a.json");
+      eq("artifact_ref is null, not a fabricated reference", v.artifacts[0].artifact_ref, null);
+      eq("the entry still carries the full pinned member set",
+        Object.keys(v.artifacts[0]).sort(), [...ARTIFACT_MEMBERS].sort());
+      check("no record_id was synthesized anywhere in the output",
+        !/record_id/.test(r.out), r.out.slice(0, 400));
+    }
+  }
+
   // --- four artifacts: related_artifacts in record_id UTF-8 byte order -----
   {
     const artifacts = {
@@ -788,21 +823,299 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
     eq("a four-artifact bundle of invalid artifacts is ERROR", r.code, 3);
     if (r.code === 3) {
       const v = parseOne("live four", r.out);
-      eq("artifacts[] is ordered by record_id UTF-8 byte order",
+
+      // AD15-IR-5. This fixture is built so that artifact_path order and
+      // record_id order DISAGREE -- if they agreed, no check here could tell
+      // the result-identity ruling from the envelope rule it must not disturb.
+      eq("artifacts[] is ordered by artifact_path UTF-8 byte order",
+        v.artifacts.map((a) => a.artifact_path),
+        ["artifacts/c.json", "artifacts/d.json", "artifacts/e.json", "artifacts/x.json"]);
+      eq("that ordering is deliberately NOT record_id order",
         v.artifacts.map((a) => a.artifact_ref.record_id),
-        ["synth-1-ctl", "synth-2-eff", "synth-3-exe", "synth-4-dec"]);
-      const values = Object.values(artifacts).map((t) => JSON.parse(t));
+        ["synth-1-ctl", "synth-4-dec", "synth-2-eff", "synth-3-exe"]);
+      check("the two orders really do disagree, so the check discriminates",
+        show(v.artifacts.map((a) => a.artifact_ref.record_id))
+          !== show([...v.artifacts.map((a) => a.artifact_ref.record_id)].sort(byteCompare)));
       for (const entry of v.artifacts) {
-        const primary = values.find((x) => x.record_id === entry.artifact_ref.record_id);
-        const related = values.filter((x) => x !== primary)
+        eq(`${entry.artifact_path}: entry carries exactly the pinned member set`,
+          Object.keys(entry).sort(), [...ARTIFACT_MEMBERS].sort());
+      }
+
+      // Section 5.1 is UNCHANGED by AD15-IR-5: related_artifacts stay in
+      // record_id byte order, so the envelope bytes -- and therefore the
+      // cross-lane equality of AD15-IR-4 -- are untouched by the ruling.
+      const byPath = Object.fromEntries(
+        Object.entries(artifacts).map(([k, t]) => [k, JSON.parse(t)]));
+      for (const entry of v.artifacts) {
+        const primary = byPath[entry.artifact_path];
+        check(`${entry.artifact_path} is resolvable by its manifest path alone`,
+          primary !== undefined);
+        const related = Object.values(byPath).filter((x) => x !== primary)
           .sort((a, b) => byteCompare(a.record_id, b.record_id));
         const want = "sha256:" + sha(Buffer.from(
           jcs({ artifact: primary, related_artifacts: related }), "utf8"));
-        eq(`envelope digest for ${entry.artifact_ref.record_id}`,
+        eq(`envelope digest for ${entry.artifact_path} (related in record_id order)`,
           entry.request_envelope_digest, want);
       }
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// 14. Erratum 2 / E2-1 -- the bundle-layout surface maps to manifest-invalid
+// ---------------------------------------------------------------------------
+// The enumeration is now NORMATIVE, so each member is asserted against the
+// reason code rather than against this lane's earlier reading of it. The
+// pre-erratum source recorded this as an open ambiguity; it is a rule now.
+
+// A directory under the bundle is a container: descended, never listed, never a
+// finding on its own. The negative control for everything below.
+{
+  const dir = mkBundle("e21-dir-ok", {
+    artifacts: {
+      "artifacts/nested/deep/a.json":
+        '{"record_id":"r","chain_id":"c","artifact_type":"decision"}',
+    },
+  });
+  const r = run(["--bundle", dir]);
+  check("a nested directory is a container, not a layout violation",
+    !(r.code === 3 && /manifest-invalid/.test(r.out)), r.out.slice(0, 300));
+}
+
+// A files[] entry whose target is a DIRECTORY: present, and the wrong kind.
+// manifest-invalid -- specifically NOT bundle-file-missing, because nothing is
+// missing. Directories are never files[] entries.
+{
+  const v = expectNonMeasured("a files[] entry naming a directory",
+    mkBundle("e21-dir-listed", {
+      mutate: (m, d) => {
+        fs.mkdirSync(path.join(d, "zz-adir"), { recursive: true });
+        m.files.push({ path: "zz-adir", role: "artifact", sha256: "0".repeat(64) });
+        m.files.sort((a, b) => byteCompare(a.path, b.path));
+      },
+    }), "manifest-invalid");
+  if (v) {
+    check("the wrong file kind is named in the detail",
+      /director/i.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+  }
+}
+
+// A FIFO under the bundle: neither regular nor directory.
+{
+  const dir = mkBundle("e21-fifo");
+  const mk = spawnSync("mkfifo", [path.join(dir, "artifacts", "pipe")], { encoding: "utf8" });
+  if (mk.status === 0) {
+    const v = expectNonMeasured("a FIFO under the bundle", dir, "manifest-invalid");
+    if (v) {
+      check("the FIFO is named as a non-regular object",
+        /FIFO|non-regular/i.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+    }
+  } else {
+    console.log("SKIPPED: FIFO check -- mkfifo is unavailable on this system");
+  }
+}
+
+// A regular file on disk that files[] does not list.
+{
+  const v = expectNonMeasured("an unlisted regular file, per the E2-1 enumeration",
+    mkBundle("e21-unlisted", {
+      mutate: (_m, d) => { fs.writeFileSync(path.join(d, "artifacts", "zz-stray.json"), "{}"); },
+    }), "manifest-invalid");
+  if (v) {
+    check("the unlisted file is named", /zz-stray/.test(v.nonmeasurement.detail),
+      v.nonmeasurement.detail);
+  }
+}
+
+// Only the ROOT manifest.json is the manifest. A nested file of that name is an
+// ordinary bundle file and must be listed like any other -- this is where the
+// erratum's "a manifest with the wrong name or location" lands.
+{
+  const v = expectNonMeasured("a nested manifest.json left unlisted",
+    mkBundle("e21-nested-manifest", {
+      mutate: (_m, d) => {
+        fs.mkdirSync(path.join(d, "sub"), { recursive: true });
+        fs.writeFileSync(path.join(d, "sub", "manifest.json"), "{}");
+      },
+    }), "manifest-invalid");
+  if (v) {
+    check("a nested manifest.json is treated as an ordinary unlisted file",
+      /sub\/manifest\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+  }
+}
+
+// bundle-file-missing SURVIVES E2-1 and is not collapsed into manifest-invalid:
+// nothing on disk at all remains its own reason. Without this the enumeration
+// would have swallowed a distinct registry row.
+expectNonMeasured("nothing on disk at all is still bundle-file-missing",
+  mkBundle("e21-truly-missing", {
+    mutate: (m) => {
+      m.files.push({ path: "zz-ghost.json", role: "artifact", sha256: "0".repeat(64) });
+      m.files.sort((a, b) => byteCompare(a.path, b.path));
+    },
+  }), "bundle-file-missing");
+
+// ---------------------------------------------------------------------------
+// 15. Erratum 2 / E2-2 -- abnormal frozen runs map to verifier-run-invalid
+// ---------------------------------------------------------------------------
+// verifier-not-invocable is now ONLY a process that could not be spawned or
+// executed at all. internal-error is now ONLY this evaluator's own fault. Both
+// bands are pure functions, which is what makes them testable at all: reaching
+// a misbehaving stub verifier THROUGH the evaluator is impossible by design,
+// because the frozen digest assertion runs first and rejects any stub.
+//
+// The process shapes below are MEASURED from this runtime, not invented.
+{
+  const measured = [
+    ["a binary that does not exist",
+      spawnSync("/nonexistent/binary/xyz", []), "verifier-not-invocable"],
+    ["a process killed by a signal",
+      spawnSync(process.execPath, ["-e", "process.kill(process.pid,'SIGKILL')"]),
+      "verifier-run-invalid"],
+    ["a process whose output exceeded maxBuffer",
+      spawnSync(process.execPath, ["-e", "process.stdout.write('x'.repeat(100000))"],
+        { maxBuffer: 10 }), "verifier-run-invalid"],
+    ["a process that timed out",
+      spawnSync(process.execPath, ["-e", "const t=Date.now();while(Date.now()-t<3000);"],
+        { timeout: 200 }), "verifier-run-invalid"],
+  ];
+  for (const [label, proc, want] of measured) {
+    const got = classifyProcessShape(proc);
+    eq(`${label} -> ${want}`, got === null ? null : got.reason, want);
+  }
+  // A normal exit -- ANY exit code -- is not a process-band failure. The code
+  // itself is judged later, by the section 7.2 causal guard.
+  for (const code of [0, 1, 2, 7]) {
+    eq(`a normal exit ${code} is not a process-band failure`,
+      classifyProcessShape(spawnSync(process.execPath, ["-e", `process.exit(${code})`])), null);
+  }
+}
+
+// The discriminator is "did it start", and nothing else. spawnSync reports an
+// unspawnable binary and a started-then-killed process through the SAME `error`
+// member, so a classifier keyed on `error` would put both in one band -- which
+// is precisely the collapse E2-2 forbids.
+{
+  eq("started-then-errored is run-invalid, not not-invocable",
+    classifyProcessShape({ pid: 4242, error: new Error("ENOBUFS"), status: null }).reason,
+    "verifier-run-invalid");
+  eq("never-started is not-invocable",
+    classifyProcessShape({ pid: 0, error: new Error("ENOENT"), status: null }).reason,
+    "verifier-not-invocable");
+  const bands = [
+    classifyProcessShape({ pid: 0, error: new Error("x"), status: null }).reason,
+    classifyProcessShape({ pid: 1, error: new Error("x"), status: null }).reason,
+    classifyProcessShape({ pid: 1, status: null, signal: "SIGTERM" }).reason,
+  ];
+  check("no process-band failure is ever internal-error", !bands.includes("internal-error"),
+    JSON.stringify(bands));
+}
+
+// Result band, for a frozen exit 0.
+{
+  const GOOD = {
+    class: "AIREP-Core", observer_assessment: "not_applicable",
+    authenticated_failures: [], authenticated_withheld: [], authenticated_caveats: [],
+    witnessed_failures: [], witnessed_withheld: [],
+  };
+  eq("exit 0 with empty stdout is run-invalid",
+    classifyVerdictStdout("").reason, "verifier-run-invalid");
+  eq("exit 0 with whitespace-only stdout is run-invalid",
+    classifyVerdictStdout("  \n\t ").reason, "verifier-run-invalid");
+  check("the empty-stdout detail names the condition plainly",
+    /empty stdout/.test(classifyVerdictStdout("").detail),
+    classifyVerdictStdout("").detail);
+  eq("exit 0 with non-JSON stdout is run-invalid",
+    classifyVerdictStdout("not json at all").reason, "verifier-run-invalid");
+  eq("exit 0 with two concatenated results is run-invalid",
+    classifyVerdictStdout(JSON.stringify(GOOD) + JSON.stringify(GOOD)).reason,
+    "verifier-run-invalid");
+  eq("exit 0 with a JSON array is a wrong-shape result",
+    classifyVerdictStdout("[]").reason, "verifier-run-invalid");
+  eq("exit 0 with a JSON scalar is a wrong-shape result",
+    classifyVerdictStdout("42").reason, "verifier-run-invalid");
+  eq("exit 0 with null is a wrong-shape result",
+    classifyVerdictStdout("null").reason, "verifier-run-invalid");
+  eq("exit 0 with a malformed verdict object is run-invalid",
+    classifyVerdictStdout('{"class":"AIREP-Core"}').reason, "verifier-run-invalid");
+  eq("a well-shaped verdict passes the band",
+    classifyVerdictStdout(JSON.stringify(GOOD)).verdict.class, "AIREP-Core");
+  check("no result-band rejection is ever internal-error",
+    ["", "  ", "x", "[]", "42", "null", '{"class":"AIREP-Core"}']
+      .every((t) => classifyVerdictStdout(t).reason === "verifier-run-invalid"));
+}
+
+// ---------------------------------------------------------------------------
+// 16. NODE-IMP-1, second route -- pipe-backed stdout truncation
+// ---------------------------------------------------------------------------
+// The Node context found a second way to reach the same forbidden output as the
+// literal-space path defect: process.stdout.write is ASYNCHRONOUS on a pipe, so
+// a following process.exit() can truncate or drop the result entirely. Both
+// routes end at exit 0 with incomplete or empty stdout, and both must stay
+// closed. Two mechanisms hold this one: writeStdoutSync loops on fs.writeSync
+// until every byte is out, and the entry point sets process.exitCode instead of
+// calling process.exit().
+//
+// A regression for truncation is worthless unless the payload actually exceeds
+// the pipe buffer, so the platform's capability to EXHIBIT the defect is
+// measured first. Without this control a green result would mean nothing.
+
+const BIG_N = 2000000;
+{
+  const bug = spawnSync(process.execPath,
+    ["-e", `process.stdout.write("x".repeat(${BIG_N})); process.exit(0)`],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const truncates = bug.stdout.length < BIG_N;
+  check("CONTROL: the buggy async-write-then-exit pattern truncates on this platform",
+    truncates,
+    `received ${bug.stdout.length} of ${BIG_N} bytes -- if this ever passes cleanly, the `
+    + "regressions below prove nothing and must be re-designed");
+
+  if (!truncates) {
+    console.log("SKIPPED: pipe-truncation regressions -- this platform did not exhibit the "
+      + "defect even for the buggy pattern, so they cannot discriminate here");
+  } else {
+    // The mechanism, in isolation, driven with the EXACT defect pattern the
+    // erratum names: a write immediately followed by process.exit(). Because
+    // writeStdoutSync loops on fs.writeSync, every byte is already out before
+    // exit runs; an async write here would be truncated exactly as the control
+    // above just demonstrated.
+    const driver = path.join(tmp, "pipe_driver.mjs");
+    fs.writeFileSync(driver,
+      `import { writeStdoutSync } from ${JSON.stringify(EVAL)};\n`
+      + `writeStdoutSync("y".repeat(${BIG_N}));\n`
+      + "process.exit(0);\n");
+    const fixed = spawnSync(process.execPath, [driver],
+      { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+    eq("writeStdoutSync delivers every byte over a pipe", fixed.stdout.length, BIG_N);
+    eq("and exits 0 having actually written the payload", fixed.status, 0);
+    check("no byte of the payload is corrupted",
+      /^y+$/.test(fixed.stdout), `first divergence in ${fixed.stdout.length} bytes`);
+  }
+}
+
+// End to end, through the real emit path: a result object far larger than the
+// pipe buffer must arrive complete and parseable. The size is driven by a
+// synthetic manifest member name -- no corpus bytes and no artifact content.
+{
+  const hugeName = "z".repeat(400000);
+  const dir = mkBundle("pipe-bigresult", { mutate: (m) => { m[hugeName] = 1; } });
+  const r = run(["--bundle", dir]);
+  eq("a very large result object still exits 3", r.code, 3);
+  check("the large result object is not truncated on the pipe",
+    r.out.length > 400000, `stdout was ${r.out.length} bytes`);
+  let parsed = null;
+  try { parsed = JSON.parse(r.out); } catch { /* left null: asserted below */ }
+  check("the large result object parses as complete JSON", parsed !== null,
+    `stdout tail: ${JSON.stringify(r.out.slice(-120))}`);
+  if (parsed !== null) {
+    eq("its reason is still the pinned one", parsed.nonmeasurement.reason, "manifest-invalid");
+    check("the full detail survived the write",
+      parsed.nonmeasurement.detail.includes(hugeName),
+      `detail was ${parsed.nonmeasurement.detail.length} bytes`);
+  }
+  check("a large result never becomes exit 0 with empty stdout",
+    !(r.code === 0 && r.out === ""));
 }
 
 console.log(`${checks - failures}/${checks} checks passed`);

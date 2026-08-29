@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 // AIREP v0.2 reference interop evaluator -- Node lane.
 //
-// Implements INTEROP_REFERENCE_EVALUATOR_CONTRACT.md (AD15-IR-2), post-erratum
-// basis 930b9457db00c1d66e2d355f59a6cf5811d52d3a, sections 5-8.
+// Implements INTEROP_REFERENCE_EVALUATOR_CONTRACT.md (AD15-IR-2), canonical
+// post-Erratum-2 basis b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278, sections 5-8.
+// The contract's own sha256 is recorded in README.md and deliberately not here:
+// every 64-hex literal in this file is a frozen-verifier digest this lane
+// asserts, and the self-test requires that set to be exactly two (section
+// 8.2.1, peer-digest absence).
 //
 // Bundle-level AD-03 reconciliation only: every per-artifact schema / hash /
 // signature / class result is taken verbatim from the frozen Node class
@@ -28,7 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // 0. Constants
 // ---------------------------------------------------------------------------
 
-const EVALUATOR_VERSION = "interop_eval_node/0.2.0";
+const EVALUATOR_VERSION = "interop_eval_node/0.2.1";
 
 // The registered twelve (section 8.1). A manifest whose scenario_id is not one
 // of these carries "no usable scenario_id" and therefore establishes no bundle
@@ -99,6 +103,9 @@ class IdentityError extends Error {}
 // measurement_status each reason MUST carry, so the pairing is derived here
 // rather than chosen at each raise site.
 const REASON_STATUS = Object.freeze({
+  // Erratum 2: manifest-invalid covers the WHOLE bundle-layout surface, now
+  // enumerated normatively in section 8.2.2. No new reason code is added for
+  // any member of that enumeration.
   "manifest-invalid": "ERROR",
   "manifest-digest-mismatch": "ERROR",
   "bundle-file-missing": "ERROR",
@@ -106,6 +113,10 @@ const REASON_STATUS = Object.freeze({
   "bundle-shape-invalid": "ERROR",
   "numeric-preflight-violation": "ERROR",
   "verifier-digest-mismatch": "ERROR",
+  // Erratum 2 narrowed these three, and the narrowing is the point: the first
+  // says we could not start it, the second says the thing we started
+  // misbehaved, the third says WE did. An external subprocess protocol failure
+  // is never internal-error.
   "verifier-not-invocable": "ERROR",
   "verifier-run-invalid": "ERROR",
   "internal-error": "ERROR",
@@ -481,6 +492,15 @@ export function loadManifest(bundleDir, onIdentity = null) {
 // Every regular file under the bundle, recursively, bundle-relative, with
 // symlinks refused anywhere (section 5). readdirSync's Dirent types come from
 // lstat, so a link is never followed to classify it.
+//
+// Erratum 2 made the whole bundle-layout surface normatively manifest-invalid,
+// so every raise below is bound to that enumeration rather than to this lane's
+// own reading of it: a forbidden symlink; a regular file on disk that files[]
+// does not list; a files[] entry whose target is not a permitted file kind; a
+// FIFO, socket, device or other non-regular non-directory object; a manifest
+// with the wrong name or location; and the closure, sort, role, path and
+// digest-encoding rules. Directories are containers only and are never files[]
+// entries -- a directory under the bundle is normal and is simply descended.
 export function walkBundle(bundleDir) {
   const found = [];
   const stack = [""];
@@ -511,11 +531,13 @@ export function walkBundle(bundleDir) {
         if (childRel !== MANIFEST_NAME) found.push(childRel);
         continue;
       }
-      // Fail closed on anything that is neither a regular file, a directory nor
-      // a symlink (fifo, socket, device). No official bundle can carry one, and
-      // silently ignoring it would leave unhashed bytes inside the bundle.
+      // Erratum 2 enumerates "a FIFO, socket, device or any other non-regular,
+      // non-directory object under the bundle" as manifest-invalid. Fail closed
+      // on all of them: no official bundle can carry one, and ignoring it would
+      // leave unhashed bytes inside a bundle whose manifest claims to cover
+      // every byte.
       throw new NonMeasurement("manifest-invalid",
-        `bundle carries a non-regular file: ${childRel}`);
+        `bundle carries a non-regular, non-directory object: ${childRel}`);
     }
   }
   found.sort(byteCompare);
@@ -633,17 +655,104 @@ export function verdictShapeViolation(verdict) {
   return null;
 }
 
+// Erratum 2, PROCESS band. The two reasons are separated by ONE question: did
+// the process start?
+//
+//  * verifier-not-invocable -- NARROWED: only a process that could not be
+//    spawned or executed AT ALL.
+//  * verifier-run-invalid -- the process started successfully but the
+//    invocation did not produce a process/result shape the frozen contract
+//    permits.
+//
+// spawnSync reports both bands through `error`, so `error` alone cannot
+// discriminate them. `pid` can, and that was MEASURED on this runtime rather
+// than assumed: a spawn that never happened returns pid 0 with error ENOENT,
+// while a process that started and was then killed for exceeding maxBuffer
+// (ENOBUFS) or for a timeout (ETIMEDOUT) carries a real pid. Those two started,
+// so under Erratum 2 they are run-invalid, not not-invocable.
+//
+// internal-error is unreachable from here by construction: an external
+// subprocess protocol failure is never this evaluator's own fault.
+//
+// Pure, and exported, so the self-test can drive it with the exact shapes
+// spawnSync produces without having to defeat the frozen digest assertion in
+// order to reach a misbehaving stub.
+export function classifyProcessShape(proc) {
+  const started = typeof proc.pid === "number" && proc.pid > 0;
+  if (!started) {
+    return {
+      reason: "verifier-not-invocable",
+      detail: "frozen verifier could not be spawned or executed at all: "
+        + `${proc.error ? proc.error.message : "no process was created"}`,
+    };
+  }
+  if (proc.error) {
+    return {
+      reason: "verifier-run-invalid",
+      detail: `frozen verifier started (pid ${proc.pid}) but the invocation did not complete `
+        + `normally: ${proc.error.message}`,
+    };
+  }
+  if (proc.status === null) {
+    // Started, then died on a signal: no exit code at all, which is not a
+    // process shape the frozen contract permits.
+    return {
+      reason: "verifier-run-invalid",
+      detail: `frozen verifier started (pid ${proc.pid}) and was terminated by signal `
+        + `${proc.signal} with no exit code`,
+    };
+  }
+  return null;
+}
+
+// Erratum 2, RESULT band for a frozen exit 0. Every rejection below is
+// verifier-run-invalid: empty stdout, stdout that is not strict JSON, and a
+// malformed, multiple or wrong-shape result instead of the single expected
+// verdict object. Returns { verdict } on success, or { reason, detail }.
+export function classifyVerdictStdout(stdoutText) {
+  // Named explicitly rather than left to fall out of JSON.parse("") as a parser
+  // message: a process claiming a completed verdict while emitting nothing is
+  // the same failure NODE-IMP-1 records on this program's own output side.
+  if (stdoutText.trim() === "") {
+    return {
+      reason: "verifier-run-invalid",
+      detail: "frozen verifier exited 0 with empty stdout; exit 0 asserts a completed verdict "
+        + "and none was emitted",
+    };
+  }
+  let verdict;
+  try {
+    // Strict JSON. A malformed result, and multiple concatenated results, both
+    // land here.
+    verdict = JSON.parse(stdoutText);
+  } catch {
+    return {
+      reason: "verifier-run-invalid",
+      detail: "frozen verifier exited 0 but its stdout is not strict JSON",
+    };
+  }
+  if (!isPlainObject(verdict)) {
+    return {
+      reason: "verifier-run-invalid",
+      detail: "frozen verifier exited 0 but emitted a wrong-shape result rather than the "
+        + "single expected verdict object",
+    };
+  }
+  const shape = verdictShapeViolation(verdict);
+  if (shape !== null) {
+    return {
+      reason: "verifier-run-invalid",
+      detail: `frozen verdict violates class-verifier contract section 2: ${shape}`,
+    };
+  }
+  return { verdict };
+}
+
 function runFrozenVerifier(verifierPath, requestPath, operatorArgs) {
   const args = [verifierPath, "--request", requestPath, ...operatorArgs];
   const proc = spawnSync(process.execPath, args, { encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
-  if (proc.error) {
-    throw new NonMeasurement("verifier-not-invocable",
-      `frozen verifier could not be executed: ${proc.error.message}`);
-  }
-  if (proc.status === null) {
-    throw new NonMeasurement("verifier-not-invocable",
-      `frozen verifier terminated by signal ${proc.signal} with no exit code`);
-  }
+  const bad = classifyProcessShape(proc);
+  if (bad !== null) throw new NonMeasurement(bad.reason, bad.detail);
   return {
     exitCode: proc.status,
     stdout: proc.stdout ?? Buffer.alloc(0),
@@ -749,24 +858,50 @@ export function mapLevel1(hasRejectingArtifact, predicates) {
 // 10. Evaluation
 // ---------------------------------------------------------------------------
 
-// Sorting and artifact_ref construction tolerate a missing record_id rather
-// than erroring on it. A broken-per-family fixture targets one specific stage-0
-// violation, and that violation may be an absent core member; refusing to
-// evaluate such a bundle would score a genuine detection as this evaluator's
-// own fault, which is precisely the inversion section 7.2 warns about. Absence
-// is represented by absence: the member is simply omitted from artifact_ref.
-function sortKey(a) {
-  return typeof a.value.record_id === "string" ? a.value.record_id : "";
+// AD15-IR-5 -- the manifest path is the TOTAL RESULT IDENTITY.
+//
+// Two orderings live here, and they are deliberately NOT the same function.
+// Collapsing them into one would change the request-envelope bytes and break
+// the cross-lane envelope equality the aggregate harness checks (AD15-IR-4),
+// so they are kept apart by construction:
+//
+//  * RESULT identity and ordering (sections 8.3, 8.3.1, 8.4) -- artifact_path,
+//    the manifest-relative path. It always exists, because the manifest lists
+//    every file, so an artifact that must be rejected at stage 0 with no usable
+//    record_id still has a name to be reported under.
+//  * ENVELOPE ordering of related_artifacts (section 5.1) -- record_id UTF-8
+//    byte order. AD15-IR-5 did NOT touch section 5.1: the manifest path is
+//    harness and result identity only, it is never wire semantics, and it never
+//    participates in reference resolution. R-A is unchanged.
+//
+// An evaluator MUST NOT synthesize a record_id -- ever, for any reason. A
+// missing record_id now reaches the frozen stage-0 evaluation it belongs to
+// instead of being converted into this evaluator's own preflight failure.
+
+// Result ordering (sections 8.3.1, 8.4): UTF-8 byte order of artifact_path.
+// Total on any bundle, because files[] forbids a duplicate path.
+function compareByPath(a, b) {
+  return byteCompare(a.bundlePath, b.bundlePath);
 }
 
-function compareArtifacts(a, b) {
-  const c = byteCompare(sortKey(a), sortKey(b));
+// Envelope ordering (section 5.1): UTF-8 byte order of record_id. The
+// bundlePath tiebreak covers only the sub-case section 5.1 does not pin -- an
+// artifact carrying no usable record_id inside a four-artifact bundle. See
+// README, recorded ambiguity 3; it cannot arise in an official W1 bundle.
+function compareByRecordId(a, b) {
+  const ka = typeof a.value.record_id === "string" ? a.value.record_id : "";
+  const kb = typeof b.value.record_id === "string" ? b.value.record_id : "";
+  const c = byteCompare(ka, kb);
   return c !== 0 ? c : byteCompare(a.bundlePath, b.bundlePath);
 }
 
+// AD15-IR-5: an object when a usable record_id exists, null when it does not.
+// "Usable" is the same test resolveRef() applies, so the file carries one
+// definition of it rather than two. Absence is represented by absence; nothing
+// is fabricated to fill the field.
 function artifactRef(a) {
-  const ref = {};
-  if (typeof a.value.record_id === "string") ref.record_id = a.value.record_id;
+  if (typeof a.value.record_id !== "string") return null;
+  const ref = { record_id: a.value.record_id };
   if (typeof a.value.chain_id === "string") ref.chain_id = a.value.chain_id;
   return ref;
 }
@@ -797,10 +932,36 @@ function preflight(flags, ctx) {
   }
   const onDiskSet = new Set(onDisk);
   for (const entry of manifest.entries) {
-    if (!onDiskSet.has(entry.path)) {
-      throw new NonMeasurement("bundle-file-missing",
-        `files[] lists ${entry.path} but no such regular file is present under the bundle`);
+    if (onDiskSet.has(entry.path)) continue;
+    // Erratum 2 splits two failures that both merely look like "absent from the
+    // walk", and the split is normative rather than inferred:
+    //
+    //  * a files[] entry whose target is NOT A PERMITTED FILE KIND is a
+    //    bundle-layout violation -> manifest-invalid;
+    //  * a files[] entry with nothing on disk at all -> bundle-file-missing.
+    //
+    // Directories are containers only and are never files[] entries, so a
+    // directory named by files[] falls in the first band, not the second: it is
+    // present, and it is the wrong kind. lstat, never stat, so a link is
+    // classified rather than followed.
+    let st = null;
+    try {
+      st = fs.lstatSync(path.join(bundleDir, entry.path));
+    } catch { /* nothing at that path at all -- handled after this block */ }
+    if (st !== null) {
+      const kind = st.isDirectory() ? "a directory"
+        : st.isSymbolicLink() ? "a symbolic link"
+        : st.isFIFO() ? "a FIFO"
+        : st.isSocket() ? "a socket"
+        : st.isBlockDevice() ? "a block device"
+        : st.isCharacterDevice() ? "a character device"
+        : "an object that is not a regular file";
+      throw new NonMeasurement("manifest-invalid",
+        `files[] entry ${entry.path} names ${kind}; a files[] target must be a regular file, `
+        + "and directories are containers only -- never files[] entries");
     }
+    throw new NonMeasurement("bundle-file-missing",
+      `files[] lists ${entry.path} but no such file is present under the bundle`);
   }
 
   // ---- digests, before anything is parsed ---------------------------------
@@ -850,7 +1011,9 @@ function preflight(flags, ctx) {
     }
     return { bundlePath: e.path, value };
   });
-  artifacts.sort(compareArtifacts);
+  // Result order (section 8.4). This is also the order invocations are
+  // attempted in, so a bundle abandoned partway lists a byte-ordered prefix.
+  artifacts.sort(compareByPath);
 
   let byFamily = null;
   if (wantArtifacts === 4) {
@@ -971,9 +1134,11 @@ function evaluateBundle(flags, ctx) {
   const resultsByPath = new Map();
   try {
     for (const primary of artifacts) {
+      // Section 5.1: ascending UTF-8 byte order of record_id -- NOT
+      // artifact_path. This is the envelope layer, and AD15-IR-5 left it alone.
       const related = artifacts
         .filter((a) => a !== primary)
-        .sort(compareArtifacts)
+        .sort(compareByRecordId)
         .map((a) => a.value);
       const envelope = { artifact: primary.value, related_artifacts: related };
       const envelopeBytes = Buffer.from(jcs(envelope), "utf8");
@@ -995,6 +1160,9 @@ function evaluateBundle(flags, ctx) {
       };
       resultsByPath.set(primary.bundlePath, record);
       ctx.artifactEntries.push({
+        // Required, and the entry's identity (AD15-IR-5). Always present.
+        artifact_path: primary.bundlePath,
+        // Object, or null when no usable record_id exists (AD15-IR-5).
         artifact_ref: artifactRef(primary),
         request_envelope_digest: envelopeDigest,
         verifier_exit_code: run.exitCode,
@@ -1005,24 +1173,12 @@ function evaluateBundle(flags, ctx) {
       const entry = ctx.artifactEntries[ctx.artifactEntries.length - 1];
 
       if (run.exitCode === 0) {
-        let verdict;
-        try {
-          verdict = JSON.parse(run.stdout.toString("utf8"));
-        } catch {
-          throw new NonMeasurement("verifier-run-invalid",
-            `frozen verifier exited 0 but its stdout is not parseable JSON for ${primary.bundlePath}`);
+        const band = classifyVerdictStdout(run.stdout.toString("utf8"));
+        if (band.reason !== undefined) {
+          throw new NonMeasurement(band.reason, `${band.detail} (for ${primary.bundlePath})`);
         }
-        if (!isPlainObject(verdict)) {
-          throw new NonMeasurement("verifier-run-invalid",
-            `frozen verifier exited 0 but did not emit a verdict object for ${primary.bundlePath}`);
-        }
-        const shape = verdictShapeViolation(verdict);
-        if (shape !== null) {
-          throw new NonMeasurement("verifier-run-invalid",
-            `frozen verdict violates class-verifier contract section 2 for ${primary.bundlePath}: ${shape}`);
-        }
-        record.verifierResult = verdict;
-        entry.verifier_result = verdict;
+        record.verifierResult = band.verdict;
+        entry.verifier_result = band.verdict;
       }
     }
   } finally {
@@ -1036,7 +1192,10 @@ function evaluateBundle(flags, ctx) {
     for (const channel of ["authenticated_withheld", "witnessed_withheld"]) {
       const reasons = verdict[channel];
       if (Array.isArray(reasons) && reasons.length > 0) {
-        ctx.withheldReasons.push({ artifact_ref: artifactRef(a), channel, reasons });
+        ctx.withheldReasons.push({
+          // artifact_path is the identity (AD15-IR-5); artifact_ref may be null.
+          artifact_path: a.bundlePath, artifact_ref: artifactRef(a), channel, reasons,
+        });
       }
     }
   }
@@ -1053,10 +1212,17 @@ function evaluateBundle(flags, ctx) {
     const r = resultsByPath.get(a.bundlePath);
     if (r.exitCode === 0) continue;
     if (r.exitCode === 1 && EXIT1_REJECT_SCENARIOS.has(scenarioId)) continue;
+    // Erratum 2 pins BOTH of the remaining shapes to verifier-run-invalid: a
+    // non-qualifying exit 1, and exit 2 or any other exit the frozen contract
+    // does not permit for this invocation. Neither is internal-error -- the
+    // thing we invoked misbehaved, not us.
     throw new NonMeasurement("verifier-run-invalid",
-      `frozen verifier exited ${r.exitCode} for ${a.bundlePath}; scenario ${scenarioId} does not `
-      + "qualify for the section 7.2 exit-1 REJECT reading, so this is the evaluator's error, "
-      + "not the artifact's");
+      r.exitCode === 1
+        ? `frozen verifier exited 1 for ${a.bundlePath}, but scenario ${scenarioId} does not `
+          + "qualify for the section 7.2 exit-1 REJECT reading, so this is the evaluator's "
+          + "error, not the artifact's"
+        : `frozen verifier exited ${r.exitCode} for ${a.bundlePath}; the frozen contract permits `
+          + "no such exit for this invocation");
   }
 
   // ---- section 7.1: authenticated_withheld is never a qualifying result ---
@@ -1068,7 +1234,7 @@ function evaluateBundle(flags, ctx) {
   const withheldAuth = ctx.withheldReasons.filter((w) => w.channel === "authenticated_withheld");
   if (withheldAuth.length > 0) {
     const named = withheldAuth
-      .map((w) => `${w.artifact_ref.record_id ?? "(no record_id)"}: ${w.reasons.join(",")}`)
+      .map((w) => `${w.artifact_path}: ${w.reasons.join(",")}`)
       .join("; ");
     throw new NonMeasurement("authenticated-withheld",
       `the Authenticated tier could not be evaluated -- ${named}; fix the operator inputs and `
@@ -1152,7 +1318,7 @@ let resultWritten = false;
 // so a subsequent process.exit() can truncate or drop it entirely -- another
 // route to the exit-0-with-empty-stdout failure. fs.writeSync loops until every
 // byte is out.
-function writeStdoutSync(text) {
+export function writeStdoutSync(text) {
   const buf = Buffer.from(text, "utf8");
   let off = 0;
   while (off < buf.length) {
