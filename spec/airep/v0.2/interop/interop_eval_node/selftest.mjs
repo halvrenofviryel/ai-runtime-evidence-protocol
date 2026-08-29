@@ -307,8 +307,40 @@ usageRejects("--bundle is required", []);
 usageRejects("an unknown option is rejected", ["--bundle", "d", "--nope", "x"]);
 usageRejects("a repeated option is rejected", ["--bundle", "a", "--bundle", "b"]);
 usageRejects("a valueless option is rejected", ["--bundle"]);
-usageRejects("--help evaluates nothing", ["--help"]);
 usageRejects("a positional argument is rejected", ["x"]);
+
+// E3-4. --help is a CLI META-ACTION, not a usage error and not an evaluation.
+// The candidate being remediated raised UsageError here; that is superseded.
+// Parsed through a guard: under the SUPERSEDED resolution parseArgs THREW on
+// --help, and letting that propagate would abort the whole suite before the
+// process-level E3-4 checks below could report. The guard turns it into a named
+// failure so the discrimination is legible rather than a stack trace.
+function parseMeta(name, argv) {
+  try {
+    return parseArgs(argv);
+  } catch (e) {
+    check(`${name}: --help must not raise a usage error`, false, String(e && e.message));
+    return null;
+  }
+}
+{
+  const h = parseMeta("--help", ["--help"]);
+  if (h) {
+    eq("--help parses as the meta-action", h.help, true);
+    check("--help does not require --bundle", h.flags.bundle === null);
+  }
+  const sh = parseMeta("-h", ["-h"]);
+  if (sh) eq("-h is the same meta-action", sh.help, true);
+}
+eq("an ordinary invocation is not the meta-action",
+  parseArgs(["--bundle", "d"]).help, false);
+// The carve-out is exactly ONE FLAG WIDE: --help does not launder a bad command
+// line into the meta-action. Without this control, "--help wins" would silently
+// turn every usage error into exit 0.
+usageRejects("--help does not excuse an unknown option", ["--help", "--nope", "x"]);
+usageRejects("--help does not excuse a positional argument", ["--help", "junk"]);
+usageRejects("--help does not excuse a repeated option",
+  ["--help", "--bundle", "a", "--bundle", "b"]);
 // Clock flags are gone: no official W1 bundle carries a clock input.
 usageRejects("--now is not an accepted option", ["--bundle", "d", "--now", "z"]);
 usageRejects("--freshness-window is not an accepted option", ["--bundle", "d", "--freshness-window", "1"]);
@@ -377,11 +409,41 @@ for (const [name, args] of [
   ["no --bundle", []],
   ["unknown option", ["--bundle", tmp, "--nope", "x"]],
   ["repeated option", ["--bundle", "a", "--bundle", "b"]],
-  ["--help", ["--help"]],
+  ["unknown option alongside --help", ["--help", "--nope", "x"]],
 ]) {
   const r = run(args);
   eq(`${name} exits 2`, r.code, 2);
   check(`${name} writes nothing to stdout`, r.out === "", JSON.stringify(r.out));
+}
+
+// --- E3-4 discrimination: --help exits 0, prints help, emits NO result object
+// The four properties are asserted separately, because three of them held under
+// the superseded exit-2 resolution too and only the conjunction discriminates.
+for (const flag of ["--help", "-h"]) {
+  const r = run([flag]);
+  eq(`${flag} exits 0`, r.code, 0);
+  check(`${flag} writes human-readable help to stdout`,
+    r.out.length > 0 && /--bundle/.test(r.out), JSON.stringify(r.out.slice(0, 120)));
+  // "No result JSON object" is the load-bearing half: exit 0 on an EVALUATION
+  // asserts a MEASURED result, and a help screen must not be mistakable for one.
+  let parsedAsJson = true;
+  try { JSON.parse(r.out); } catch { parsedAsJson = false; }
+  check(`${flag} emits no result JSON object`, !parsedAsJson, r.out.slice(0, 200));
+  // Not a regex on field names -- the help text legitimately DOCUMENTS
+  // measurement_status in its exit table, so that probe would fail on correct
+  // output. The property that matters is that stdout is not a result object.
+  check(`${flag} output is not a JSON object at all`,
+    r.out.trimStart()[0] !== "{", r.out.slice(0, 200));
+  // It does not require --bundle, and it touches no bundle at all.
+  check(`${flag} needs no --bundle`, r.code === 0);
+}
+// The exit-0 invariant guard must not have fired: it is keyed on invocation
+// kind, so a meta-action satisfying it via stdout does NOT relax what an
+// evaluation must satisfy. This control measures that the guard stayed silent.
+{
+  const r = run(["--help"]);
+  check("--help does not trip the exit-0 invariant guard",
+    !/internal invariant violated/.test(r.err), r.err.slice(0, 200));
 }
 
 // --- exit 1: bundle identity never established, and ONLY that --------------
@@ -810,12 +872,18 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
     }
   }
 
-  // --- four artifacts: related_artifacts in record_id UTF-8 byte order -----
+  // --- four artifacts: related_artifacts in artifact_path UTF-8 byte order -
   {
+    // record_id rank is the EXACT REVERSE of artifact_path rank
+    // (c<d<e<x by path; 4>3>2>1 by record_id), so for every choice of primary
+    // the remaining three order differently under the two keys. An earlier
+    // arrangement put the outlier id on one artifact, and with that artifact as
+    // primary the other three coincided -- the control silently measured
+    // nothing for that case.
     const artifacts = {
-      "artifacts/d.json": synth("synth-4-dec", "decision"),
-      "artifacts/c.json": synth("synth-1-ctl", "control"),
-      "artifacts/x.json": synth("synth-3-exe", "execution"),
+      "artifacts/d.json": synth("synth-3-dec", "decision"),
+      "artifacts/c.json": synth("synth-4-ctl", "control"),
+      "artifacts/x.json": synth("synth-1-exe", "execution"),
       "artifacts/e.json": synth("synth-2-eff", "effect"),
     };
     const dir = mkBundle("live-four", { scenarioId: "IOP-R-CLEAN", artifacts });
@@ -832,7 +900,7 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
         ["artifacts/c.json", "artifacts/d.json", "artifacts/e.json", "artifacts/x.json"]);
       eq("that ordering is deliberately NOT record_id order",
         v.artifacts.map((a) => a.artifact_ref.record_id),
-        ["synth-1-ctl", "synth-4-dec", "synth-2-eff", "synth-3-exe"]);
+        ["synth-4-ctl", "synth-3-dec", "synth-2-eff", "synth-1-exe"]);
       check("the two orders really do disagree, so the check discriminates",
         show(v.artifacts.map((a) => a.artifact_ref.record_id))
           !== show([...v.artifacts.map((a) => a.artifact_ref.record_id)].sort(byteCompare)));
@@ -841,23 +909,112 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
           Object.keys(entry).sort(), [...ARTIFACT_MEMBERS].sort());
       }
 
-      // Section 5.1 is UNCHANGED by AD15-IR-5: related_artifacts stay in
-      // record_id byte order, so the envelope bytes -- and therefore the
-      // cross-lane equality of AD15-IR-4 -- are untouched by the ruling.
+      // AD15-IR-6 (E3-1). related_artifacts is now ordered by manifest-relative
+      // artifact_path, NOT record_id. The fixture is built so the two orders
+      // disagree, so this check discriminates the ruling rather than merely
+      // restating it: under the superseded record_id rule every digest below
+      // would differ.
       const byPath = Object.fromEntries(
         Object.entries(artifacts).map(([k, t]) => [k, JSON.parse(t)]));
+      const pathOf = new Map(Object.entries(byPath).map(([k, val]) => [val, k]));
       for (const entry of v.artifacts) {
         const primary = byPath[entry.artifact_path];
         check(`${entry.artifact_path} is resolvable by its manifest path alone`,
           primary !== undefined);
-        const related = Object.values(byPath).filter((x) => x !== primary)
+        const others = Object.values(byPath).filter((x) => x !== primary);
+        const byPathOrder = [...others]
+          .sort((a, b) => byteCompare(pathOf.get(a), pathOf.get(b)));
+        const byRecordOrder = [...others]
           .sort((a, b) => byteCompare(a.record_id, b.record_id));
-        const want = "sha256:" + sha(Buffer.from(
+        const digestOf = (related) => "sha256:" + sha(Buffer.from(
           jcs({ artifact: primary, related_artifacts: related }), "utf8"));
-        eq(`envelope digest for ${entry.artifact_path} (related in record_id order)`,
-          entry.request_envelope_digest, want);
+        eq(`envelope digest for ${entry.artifact_path} (related in artifact_path order)`,
+          entry.request_envelope_digest, digestOf(byPathOrder));
+        // Control: the two orderings really do produce different envelope
+        // bytes here, so the assertion above could have failed. Without this,
+        // a fixture where both orders coincided would pass while measuring
+        // nothing -- and differing envelope bytes are exactly what aggregate
+        // duty 2 compares across lanes.
+        check(`${entry.artifact_path}: path order and record_id order give different envelopes`,
+          digestOf(byPathOrder) !== digestOf(byRecordOrder),
+          `${show(byPathOrder.map((x) => pathOf.get(x)))} vs ${show(byRecordOrder.map((x) => pathOf.get(x)))}`);
+        check(`${entry.artifact_path}: the superseded record_id ordering is NOT what was emitted`,
+          entry.request_envelope_digest !== digestOf(byRecordOrder));
       }
     }
+  }
+
+  // --- E3-1 discrimination: an artifact with NO record_id ------------------
+  // This is the case AD15-IR-6 exists for. Under the superseded record_id
+  // ordering such an artifact had no defined envelope at all, and the two
+  // isolated lanes resolved it differently -- one sorting it under an empty
+  // key (this lane), one refusing to build the envelope. Both are gone: the
+  // key is artifact_path, which always exists, so the envelope is always
+  // defined and the artifact reaches frozen stage 0 on its own merits.
+  {
+    const noId = JSON.stringify({
+      airep_version: "0.2", artifact_type: "execution", chain_id: "synth.chain",
+      sequence: 0,
+    });
+    const artifacts = {
+      "artifacts/d.json": synth("synth-3-dec", "decision"),
+      "artifacts/c.json": synth("synth-4-ctl", "control"),
+      "artifacts/x.json": noId,                       // no record_id at all
+      "artifacts/e.json": synth("synth-2-eff", "effect"),
+    };
+    const dir = mkBundle("e31-no-record-id", { scenarioId: "IOP-R-CLEAN", artifacts });
+    const r = run(["--bundle", dir]);
+
+    // (a) STAGE-0 REACHABILITY. The load-bearing half. A missing record_id must
+    // NOT become this evaluator's own preflight failure: the artifact is handed
+    // to the frozen verifier and rejected there, on the frozen contract's
+    // terms. bundle-shape-invalid or numeric-preflight-violation here would
+    // mean the evaluator pre-empted the measurement it exists to take.
+    eq("a record_id-less artifact still produces a result object", r.code, 3);
+    const v = parseOne("no record_id", r.out);
+    eq("it reaches the frozen verifier, not a preflight refusal",
+      v.nonmeasurement.reason, "verifier-run-invalid");
+    eq("all four invocations were attempted", v.artifacts.length, 4);
+    check("every artifact reached an invocation and has an exit code",
+      v.artifacts.every((a) => typeof a.verifier_exit_code === "number"),
+      show(v.artifacts.map((a) => a.verifier_exit_code)));
+
+    // (b) NOTHING WAS FABRICATED. artifact_ref is null for that artifact, and
+    // artifact_path still names it -- identity without invention.
+    const entry = v.artifacts.find((a) => a.artifact_path === "artifacts/x.json");
+    check("the record_id-less artifact has an entry", entry !== undefined);
+    eq("its artifact_ref is null, never a synthesized record_id",
+      entry.artifact_ref, null);
+    eq("its artifact_path is still its identity", entry.artifact_path, "artifacts/x.json");
+
+    // (c) DETERMINISTIC artifact_path ORDERING, including the unidentifiable
+    // artifact, which under the superseded rule had no defined position.
+    eq("artifacts[] is ordered by artifact_path even with a record_id absent",
+      v.artifacts.map((a) => a.artifact_path),
+      ["artifacts/c.json", "artifacts/d.json", "artifacts/e.json", "artifacts/x.json"]);
+
+    // (d) THE ENVELOPE IS DEFINED for every artifact, and is the path-ordered
+    // one. Recomputed here independently of the evaluator's own ordering code.
+    const byPath = Object.fromEntries(
+      Object.entries(artifacts).map(([k, t]) => [k, JSON.parse(t)]));
+    for (const e of v.artifacts) {
+      const primary = byPath[e.artifact_path];
+      const related = Object.entries(byPath)
+        .filter(([k]) => k !== e.artifact_path)
+        .sort((a, b) => byteCompare(a[0], b[0]))
+        .map(([, val]) => val);
+      const want = "sha256:" + sha(Buffer.from(
+        jcs({ artifact: primary, related_artifacts: related }), "utf8"));
+      eq(`${e.artifact_path}: envelope defined and path-ordered despite a missing record_id`,
+        e.request_envelope_digest, want);
+    }
+
+    // (e) DETERMINISM (section 8.4). Identical bundle, byte-identical output --
+    // the property the superseded empty-key resolution could not guarantee
+    // across lanes.
+    const r2 = run(["--bundle", dir]);
+    eq("a second run is byte-identical", r2.out, r.out);
+    eq("a second run exits the same", r2.code, r.code);
   }
 }
 
@@ -954,6 +1111,125 @@ expectNonMeasured("nothing on disk at all is still bundle-file-missing",
       m.files.sort((a, b) => byteCompare(a.path, b.path));
     },
   }), "bundle-file-missing");
+
+// ---------------------------------------------------------------------------
+// 14b. Erratum 3 / E3-2 -- the four filesystem reasons are DISTINCT
+// ---------------------------------------------------------------------------
+// The registry now bounds them exactly. The point of this block is the
+// SEPARATION: each condition must produce its own reason, and a test that only
+// checked one of them would not notice three collapsing into one. The candidate
+// being remediated reported an unreadable file as bundle-file-missing, which
+// asserts something false about the bundle.
+{
+  // (1) absent -> bundle-file-missing (asserted above, restated here as the
+  //     first member of the four-way comparison).
+  const missing = mkBundle("e32-missing", {
+    mutate: (m) => {
+      m.files.push({ path: "zz-ghost.json", role: "artifact", sha256: "0".repeat(64) });
+      m.files.sort((a, b) => byteCompare(a.path, b.path));
+    },
+  });
+  const vMissing = expectNonMeasured("absent file", missing, "bundle-file-missing");
+
+  // (2) present, regular, unreadable -> bundle-file-unreadable (NEW in E3-2).
+  //     Skipped rather than faked where the mode cannot actually deny a read:
+  //     running as root, or on a filesystem that silently drops chmod. The
+  //     CONTROL below measures that the file really is unreadable before the
+  //     assertion is allowed to count -- otherwise this test would pass by
+  //     measuring an ordinary readable file.
+  let vUnreadable = null;
+  {
+    const dir = mkBundle("e32-unreadable");
+    const target = path.join(dir, "artifacts", "a.json");
+    let denied = false;
+    try {
+      fs.chmodSync(target, 0o000);
+      try { fs.readFileSync(target); } catch { denied = true; }
+    } catch { /* chmod unsupported here */ }
+    if (!denied) {
+      console.log("SKIPPED: bundle-file-unreadable -- this process can read a 0o000 file "
+        + "(root, or a filesystem that ignores chmod); the condition cannot be produced");
+    } else {
+      check("control: the target really is unreadable before the assertion counts", denied);
+      vUnreadable = expectNonMeasured("present but unreadable file", dir, "bundle-file-unreadable");
+      if (vUnreadable) {
+        check("the detail says present-but-unreadable, not missing",
+          /present/i.test(vUnreadable.nonmeasurement.detail)
+          && !/\bmissing\b/i.test(vUnreadable.nonmeasurement.detail),
+          vUnreadable.nonmeasurement.detail);
+      }
+      fs.chmodSync(target, 0o644);
+    }
+  }
+
+  // (3) read but unparseable -> bundle-json-invalid.
+  const vJson = expectNonMeasured("present, readable, not JSON",
+    mkBundle("e32-nonjson", { artifacts: { "artifacts/a.json": "{ not json" } }),
+    "bundle-json-invalid");
+
+  // (4) read but digest mismatch -> manifest-digest-mismatch.
+  const vDigest = expectNonMeasured("present, readable, wrong digest",
+    mkBundle("e32-digest", { corrupt: "artifacts/a.json" }), "manifest-digest-mismatch");
+
+  // THE DISCRIMINATION ITSELF: all reasons observed are pairwise distinct. A
+  // collapse of any two -- which is exactly the defect E3-2 closed -- fails
+  // here even though each individual assertion above would still pass.
+  const observed = [vMissing, vUnreadable, vJson, vDigest]
+    .filter((x) => x !== null).map((x) => x.nonmeasurement.reason);
+  eq("every filesystem failure produced a distinct reason",
+    observed.length, new Set(observed).size);
+  check("the four-way boundary was exercised over at least three conditions",
+    observed.length >= 3, show(observed));
+}
+
+// ---------------------------------------------------------------------------
+// 14c. Erratum 3 / E3-3 -- NO manifest discovery is performed
+// ---------------------------------------------------------------------------
+// A bundle whose only manifest-shaped file is wrongly named establishes NO
+// identity. It must exit 1 with empty stdout -- never manifest-invalid, which
+// would require a scenario_id the evaluator does not have, and never a
+// discovered manifest, which would make the identity depend on a search.
+for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manifest.json.bak"]) {
+  const dir = path.join(tmp, `e33-${wrongName.replace(/[^a-zA-Z0-9]/g, "_")}`);
+  fs.mkdirSync(dir, { recursive: true });
+  // Byte-for-byte a VALID manifest -- only the NAME is wrong. If any discovery
+  // existed, this is the file it would find, so the test discriminates
+  // discovery rather than merely the absence of a file.
+  fs.writeFileSync(path.join(dir, wrongName), JSON.stringify({
+    manifest_version: "1", scenario_id: "IOP-P-DEC", files: [],
+  }));
+  const r = run(["--bundle", dir]);
+  eq(`only ${wrongName} present: exits 1`, r.code, 1);
+  check(`only ${wrongName} present: stdout is empty`, r.out === "", JSON.stringify(r.out));
+  check(`only ${wrongName} present: no result object, so no reason code either`,
+    !/manifest-invalid|nonmeasurement/.test(r.out), r.out.slice(0, 200));
+}
+// A subdirectory manifest is not discovered either.
+{
+  const dir = path.join(tmp, "e33-nested-only");
+  fs.mkdirSync(path.join(dir, "sub"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "sub", "manifest.json"), JSON.stringify({
+    manifest_version: "1", scenario_id: "IOP-P-DEC", files: [],
+  }));
+  const r = run(["--bundle", dir]);
+  eq("a manifest in a subdirectory is not discovered: exits 1", r.code, 1);
+  check("a manifest in a subdirectory writes nothing to stdout", r.out === "");
+}
+// Negative control: with a ROOT manifest.json present, a wrongly-named file
+// BESIDE it is an ordinary unlisted regular file and IS reported -- identity
+// exists, so the ordinary layout rules apply and the reason is manifest-invalid.
+{
+  const v = expectNonMeasured("a wrongly-named manifest beside a valid root manifest",
+    mkBundle("e33-beside", {
+      mutate: (_m, d) => {
+        fs.writeFileSync(path.join(d, "MANIFEST.json"), "{}");
+      },
+    }), "manifest-invalid");
+  if (v) {
+    check("it is caught as an ordinary unlisted file, not as a rival manifest",
+      /MANIFEST\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // 15. Erratum 2 / E2-2 -- abnormal frozen runs map to verifier-run-invalid

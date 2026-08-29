@@ -4,11 +4,20 @@ The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored
 in isolation from the Python lane: no shared reconciliation code, no shared helper, no port, and
 no sight of the peer lane's source or output.
 
-Contract basis: the canonical post-Erratum-2 head
-`b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278`, `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` sha256
-`42e350d09b28cb79a7e59f91fe55af96968925bf8615c8818f5c45d42c2b2fa2`, asserted before any source
-was edited. Pre-Erratum-2 remediation lineage: `801a1dc1a056ab65e20d735c83cf04a28c1fb45d`, frozen
-as evidence and not rewritten.
+Contract basis: the canonical post-Erratum-3 head
+`b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd`, with both canonical contracts asserted before any
+source was edited:
+
+| File | sha256 |
+|---|---|
+| `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` | `39432fabbe643c0b45a012be442721208134f5a14a3421bf820fa4a0b8cefefa` |
+| `INTEROP_CORPUS_CONTRACT.md` | `ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd` |
+
+Lineage, frozen as evidence and never rewritten: `da22e066a6aceaa72b9bda2fb8813205120fe0ff`
+(pre-Erratum-1), `801a1dc1a056ab65e20d735c83cf04a28c1fb45d` (Erratum-2 candidate),
+`4b14328d67ea36f7657db8b3b4765bf3e187e639` (pre-Erratum-3 micro-remediation candidate). None of
+those is an official evaluator identity; the ref named `w1/interop-eval-node-official` predates
+its demotion to evidence, which is why this final lane lives on `w1/interop-eval-node-final`.
 
 ```
 node interop_eval.mjs --bundle DIR
@@ -28,8 +37,13 @@ The dividing line is **whether bundle identity was established**, and nothing el
 |---|---|---|
 | `0` | one result object, `MEASURED`, `level1` populated | the bundle was measured |
 | `1` | empty | bundle identity could not be established: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
-| `2` | empty | CLI usage error (`--help` included: nothing is evaluated) |
+| `2` | empty | CLI usage error |
 | `3` | one result object, `MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | identity established, scenario not measured |
+
+`--help` is outside this table entirely (Erratum 3): it is a **CLI meta-action, not an
+evaluation** — exit `0`, human-readable help on stdout, no result object, no `--bundle` required,
+and the aggregate harness never invokes it. The carve-out is exactly one flag wide; every other
+CLI usage error is still exit `2` with empty stdout.
 
 Diagnostics go to stderr, carry no semantics, and are never parsed — by this program or by the
 harness. Frozen-verifier stderr is hashed for audit only.
@@ -38,7 +52,9 @@ harness. Frozen-verifier stderr is hashed for audit only.
 mechanisms hold that line: direct-invocation detection that cannot be defeated by percent-encoding,
 a synchronous complete write of the result object rather than an async `process.stdout.write` that
 a subsequent `process.exit()` could truncate, and a process-exit invariant that converts a silent
-zero into exit `3` with a diagnostic. Both defect routes and their regressions are set out under
+zero into exit `3` with a diagnostic. The invariant is **keyed on invocation kind**, so `--help`
+did not relax it: an evaluation exiting `0` must still have written a *result object*, exactly as
+before Erratum 3, while the meta-action must have written help. Both branches are regressed. Both defect routes and their regressions are set out under
 [`NODE-IMP-1` — both routes](#node-imp-1--both-routes-and-how-each-is-regressed) below.
 
 ## Frozen verifier
@@ -68,20 +84,39 @@ preflight is a pre-invocation `ERROR` carrying `artifacts: []` — an empty arra
 with placeholder fields. Once invocation begins, `artifacts[]` carries an entry for each
 invocation that produced an exit code, and no more.
 
-### Two orderings, deliberately not the same function (`AD15-IR-5`)
+### One ordering key, everywhere (`AD15-IR-5` + `AD15-IR-6`)
 
 | Layer | Ordered by | Pinned in |
 |---|---|---|
 | `artifacts[]` result entries | UTF-8 byte order of **`artifact_path`** | §8.3.1, §8.4 |
-| `related_artifacts` inside a request envelope | UTF-8 byte order of **`record_id`** | §5.1, **unchanged** |
+| aggregate cross-lane comparison key | **`(scenario_id, artifact_path)`** | §8.1 duty 2 |
+| `related_artifacts` inside a request envelope | UTF-8 byte order of **`artifact_path`** | §5.1, **`AD15-IR-6`** |
 
-`AD15-IR-5` moved *result identity* to the manifest path; it did **not** touch §5.1. Collapsing
-the two into one comparator would change the request-envelope bytes and break the cross-lane
-envelope equality the aggregate harness checks (`AD15-IR-4`), so `compareByPath` and
-`compareByRecordId` are separate functions and the self-test asserts them against a four-artifact
-fixture whose path order and `record_id` order **disagree**. R-A is unchanged: reference
-resolution still matches on `record_id`, additionally `chain_id` where carried. The manifest path
-is harness and result identity only — never wire semantics.
+`AD15-IR-6` moved the last `record_id`-keyed surface — envelope ordering — onto `artifact_path`,
+so there is now **one comparator** rather than two. This lane's Erratum-2 candidate deliberately
+kept them apart, on the reading that `AD15-IR-5` had left §5.1 alone, and sorted an artifact with
+no usable `record_id` under an empty key with an `artifact_path` tiebreak. That resolution is
+**superseded**: it was one of two defensible readings across the two isolated lanes, and neither
+was cross-lane safe, because a differing `related_artifacts` order changes
+`request_envelope_digest` — precisely what aggregate duty 2 compares. `compareByRecordId` is
+therefore **deleted**, not left unused.
+
+Why `artifact_path` is the right key: the manifest lists every file and `files[]` forbids a
+duplicate path, so it always exists and is unique. No tiebreak is needed or permitted, and the
+envelope is **always defined** — including for an artifact carrying no `record_id` at all, which
+under the superseded rule had no defined envelope and therefore no defined
+`request_envelope_digest`.
+
+The self-test asserts this against a four-artifact fixture whose `record_id` rank is the **exact
+reverse** of its `artifact_path` rank, so the two orders disagree for *every* choice of primary,
+plus a per-primary control proving the two orderings really do yield different envelope bytes. An
+earlier arrangement of that fixture left the other three artifacts coincidentally in the same
+order when the record_id outlier was primary — the control caught it, and it was fixed rather than
+accepted.
+
+**R-A is unchanged**: reference resolution still matches on `record_id`, additionally `chain_id`
+where carried, and `resolveRef` is the only remaining reader of `record_id`. The manifest path is
+harness and result identity only — never wire semantics.
 
 `artifact_path` is required and always exists, because the manifest lists every file.
 `artifact_ref` is an object when a usable `record_id` exists and **`null`** when it does not.
@@ -109,13 +144,25 @@ numeric preflight including its mandatory JSON Pointer, the closed `nonmeasureme
 its status pairing, envelope construction and ordering, the §7.2 causal guard in both directions,
 reference resolution, all three predicates, the Level-1 mapping order, the Erratum 2 rulings
 (§14 bundle layout, §15 both frozen-run bands, and `AD15-IR-5` identity and ordering inside §13),
-and **both** `NODE-IMP-1` routes (§12 path, §16 pipe truncation).
+the four Erratum 3 rulings (`AD15-IR-6` envelope ordering and the `record_id`-less artifact in
+§13, the four-way filesystem reason boundary in §14b, no-manifest-discovery in §14c, and the
+`--help` meta-action in §10/§11), and **both** `NODE-IMP-1` routes (§12 path, §16 pipe
+truncation).
 
-Two of those sections carry their own controls, because a regression that cannot fail proves
-nothing: §16 first measures that the buggy write pattern really does truncate on this platform,
-and §13's four-artifact fixture is built so `artifact_path` order and `record_id` order
-**disagree** — otherwise no check there could tell `AD15-IR-5` from the §5.1 rule it must leave
-alone.
+Several of those sections carry their own controls, because a regression that cannot fail proves
+nothing: §16 first measures that the buggy write pattern really does truncate on this platform;
+§13's four-artifact fixture is built so `artifact_path` order and `record_id` order **disagree**
+for every choice of primary, and each envelope check is paired with a control asserting the two
+orderings really do yield different bytes; §14b asserts that the four filesystem reasons are
+**pairwise distinct**, which fails if any two collapse even though each individual assertion would
+still pass; §14b's unreadable case first verifies the file genuinely cannot be read before the
+assertion is allowed to count, and skips rather than fakes where the platform cannot produce the
+condition; and §14c uses a byte-for-byte *valid* manifest under a wrong name, so it discriminates
+discovery rather than mere absence.
+
+Beyond those in-suite controls, each Erratum 3 fix was **mutation-tested**: the fix was reverted
+in turn and the corresponding checks confirmed to fail. A test that passes both with and without
+the fix measures nothing, and that is not assumed here.
 
 One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
 checks recompute their expected value with this module's own `jcs()` and `byteCompare()`, so they
@@ -128,7 +175,15 @@ and integer numbers) is asserted as a literal. Envelope-byte equality across lan
 ## Bundle manifest
 
 The encoding is now pinned exactly by §5 and is no longer an assumption. `manifest.json` in the
-bundle root; the evaluator searches for no other name or location.
+bundle root.
+
+**No manifest discovery is performed** (Erratum 3). The lookup is a single
+`path.join(bundleDir, "manifest.json")` — no fallback name, no search, no walk for a
+manifest-shaped file. If the root manifest is absent, bundle identity is not established, so the
+result is exit `1` with empty stdout, never `manifest-invalid` — that reason would require a
+`scenario_id` the evaluator does not have. A wrongly-named or misplaced file sitting *beside* a
+valid root manifest needs no special rule: it is an unlisted regular file, or a listed entry with
+an invalid `role`, and the ordinary layout rules make it `manifest-invalid`.
 
 ```jsonc
 {
@@ -227,10 +282,29 @@ quietly.
 **`exit 0` with empty stdout remains unacceptable under every condition**, and the process-exit
 invariant converts a silent zero into exit `3` with a diagnostic.
 
+## Erratum 3 — what changed in this lane
+
+Four rulings landed. Two of them closed ambiguities this lane had **recorded rather than
+invented**, which is why those changes are small; the other two corrected behaviour.
+
+| Ruling | Change here |
+|---|---|
+| **E3-1** (`AD15-IR-6`) | `related_artifacts` now ordered by `artifact_path`. `compareByRecordId` deleted; the deliberate two-comparator split is **collapsed on purpose**. Closes recorded ambiguity 3. |
+| **E3-2** | New reason `bundle-file-unreadable`. A listed file that is present and a permitted regular file but whose bytes will not read is no longer reported as `bundle-file-missing` — which said something false about the bundle. A definite `ENOENT` still means missing. |
+| **E3-3** | The Erratum-2 enumeration comment no longer lists "a manifest with the wrong name or location" under `manifest-invalid`. No manifest discovery is performed and none was: the lookup is a single `path.join(bundleDir, "manifest.json")`. A bundle whose only manifest-shaped file is wrongly named exits `1` with empty stdout. |
+| **E3-4** | `--help` is a CLI meta-action: exit `0`, help on stdout, no result object, no `--bundle` required. Closes recorded ambiguity 6, which this lane had resolved the other way because the pre-erratum §8.5 made exit `0` unsatisfiable for a help screen. |
+
+Each ruling has a self-test that **discriminates it specifically** — verified by reverting each
+fix in turn and confirming the corresponding checks fail, rather than by assuming the tests have
+teeth. The `NODE-IMP-1` regressions (both routes) are preserved unchanged and still pass,
+including the control that measures the buggy async-write-then-exit pattern actually truncating on
+the host platform.
+
 ## Recorded ambiguities — not resolved here
 
-Erratum 2 closed three of the eight this lane carried. These six remain, recorded rather than
-invented, and each is marked at the point of use in the source.
+Erratum 2 closed three of the eight this lane carried, and Erratum 3 closed two more (3 and 7
+below, struck through). Erratum 3 also surfaced one new one (5). These five remain, recorded
+rather than invented, and each is marked at the point of use in the source.
 
 1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
    strings but not what to emit when the assertion has not yet run, or when a file could not be
@@ -244,24 +318,30 @@ invented, and each is marked at the point of use in the source.
    `nonmeasurement.detail` — following that section's own rule that no implementer invents an exit
    code, and its principle that absence is represented by absence. E2-2 narrowed the reason for
    this case to `verifier-not-invocable` but did not pin the `artifacts[]` shape.
-3. **`related_artifacts` ordering when an artifact carries no usable `record_id`.** This is the
-   residue of the old ambiguity 6 after `AD15-IR-5`. That ruling moved *result* identity and
-   ordering to `artifact_path`, but §5.1 still orders the **envelope**'s `related_artifacts` by
-   `record_id`, and it does not say what to do when one is absent. This lane sorts such an
-   artifact under an empty key with `artifact_path` as a deterministic tiebreak. The choice is
-   **not** cross-lane safe on its own — a peer lane could tiebreak differently and produce
-   different envelope bytes — but it cannot arise in an official W1 bundle, because a four-artifact
-   `IOP-R-*` fixture is built to be individually sound. Recorded rather than resolved, because
-   resolving it would mean amending §5.1.
+3. ~~**`related_artifacts` ordering when an artifact carries no usable `record_id`.**~~
+   **CLOSED by `AD15-IR-6` (E3-1).** §5.1 now orders `related_artifacts` by `artifact_path`, which
+   always exists, so the envelope is always defined and the empty-key resolution this lane had
+   recorded is superseded. The concern recorded here — that the choice was *not cross-lane safe* —
+   was exactly right: the peer lane resolved it differently, and the erratum ruled rather than
+   letting either stand.
 4. **An unexpected fault before identity is established.** `internal-error` is defined as a fault
    *after* identity. Before it there is no scenario to name, so the exit-`1` band applies, per
    §8.5's statement that the dividing line is whether identity was established and nothing else.
    The enumeration in the exit-`1` row does not list this case.
-5. **Duplicate member names inside `manifest.json`.** "not parseable as strict JSON" is not pinned
+5. **An unreadable bundle DIRECTORY.** E3-2 bounds the four filesystem reasons for a **listed
+   file**. A directory is never a `files[]` entry, so none of the four covers a directory under
+   the bundle that cannot be `readdir`-ed. This lane reports `manifest-invalid`, on the Erratum-2
+   reading that the reason covers the whole bundle-layout surface and that layout closure cannot
+   be established without the listing. **Recorded because it is arguably the same shape E3-2
+   closed, one level up**: "the layout violates a rule" is as questionable a thing to say about a
+   faulty medium as "the file is missing" was. Not resolved here — resolving it would mean adding
+   a registry row, which needs an erratum.
+6. **Duplicate member names inside `manifest.json`.** "not parseable as strict JSON" is not pinned
    to reject them. `JSON.parse` keeps the last occurrence, as most JSON libraries do, so the
    closure check sees one member. This is left as the library default deliberately: tightening it
    unilaterally would be a rule the peer lane has no reason to share.
-6. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
-   contract pins `--help` to exit `0` — which §8.5 here forbids, since exit `0` owes a result
-   object. Treated as a usage error (exit `2`, usage text on stderr). The two lanes have no shared
-   basis to agree on this until it is pinned.
+7. ~~**`--help`.**~~ **CLOSED by E3-4.** The contradiction recorded here — the frozen contract
+   pinning exit `0` while §8.5 owed a result object at exit `0` — is resolved by putting `--help`
+   outside the evaluation exit table altogether. This lane's earlier resolution (exit `2`, usage
+   on stderr) is superseded; it now matches the frozen lane: exit `0`, help on stdout, no result
+   object.

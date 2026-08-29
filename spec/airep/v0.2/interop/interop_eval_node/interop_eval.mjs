@@ -2,7 +2,7 @@
 // AIREP v0.2 reference interop evaluator -- Node lane.
 //
 // Implements INTEROP_REFERENCE_EVALUATOR_CONTRACT.md (AD15-IR-2), canonical
-// post-Erratum-2 basis b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278, sections 5-8.
+// post-Erratum-3 basis b947a2b9e4f8d72a4fcc24eaa8a6e0f1b4daa9bd, sections 5-8.
 // The contract's own sha256 is recorded in README.md and deliberately not here:
 // every 64-hex literal in this file is a frozen-verifier digest this lane
 // asserts, and the self-test requires that set to be exactly two (section
@@ -32,7 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // 0. Constants
 // ---------------------------------------------------------------------------
 
-const EVALUATOR_VERSION = "interop_eval_node/0.2.1";
+const EVALUATOR_VERSION = "interop_eval_node/0.2.2";
 
 // The registered twelve (section 8.1). A manifest whose scenario_id is not one
 // of these carries "no usable scenario_id" and therefore establishes no bundle
@@ -107,8 +107,20 @@ const REASON_STATUS = Object.freeze({
   // enumerated normatively in section 8.2.2. No new reason code is added for
   // any member of that enumeration.
   "manifest-invalid": "ERROR",
+  // Erratum 3 bounds the four filesystem reasons EXACTLY, so no condition
+  // falls between them and none overlaps:
+  //
+  //   path absent, or a definite ENOENT on read      -> bundle-file-missing
+  //   present, permitted regular file, read fails    -> bundle-file-unreadable
+  //   bytes read but not parseable JSON              -> bundle-json-invalid
+  //   bytes read but digest does not match           -> manifest-digest-mismatch
+  //
+  // Each says a different TRUE thing about the bundle. The candidate this lane
+  // is remediating had no row for the second and reported it as the first,
+  // which asserts something false: nothing was missing.
   "manifest-digest-mismatch": "ERROR",
   "bundle-file-missing": "ERROR",
+  "bundle-file-unreadable": "ERROR",
   "bundle-json-invalid": "ERROR",
   "bundle-shape-invalid": "ERROR",
   "numeric-preflight-violation": "ERROR",
@@ -408,6 +420,14 @@ export function checkBundlePath(p) {
 // Reads and validates manifest.json. Distinguishes the two failure bands:
 // an IdentityError (exit 1, no scenario to name) from a NonMeasurement
 // (exit 3, identity established and the scenario is named).
+//
+// NO MANIFEST DISCOVERY IS PERFORMED (Erratum 3). The manifest is exactly
+// <bundle>/manifest.json and nothing else. There is no search, no fallback
+// name, no walk looking for a manifest-shaped file, and adding one would be a
+// contract violation rather than a convenience: if the root manifest is absent,
+// bundle identity is not established, so the answer is exit 1 with empty
+// stdout, never manifest-invalid -- that reason would require an identity this
+// evaluator does not have. The single path.join below IS the whole lookup.
 export function loadManifest(bundleDir, onIdentity = null) {
   const manifestPath = path.join(bundleDir, MANIFEST_NAME);
   let text;
@@ -497,10 +517,18 @@ export function loadManifest(bundleDir, onIdentity = null) {
 // so every raise below is bound to that enumeration rather than to this lane's
 // own reading of it: a forbidden symlink; a regular file on disk that files[]
 // does not list; a files[] entry whose target is not a permitted file kind; a
-// FIFO, socket, device or other non-regular non-directory object; a manifest
-// with the wrong name or location; and the closure, sort, role, path and
-// digest-encoding rules. Directories are containers only and are never files[]
-// entries -- a directory under the bundle is normal and is simply descended.
+// FIFO, socket, device or other non-regular non-directory object; and the
+// closure, sort, role, path and digest-encoding rules. Directories are
+// containers only and are never files[] entries -- a directory under the bundle
+// is normal and is simply descended.
+//
+// Erratum 3 REMOVED "a manifest with the wrong name or location" from that
+// enumeration, and nothing here replaces it. The condition was unimplementable:
+// naming it requires a scenario_id, and a bundle with no root manifest.json has
+// none. Section 8.5 already routes it to exit 1. A wrongly-named file sitting
+// BESIDE a valid root manifest needs no special rule either -- it is an
+// unlisted regular file, caught by the closure check below, or a listed entry
+// with an invalid role, caught in loadManifest. Neither is a new code path.
 export function walkBundle(bundleDir) {
   const found = [];
   const stack = [""];
@@ -547,10 +575,23 @@ export function walkBundle(bundleDir) {
 // ---------------------------------------------------------------------------
 // 7. CLI
 // ---------------------------------------------------------------------------
-// Section 8.5 pins exit 0 to "exactly one result object, MEASURED". A --help
-// path printing usage to stdout and exiting 0 would contradict that, so usage
-// text goes to stderr and --help is an exit-2 usage error like any other
-// non-measuring invocation.
+// Section 8.5's exit table governs EVALUATION invocations. Erratum 3 pins
+// --help as a CLI meta-action that is not one: it exits 0, may write
+// human-readable help to stdout, produces no result JSON object, does not
+// require --bundle, and the exit table does not apply to it. The frozen
+// class-verifier contract carries the same carve-out for the same reason, and
+// the frozen verifier of this lane implements it the same way.
+//
+// The candidate this lane is remediating resolved the contradiction the other
+// way -- usage text to stderr, exit 2 -- because the pre-erratum contract made
+// exit 0 unsatisfiable for a help screen. That resolution is superseded.
+//
+// The carve-out is EXACTLY ONE FLAG WIDE. Every other CLI usage error is still
+// exit 2 with empty stdout, and the "exit 0 never has empty stdout" invariant
+// still binds every evaluation invocation -- see the process-exit guard at the
+// foot of this file, which is now keyed on stdout actually carrying bytes
+// rather than on a result object specifically, so it defends --help and an
+// evaluation alike without being weakened for either.
 
 const USAGE = `interop_eval.mjs - AIREP v0.2 reference interop evaluator (Node lane)
 
@@ -567,11 +608,15 @@ role, never synthesized or filtered. The optional operator-input flags are
 assertions -- each must name the bundle file already carrying that role, and a
 disagreement is a usage error.
 
-Exit codes (contract section 8.5):
+Exit codes for an evaluation invocation (contract section 8.5):
   0  one result object  - measurement_status MEASURED, level1 populated
   1  no result object   - bundle identity could not be established
   2  no result object   - CLI usage error
   3  one result object  - MEASUREMENT_INVALID or ERROR, level1 and predicates null
+
+--help is a CLI meta-action, not an evaluation: it exits 0, prints this text,
+evaluates nothing, emits no result object, and does not require --bundle. The
+exit table above does not apply to it.
 `;
 
 const FLAG_FOR_ROLE = {
@@ -580,14 +625,20 @@ const FLAG_FOR_ROLE = {
   revocation: "--revocation",
 };
 
+// Returns { flags, help }. The whole argv is parsed even when --help is
+// present, so a genuine usage error alongside it is still an exit-2 usage error
+// -- the carve-out is one flag wide and is not a way to launder a bad command
+// line into exit 0. Only the --bundle requirement is lifted, because Erratum 3
+// says in terms that --help does not require it.
 export function parseArgs(argv) {
   const flags = {
     bundle: null, bindings: null, "independence-policy": null, revocation: null,
     verifier: null, "verifier-contract": null,
   };
+  let help = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
-    if (a === "--help" || a === "-h") throw new UsageError("--help: nothing is evaluated");
+    if (a === "--help" || a === "-h") { help = true; continue; }
     if (!a.startsWith("--")) throw new UsageError(`unexpected argument: ${a}`);
     const name = a.slice(2);
     if (!(name in flags)) throw new UsageError(`unknown option: ${a}`);
@@ -595,8 +646,8 @@ export function parseArgs(argv) {
     if (flags[name] !== null) throw new UsageError(`option ${a} given more than once`);
     flags[name] = argv[++i];
   }
-  if (flags.bundle === null) throw new UsageError("--bundle is required");
-  return flags;
+  if (!help && flags.bundle === null) throw new UsageError("--bundle is required");
+  return { flags, help };
 }
 
 // ---------------------------------------------------------------------------
@@ -858,41 +909,41 @@ export function mapLevel1(hasRejectingArtifact, predicates) {
 // 10. Evaluation
 // ---------------------------------------------------------------------------
 
-// AD15-IR-5 -- the manifest path is the TOTAL RESULT IDENTITY.
+// AD15-IR-5 + AD15-IR-6 -- the manifest path is the TOTAL ordering key.
 //
-// Two orderings live here, and they are deliberately NOT the same function.
-// Collapsing them into one would change the request-envelope bytes and break
-// the cross-lane envelope equality the aggregate harness checks (AD15-IR-4),
-// so they are kept apart by construction:
+// There is exactly ONE ordering function, and that is now the contract's
+// position rather than this lane's convenience. AD15-IR-6 moved the last
+// remaining record_id-keyed surface -- related_artifacts inside the section 5.1
+// request envelope -- onto artifact_path, so every surface a harness needs an
+// identity for uses the same key:
 //
-//  * RESULT identity and ordering (sections 8.3, 8.3.1, 8.4) -- artifact_path,
-//    the manifest-relative path. It always exists, because the manifest lists
-//    every file, so an artifact that must be rejected at stage 0 with no usable
-//    record_id still has a name to be reported under.
-//  * ENVELOPE ordering of related_artifacts (section 5.1) -- record_id UTF-8
-//    byte order. AD15-IR-5 did NOT touch section 5.1: the manifest path is
-//    harness and result identity only, it is never wire semantics, and it never
-//    participates in reference resolution. R-A is unchanged.
+//  * result identity, and artifacts[] ordering  (sections 8.3, 8.3.1, 8.4);
+//  * aggregate cross-lane comparison, (scenario_id, artifact_path);
+//  * related_artifacts ordering inside the request envelope (section 5.1).
+//
+// The Erratum-2 candidate of this lane deliberately kept two comparators apart,
+// on the reading that AD15-IR-5 had left section 5.1 alone, and sorted an
+// artifact with no usable record_id under an empty key with a bundlePath
+// tiebreak. AD15-IR-6 supersedes that resolution explicitly: it was one of two
+// defensible readings, and neither was cross-lane safe, because a differing
+// related_artifacts order changes request_envelope_digest -- exactly what
+// aggregate duty 2 compares. The distinction this lane preserved is therefore
+// COLLAPSED on purpose, not lost by accident, and compareByRecordId is gone
+// rather than left unused.
+//
+// Why artifact_path is total where record_id was not: the manifest lists every
+// file and files[] forbids a duplicate path, so artifact_path always exists and
+// is unique. No tiebreak is needed or permitted, and the envelope is always
+// defined -- including for an artifact carrying no record_id at all.
+//
+// record_id remains ONLY the AIREP semantic reference-resolution key. R-A is
+// untouched; see resolveRef(), which is the sole remaining reader of it.
 //
 // An evaluator MUST NOT synthesize a record_id -- ever, for any reason. A
 // missing record_id now reaches the frozen stage-0 evaluation it belongs to
 // instead of being converted into this evaluator's own preflight failure.
-
-// Result ordering (sections 8.3.1, 8.4): UTF-8 byte order of artifact_path.
-// Total on any bundle, because files[] forbids a duplicate path.
 function compareByPath(a, b) {
   return byteCompare(a.bundlePath, b.bundlePath);
-}
-
-// Envelope ordering (section 5.1): UTF-8 byte order of record_id. The
-// bundlePath tiebreak covers only the sub-case section 5.1 does not pin -- an
-// artifact carrying no usable record_id inside a four-artifact bundle. See
-// README, recorded ambiguity 3; it cannot arise in an official W1 bundle.
-function compareByRecordId(a, b) {
-  const ka = typeof a.value.record_id === "string" ? a.value.record_id : "";
-  const kb = typeof b.value.record_id === "string" ? b.value.record_id : "";
-  const c = byteCompare(ka, kb);
-  return c !== 0 ? c : byteCompare(a.bundlePath, b.bundlePath);
 }
 
 // AD15-IR-5: an object when a usable record_id exists, null when it does not.
@@ -971,8 +1022,24 @@ function preflight(flags, ctx) {
     try {
       buf = fs.readFileSync(path.join(bundleDir, entry.path));
     } catch (e) {
-      throw new NonMeasurement("bundle-file-missing",
-        `${entry.path} could not be read: ${e.message}`);
+      // Erratum 3. The presence-and-kind sweep above already ran, so reaching
+      // here at all means the path was present and a regular file a moment ago.
+      // The two outcomes are still kept apart on the evidence rather than on
+      // that assumption:
+      //
+      //  * a DEFINITE ENOENT -- the file was removed between the sweep and this
+      //    read -- is genuinely missing, and bundle-file-missing is true;
+      //  * anything else (EACCES, EIO, EISDIR, ELOOP, EMFILE, a short read on a
+      //    faulty medium) is a file that is there and cannot be read.
+      //
+      // Reporting the second as "missing" would tell a reader the bundle is
+      // incomplete when in fact the medium or the permissions are at fault.
+      if (e && e.code === "ENOENT") {
+        throw new NonMeasurement("bundle-file-missing",
+          `files[] lists ${entry.path} but it is no longer present: ${e.message}`);
+      }
+      throw new NonMeasurement("bundle-file-unreadable",
+        `${entry.path} is present but its bytes could not be read: ${e.message}`);
     }
     const observed = sha256Hex(buf);
     if (observed !== entry.sha256) {
@@ -1134,11 +1201,17 @@ function evaluateBundle(flags, ctx) {
   const resultsByPath = new Map();
   try {
     for (const primary of artifacts) {
-      // Section 5.1: ascending UTF-8 byte order of record_id -- NOT
-      // artifact_path. This is the envelope layer, and AD15-IR-5 left it alone.
+      // Section 5.1, as amended by AD15-IR-6: every OTHER artifact of this
+      // bundle, in ascending UTF-8 byte order of its manifest-relative
+      // artifact_path. artifact_path always exists and is unique, so the
+      // envelope is a function of the bundle alone and is defined even when an
+      // artifact carries no usable record_id -- which is the whole point of the
+      // ruling. `artifacts` is already sorted by path, and Array.prototype.sort
+      // is stable, so this re-sort is a restatement of the key rather than a
+      // reliance on the incoming order.
       const related = artifacts
         .filter((a) => a !== primary)
-        .sort(compareByRecordId)
+        .sort(compareByPath)
         .map((a) => a.value);
       const envelope = { artifact: primary.value, related_artifacts: related };
       const envelopeBytes = Buffer.from(jcs(envelope), "utf8");
@@ -1314,6 +1387,22 @@ function evaluateBundle(flags, ctx) {
 // tracked explicitly and enforced at process exit rather than assumed.
 let resultWritten = false;
 
+// Whether ANY byte has reached stdout, and whether this invocation was the one
+// CLI meta-action rather than an evaluation.
+//
+// Erratum 3 makes --help exit 0 with help text and no result object. The guard
+// must accommodate that WITHOUT relaxing what it checks for an evaluation, so
+// it is split by invocation kind rather than loosened for both:
+//
+//   evaluation   exiting 0 MUST have written a result object  (unchanged);
+//   --help       exiting 0 MUST have written help to stdout.
+//
+// Keyed this way, an evaluation that exits 0 with no result object still trips
+// the guard exactly as it did before Erratum 3 -- which is the NODE-IMP-1
+// failure -- and "exit 0 never has empty stdout" holds on both paths.
+let stdoutWritten = false;
+let metaAction = false;
+
 // Synchronous, complete write. process.stdout.write is asynchronous on a pipe,
 // so a subsequent process.exit() can truncate or drop it entirely -- another
 // route to the exit-0-with-empty-stdout failure. fs.writeSync loops until every
@@ -1329,6 +1418,7 @@ export function writeStdoutSync(text) {
       throw e;
     }
   }
+  if (buf.length > 0) stdoutWritten = true;
 }
 
 function emit(result, diagnostic, exitCode) {
@@ -1363,9 +1453,9 @@ function nonMeasuredResult(ctx, err) {
 // ---------------------------------------------------------------------------
 
 export function main(argv) {
-  let flags;
+  let parsed;
   try {
-    flags = parseArgs(argv);
+    parsed = parseArgs(argv);
   } catch (e) {
     if (e instanceof UsageError) {
       process.stderr.write(`usage error: ${e.message}\n\n${USAGE}`);
@@ -1373,6 +1463,18 @@ export function main(argv) {
     }
     throw e;
   }
+
+  // Erratum 3: a CLI meta-action, taken before anything is evaluated. Exit 0,
+  // help to stdout, no result object, no bundle touched. The section 8.5 exit
+  // table does not apply here, and the official aggregate harness never
+  // invokes this path. Written with the same synchronous full-write used for a
+  // result object, so a help screen cannot be truncated on a pipe either.
+  if (parsed.help) {
+    metaAction = true;
+    writeStdoutSync(USAGE);
+    return 0;
+  }
+  const flags = parsed.flags;
 
   const ctx = {
     scenarioId: null,
@@ -1441,9 +1543,10 @@ if (isDirectInvocation()) {
   // none -- the one output the section 8.5 table cannot defend against. If the
   // program is about to do that, it exits non-zero instead and says why.
   process.on("exit", (code) => {
-    if (code === 0 && !resultWritten) {
+    const satisfied = metaAction ? stdoutWritten : resultWritten;
+    if (code === 0 && !satisfied) {
       process.stderr.write(
-        "internal invariant violated: exit 0 with no result object on stdout; "
+        `internal invariant violated: exit 0 with ${metaAction ? "empty stdout" : "no result object on stdout"}; `
         + "exiting 3 instead\n");
       process.exitCode = 3;
     }
