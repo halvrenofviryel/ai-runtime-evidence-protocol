@@ -542,7 +542,7 @@
     },
     {
       "artifact_family": "decision",
-      "category": "indeterminate",
+      "category": "failure",
       "expected_provenance_kind": "frozen_release_expected_result",
       "files": [
         {

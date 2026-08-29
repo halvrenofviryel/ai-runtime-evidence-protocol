@@ -109,11 +109,14 @@
     "spec/airep/v0.2/class-verification/corpus/probes/PRB-REQUEST-UNPARSEABLE/independence.json": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
     "spec/airep/v0.2/class-verification/corpus/probes/PRB-REQUEST-UNPARSEABLE/request.json": "f9582875fce5c6446292efeb655fe7b9f0ec884dab3fad8f1322cd99269f8a02",
     "spec/airep/v0.2/class-verification/corpus/probes/PRB-REQUEST-UNPARSEABLE/revocation.json": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c",
+    "spec/airep/v0.2/class-verification/corpus/probes/probe_index.json": "e65e6bf670505443cdc6407b8dc7bd197366d168b41372c4f4283daf92d721e6",
     "spec/airep/v0.2/schemas/common.schema.json": "b46a02988ba3260444cd92153562346ca633e79f64eaf12c684d5069830e714a",
     "spec/airep/v0.2/schemas/control.schema.json": "f986225eac62c8df2091fc1f2af917c717025a88b6b0fe9157fdb07732f00b90",
     "spec/airep/v0.2/schemas/decision.schema.json": "04b53d4a5a1f1e3c7ba4d5ad32072a09b9e2b58702304a7845d327bc4ef84a6b",
     "spec/airep/v0.2/schemas/effect.schema.json": "4bc2cda84ba68be6e57a8b18a7fce733c54c6835e463822e5b9721a586456297",
-    "spec/airep/v0.2/schemas/execution.schema.json": "eaf476d0dbc43a7abb3eabc55a427a0bfc8dfd8529f18d8e5efe53672f58085b"
+    "spec/airep/v0.2/schemas/execution.schema.json": "eaf476d0dbc43a7abb3eabc55a427a0bfc8dfd8529f18d8e5efe53672f58085b",
+    "spec/airep/v0.2/vectors/out/node_vectors.json": "3153ef094802fb657ba9a83169dede31662353088f68c5dd25a910f27b5bfb65",
+    "spec/airep/v0.2/vectors/out/python_vectors.json": "3153ef094802fb657ba9a83169dede31662353088f68c5dd25a910f27b5bfb65"
   },
   "source_repository": "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol",
   "source_tag": "v0.2.0-alpha.1",

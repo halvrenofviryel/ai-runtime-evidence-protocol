@@ -81,7 +81,7 @@ CASES = [
     ("CLS-PB2",  "PB2",  "class", "withheld",      "decision",  "no producer binding entry: assurance WITHHELD, not failed"),
     ("CLS-WB2",  "WB2",  "class", "withheld",      "decision",  "no witness binding entry: witness assurance WITHHELD"),
     ("CLS-OB4",  "OB4",  "class", "withheld",      "effect",    "Effect declares independent; referenced Execution cannot earn the class, so observer is unknown"),
-    ("CLS-LEX1", "LEX1", "class", "indeterminate", "decision",  "witness claim length written 1e0: the semantic JSON value alone is insufficient"),
+    ("CLS-LEX1", "LEX1", "class", "failure",       "decision",  "witness claim length written 1e0: the semantic JSON value alone is insufficient"),
     ("PROC-UNP", "PRB-REQUEST-UNPARSEABLE",   "probe", "indeterminate", "n/a", "request is not parseable: run-invalid, no verdict is emitted"),
     ("PROC-NGR", "PRB-CLI-NOW-NOT-GREGORIAN", "probe", "indeterminate", "n/a", "operator clock input is format-valid but not a Gregorian date: usage error"),
 ]
@@ -89,9 +89,12 @@ VECTORS = ["V1", "V2", "V3", "V4", "W1", "W2"]
 
 
 def main() -> int:
-    if OUT.exists():
-        subprocess.run(["rm", "-rf", str(OUT)], check=True)
-    OUT.mkdir(parents=True)
+    # Rebuild only the GENERATED subtrees. An earlier version wiped the whole package
+    # directory, which silently deleted the hand-authored documents on every re-run.
+    for gen in ["cases", "bytes", "normative_basis", "expected", "manifests"]:
+        if (OUT / gen).exists():
+            subprocess.run(["rm", "-rf", str(OUT / gen)], check=True)
+    OUT.mkdir(parents=True, exist_ok=True)
 
     src_digests: dict[str, str] = {}
 
@@ -111,6 +114,13 @@ def main() -> int:
                     f"normative_basis/schemas/{s}.schema.json")
 
     # vectors: frozen byte material, plus package-derived raw .bin forms
+    # Digest-record every pinned source CONSULTED, not only those copied verbatim. An
+    # earlier version recorded only copied files, so the vector sources and the probe index
+    # were read but never pinned - the README's per-file-digest claim outran the manifest.
+    for consulted in ["vectors/out/python_vectors.json", "vectors/out/node_vectors.json",
+                      "class-verification/corpus/probes/probe_index.json"]:
+        src_digests[f"{SRC}/{consulted}"] = sha256(git_show(f"{SRC}/{consulted}"))
+
     vecs = json.loads(git_show(f"{SRC}/vectors/out/python_vectors.json"))["vectors"]
     node_vecs = json.loads(git_show(f"{SRC}/vectors/out/node_vectors.json"))["vectors"]
     vector_rows = []

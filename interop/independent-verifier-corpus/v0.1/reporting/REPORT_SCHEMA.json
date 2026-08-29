@@ -38,6 +38,110 @@
       "type": "string"
     },
     "expected_result": {
+      "additionalProperties": false,
+      "description": "A conforming result MUST keep the five outcome dimensions separate. Collapsing FAIL, WITHHELD and INDETERMINATE into one boolean is non-conforming.",
+      "properties": {
+        "airep_class": {
+          "enum": [
+            "AIREP-Core",
+            "AIREP-Authenticated",
+            "AIREP-Witnessed",
+            null
+          ]
+        },
+        "cryptographic_result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_EVALUATED"
+          ]
+        },
+        "observer_assessment": {
+          "enum": [
+            "same_executor",
+            "independent",
+            "unknown",
+            "not_applicable",
+            null
+          ]
+        },
+        "process_exit": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "reason_channels": {
+          "additionalProperties": false,
+          "description": "null only when no verdict is emitted",
+          "properties": {
+            "authenticated_caveats": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "authenticated_failures": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "authenticated_withheld": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "witnessed_failures": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "witnessed_withheld": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "authenticated_failures",
+            "authenticated_withheld",
+            "authenticated_caveats",
+            "witnessed_failures",
+            "witnessed_withheld"
+          ],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "run_validity": {
+          "enum": [
+            "VALID",
+            "INVALID_CONFIGURATION",
+            "INVALID_ARTIFACT"
+          ]
+        },
+        "signing_input_reconstruction": {
+          "enum": [
+            "RECONSTRUCTED",
+            "MISMATCH",
+            "INDETERMINATE"
+          ]
+        }
+      },
+      "required": [
+        "run_validity",
+        "signing_input_reconstruction",
+        "cryptographic_result",
+        "airep_class",
+        "reason_channels",
+        "observer_assessment",
+        "process_exit"
+      ],
       "type": [
         "object",
         "null"
@@ -100,6 +204,110 @@
       "type": "array"
     },
     "observed_result": {
+      "additionalProperties": false,
+      "description": "A conforming result MUST keep the five outcome dimensions separate. Collapsing FAIL, WITHHELD and INDETERMINATE into one boolean is non-conforming.",
+      "properties": {
+        "airep_class": {
+          "enum": [
+            "AIREP-Core",
+            "AIREP-Authenticated",
+            "AIREP-Witnessed",
+            null
+          ]
+        },
+        "cryptographic_result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT_EVALUATED"
+          ]
+        },
+        "observer_assessment": {
+          "enum": [
+            "same_executor",
+            "independent",
+            "unknown",
+            "not_applicable",
+            null
+          ]
+        },
+        "process_exit": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "reason_channels": {
+          "additionalProperties": false,
+          "description": "null only when no verdict is emitted",
+          "properties": {
+            "authenticated_caveats": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "authenticated_failures": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "authenticated_withheld": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "witnessed_failures": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "witnessed_withheld": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "authenticated_failures",
+            "authenticated_withheld",
+            "authenticated_caveats",
+            "witnessed_failures",
+            "witnessed_withheld"
+          ],
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "run_validity": {
+          "enum": [
+            "VALID",
+            "INVALID_CONFIGURATION",
+            "INVALID_ARTIFACT"
+          ]
+        },
+        "signing_input_reconstruction": {
+          "enum": [
+            "RECONSTRUCTED",
+            "MISMATCH",
+            "INDETERMINATE"
+          ]
+        }
+      },
+      "required": [
+        "run_validity",
+        "signing_input_reconstruction",
+        "cryptographic_result",
+        "airep_class",
+        "reason_channels",
+        "observer_assessment",
+        "process_exit"
+      ],
       "type": [
         "object",
         "null"

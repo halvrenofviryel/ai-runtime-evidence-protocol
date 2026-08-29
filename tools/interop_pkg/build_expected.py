@@ -34,8 +34,12 @@ for c in idx["cases"]:
         # is stated so a reader can dispute it rather than take it on trust.
         row.update({
             "run_validity": "VALID",
-            "signing_input_reconstruction":
-                "MISMATCH" if sid == "PS1" else "RECONSTRUCTED",
+            # The signing input reconstructs for every class case, PS1 included: the
+            # preimage is well-formed and the signature is well-formed 128-hex. What fails
+            # in PS1 is verification under the BOUND key. Reporting MISMATCH here would
+            # conflate "could not rebuild the input" with "rebuilt it and the signature
+            # did not verify" - the exact distinction a three-valued checker exists to make.
+            "signing_input_reconstruction": "RECONSTRUCTED",
             "cryptographic_result":
                 "FAIL" if sid == "PS1" else ("NOT_EVALUATED" if sid == "PB2" else "PASS"),
             "airep_class": cls,
@@ -59,9 +63,11 @@ for c in idx["cases"]:
                     "dimensions the recipient's checker reports separately; the frozen release "
                     "does not carry these three fields. Derivation: a populated "
                     "authenticated_failures channel naming a signature reason implies "
-                    "MISMATCH/FAIL; a withheld producer binding means the signature path was "
-                    "NOT_EVALUATED; otherwise RECONSTRUCTED/PASS. Dispute this projection rather "
-                    "than the frozen fields if you disagree."),
+                    "cryptographic_result FAIL while signing_input_reconstruction stays "
+                    "RECONSTRUCTED, because the preimage rebuilds and only verification under "
+                    "the bound key fails; a withheld producer binding means the signature path "
+                    "was NOT_EVALUATED; otherwise RECONSTRUCTED/PASS. Dispute this projection "
+                    "rather than the frozen fields if you disagree."),
             },
         })
     else:

@@ -54,7 +54,34 @@ artifact and no paired delivery case exists at the pin, so paired control-delive
 reconciliation is **not** tested and none was synthesised. Absence of a receiver-side record
 does not prove non-delivery.
 
-## Balance
+## Sampling policy, and the population it samples from
 
-6 positive · 5 definitive failure · 1 caveat · 3 withheld · 3 indeterminate. The set is not a
-favourable subset: 12 of 18 are non-positive, and 3 produce no verdict at all.
+The 60 scored source cases break down as:
+
+| Population | Count |
+|---|---|
+| contains at least one **definitive failure** reason | **22** |
+| contains **withheld** reasons only, no failure | **35** |
+| **fully clean** — neither failure nor withheld | **3** |
+
+This package selects **all 3** fully clean cases and **6 of the 22** definitive-failure cases.
+
+**That is not a proportionate sample, and no balance claim is made.** An earlier draft asserted the
+selection was "not a favourable subset" on the strength of a count that had `CLS-LEX1`
+miscategorised; the assertion did not survive checking and has been withdrawn.
+
+The actual policy is **rule coverage, not proportional representation**: one case per distinct
+normative property, chosen so that a verifier which passes all 18 has exercised each rule at least
+once. Sixteen definitive-failure cases are deliberately omitted because each duplicates a property
+already covered — for example, `PB1`, `PB3` and `XT1` all exercise producer-binding rejection, and
+only `XT1` is selected.
+
+A reader who wants proportional coverage of the failure space should use the full 60-case release
+corpus, which is public. This package is the compact set, and compactness has a cost that is
+stated here rather than argued away.
+
+## Byte material
+
+Per-case canonical bytes and hash preimages are provided for **17 of 18** cases; signature
+preimages for the 16 with a resolving producer binding; the full chain for the 6 fixed vectors.
+`PROC-UNP` has none — its request is unparseable by design. See the README table.

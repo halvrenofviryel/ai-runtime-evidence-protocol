@@ -38,10 +38,10 @@ Not ES256. Not P-256. Adding a suite is a specification change. The construction
 | Category | Count |
 |---|---|
 | positive | 6 |
-| definitive failure | 5 |
+| definitive failure | 6 |
 | caveat (passes with a recorded caveat) | 1 |
 | withheld assurance | 3 |
-| indeterminate / cannot-reconstruct | 3 |
+| indeterminate / no verdict emitted | 2 |
 
 Artifact families: `decision` 13, `effect` 2, `control` 1, plus 2 process probes that evaluate no
 artifact. **`execution` appears as a referenced `related_artifacts` member inside the Effect
@@ -59,7 +59,10 @@ A verifier must not collapse these into one boolean:
 | **INDETERMINATE** | the signing input, head, reference or configuration could not be rebuilt |
 | **run-invalid** | no verdict is emitted at all; a process exit is the only result |
 
-Three cases carry no verdict by design. Two emit a non-zero process exit and nothing else.
+**Two cases emit no verdict at all** — both are process probes returning a non-zero exit and
+nothing else. Every other case emits a normal verdict, the definitive failures included: a failure
+is a *verdict*, not the absence of one. `CLS-LEX1` in particular returns `AIREP-Authenticated`
+with a definitive `witness-claim-invalid`, so it is a failure case, not an indeterminate one.
 
 ## What a successful run would NOT establish
 
@@ -85,15 +88,20 @@ It would establish only the bounded result actually measured:
 
 ## Control delivery — a disclosed absence
 
-The frozen release contains **exactly one** Control Evidence artifact: `CTL1`, `boundary_side:
-issuer`, `control_event: dispatched`. Searching the whole pinned `spec/airep/v0.2` tree for
-`"receiver"`, `"received"` or `"delivery_failed"` outside the schema and documentation files that
-*define* those enum values returns nothing.
+The scored class-verification corpus contains **one primary Control case**: `CTL1`,
+`boundary_side: issuer`, `control_event: dispatched`. Control artifacts appear elsewhere in the
+pinned tree — the schema-validation corpus carries about thirty, Stage-4 more — so this is a
+statement about the **scored** corpus, not about the release as a whole.
 
-So there is **no receiver-side Control artifact and no paired delivery case** in this release.
-This corpus therefore **does not test end-to-end control-delivery reconciliation**, and no paired
-case was synthesised to appear to. **Absence of a receiver-side record does not prove
-non-delivery** — it means the evidence was never produced, which is a different thing.
+Searching every `.json` under the pinned `spec/airep/v0.2` tree for the values `"receiver"`,
+`"received"` or `"delivery_failed"` returns exactly one file: `schemas/control.schema.json`, which
+*defines* the enum. **No fixture anywhere carries a receiver-side value.**
+
+So no paired issuer/receiver delivery case exists in this release, this corpus **does not test
+end-to-end control-delivery reconciliation**, and none was synthesised to appear to. **Absence of
+a receiver-side record does not prove non-delivery.** What the search establishes is narrower, and
+is all that should be said: *no such evidence is present in the pinned release.* Whether such
+evidence was ever produced elsewhere is not something this package can observe.
 
 ## Keys
 
@@ -101,6 +109,28 @@ All keys are **TEST-ONLY**. Only public halves are distributed. Their signatures
 signatures over real frozen preimages so the cryptographic path is genuinely exercised, and they
 are **not evidence of real-world authenticity**. The private seeds are published in the source
 repository; they are excluded here and the package's leak scanner fails if any appears.
+
+## Byte material — what is provided, for which cases
+
+| Material | Coverage |
+|---|---|
+| Canonical JCS bytes and hash preimage (`.bin` + `.hex`) | **17 of 18 cases**, under `bytes/cases/<id>/` |
+| Signature preimage | the 16 cases where a producer binding resolves |
+| Full chain incl. signature, suite id, public key | the **6 fixed vectors**, under `bytes/vectors/` |
+| None | `PROC-UNP` — its request is unparseable by design |
+
+Do not read this as "every case carries every byte artefact". It does not, and the table above is
+the precise statement.
+
+The two layers are complementary rather than overlapping. The **vectors** are construction-test
+bodies — the release states they are deliberately *not* schema-conformant artifacts — and they
+exercise the byte-construction stack. The **cases** are conformant artifacts and exercise
+classification.
+
+Every per-case derivation is self-validated against a value this package did not produce: the
+derived hash preimage must SHA-256 to the artifact's own recorded `integrity.current`. All 17
+match. Where a signature preimage is emitted it is checked against the artifact's own recorded
+signature. `CLS-PS1` does not verify — that is the case's expected outcome, not a packaging error.
 
 ## Checking the package
 

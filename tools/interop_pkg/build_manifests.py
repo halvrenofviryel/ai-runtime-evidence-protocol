@@ -65,8 +65,9 @@ def is_oracle(p): return p.startswith("expected/")
 
 if __name__ == "__main__":
     agg, n = build_manifests()
+    # One archive only. The inputs/oracle split was withdrawn: inputs.zip retained every
+    # per-case expected.json (so it was not input-only) and shipped the checker with a
+    # manifest declaring a file it did not contain (so the checker could only fail).
     full = build_zip("airep-v0.2-independent-verifier-corpus-v0.1-full.zip", lambda p: True)
-    inp  = build_zip("airep-v0.2-independent-verifier-corpus-v0.1-inputs.zip", lambda p: not is_oracle(p))
-    ora  = build_zip("airep-v0.2-independent-verifier-corpus-v0.1-oracle.zip", is_oracle)
     print(json.dumps({"release_commit_time": REL_TS, "file_count": n, "aggregate": agg,
-                      "full": full, "inputs": inp, "oracle": ora}, indent=2))
+                      "full": full}, indent=2))
