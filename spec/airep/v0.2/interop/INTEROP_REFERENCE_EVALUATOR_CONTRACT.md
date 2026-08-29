@@ -117,6 +117,22 @@ identity is not established, so the result is **exit 1 with empty stdout** — n
 listed "a manifest with the wrong name or location" under `manifest-invalid`; that was
 unimplementable, because §8.5 already routes exactly that condition to exit 1.
 
+**The identity boundary is a direct read (Erratum 4).** The evaluator establishes bundle identity by
+reading the bytes of `DIR/manifest.json` **directly** — not by enumerating the bundle first. Every
+one of the following is *identity not established* → **exit 1, stdout empty, no result object**:
+
+- the bundle root itself cannot be accessed;
+- `DIR/manifest.json` is not found;
+- it is found but cannot be opened or read;
+- its bytes do not parse as strict JSON;
+- no registered `scenario_id` can be obtained from it.
+
+**A root manifest that cannot be read never yields `bundle-file-unreadable`.** That reason names a
+file listed in `files[]`, and the root manifest is deliberately excluded from `files[]` — but more
+fundamentally, a reason belongs to a result object, and at this point there is no scenario to name
+one after. Unreadable and absent are genuinely indistinguishable *to the evaluator* here, because
+neither yields an identity.
+
 A wrongly-named or misplaced file sitting *beside* a valid root `manifest.json` needs no special
 rule: it is an unlisted regular file, or a listed entry with an invalid `role`, and the ordinary
 layout rules make it `manifest-invalid`.
@@ -190,6 +206,27 @@ For a single-artifact scenario (the four positives and the four broken-per-famil
 Operator inputs (`--bindings`, `--independence-policy`, `--revocation`, clock inputs) are passed
 as the **same bytes** to every artifact in the bundle and to both lanes. An evaluator MUST NOT
 synthesize, filter, reorder or re-emit them; it passes through the files the bundle ships.
+
+#### Ruling `AD15-IR-7` — duplicate semantic IDs are not bundle-preflight invalidity
+
+The W1 evaluator applies **no** bundle-wide preflight gate on duplicate `record_id` or duplicate
+`(chain_id, record_id)`. `artifact_path` is each artifact's total harness identity
+(`AD15-IR-5`, `AD15-IR-6`), so duplicated semantic IDs cannot make a bundle unidentifiable.
+
+Artifacts carrying duplicate semantic IDs are still sent to frozen stage evaluation. If a real
+reference lookup then produces more than one match, **R-A and the frozen resolution semantics
+treat it as ambiguous** — which is what §5 already requires: *"more than one match is ambiguous and
+fails closed. An evaluator MUST NOT pick one."* A preflight gate would make that predicate
+unreachable, converting a genuine reconciliation finding into the evaluator's own refusal. The
+evaluator never picks one and never synthesizes an ID.
+
+**Frozen `R-10` is a different surface.** It makes a duplicate `(chain_id, record_id)` in the
+**batch verifier's own emitted verdict set** run-invalid. The W1 evaluator submits each artifact as
+a separate request, so that batch invariant does not generalize into a bundle-wide semantic
+preflight, and must not be widened into one.
+
+This ruling **confirms** the removal of a duplicate-`record_id` preflight from an evaluator lane.
+No mandatory W1 scenario targets duplicate semantic IDs, so the expected matrix is unchanged.
 
 #### Ruling `AD15-IR-6` — envelope ordering is `artifact_path` too
 
@@ -544,6 +581,7 @@ implementer:
 | `manifest-digest-mismatch` | a listed file's bytes do not match its `files[]` digest | `ERROR` |
 | `bundle-file-missing` | a file listed in `files[]` is not present on disk | `ERROR` |
 | `bundle-file-unreadable` | a listed file exists and is a permitted regular file, but its bytes cannot be read | `ERROR` |
+| `bundle-directory-unreadable` | after identity is established, bundle traversal cannot complete because a directory cannot be enumerated | `ERROR` |
 | `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
 | `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
 | `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
@@ -566,7 +604,22 @@ The reason covers **all** of:
 **Directories are containers only.** A directory is normal under a bundle and is never itself a
 `files[]` entry. No new reason code is added for any of the above.
 
-**Filesystem failures are four distinct reasons, not one (Erratum 3).** An earlier registry had no
+**Enumeration failure is not a layout violation (Erratum 4).** Once a usable manifest and
+`scenario_id` exist, the evaluator traverses the bundle. If that traversal cannot complete —
+permission denied, an I/O error, or any other failure to enumerate a directory — the reason is
+**`bundle-directory-unreadable`**, exit `3`.
+
+It is deliberately **not** `manifest-invalid`. `manifest-invalid` says *the layout is wrong*; this
+says *the layout could not be measured*. Both isolated lanes independently reached for
+`manifest-invalid` here and both recorded discomfort with it, one observing that it is the same
+shape Erratum 3 had just closed one level down: saying "the layout violates a rule" about a faulty
+medium is as false as saying "the file is missing" was.
+
+The file-level distinctions are unaffected: enumeration succeeding but a listed file being absent
+remains `bundle-file-missing`, and a listed regular file whose bytes cannot be read remains
+`bundle-file-unreadable`.
+
+**Listed-file failures are four distinct reasons, not one (Erratum 3).** An earlier registry had no
 row for a file that exists and is readable-in-principle but cannot actually be read, so it was
 reported as `bundle-file-missing` — which says something false about the bundle. The boundary is
 exact:
@@ -708,7 +761,7 @@ object *about*. Exit code and stdout are therefore pinned together.
 | Exit | stdout | Condition |
 |---|---|---|
 | `0` | **exactly one** result object, `measurement_status: MEASURED`, with a Level-1 verdict | the bundle was measured |
-| `1` | **no result object** — stdout empty | **bundle identity could not be established**, and only that: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
+| `1` | **no result object** — stdout empty | **bundle identity could not be established under §5's direct-read identity boundary — and only that** (bundle root inaccessible · root `manifest.json` absent · present but unopenable or unreadable · not parseable as strict JSON · no registered `scenario_id` obtainable) |
 | `2` | **no result object** — stdout empty | CLI usage error |
 | `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
 
@@ -726,9 +779,22 @@ reason.
 - the §8.5 evaluation exit table **does not apply to it**;
 - the official aggregate harness never invokes it.
 
-Every other CLI usage error remains exit `2`. This carve-out is exactly one flag wide: it is not a
-general licence for exit 0 without a result object, and the "exit 0 never has empty stdout"
-invariant continues to bind every evaluation invocation.
+Every other CLI usage error remains exit `2`.
+
+**The carve-out is one exact invocation, not one concept (Erratum 4).** "Exactly one flag wide"
+proved ambiguous: two isolated lanes read it differently and measurably diverged — one treated it
+as a statement about *spellings* and refused `-h`, the other as a statement about the *exit-0
+licence* and accepted `-h`. Both readings were defensible, so the text is now precise:
+
+- the meta-action is the **single-token invocation `--help`, and nothing else**;
+- **`-h` is not an alias.** It is a CLI usage error: exit `2`, no result object;
+- **`--help` combined with any other argument is not a meta-action** — it is a usage error, exit
+  `2`. Only the lone help invocation is carved out;
+- **help text content and byte length are not a parity requirement.** The lanes may print
+  different help; nothing compares it.
+
+This remains not a general licence for exit 0 without a result object, and the "exit 0 never has
+empty stdout" invariant continues to bind every evaluation invocation.
 
 The dividing line is **whether bundle identity was established**, and nothing else. Once it is, the
 evaluator owes a result object naming the scenario it failed on; before it, it owes silence on
@@ -924,35 +990,66 @@ makes it a required member over a closed enum, so an exit-0 result lacking it is
 frozen result, which Erratum 2 already routes to `verifier-run-invalid`. Adding missing-value
 semantics to R-C would mean accepting malformed frozen output as ordinary semantic input.
 
+### Erratum 4 — record (2026-08-29)
+
+Raised by the final micro-remediation round. Both candidates are frozen as evidence, not identities:
+
+| Lane | Erratum-3 candidate | Final candidate (r1) |
+|---|---|---|
+| Python | `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` | `0d05975caacd4624e201c67b0f7ccd0abf648d26` |
+| Node | `4b14328d67ea36f7657db8b3b4765bf3e187e639` | `c801d5058c5538de0fd0fb414a68041538806f0e` |
+
+**The three findings have different evidential strengths, and conflating them would overstate two
+of them:**
+
+| Finding | Strength | Reach |
+|---|---|---|
+| `-h` spelling | **measured cross-lane divergence** — Python exit 2 / Node exit 0, both from the same sentence | **unreachable** by the official harness, which never invokes help |
+| directory enumeration failure | **convergent inferred resolution** — both lanes reached `manifest-invalid` and both recorded discomfort | contract was silent; now pinned |
+| duplicate-`record_id` preflight | **source-contract boundary ruling** — one lane removed a gate its own reading of §5/§8.2.2 forbade | confirmed by `AD15-IR-7` |
+
+Only the first is a measurement. The second is two implementers inferring the same thing from
+silence, which is weaker evidence than agreement under a rule. The third is a reading of existing
+text, not a new observation.
+
+| # | Change |
+|---|---|
+| E4-1 | help carve-out is one exact single-token invocation; `-h` is a usage error; `--help` with other arguments is not a meta-action; help content is not a parity requirement |
+| E4-2 | identity boundary is a direct read of `DIR/manifest.json`; five listed conditions all yield exit 1 with no result object; the root manifest never yields `bundle-file-unreadable` |
+| E4-3 | `bundle-directory-unreadable` added — the layout could not be *measured*, as distinct from being *wrong* |
+| E4-4 | `AD15-IR-7` — duplicate semantic IDs are not preflight invalidity; frozen `R-10` stays a batch-verifier output invariant |
+
+Also worth recording as method: the Node lane found that its **own prior ordering fixture measured
+nothing** — with the outlier `record_id` on one artifact, the remaining three ordered identically
+under both keys depending on which was primary. Both lanes now make `record_id` rank the exact
+reverse of `artifact_path` rank, so the test cannot pass under the wrong key. A test that passes
+with and without the fix is not a test.
+
 ## 13. Sequencing
 
-Everything through the Erratum-2 micro-remediation round is complete. Both lanes were remediated in
-fresh isolated contexts and their candidates are frozen as **pre-Erratum-3 micro-remediation
-evidence** — `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` (Python) and
-`4b14328d67ea36f7657db8b3b4765bf3e187e639` (Node). Neither is an official evaluator identity.
+The final micro-remediation round is complete and both candidates are frozen as
+**post-Erratum-3 final candidates (r1)** — `0d05975caacd4624e201c67b0f7ccd0abf648d26` (Python) and
+`c801d5058c5538de0fd0fb414a68041538806f0e` (Node), on refs `w1/interop-eval-py-final-r1` and
+`w1/interop-eval-node-final-r1`.
 
-**Branch naming, so the record stays legible.** Those two candidates live on refs named
-`w1/interop-eval-py-official` and `w1/interop-eval-node-official`. That naming predates their
-demotion to evidence and is now misleading, but the refs are **not rewritten or deleted** — the
-history stays as it happened. The final official identities therefore take **new** refs,
-`w1/interop-eval-py-final` and `w1/interop-eval-node-final`, so evidence and identity are never
-confused by a name.
+**The `w1/interop-eval-py-final` and `w1/interop-eval-node-final` refs are deliberately unused.**
+They are reserved for the post-Erratum-4 official candidates. The earlier `-official` refs, which
+now hold evidence rather than identities, are likewise never rewritten — every naming decision in
+this chain preserves what actually happened rather than tidying it.
 
-The remaining sequence:
+Remaining sequence:
 
-1. **Erratum 3 is source-reviewed and canonicalized** — the maintainer pins a new head plus the
-   **evaluator-contract** digest and the **corpus-contract** digest.
-2. **Python final micro-remediation** in a fresh context: only
-   `4cc3773e1b27b85f889717afe5f2ba8121fd2a09` plus the new canonical contracts, on
+1. **Erratum 4 is source-reviewed and canonicalized** — the maintainer pins a new head plus the
+   evaluator-contract and corpus-contract digests.
+2. **Python last remediation** in a fresh isolated context: only its own r1 head
+   `0d05975caacd4624e201c67b0f7ccd0abf648d26` plus the new canonical contracts, on
    `w1/interop-eval-py-final`.
-3. **Node final micro-remediation** in a fresh context: only
-   `4b14328d67ea36f7657db8b3b4765bf3e187e639` plus the new canonical contracts, on
+3. **Node last remediation** in a fresh isolated context: only its own r1 head
+   `c801d5058c5538de0fd0fb414a68041538806f0e` plus the new canonical contracts, on
    `w1/interop-eval-node-final`.
-4. **Peer material remains invisible** throughout, as in every prior round.
-5. **The new canonical contract lineage is merged into each final evaluator branch**, so a reviewer
-   opening a frozen branch finds the exact canonical contracts beside the evaluator rather than a
-   superseded one.
-6. Test and source review.
+4. **Peer material remains invisible** throughout.
+5. **The canonical contract lineage is merged into each branch**, no squash or rewrite.
+6. Tests and source review.
 7. **Official Python and Node evaluator identities are frozen.**
 8. **Only then is corpus construction opened.**
 
