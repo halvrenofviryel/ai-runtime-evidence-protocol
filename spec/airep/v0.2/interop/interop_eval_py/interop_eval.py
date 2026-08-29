@@ -82,7 +82,8 @@ RECORDED AMBIGUITIES -- resolved in the direction the contract determines, and
 reported rather than buried. None of them can change the measured result of a
 conforming official W1 bundle.
 
-  A1  Contract 8.1 shows ``interop-eval --bundle DIR [operator-input flags]``,
+  A1  OPEN in one respect -- see the exit-band note at the end. Contract 8.1
+      shows ``interop-eval --bundle DIR [operator-input flags]``,
       but contract 5 pins the operator inputs as bundle members addressed by
       the closed ``role`` set, and 5.1 says the evaluator "passes through the
       files the bundle ships". Role-derivation is the determinate reading and
@@ -90,6 +91,16 @@ conforming official W1 bundle.
       ONLY as a consistency assertion: each must resolve to the same file the
       role already selected, or it is a usage error. A flag can therefore never
       change what is measured.
+
+      EXIT-BAND NOTE (open): a flag/manifest mismatch is raised as a usage
+      error, so it exits 2 with empty stdout -- but the mismatch is only
+      detectable AFTER ``manifest.json`` has yielded a usable ``scenario_id``,
+      and 8.5 says that once identity is established "the evaluator owes a
+      result object naming the scenario it failed on". Whether this belongs in
+      the exit-2 row ("CLI usage error") or must become an exit-3 reason is not
+      pinned, and a peer lane resolving A1 differently lands in a different exit
+      band for the same inputs. Left as exit 2 pending a maintainer ruling; it
+      cannot arise in an official run, which passes no operator-input flags.
 
   A2  Numeric-preflight JSON Pointers are rooted at the DOCUMENT carrying the
       offending number, with the bundle-relative path in ``detail``. Contract
@@ -131,6 +142,28 @@ conforming official W1 bundle.
       bundle is unaffected and a missing ``record_id`` reaches the frozen
       stage-0 evaluation it belongs to, exactly as ``AD15-IR-5`` requires.
 
+      TWO KNOWN DEFECTS IN THIS RESOLUTION, stated rather than hidden, both of
+      which an erratum should settle:
+
+        (i)  ``AD15-IR-5``'s consequence sentence is UNQUALIFIED -- "a missing
+             ``record_id`` now reaches the frozen stage-0 evaluation it belongs
+             to, instead of being converted into the evaluator's own preflight
+             failure". Failing the multi-artifact case closed IS such a
+             conversion, so this resolution honours 5.1 at the cost of
+             contradicting AD15-IR-5 for that case. The two cannot both hold
+             while 5.1 keys envelope order on a field AD15-IR-5 made optional;
+        (ii) ``bundle-shape-invalid`` is defined (8.2.2) as "artifact count,
+             family composition or operator-input composition outside section
+             5". A missing ``record_id`` is none of those three, so the reason
+             emitted is outside its own registry row. No row describes this
+             case, the registry is closed, and 8.2.2 forbids adding one without
+             an erratum -- so the nearest row is used under protest.
+
+      Unreachable in a schema-valid corpus: ``common.schema.json`` makes
+      ``record_id`` required on artifact core, so only a stage-0-rejected
+      artifact can lack one, and those are the single-artifact ``IOP-B-*``
+      scenarios where no ordering is needed.
+
   A7  OPEN -- reported. Contract 5 pins bundle FAMILY COMPOSITION, which can
       only be checked by reading ``artifact_type``. An artifact broken at stage 0
       hard enough to lose its ``artifact_type`` would therefore be converted
@@ -163,6 +196,24 @@ conforming official W1 bundle.
       is just a regular file under the bundle and is caught either as an
       unlisted on-disk file or by the closed ``role`` set. No separate code path
       is needed and none is invented.
+
+  A11 OPEN -- reported. ``--help`` exits 0 while writing usage text, not a
+      result object. Contract 8.5's exit-0 row is stated unconditionally
+      ("exactly one result object, ``measurement_status: MEASURED``, with a
+      Level-1 verdict") and carves out no help case, where the FROZEN class
+      verifier's own contract 6.4 explicitly does carve one out. So either this
+      contract inherits that carve-out silently or ``--help`` is out of band.
+      Behaviour is left as the ecosystem norm rather than invented away; the
+      surface is unreachable from the aggregate harness, which performs exactly
+      twelve ``--bundle`` invocations (8.1).
+
+  A12 The FROZEN verdict envelope (frozen contract 2) is shape-checked before a
+      verdict is trusted -- required members, the closed ``class`` set, the five
+      always-present reason arrays, and the closed ``observer_assessment`` set.
+      This is E2-2's "wrong-shape result" case and is a shape check ONLY: no
+      frozen decision is recomputed and no checked value influences a predicate.
+      Frozen 2 does not declare the envelope closed, so an unknown member is
+      deliberately tolerated.
 """
 from __future__ import annotations
 
@@ -391,6 +442,27 @@ def byte_key(text: str) -> bytes:
 
 def dump_json(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, indent=1, ensure_ascii=False) + "\n"
+
+
+def write_result(text: str) -> None:
+    """Write the one result object to stdout as UTF-8, whatever the locale.
+
+    ``record_id`` / ``chain_id`` are free-form core strings that MAY be
+    non-ASCII (frozen contract 2). Writing them through ``sys.stdout`` in a
+    non-UTF-8 locale raises ``UnicodeEncodeError`` AFTER bundle identity is
+    established, which would leave exit 1 with empty stdout -- precisely what
+    contract 8.5 forbids once identity exists -- and would make contract-8.4
+    determinism a property of the operator's environment rather than of the
+    bundle. Going through the byte buffer removes the coupling, and the
+    explicit flush keeps a pipe-backed stdout from truncating.
+    """
+    buffer = getattr(sys.stdout, "buffer", None)
+    if buffer is None:                     # a text-only stream, e.g. under test
+        sys.stdout.write(text)
+        sys.stdout.flush()
+        return
+    buffer.write(text.encode("utf-8"))
+    buffer.flush()
 
 
 def warn(message: str) -> None:
@@ -1005,7 +1077,62 @@ def _verdict_from_stdout(artifact: "Artifact", stdout: bytes,
             "single expected verdict object"
             % (artifact.path, type(decoded).__name__),
             entries)
+    wrong = _wrong_shape(decoded)
+    if wrong is not None:
+        raise _run_invalid(
+            "frozen verifier exited 0 for %s but the result is not a normalized "
+            "verdict envelope: %s" % (artifact.path, wrong),
+            entries)
     return decoded
+
+
+#: The normalized verdict envelope, pinned by the FROZEN
+#: ``CLASS_VERIFIER_CONTRACT.md`` section 2 -- required members, the closed
+#: ``class`` set, the five always-present reason arrays, and the closed
+#: ``observer_assessment`` set. This is a shape check on what the frozen
+#: verifier returned, NOT a re-implementation of any frozen decision: no value
+#: here is recomputed, compared with the artifact, or allowed to influence a
+#: predicate. Section 2 does not declare the envelope closed, so an unknown
+#: member is deliberately NOT rejected.
+VERDICT_CHANNELS = (
+    "authenticated_failures", "authenticated_withheld", "authenticated_caveats",
+    "witnessed_failures", "witnessed_withheld",
+)
+VERDICT_CLASSES = frozenset({
+    "AIREP-Core", "AIREP-Authenticated", "AIREP-Witnessed"})
+VERDICT_OBSERVER_ASSESSMENTS = frozenset({
+    "same_executor", "independent", "unknown", "not_applicable"})
+
+
+def _wrong_shape(verdict: dict) -> Optional[str]:
+    """Return why ``verdict`` is not a normalized verdict envelope, or ``None``.
+
+    Without this, an ``exit 0`` carrying an arbitrary JSON object reaches the
+    Level-1 mapping, where every reader degrades to its positive branch --
+    ``verdict.get("authenticated_failures") or []`` sees no failure,
+    ``verdict.get("authenticated_withheld") or []`` sees no withheld tier, and
+    R-C sees no ``unknown``. The result is a `MEASURED` / `ACCEPT` built on a
+    measurement that never happened, which is the exact laundering contract 7.1
+    forbids. E2-2 names this case, so it is refused here.
+    """
+    for member in ("artifact_ref", "class", "observer_assessment", "evidence"):
+        if member not in verdict:
+            return "required member %r is absent" % member
+    if not isinstance(verdict["artifact_ref"], dict):
+        return "artifact_ref is not an object"
+    if not isinstance(verdict["evidence"], dict):
+        return "evidence is not an object"
+    if verdict["class"] not in VERDICT_CLASSES:
+        return "class %r is outside the closed set" % (verdict["class"],)
+    if verdict["observer_assessment"] not in VERDICT_OBSERVER_ASSESSMENTS:
+        return ("observer_assessment %r is outside the closed set"
+                % (verdict["observer_assessment"],))
+    for channel in VERDICT_CHANNELS:
+        if channel not in verdict:
+            return "reason array %r is absent; frozen 2 requires all five always" % channel
+        if not isinstance(verdict[channel], list):
+            return "reason array %r is not an array" % channel
+    return None
 
 
 def invoke_frozen_verifier(request: bytes, flags: List[str]) -> Tuple[int, bytes, bytes]:
@@ -1449,11 +1576,11 @@ def main(argv: Optional[List[str]] = None) -> int:
             # emit a result object with an invented identity.
             warn("no bundle identity for an exit-3 result object")
             return 1
-        sys.stdout.write(dump_json(build_result(
+        write_result(dump_json(build_result(
             exc.scenario_id, exc.status, None, None, nonmeasurement_object(exc),
             exc.artifacts, exc.withheld_reasons, exc.verifier_digests)))
         return 3
-    sys.stdout.write(dump_json(result))
+    write_result(dump_json(result))
     return 0
 
 

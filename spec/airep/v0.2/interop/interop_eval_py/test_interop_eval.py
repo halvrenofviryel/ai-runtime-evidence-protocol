@@ -18,6 +18,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -627,16 +628,43 @@ class Envelope(BundleCase):
             self.assertNotIn(record_id, related)
             self.assertEqual(related, sorted(related, key=lambda s: s.encode("utf-8")))
 
-    def test_digest_is_a_function_of_the_bundle_not_of_manifest_order(self):
-        """files[] order cannot change the envelope; only its sort rule is pinned."""
-        bundle_a = write_bundle(self.root, "IOP-R-CLEAN", four_artifacts())
-        first = self.evaluate(bundle_a)
+    def test_digest_is_a_function_of_the_bundle_not_of_the_file_layout(self):
+        """Contract 5.1: the envelope is "a function of the bundle alone".
+
+        The manifest MUST be path-sorted, so files[] order cannot be varied
+        directly -- varying the PATHS varies the manifest order instead. The two
+        bundles below carry the same four artifact VALUES at paths whose sort
+        order is reversed, so each artifact occupies a different manifest slot.
+        The per-artifact envelope digest must be unchanged, because the envelope
+        contains artifact values and never paths.
+
+        The earlier version of this test built the same bundle twice and could
+        not have failed.
+        """
+        arts = four_artifacts()
+        forward = {
+            "artifacts/1decision.json": arts["artifacts/decision.json"],
+            "artifacts/2control.json": arts["artifacts/control.json"],
+            "artifacts/3execution.json": arts["artifacts/execution.json"],
+            "artifacts/4effect.json": arts["artifacts/effect.json"],
+        }
+        reversed_layout = {
+            "artifacts/8decision.json": arts["artifacts/decision.json"],
+            "artifacts/7control.json": arts["artifacts/control.json"],
+            "artifacts/6execution.json": arts["artifacts/execution.json"],
+            "artifacts/5effect.json": arts["artifacts/effect.json"],
+        }
         root_b = tempfile.mkdtemp(prefix="airep interop test ")
         self.addCleanup(shutil.rmtree, root_b, ignore_errors=True)
-        bundle_b = write_bundle(root_b, "IOP-R-CLEAN", four_artifacts())
-        second = self.evaluate(bundle_b)
-        self.assertEqual([e["request_envelope_digest"] for e in first["artifacts"]],
-                         [e["request_envelope_digest"] for e in second["artifacts"]])
+        first = self.evaluate(write_bundle(self.root, "IOP-R-CLEAN", forward))
+        second = self.evaluate(write_bundle(root_b, "IOP-R-CLEAN", reversed_layout))
+
+        # The manifest slot each artifact occupies genuinely differs.
+        self.assertNotEqual([e["artifact_path"] for e in first["artifacts"]],
+                            [e["artifact_path"] for e in second["artifacts"]])
+        by_record = lambda r: {e["artifact_ref"]["record_id"]:
+                               e["request_envelope_digest"] for e in r["artifacts"]}
+        self.assertEqual(by_record(first), by_record(second))
 
     def test_digest_is_over_the_jcs_bytes(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
@@ -1137,9 +1165,88 @@ class AbnormalFrozenRun(BundleCase):
         """Two concatenated documents are not the single expected verdict."""
         self.abnormal(StubVerifier(default=(0, b'{"a": 1}\n{"b": 2}')))
 
-    def test_exit_0_with_a_wrong_shape_result(self):
+    def test_exit_0_with_a_non_object_result(self):
         exc = self.abnormal(StubVerifier(default=(0, b'["not", "an", "object"]')))
         self.assertIn("single expected verdict object", exc.detail)
+
+    # -- "wrong-shape result": a JSON OBJECT that is not a verdict envelope --
+    #
+    # These are the cases that previously reached MEASURED / ACCEPT. The frozen
+    # CLASS_VERIFIER_CONTRACT.md section 2 pins the envelope, so "wrong-shape"
+    # is determinable and E2-2 requires refusing it.
+
+    def test_exit_0_with_an_empty_object(self):
+        exc = self.abnormal(StubVerifier(default=(0, b'{}')))
+        self.assertIn("not a normalized verdict envelope", exc.detail)
+
+    def test_exit_0_with_an_unrelated_object(self):
+        self.abnormal(StubVerifier(default=(0, b'{"totally": "wrong"}')))
+
+    def test_a_verdict_missing_a_reason_array_is_refused(self):
+        """Frozen 2: all five reason arrays are PRESENT ALWAYS. A missing one
+        would read as "no failures" and launder an unmeasured tier into ACCEPT.
+        """
+        for channel in ("authenticated_failures", "authenticated_withheld",
+                        "authenticated_caveats", "witnessed_failures",
+                        "witnessed_withheld"):
+            with self.subTest(channel=channel):
+                body = {k: v for k, v in verdict("a-decision").items()
+                        if k != channel}
+                root = tempfile.mkdtemp(prefix="airep interop test ")
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+                bundle = write_bundle(root, "IOP-P-DEC",
+                                      {"artifacts/a.json": DECISION})
+                with self.assertRaises(ev.NonMeasurement) as ctx:
+                    ev.evaluate_bundle(
+                        Args(bundle),
+                        invoke=StubVerifier(default=(0, body)))
+                self.assertEqual(ctx.exception.reason, "verifier-run-invalid")
+                self.assertIn(channel, ctx.exception.detail)
+
+    def test_a_verdict_with_an_out_of_set_class_is_refused(self):
+        body = dict(verdict("a-decision"), **{"class": "AIREP-Pseudo"})
+        exc = self.abnormal(StubVerifier(default=(0, body)))
+        self.assertIn("class", exc.detail)
+
+    def test_a_verdict_with_an_out_of_set_observer_assessment_is_refused(self):
+        body = dict(verdict("a-decision"), observer_assessment="probably")
+        exc = self.abnormal(StubVerifier(default=(0, body)))
+        self.assertIn("observer_assessment", exc.detail)
+
+    def test_a_verdict_missing_evidence_or_artifact_ref_is_refused(self):
+        for member in ("evidence", "artifact_ref"):
+            with self.subTest(member=member):
+                body = {k: v for k, v in verdict("a-decision").items()
+                        if k != member}
+                root = tempfile.mkdtemp(prefix="airep interop test ")
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+                bundle = write_bundle(root, "IOP-P-DEC",
+                                      {"artifacts/a.json": DECISION})
+                with self.assertRaises(ev.NonMeasurement) as ctx:
+                    ev.evaluate_bundle(Args(bundle),
+                                       invoke=StubVerifier(default=(0, body)))
+                self.assertEqual(ctx.exception.reason, "verifier-run-invalid")
+
+    def test_a_garbage_effect_verdict_cannot_become_accept(self):
+        """The laundering path contract 7.1 forbids, asserted end to end: a
+        wrong-shape Effect verdict must not produce MEASURED / ACCEPT with a
+        vacuous R_C PASS.
+        """
+        bundle = write_bundle(self.root, "IOP-R-INDEP", four_artifacts())
+        stub = StubVerifier(by_record={
+            "d-effect": (0, {"class": "AIREP-Authenticated"})})
+        with self.assertRaises(ev.NonMeasurement) as ctx:
+            ev.evaluate_bundle(Args(bundle), invoke=stub)
+        self.assertEqual(ctx.exception.reason, "verifier-run-invalid")
+
+    def test_an_unknown_member_in_a_verdict_is_tolerated(self):
+        """Frozen 2 does not declare the envelope closed, so the shape check
+        must not invent closure (ambiguity A12).
+        """
+        body = dict(verdict("a-decision"), some_future_member=1)
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        result = self.evaluate(bundle, StubVerifier(default=(0, body)))
+        self.assertEqual(result["measurement_status"], "MEASURED")
 
     def test_exit_2(self):
         """The case that diverged across the two lanes before Erratum 2."""
@@ -1167,18 +1274,22 @@ class AbnormalFrozenRun(BundleCase):
 
     def test_not_invocable_is_only_a_spawn_failure(self):
         """Erratum 2 narrows verifier-not-invocable to a process that could not
-        be spawned or executed AT ALL. A process that ran and misbehaved is not
-        it.
-        """
-        def cannot_spawn(request, flags):
-            raise ev.NonMeasurement(
-                "verifier-not-invocable",
-                "frozen verifier could not be executed: [Errno 2] no such file")
+        be spawned or executed AT ALL.
 
+        This drives the REAL invoke_frozen_verifier and makes the spawn itself
+        fail, so the OSError -> verifier-not-invocable mapping is exercised
+        rather than hand-raised.
+        """
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
-        exc = self.nonmeasurement(bundle, cannot_spawn)
+        original = ev.sys.executable
+        ev.sys.executable = os.path.join(self.root, "no-such-interpreter")
+        try:
+            exc = self.nonmeasurement(bundle, ev.invoke_frozen_verifier)
+        finally:
+            ev.sys.executable = original
         self.assertEqual(exc.reason, "verifier-not-invocable")
         self.assertEqual(exc.artifacts, [])       # nothing was ever attempted
+        self.assertIn("could not be executed", exc.detail)
 
     def test_internal_error_is_the_evaluators_own_fault_only(self):
         """Erratum 2: an external subprocess protocol failure is never
@@ -1309,6 +1420,66 @@ class ArtifactPathIdentity(BundleCase):
         paths = [e["artifact_path"] for e in self.evaluate(bundle)["artifacts"]]
         self.assertEqual(paths, ["artifacts/w.json", "artifacts/x.json",
                                  "artifacts/y.json", "artifacts/z.json"])
+
+
+# --------------------------------------------------------------------------
+# Envelope acceptance and output encoding
+# --------------------------------------------------------------------------
+
+class EnvelopeIsAcceptedByTheFrozenVerifier(BundleCase):
+    """Contract 7.2 warns that a malformed REQUEST and a malformed ARTIFACT both
+    exit 1: "without this pin, an evaluator that built a bad envelope would
+    score its own bug as a successful detection".
+
+    Observing exit 1 therefore proves nothing on its own. This asserts the
+    envelope is structurally ACCEPTED -- that the frozen verifier got past
+    request parsing to artifact evaluation. stderr is read here only as TEST
+    evidence; the evaluator itself never parses it (contract 8.3).
+    """
+
+    def test_the_frozen_verifier_does_not_reject_our_request_envelope(self):
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        code, out, err = self.run_cli(bundle)          # real frozen subprocess
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["artifacts"][0]["verifier_exit_code"], 1)
+        # Re-run the frozen verifier by hand on the same envelope to read why.
+        artifacts = [ev.Artifact("artifacts/a.json", DECISION)]
+        request = ev.envelope_bytes(ev.build_envelope(artifacts[0], artifacts))
+        rc, stdout, stderr = ev.invoke_frozen_verifier(request, [])
+        text = (stderr + stdout).decode("utf-8", "replace").lower()
+        for envelope_complaint in ("unknown member", "unparseable", "unreadable",
+                                   "request envelope", "invalid request"):
+            self.assertNotIn(envelope_complaint, text,
+                             "frozen verifier rejected the ENVELOPE, not the "
+                             "artifact: %s" % text[:400])
+        self.assertIn("schema", text)   # it reached artifact schema validation
+
+
+class OutputEncoding(BundleCase):
+    def test_a_non_ascii_record_id_survives_a_non_utf8_stdout_locale(self):
+        """Frozen contract 2: record_id / chain_id are free-form core strings
+        that MAY be non-ASCII. Writing the result through a non-UTF-8 text
+        stdout used to raise UnicodeEncodeError AFTER identity was established,
+        leaving exit 1 with empty stdout -- which contract 8.5 forbids once
+        identity exists -- and made contract-8.4 determinism depend on locale.
+        """
+        doc = dict(DECISION, record_id="a-decisiön")
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": doc})
+        script = (
+            "import json,sys;"
+            "sys.path.insert(0, %r);"
+            "import interop_eval as ev;"
+            "sys.exit(ev.main(['--bundle', %r]))"
+            % (os.path.dirname(os.path.abspath(ev.__file__)), bundle))
+        env = dict(os.environ, PYTHONIOENCODING="ascii")
+        proc = subprocess.run([sys.executable, "-c", script],
+                              capture_output=True, env=env)
+        self.assertEqual(proc.returncode, 3, proc.stderr[:400])
+        result = json.loads(proc.stdout.decode("utf-8"))
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["artifacts"][0]["artifact_ref"]["record_id"],
+                         "a-decisiön")
 
 
 if __name__ == "__main__":
