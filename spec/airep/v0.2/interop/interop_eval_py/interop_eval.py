@@ -3,13 +3,60 @@
 """AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
 Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
-``cd7b634f46e1106aca8f228d9633150cbc111855``
-(sha256 ``fa87cb246d4bb006ca1cb6aa461252815215376d6291dfee3aa51bb79ce7b1d2``),
+``e95713e546bd49e47669526aa241227ea678dd66``
+(sha256 ``f1ca998c375b7a0ffc42aefc996d25ef254cfecc2e2d435c76f430f1b7c038bf``),
 alongside ``INTEROP_CORPUS_CONTRACT.md``
 (sha256 ``ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd``),
-i.e. the canonical post-Erratum-4 contracts, over the FROZEN Python class
+i.e. the canonical post-Erratum-5 contracts, over the FROZEN Python class
 verifier, which is invoked as a SUBPROCESS and is never imported, vendored or
 re-implemented (contract 3).
+
+Erratum 5 rulings carried here:
+
+  * E5-1  ruling ``AD15-IR-8``: IDENTITY ESTABLISHMENT IS MONOTONIC. Once the
+          root ``manifest.json`` bytes have been read, parsed as strict JSON and
+          have yielded a registered ``scenario_id``, bundle identity IS
+          established and no later filesystem, traversal or preflight failure
+          can retroactively unestablish it. The worked case the ruling pins is a
+          bundle directory at mode ``0o111``: traverse permission lets
+          ``open(DIR/manifest.json)`` succeed while ``readdir(DIR)`` fails
+          ``EACCES``, so the result is ``bundle-directory-unreadable`` at exit 3
+          and NOT exit 1. This lane's structure already put the direct read
+          strictly before any traversal, so the ruling CONFIRMS it; the worked
+          case is now asserted rather than merely implied;
+  * E5-2  the stale "three conditions" restatement of the exit-1 band is
+          replaced by a reference to contract 5. Documentation only; the band
+          itself is unchanged and this file already referenced the five
+          conditions rather than a count;
+  * E5-3  ``bundle-entry-uninspectable`` joins the closed registry -> ERROR,
+          exit 3, ``artifacts: []``. It is the last gap in the filesystem
+          taxonomy: an entry whose NAME was obtained by a successful enumeration
+          but whose KIND could not be determined by a no-follow inspection
+          (``lstat`` or equivalent). Calling that ``manifest-invalid`` would
+          assert the layout is wrong when that is precisely what could not be
+          established, and ``bundle-directory-unreadable`` does not fit either,
+          because enumeration SUCCEEDED. This CLOSES recorded ambiguity A14
+          AGAINST this lane's inferred mapping;
+  * E5-4  ``frozen-identity-unreadable`` joins the closed registry, and the
+          frozen-identity preflight ORDER is pinned: bundle identity first, then
+          IMMEDIATELY the evaluator's own frozen identity pair, then everything
+          else. If either frozen file cannot be READ the result is exit 3 with
+          that reason, ``verifier_digests: null`` and ``artifacts: []``; if both
+          are read the exact TWO-entry object is built from the RECOMPUTED
+          values, and a mismatch keeps that actual two-entry object rather than
+          the expected one. ``verifier_digests`` is therefore exactly two
+          entries or ``null``, never a one-entry object. This CLOSES recorded
+          ambiguity A15 AGAINST this lane's pre-erratum construction, which
+          omitted the unmeasurable entry;
+  * E5-5  contract 7.1's expected-tier dependency is REMOVED: the rule is
+          SCENARIO-INDEPENDENT. Any emitted frozen verdict carrying a non-empty
+          ``authenticated_withheld`` channel makes the scenario
+          MEASUREMENT_INVALID regardless of scenario id. An evaluator consulting
+          a per-scenario expected-tier table would be consulting an
+          expected-outcome oracle, which a measuring instrument must not do.
+          This lane never had such a table, so the ruling CONFIRMS its
+          construction; the scenario-independence is now asserted over all
+          twelve registered ids rather than exercised on one.
 
 Erratum 4 rulings carried here:
 
@@ -110,11 +157,13 @@ Composition, in the contract's own order:
   * section 5.1  the closed section-0 request envelope, RFC 8785 (JCS)
                  serialized; ``request_envelope_digest`` over exactly those
                  bytes; numeric preflight on integral VALUE, not JSON spelling;
-  * section 3    frozen-verifier digest assertion before use -- THIS LANE ONLY;
+  * section 3    frozen-verifier digest assertion before use -- THIS LANE ONLY,
+                 at the section-8.2.1 pinned position: immediately after bundle
+                 identity and before any other post-identity preflight;
   * section 6    R-A / R-B / R-C, with the section 6.1 applicability matrix;
   * section 7    the Level-1 mapping, plus 7.1 (``authenticated_withheld`` =>
-                 MEASUREMENT_INVALID) and 7.2 (the causal guard on frozen
-                 ``exit 1``);
+                 MEASUREMENT_INVALID, SCENARIO-INDEPENDENTLY) and 7.2 (the causal
+                 guard on frozen ``exit 1``);
   * section 8    one bundle per invocation, one JSON result object, full
                  preflight before any invocation, and the 8.5 exit/stdout table.
 
@@ -302,7 +351,9 @@ conforming official W1 bundle.
              The registry now carries ``bundle-directory-unreadable`` for
              exactly that, and the distinction is the one this entry was
              groping for: ``manifest-invalid`` says the layout is WRONG, the new
-             reason says the layout could not be MEASURED;
+             reason says the layout could not be MEASURED. E5-3 later split
+             the remaining sliver -- an entry whose KIND could not be
+             determined -- into ``bundle-entry-uninspectable``; see A14;
         (ii) CLOSED by E4-2, CONFIRMING this lane's construction. The root
              ``manifest.json`` PRESENT but unreadable is exit 1 with no result
              object -- the identity boundary is a direct read, and being
@@ -313,35 +364,28 @@ conforming official W1 bundle.
              to a result object and there is no scenario to name one after.
              Unreadable and absent are genuinely indistinguishable here.
 
-  A14 OPEN -- reported rather than resolved silently. E4-3 scopes
-      ``bundle-directory-unreadable`` to a directory that "cannot be
-      enumerated", and 8.2.2's ``manifest-invalid`` enumeration covers the
-      entry-KIND conditions (symlink, non-regular non-directory object). Neither
-      names the case in between: enumeration SUCCEEDS, yields an entry, and then
-      the entry's KIND cannot be determined because the stat fails.
+  A14 CLOSED by Erratum 5 (E5-3), AGAINST this lane's inferred mapping. The
+      case reported here -- enumeration SUCCEEDS, yields an entry, and then the
+      entry's KIND cannot be determined because the no-follow stat fails -- was
+      mapped to ``bundle-directory-unreadable`` by INFERENCE from E4-3's
+      faulty-medium rationale, with the inference recorded as an inference. The
+      registry now carries ``bundle-entry-uninspectable`` for exactly that case,
+      and the contract's ordering is the one this entry was groping for: each
+      row says only what was actually LEARNED and stops there. Enumeration
+      succeeded, so ``bundle-directory-unreadable`` is false; the kind was never
+      determined, so ``manifest-invalid`` would assert a layout violation that
+      could not be established. The mapping here is corrected accordingly.
 
-      This lane reports it as ``bundle-directory-unreadable``, because E4-3's
-      own reasoning is about a faulty MEDIUM rather than a wrong LAYOUT -- "the
-      layout could not be measured" -- and a kind that cannot be read is the
-      same shape as a directory that cannot be listed. That is an INFERENCE from
-      E4-3's rationale, NOT a reading of its words, and a peer lane inferring
-      ``manifest-invalid`` from 8.2.2's enumeration instead would be equally
-      defensible. The divergence changes ``nonmeasurement.reason`` without
-      changing any Level-1 value, which is the Erratum-2 gap-2 shape that no
-      aggregate duty can observe -- so it is recorded here for a ruling rather
-      than presented as settled. It cannot arise in an official W1 run, whose
-      bundles are built by the harness on a sound medium.
-
-  A15 OPEN -- reported, behaviour unchanged. Contract 8.2.1 says each evaluator
-      emits "exactly two entries", and also that both are values "it recomputed
-      itself" and never "a carried-forward constant". When a frozen file cannot
-      be READ, those two requirements conflict: the digest cannot be recomputed,
-      so emitting two entries would require fabricating one. This lane omits the
-      unmeasurable entry, so ``verifier_digests`` may carry one entry on the
-      ``verifier-digest-mismatch`` / unreadable path. Fabricating a digest is
-      the worse failure, and 8.2.1's "never a value this lane did not measure"
-      is the stronger of the two clauses, but the arity is stated
-      unconditionally and a peer lane could read it that way.
+  A15 CLOSED by Erratum 5 (E5-4), AGAINST this lane's construction. The
+      conflict reported here -- "exactly two entries" against "never a value
+      this lane did not measure", when a frozen file cannot be READ -- is
+      resolved by a THIRD option neither clause offered: ``verifier_digests`` is
+      ``null``, under a reason of its own, ``frozen-identity-unreadable``. The
+      one-entry object this lane emitted is therefore REMOVED: the object is
+      exactly two entries or it is ``null``, and no placeholder or omitted entry
+      ever appears. The preflight ORDER is pinned with it -- identity, then
+      immediately the frozen identity pair, then everything else -- so every
+      other post-identity result carries a populated two-entry object.
 """
 from __future__ import annotations
 
@@ -356,7 +400,7 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.3"   # post-Erratum-4 (E4-1..E4-4, AD15-IR-7)
+EVALUATOR_VERSION = "0.2.4"   # post-Erratum-5 (E5-1..E5-5, AD15-IR-8)
 
 #: Contract 8.5 / E4-1: the CLI meta-action is this EXACT argv and no other.
 HELP_INVOCATION = ["--help"]
@@ -484,6 +528,8 @@ REASON_STATUS: Dict[str, str] = {
     "bundle-file-missing": ERROR,
     "bundle-file-unreadable": ERROR,
     "bundle-directory-unreadable": ERROR,
+    "bundle-entry-uninspectable": ERROR,
+    "frozen-identity-unreadable": ERROR,
     "bundle-json-invalid": ERROR,
     "bundle-shape-invalid": ERROR,
     "numeric-preflight-violation": ERROR,
@@ -550,9 +596,10 @@ class NonMeasurement(Exception):
         #: Stamped once the manifest has yielded a usable scenario_id, so the
         #: exit-3 object can name the scenario it failed on (contract 8.5).
         self.scenario_id: Optional[str] = None
-        #: Contract 8.2.1: the two digests THIS lane recomputed, whenever they
-        #: were recomputed at all. Never a value this lane did not measure.
-        self.verifier_digests: Dict[str, str] = {}
+        #: Contract 8.2.1 (E5-4): the EXACT TWO digests this lane recomputed,
+        #: or ``None`` -- and ``None`` only for ``frozen-identity-unreadable``.
+        #: Never a value this lane did not measure, and never one entry.
+        self.verifier_digests: Optional[Dict[str, str]] = None
 
 
 # --------------------------------------------------------------------------
@@ -884,9 +931,21 @@ def scan_bundle(bundle_dir: str) -> List[str]:
     not a digest over the bundle's own bytes.
 
     Runs only AFTER identity is established (E4-2): the manifest is read
-    directly and this traversal never contributes to identity. A traversal that
-    cannot complete is ``bundle-directory-unreadable`` (E4-3), never a layout
-    reason.
+    directly and this traversal never contributes to identity, and by ruling
+    ``AD15-IR-8`` (E5-1) nothing that happens here can retroactively unestablish
+    it. The worked case the ruling pins is a bundle directory at mode ``0o111``,
+    where traverse permission lets the root manifest open while ``readdir``
+    fails ``EACCES``: identity WAS established, so the result is
+    ``bundle-directory-unreadable`` at exit 3, never exit 1.
+
+    The filesystem taxonomy this function applies, in order of what was actually
+    learned (E5-3 closes the last gap):
+
+    * a directory cannot be enumerated        -> ``bundle-directory-unreadable``
+    * an entry name was obtained but its kind
+      could not be determined                 -> ``bundle-entry-uninspectable``
+    * kind determined: symlink or other
+      forbidden non-regular object            -> ``manifest-invalid``
     """
     found: List[str] = []
 
@@ -894,10 +953,10 @@ def scan_bundle(bundle_dir: str) -> List[str]:
         # E4-3: enumeration failure is NOT a layout violation. `manifest-invalid`
         # says the layout is WRONG; this says the layout could not be MEASURED,
         # which is a different true thing about the bundle. Permission denied,
-        # an I/O error, or any other failure to enumerate a directory -- and
-        # equally a failure to determine the KIND of an entry it yielded, since
-        # traversal has not completed until that is known -- is
-        # `bundle-directory-unreadable` at exit 3.
+        # an I/O error, or any other failure to ENUMERATE a directory is
+        # `bundle-directory-unreadable` at exit 3. A failure to determine the
+        # KIND of an entry enumeration DID yield is a different row (E5-3,
+        # below): enumeration succeeded there, so this reason would be false.
         try:
             entries = scan_directory(directory)
         except OSError as exc:
@@ -910,11 +969,17 @@ def scan_bundle(bundle_dir: str) -> List[str]:
             try:
                 is_link, is_dir, is_file = entry_kind(entry)
             except OSError as exc:
-                # RECORDED AMBIGUITY A14 -- not a pinned rule. See the register.
+                # E5-3 -- the last gap in the filesystem taxonomy, and now a
+                # pinned rule rather than this lane's inference (A14). The entry
+                # NAME was obtained, so enumeration SUCCEEDED and
+                # `bundle-directory-unreadable` is false; the KIND was never
+                # determined, so `manifest-invalid` would assert a layout
+                # violation that is precisely what could not be established.
+                # Each row says only what was actually learned, and stops there.
                 raise NonMeasurement(
-                    "bundle-directory-unreadable",
-                    "bundle traversal could not complete: the kind of %r could "
-                    "not be determined: %s" % (rel, exc))
+                    "bundle-entry-uninspectable",
+                    "bundle entry %r was enumerated, but its filesystem kind "
+                    "could not be determined: %s" % (rel, exc))
             if is_link:
                 raise _bad_manifest("bundle carries a symbolic link at %r" % rel)
             if is_dir:
@@ -1199,41 +1264,74 @@ FROZEN_FILES = (
 )
 
 
-def measure_frozen_digests() -> Tuple[Dict[str, str], Optional[str]]:
-    """Recompute the two frozen files THIS lane uses.
+def read_frozen_file(path: str) -> bytes:
+    """Read one frozen-identity file, raising ``OSError`` verbatim.
 
-    Returns the ``verifier_digests`` object (contract 8.2.1) built from values
-    this lane actually measured -- never a carried constant -- together with the
-    first mismatch detail, or ``None`` when both match. The comparison is turned
-    into a verdict by ``assert_frozen_digests`` at its pinned position in the
-    contract-8.3.1 preflight order; measuring early only lets a result object
-    report what was measured.
+    A named seam, so the E5-4 boundary between a frozen identity that cannot be
+    READ and one that does not MATCH can be exercised deterministically rather
+    than only through filesystem permissions, which are not portable.
+    """
+    with open(path, "rb") as handle:
+        return handle.read()
+
+
+def measure_frozen_digests() -> Tuple[Optional[Dict[str, str]],
+                                      Optional[Tuple[str, str]]]:
+    """Recompute the two frozen files THIS lane uses (contract 8.2.1, E5-4).
+
+    Returns ``(verifier_digests, problem)``:
+
+    * ``verifier_digests`` is the EXACT TWO-entry object built from the values
+      this lane recomputed -- never a carried constant, never one entry -- or
+      ``None`` when either file could not be READ, in which case there is no
+      digest to emit and none is invented;
+    * ``problem`` is ``(reason, detail)`` or ``None``.
+
+    THE TWO FAILURES ARE DIFFERENT THINGS AND CARRY DIFFERENT REASONS. A frozen
+    file that cannot be read is ``frozen-identity-unreadable`` with
+    ``verifier_digests: null``: the identity was never measured. A file that was
+    read and disagrees with its pin is ``verifier-digest-mismatch``, and the
+    ACTUAL recomputed two-entry object is retained -- a reader needs to see what
+    was actually there, not what was expected. Unreadability is decided FIRST,
+    over both files, because a two-entry object cannot be built at all when one
+    of the two is missing from the measurement.
     """
     measured: Dict[str, str] = {}
-    problem: Optional[str] = None
-    for key, path_of, expected in FROZEN_FILES:
+    unreadable: Optional[str] = None
+    for key, path_of, _expected in FROZEN_FILES:
         path = path_of()
         try:
-            with open(path, "rb") as handle:
-                actual = sha256_hex(handle.read())
+            data = read_frozen_file(path)
         except OSError as exc:
-            if problem is None:
-                problem = ("frozen file %s is unreadable, so its digest cannot be "
-                           "asserted: %s" % (path, exc))
+            if unreadable is None:
+                unreadable = ("frozen file %s could not be read, so its digest "
+                              "cannot be recomputed: %s" % (path, exc))
             continue
-        measured[key] = "sha256:" + actual
-        if actual != expected and problem is None:
-            problem = ("%s: contract pins %s, the tree measures %s"
-                       % (path, expected, actual))
-    return measured, problem
+        measured[key] = "sha256:" + sha256_hex(data)
+    if unreadable is not None:
+        # Contract 8.2.1 step 3: verifier_digests is null, and it is null ONLY
+        # here. Emitting a partial object would be the fabrication the ruling
+        # exists to forbid.
+        return None, ("frozen-identity-unreadable", unreadable)
+    for key, path_of, expected in FROZEN_FILES:
+        if measured[key] != "sha256:" + expected:
+            # Step 5: the actual two-entry object is RETAINED alongside the
+            # mismatch; the expected value is named in `detail` only.
+            return measured, ("verifier-digest-mismatch",
+                              "%s: contract pins %s, the tree measures %s"
+                              % (path_of(), expected, measured[key][7:]))
+    return measured, None
 
 
-def assert_frozen_digests(problem: Optional[str]) -> None:
-    """A digest mismatch is a hard ERROR: the run is not valid and no Level-1
-    verdict is emitted (contract 3).
+def assert_frozen_identity(problem: Optional[Tuple[str, str]]) -> None:
+    """Contract 3 and 8.2.1 step 3/5: an unreadable or mismatched frozen
+    identity is a hard ERROR -- the run is not valid and no Level-1 verdict is
+    emitted. Raised at the PINNED position: immediately after bundle identity
+    and before any other post-identity preflight, so every other post-identity
+    result carries a populated two-entry ``verifier_digests``.
     """
     if problem is not None:
-        raise NonMeasurement("verifier-digest-mismatch", problem)
+        raise NonMeasurement(problem[0], problem[1])
 
 
 # --------------------------------------------------------------------------
@@ -1517,7 +1615,7 @@ def build_result(scenario_id: str, status: str, level1: Optional[str],
                  predicates: Optional[Dict[str, str]],
                  nonmeasurement: Optional[dict], artifacts: List[dict],
                  withheld_reasons: List[dict],
-                 verifier_digests: Dict[str, str]) -> dict:
+                 verifier_digests: Optional[Dict[str, str]]) -> dict:
     return {
         "scenario_id": scenario_id,
         "measurement_status": status,
@@ -1558,7 +1656,13 @@ def evaluate_bundle(args, invoke=None) -> dict:
     bundle_dir = os.path.abspath(args.bundle)
     # exit-1 band ends here
     doc, scenario_id, duplicates = load_manifest_identity(bundle_dir)
-    verifier_digests, digest_problem = measure_frozen_digests()
+    # Contract 8.2.1 step 2 (E5-4): IMMEDIATELY after identity, and BEFORE any
+    # other post-identity preflight, this lane reads its own frozen identity
+    # pair and recomputes SHA-256 over each. Ruling AD15-IR-8 (E5-1) makes the
+    # identity above monotonic, so everything from here on owes a result object
+    # naming the scenario -- including an unreadable frozen file, which is why
+    # it needs a reason of its own rather than the exit-1 band.
+    verifier_digests, frozen_problem = measure_frozen_digests()
     # Contract 8.3.1 rule 3: once invocation begins, `artifacts[]` carries an
     # entry for each invocation ACTUALLY ATTEMPTED. The list is owned here so
     # that a fault raised anywhere downstream -- including the generic net
@@ -1567,8 +1671,11 @@ def evaluate_bundle(args, invoke=None) -> dict:
     # failure which did not happen.
     entries: List[dict] = []
     try:
+        # Step 3/5 before step 6: no bundle traversal and no remaining preflight
+        # begins until the frozen identity has been read and asserted.
+        assert_frozen_identity(frozen_problem)
         return _evaluate(args, bundle_dir, doc, scenario_id, duplicates, invoke,
-                         verifier_digests, digest_problem, entries)
+                         verifier_digests, entries)
     except NonMeasurement as exc:
         # Identity IS established from here on, so the caller owes a result
         # object naming the scenario it failed on (contract 8.5).
@@ -1595,7 +1702,7 @@ def evaluate_bundle(args, invoke=None) -> dict:
 
 def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
               duplicates: Sequence[str], invoke,
-              verifier_digests: Dict[str, str], digest_problem: Optional[str],
+              verifier_digests: Optional[Dict[str, str]],
               entries: List[dict]) -> dict:
     # ---- contract 8.3.1 step 1: the WHOLE preflight, before any invocation ---
     manifest = validate_manifest(doc, scenario_id, duplicates)
@@ -1613,8 +1720,6 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
                 "numeric-preflight-violation",
                 "%s (%s): %s" % (entry.path, entry.role, why),
                 json_pointer=pointer)
-
-    assert_frozen_digests(digest_problem)
 
     flags: List[str] = []
     for role in REQUIRED_OPERATOR_ROLES:
@@ -1709,6 +1814,14 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
     if authenticated_withheld:
         # Contract 7.1: withheld is the ABSENCE of a measurement. Not REJECT --
         # nothing was refused -- and emphatically not ACCEPT.
+        #
+        # THE RULE IS SCENARIO-INDEPENDENT (E5-5). `scenario_id` appears in the
+        # detail string and NOWHERE in the condition: ANY emitted verdict with a
+        # non-empty `authenticated_withheld` channel invalidates the scenario,
+        # regardless of which of the twelve it is. The removed wording required
+        # the evaluator to know what a scenario EXPECTED, and an instrument that
+        # consults an expected-outcome oracle is not measuring. No expected-tier
+        # table exists in this file, and none may be added.
         raise NonMeasurement(
             "authenticated-withheld",
             "a non-empty authenticated_withheld channel makes %s "

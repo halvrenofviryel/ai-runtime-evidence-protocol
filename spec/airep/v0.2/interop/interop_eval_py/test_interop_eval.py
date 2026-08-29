@@ -1210,6 +1210,7 @@ class ResultShape(BundleCase):
         self.assertEqual(set(ev.REASON_STATUS), {
             "manifest-invalid", "manifest-digest-mismatch", "bundle-file-missing",
             "bundle-file-unreadable", "bundle-directory-unreadable",
+            "bundle-entry-uninspectable", "frozen-identity-unreadable",
             "bundle-json-invalid", "bundle-shape-invalid",
             "numeric-preflight-violation", "verifier-digest-mismatch",
             "verifier-not-invocable", "verifier-run-invalid", "internal-error",
@@ -2070,13 +2071,14 @@ class DirectoryEnumerationBoundary(BundleCase):
         self.assertEqual(len(set(observed.values())), 4)
         self.assertEqual(ev.REASON_STATUS["bundle-directory-unreadable"], "ERROR")
 
-    def test_an_undeterminable_entry_kind_is_recorded_ambiguity_a14(self):
-        """A14. Enumeration SUCCEEDS and yields an entry whose KIND then cannot
-        be determined -- a case E4-3's words do not name and 8.2.2's
-        manifest-invalid enumeration does not cover either. This lane infers
-        `bundle-directory-unreadable` from E4-3's faulty-medium rationale. The
-        test exists so the inference is visible and a maintainer ruling that
-        goes the other way changes a test rather than passing silently.
+    def test_an_undeterminable_entry_kind_is_not_this_reason(self):
+        """E5-3 CLOSES recorded ambiguity A14 AGAINST this lane's inference.
+
+        Enumeration SUCCEEDS and yields an entry whose KIND then cannot be
+        determined. This lane used to report `bundle-directory-unreadable` -- an
+        inference from E4-3's faulty-medium rationale -- which is now wrong:
+        enumeration succeeded, so that reason says something false. The reason is
+        `bundle-entry-uninspectable`, asserted in full in `EntryInspectability`.
         """
         bundle = self.one_artifact()
         original = ev.entry_kind
@@ -2084,8 +2086,8 @@ class DirectoryEnumerationBoundary(BundleCase):
         ev.entry_kind = lambda entry: (_ for _ in ()).throw(
             OSError(errno.EIO, "Input/output error", entry.path))
         exc = self.nonmeasurement(bundle)
-        self.assertEqual(exc.reason, "bundle-directory-unreadable")
-        self.assertIn("kind of", exc.detail)
+        self.assertEqual(exc.reason, "bundle-entry-uninspectable")
+        self.assertNotEqual(exc.reason, "bundle-directory-unreadable")
 
     def test_no_frozen_verifier_is_invoked(self):
         """Traversal is preflight, and contract 8.3.1 forbids any invocation
@@ -2266,6 +2268,525 @@ class HelpMetaAction(BundleCase):
         self.assertTrue(out.strip())
         with self.assertRaises(ValueError):
             json.loads(out)
+
+
+# --------------------------------------------------------------------------
+# Erratum 5, E5-3 -- `bundle-entry-uninspectable`
+# --------------------------------------------------------------------------
+
+class EntryInspectability(BundleCase):
+    """The last gap in the filesystem taxonomy, and the reason it is its own row.
+
+    Contract 8.2.2's boundary table is ordered by WHAT WAS ACTUALLY LEARNED:
+
+      * entry name obtained, kind inspection could not complete
+                                                -> `bundle-entry-uninspectable`
+      * kind determined: symlink / forbidden object       -> `manifest-invalid`
+      * kind determined: directory, cannot enumerate
+                                                -> `bundle-directory-unreadable`
+      * kind determined: regular file, bytes unreadable  -> `bundle-file-unreadable`
+
+    Each row says only what was learned and stops there. Reporting a layout
+    violation when the layout could not be inspected is the same error as
+    reporting a missing file when the medium was merely unreadable.
+    """
+
+    def bundle_at(self, name):
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        return write_bundle(root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+
+    def deny_kind(self, errno_value=errno.EIO):
+        original = ev.entry_kind
+        self.addCleanup(setattr, ev, "entry_kind", original)
+        ev.entry_kind = lambda entry: (_ for _ in ()).throw(
+            OSError(errno_value, os.strerror(errno_value), entry.path))
+
+    def test_an_uninspectable_entry_has_its_own_reason(self):
+        self.deny_kind()
+        exc = self.nonmeasurement(self.bundle_at("k1"))
+        self.assertEqual(exc.reason, "bundle-entry-uninspectable")
+        self.assertEqual(exc.status, "ERROR")
+
+    def test_it_is_reported_at_exit_3_with_an_empty_artifacts_array(self):
+        self.deny_kind()
+        code, out, _ = self.run_cli(self.bundle_at("k2"))
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["measurement_status"], "ERROR")
+        self.assertEqual(result["nonmeasurement"]["reason"],
+                         "bundle-entry-uninspectable")
+        self.assertIsNone(result["level1"])
+        self.assertIsNone(result["predicates"])
+        self.assertEqual(result["artifacts"], [])      # pre-invocation
+        self.assertNotIn("json_pointer", result["nonmeasurement"])
+
+    def test_the_permission_errno_does_not_change_the_reason(self):
+        self.deny_kind(errno.EACCES)
+        self.assertEqual(self.nonmeasurement(self.bundle_at("k3")).reason,
+                         "bundle-entry-uninspectable")
+
+    def test_no_frozen_verifier_is_invoked(self):
+        self.deny_kind()
+        stub = StubVerifier()
+        with self.assertRaises(ev.NonMeasurement):
+            self.evaluate(self.bundle_at("k4"), stub)
+        self.assertEqual(stub.calls, [])
+
+    def test_the_five_filesystem_reasons_are_observed_pairwise_distinct(self):
+        """Five DIFFERENT bundle conditions must yield five DIFFERENT reasons.
+
+        Read back out of five evaluations, not asserted between five literals: a
+        collapse anywhere in the mapping fails here.
+        """
+        observed = {}
+
+        observed["layout wrong"] = self.nonmeasurement(
+            self.bundle_at_with(
+                "d1", extra_disk_files={"artifacts/stray.json": b"{}"})).reason
+
+        observed["listed file absent"] = self.nonmeasurement(
+            self.bundle_at_with("d2", drop_from_disk=("artifacts/d.json",))).reason
+
+        unreadable = self.bundle_at("d3")
+        original_read = ev.read_bundle_file
+        ev.read_bundle_file = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EIO, "Input/output error", path))
+        try:
+            observed["listed file unreadable"] = self.nonmeasurement(unreadable).reason
+        finally:
+            ev.read_bundle_file = original_read
+
+        original_scan = ev.scan_directory
+        ev.scan_directory = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EACCES, "Permission denied", path))
+        try:
+            observed["directory unenumerable"] = self.nonmeasurement(
+                self.bundle_at("d4")).reason
+        finally:
+            ev.scan_directory = original_scan
+
+        self.deny_kind()
+        observed["entry kind unknown"] = self.nonmeasurement(
+            self.bundle_at("d5")).reason
+
+        self.assertEqual(observed, {
+            "layout wrong": "manifest-invalid",
+            "listed file absent": "bundle-file-missing",
+            "listed file unreadable": "bundle-file-unreadable",
+            "directory unenumerable": "bundle-directory-unreadable",
+            "entry kind unknown": "bundle-entry-uninspectable"})
+        self.assertEqual(len(set(observed.values())), 5)
+
+    def bundle_at_with(self, name, **kwargs):
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        return write_bundle(root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                            **kwargs)
+
+
+# --------------------------------------------------------------------------
+# Erratum 5, E5-4 -- frozen-identity preflight order, and the two failures
+# --------------------------------------------------------------------------
+
+class FrozenIdentityBoundary(BundleCase):
+    """`frozen-identity-unreadable` vs `verifier-digest-mismatch`.
+
+    These are DIFFERENT things and the contract keeps them apart: a digest that
+    could not be RECOMPUTED cannot be emitted, so `verifier_digests` is `null`;
+    a digest that was recomputed and DISAGREES is retained verbatim, because a
+    reader needs to see what was actually there. Collapsing the two would either
+    fabricate a digest or hide the measured one.
+    """
+
+    def one_artifact(self):
+        return write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+
+    def deny_frozen_read(self, only=None):
+        """Make the frozen-identity read fail -- for one named file, or both."""
+        original = ev.read_frozen_file
+        self.addCleanup(setattr, ev, "read_frozen_file", original)
+
+        def reader(path):
+            if only is None or path.endswith(only):
+                raise OSError(errno.EACCES, "Permission denied", path)
+            return original(path)
+
+        ev.read_frozen_file = reader
+
+    def pin_wrong(self, verifier=None, contract=None):
+        """Repin one or both frozen digests to a value the tree cannot match."""
+        original = ev.FROZEN_FILES
+        self.addCleanup(setattr, ev, "FROZEN_FILES", original)
+        ev.FROZEN_FILES = (
+            ("class_verifier", ev.frozen_verifier_path,
+             verifier or ev.FROZEN_VERIFIER_SHA256),
+            ("class_verifier_contract", ev.frozen_contract_path,
+             contract or ev.FROZEN_CONTRACT_SHA256),
+        )
+
+    # ---- the two failures are not the same thing ---------------------------
+
+    def test_an_unreadable_frozen_verifier_is_frozen_identity_unreadable(self):
+        self.deny_frozen_read(only="class_verifier.py")
+        exc = self.nonmeasurement(self.one_artifact())
+        self.assertEqual(exc.reason, "frozen-identity-unreadable")
+        self.assertEqual(exc.status, "ERROR")
+        self.assertIsNone(exc.verifier_digests)
+
+    def test_an_unreadable_frozen_contract_is_the_same_reason(self):
+        self.deny_frozen_read(only="CLASS_VERIFIER_CONTRACT.md")
+        exc = self.nonmeasurement(self.one_artifact())
+        self.assertEqual(exc.reason, "frozen-identity-unreadable")
+        self.assertIsNone(exc.verifier_digests)
+
+    def test_a_mismatched_frozen_verifier_is_verifier_digest_mismatch(self):
+        self.pin_wrong(verifier="0" * 64)
+        exc = self.nonmeasurement(self.one_artifact())
+        self.assertEqual(exc.reason, "verifier-digest-mismatch")
+        self.assertIsNotNone(exc.verifier_digests)
+
+    def test_the_two_reasons_are_observed_distinct_on_the_same_bundle(self):
+        """THE discrimination E5-4 exists for. Same bundle, two conditions, two
+        reasons and two `verifier_digests` shapes -- read back out of two
+        evaluations, so a collapse in either direction fails here.
+        """
+        observed = {}
+        self.pin_wrong(verifier="0" * 64)
+        mismatch = self.nonmeasurement(self.one_artifact())
+        observed["digest disagrees"] = (mismatch.reason,
+                                        mismatch.verifier_digests is None)
+        ev.FROZEN_FILES = (
+            ("class_verifier", ev.frozen_verifier_path, ev.FROZEN_VERIFIER_SHA256),
+            ("class_verifier_contract", ev.frozen_contract_path,
+             ev.FROZEN_CONTRACT_SHA256),
+        )
+        self.deny_frozen_read()
+        unreadable = self.nonmeasurement(self.one_artifact())
+        observed["file unreadable"] = (unreadable.reason,
+                                       unreadable.verifier_digests is None)
+
+        self.assertEqual(observed, {
+            "digest disagrees": ("verifier-digest-mismatch", False),
+            "file unreadable": ("frozen-identity-unreadable", True)})
+        self.assertNotEqual(observed["digest disagrees"][0],
+                            observed["file unreadable"][0])
+
+    # ---- verifier_digests arity and content --------------------------------
+
+    def test_verifier_digests_is_null_only_for_the_unreadable_reason(self):
+        self.deny_frozen_read()
+        code, out, _ = self.run_cli(self.one_artifact())
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["nonmeasurement"]["reason"],
+                         "frozen-identity-unreadable")
+        self.assertIsNone(result["verifier_digests"])
+        self.assertEqual(result["artifacts"], [])
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+
+    def test_a_mismatch_retains_the_actual_recomputed_two_entry_object(self):
+        """Step 5: the ACTUAL recomputed values are retained, never the expected
+        ones. Asserted against a freshly hashed tree read, so the test cannot be
+        satisfied by echoing the pin back.
+        """
+        self.pin_wrong(verifier="0" * 64)
+        code, out, _ = self.run_cli(self.one_artifact())
+        self.assertEqual(code, 3)
+        digests = json.loads(out)["verifier_digests"]
+        self.assertEqual(set(digests), {"class_verifier", "class_verifier_contract"})
+        with open(ev.frozen_verifier_path(), "rb") as handle:
+            actual = hexdigest(handle.read())
+        self.assertEqual(digests["class_verifier"], "sha256:" + actual)
+        self.assertNotEqual(digests["class_verifier"], "sha256:" + "0" * 64)
+
+    def test_a_partially_unreadable_pair_never_yields_a_one_entry_object(self):
+        """A15 is CLOSED: the object is exactly two entries or it is null. One
+        readable file and one unreadable file used to produce a single entry.
+        """
+        self.deny_frozen_read(only="CLASS_VERIFIER_CONTRACT.md")
+        digests, problem = ev.measure_frozen_digests()
+        self.assertIsNone(digests)
+        self.assertEqual(problem[0], "frozen-identity-unreadable")
+
+    def test_a_measured_run_carries_exactly_two_recomputed_entries(self):
+        result = self.evaluate(self.one_artifact())
+        digests = result["verifier_digests"]
+        self.assertEqual(len(digests), 2)
+        with open(ev.frozen_contract_path(), "rb") as handle:
+            self.assertEqual(digests["class_verifier_contract"],
+                             "sha256:" + hexdigest(handle.read()))
+
+    # ---- the pinned preflight order ----------------------------------------
+
+    def test_frozen_identity_precedes_every_other_post_identity_preflight(self):
+        """Contract 8.2.1 steps 2 and 6: the frozen identity is read IMMEDIATELY
+        after bundle identity, and only THEN does bundle traversal and the
+        remaining preflight begin. A bundle that would fail traversal must still
+        report the frozen-identity failure, or the order is not the pinned one.
+        """
+        original = ev.scan_directory
+        self.addCleanup(setattr, ev, "scan_directory", original)
+        ev.scan_directory = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EACCES, "Permission denied", path))
+        self.deny_frozen_read()
+        self.assertEqual(self.nonmeasurement(self.one_artifact()).reason,
+                         "frozen-identity-unreadable")
+
+    def test_a_digest_mismatch_also_precedes_traversal(self):
+        original = ev.scan_directory
+        self.addCleanup(setattr, ev, "scan_directory", original)
+        ev.scan_directory = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EACCES, "Permission denied", path))
+        self.pin_wrong(contract="0" * 64)
+        self.assertEqual(self.nonmeasurement(self.one_artifact()).reason,
+                         "verifier-digest-mismatch")
+
+    def test_a_broken_manifest_does_not_outrank_the_frozen_identity(self):
+        """The manifest here violates the pinned encoding, which would be
+        `manifest-invalid` on its own. The frozen identity is read first, so the
+        frozen reason is what the harness receives.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              manifest_overrides=lambda m: dict(m, unexpected=True))
+        self.assertEqual(self.nonmeasurement(bundle).reason, "manifest-invalid")
+        self.deny_frozen_read()
+        self.assertEqual(self.nonmeasurement(bundle).reason,
+                         "frozen-identity-unreadable")
+
+    def test_the_identity_band_still_outranks_the_frozen_identity(self):
+        """The frozen read is post-identity: a bundle with no root manifest is
+        still exit 1 with empty stdout, not a frozen-identity result object.
+        """
+        bundle = self.one_artifact()
+        os.remove(os.path.join(bundle, "manifest.json"))
+        self.deny_frozen_read()
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 1)
+        self.assertEqual(out, "")
+
+    def test_no_frozen_verifier_is_invoked_on_either_failure(self):
+        self.deny_frozen_read()
+        stub = StubVerifier()
+        with self.assertRaises(ev.NonMeasurement):
+            self.evaluate(self.one_artifact(), stub)
+        self.assertEqual(stub.calls, [])
+
+
+# --------------------------------------------------------------------------
+# Erratum 5, E5-1 -- ruling AD15-IR-8, identity establishment is monotonic
+# --------------------------------------------------------------------------
+
+class MonotonicIdentity(BundleCase):
+    """Once the root manifest has been read, parsed and has yielded a registered
+    `scenario_id`, identity IS established, and no later filesystem, traversal or
+    preflight failure can retroactively unestablish it.
+
+    E4-2 lists "the bundle root itself cannot be accessed" as an exit-1 identity
+    condition and E4-3 makes an unenumerable directory after identity
+    `bundle-directory-unreadable` at exit 3. On POSIX those meet in exactly one
+    place, and the contract pins the worked case rather than leaving it inferred.
+    """
+
+    def one_artifact(self):
+        return write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+
+    def test_the_0o111_worked_case_is_exit_3_not_exit_1(self):
+        """Bundle directory mode 0o111: traverse permission lets
+        `open(DIR/manifest.json)` succeed while `readdir(DIR)` fails EACCES.
+        """
+        if os.geteuid() == 0:
+            self.skipTest("running as root: mode bits do not deny enumeration")
+        bundle = self.one_artifact()
+        os.chmod(bundle, 0o111)
+        self.addCleanup(os.chmod, bundle, 0o700)
+        try:
+            os.listdir(bundle)
+            self.skipTest("this filesystem does not enforce mode bits")
+        except PermissionError:
+            pass
+        # The precondition the ruling turns on: the direct read still succeeds.
+        with open(os.path.join(bundle, "manifest.json"), "rb") as handle:
+            self.assertTrue(handle.read())
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["nonmeasurement"]["reason"],
+                         "bundle-directory-unreadable")
+
+    def test_identity_is_read_directly_and_never_by_enumeration(self):
+        """The structural reason the 0o111 case lands where it does: nothing
+        enumerates the bundle before identity exists. Denying enumeration
+        outright still produces a result object NAMING the scenario.
+        """
+        original = ev.scan_directory
+        self.addCleanup(setattr, ev, "scan_directory", original)
+        ev.scan_directory = lambda path: (_ for _ in ()).throw(
+            OSError(errno.EACCES, "Permission denied", path))
+        code, out, _ = self.run_cli(self.one_artifact())
+        self.assertEqual(code, 3)
+        self.assertEqual(json.loads(out)["scenario_id"], "IOP-P-DEC")
+
+    def test_every_post_identity_filesystem_failure_stays_at_exit_3(self):
+        """Monotonicity, asserted over the whole post-identity filesystem
+        surface rather than on one representative: none of these may fall back
+        into the exit-1 band once a scenario_id has been obtained.
+        """
+        cases = {}
+
+        def fresh(name, **kwargs):
+            root = os.path.join(self.root, name)
+            os.makedirs(root)
+            return write_bundle(root, "IOP-P-DEC",
+                                {"artifacts/d.json": DECISION}, **kwargs)
+
+        cases["listed file absent"] = (
+            fresh("m1", drop_from_disk=("artifacts/d.json",)), None)
+
+        original_scan = ev.scan_directory
+        original_kind = ev.entry_kind
+        original_read = ev.read_bundle_file
+        self.addCleanup(setattr, ev, "scan_directory", original_scan)
+        self.addCleanup(setattr, ev, "entry_kind", original_kind)
+        self.addCleanup(setattr, ev, "read_bundle_file", original_read)
+
+        seams = [
+            ("directory unenumerable", "scan_directory",
+             lambda path: (_ for _ in ()).throw(
+                 OSError(errno.EACCES, "Permission denied", path))),
+            ("entry kind unknown", "entry_kind",
+             lambda entry: (_ for _ in ()).throw(
+                 OSError(errno.EIO, "Input/output error", entry.path))),
+            ("listed file unreadable", "read_bundle_file",
+             lambda path: (_ for _ in ()).throw(
+                 OSError(errno.EIO, "Input/output error", path))),
+        ]
+        for index, (label, attr, seam) in enumerate(seams):
+            cases[label] = (fresh("m%d" % (index + 2)), (attr, seam))
+
+        for label, (bundle, seam) in cases.items():
+            if seam is not None:
+                setattr(ev, seam[0], seam[1])
+            try:
+                code, out, _ = self.run_cli(bundle)
+            finally:
+                if seam is not None:
+                    setattr(ev, seam[0], {"scan_directory": original_scan,
+                                          "entry_kind": original_kind,
+                                          "read_bundle_file": original_read}[seam[0]])
+            with self.subTest(condition=label):
+                self.assertEqual(code, 3, label)
+                self.assertEqual(json.loads(out)["scenario_id"], "IOP-P-DEC")
+
+
+# --------------------------------------------------------------------------
+# Erratum 5, E5-5 -- contract 7.1 is SCENARIO-INDEPENDENT
+# --------------------------------------------------------------------------
+
+class AuthenticatedWithheldIsScenarioIndependent(BundleCase):
+    """The erratum removed an expected-tier oracle from the rule, so a test that
+    still encodes the oracle is not a test of the new rule.
+
+    The rule under test: ANY emitted frozen verdict carrying a non-empty
+    `authenticated_withheld` channel makes the scenario MEASUREMENT_INVALID,
+    REGARDLESS OF SCENARIO ID. The assertion below therefore ranges over ALL
+    TWELVE registered ids -- an implementation that consulted any per-scenario
+    expected-tier table would have to exempt at least one of them, and would
+    fail here whichever partition it chose.
+    """
+
+    WITHHELD = ["producer-binding-absent"]
+
+    def bundle_for(self, scenario_id, name):
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        if scenario_id in ev.SINGLE_ARTIFACT_FAMILY:
+            family = ev.SINGLE_ARTIFACT_FAMILY[scenario_id]
+            doc = {"decision": DECISION, "control": CONTROL,
+                   "execution": EXECUTION, "effect": EFFECT}[family]
+            return write_bundle(root, scenario_id, {"artifacts/a.json": doc})
+        return write_bundle(root, scenario_id, four_artifacts())
+
+    def withholding_stub(self, only_record=None):
+        """A stub that withholds on every artifact, or on one named artifact."""
+
+        class Withholding(StubVerifier):
+            def __call__(self, request, flags):
+                envelope = json.loads(request.decode("utf-8"))
+                record_id = envelope["artifact"].get("record_id")
+                self.calls.append((record_id, envelope, list(flags)))
+                withheld = (AuthenticatedWithheldIsScenarioIndependent.WITHHELD
+                            if only_record in (None, record_id) else [])
+                body = verdict(record_id, klass="AIREP-Core",
+                               auth_withheld=withheld)
+                return 0, json.dumps(body).encode("utf-8"), b""
+
+        return Withholding()
+
+    def test_all_twelve_scenarios_are_measurement_invalid(self):
+        seen = set()
+        for index, scenario_id in enumerate(sorted(ev.SCENARIO_IDS)):
+            with self.subTest(scenario_id=scenario_id):
+                bundle = self.bundle_for(scenario_id, "w%d" % index)
+                exc = self.nonmeasurement(bundle, self.withholding_stub())
+                self.assertEqual(exc.reason, "authenticated-withheld")
+                self.assertEqual(exc.status, "MEASUREMENT_INVALID")
+                seen.add(scenario_id)
+        self.assertEqual(seen, set(ev.SCENARIO_IDS))
+        self.assertEqual(len(seen), 12)
+
+    def test_no_level1_verdict_is_emitted_for_any_of_the_twelve(self):
+        for index, scenario_id in enumerate(sorted(ev.SCENARIO_IDS)):
+            with self.subTest(scenario_id=scenario_id):
+                bundle = self.bundle_for(scenario_id, "x%d" % index)
+                original = ev.invoke_frozen_verifier
+                ev.invoke_frozen_verifier = self.withholding_stub()
+                try:
+                    code, out, _ = self.run_cli(bundle)
+                finally:
+                    ev.invoke_frozen_verifier = original
+                self.assertEqual(code, 3)
+                result = json.loads(out)
+                self.assertEqual(result["measurement_status"],
+                                 "MEASUREMENT_INVALID")
+                self.assertIsNone(result["level1"])
+                self.assertIsNone(result["predicates"])
+
+    def test_a_single_withholding_artifact_invalidates_a_four_artifact_bundle(self):
+        """The channel is per-verdict, not per-bundle: one withheld artifact out
+        of four is enough, on a scenario whose Level-1 expectation is ACCEPT.
+        """
+        bundle = self.bundle_for("IOP-R-CLEAN", "one")
+        exc = self.nonmeasurement(bundle, self.withholding_stub("d-effect"))
+        self.assertEqual(exc.reason, "authenticated-withheld")
+        self.assertEqual([w["artifact_path"] for w in exc.withheld_reasons],
+                         ["artifacts/effect.json"])
+
+    def test_the_withheld_reasons_are_reported_verbatim(self):
+        bundle = self.bundle_for("IOP-B-EXE", "verbatim")
+        exc = self.nonmeasurement(bundle, self.withholding_stub())
+        self.assertEqual(exc.withheld_reasons[0]["authenticated_withheld"],
+                         self.WITHHELD)
+
+    def test_the_evaluator_carries_no_expected_tier_table(self):
+        """The structural half of E5-5, asserted rather than assumed: no
+        per-scenario expected-outcome map exists in the module. `map_level1`
+        takes only measured inputs, and the only scenario-keyed tables are the
+        bundle-family composition (contract 5) and the contract-7.2 exit-1
+        allowance -- neither of which is an expected TIER or an expected Level-1.
+        """
+        scenario_keyed = [name for name, value in vars(ev).items()
+                          if isinstance(value, dict)
+                          and set(value).issubset(ev.SCENARIO_IDS)
+                          and value]
+        self.assertEqual(scenario_keyed, ["SINGLE_ARTIFACT_FAMILY"])
+        self.assertEqual(set(ev.SINGLE_ARTIFACT_FAMILY.values()),
+                         {"decision", "control", "execution", "effect"})
+        for level1 in (ev.ACCEPT, ev.REJECT, ev.RECONCILIATION_MISMATCH,
+                       ev.INDEPENDENCE_NOT_ESTABLISHED):
+            self.assertNotIn(level1, ev.SINGLE_ARTIFACT_FAMILY.values())
 
 
 if __name__ == "__main__":
