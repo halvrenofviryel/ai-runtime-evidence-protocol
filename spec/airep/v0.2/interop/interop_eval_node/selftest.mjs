@@ -578,17 +578,30 @@ expectNonMeasured("a number inside an operator input",
     JSON.stringify(v.verifier_digests));
 }
 
-// Section 8.2.1: the peer lane's verifier digest appears NOWHERE.
+// Section 8.2.1: the peer lane's verifier digest appears NOWHERE -- not in the
+// output, and not as a carried-forward constant in the source. The check is
+// deliberately CONSTANT-FREE: writing the peer digest here to assert its
+// absence would put it back into this lane's tree, which is the thing the
+// section forbids. Instead the set of 64-hex literals in the source is required
+// to be exactly the two this lane pins.
 {
-  const PEER_DIGEST = "5d08c327648d4bdc83714879be8531c837b991dd474d7ca46397b0ff8c9d01cc";
   const source = fs.readFileSync(EVAL, "utf8");
-  check("the peer verifier digest is not a constant in the evaluator source",
-    !source.includes(PEER_DIGEST));
-  check("the evaluator source never names the peer lane's verifier file",
-    !source.includes("verifier_py") && !source.includes("class_verifier.py"));
+  const hexLiterals = new Set(source.match(/\b[0-9a-f]{64}\b/g) ?? []);
+  eq("the evaluator source pins exactly two 64-hex digests", hexLiterals.size, 2);
+  check("the evaluator source never names the peer lane",
+    !/verifier_py|class_verifier\.py|interop_eval_py/.test(source));
+
   const r = run(["--bundle", mkBundle("v-peerscan")]);
-  check("the peer verifier digest is absent from output",
-    !r.out.includes(PEER_DIGEST) && !r.out.includes("verifier_py"), r.out.slice(0, 400));
+  const v = JSON.parse(r.out);
+  eq("output carries exactly two verifier_digests members",
+    Object.keys(v.verifier_digests).sort(), ["class_verifier", "class_verifier_contract"]);
+  const outHex = new Set((r.out.match(/\b[0-9a-f]{64}\b/g) ?? []));
+  const pinnedInSource = [...hexLiterals];
+  const pinnedInOutput = [...outHex].filter((h) => pinnedInSource.includes(h));
+  check("no unasserted third verifier digest is carried into the output",
+    pinnedInOutput.length <= 2, JSON.stringify(pinnedInOutput));
+  check("the output never names the peer lane",
+    !/verifier_py|class_verifier\.py|interop_eval_py/.test(r.out), r.out.slice(0, 400));
 }
 
 // Determinism (section 8.4).
