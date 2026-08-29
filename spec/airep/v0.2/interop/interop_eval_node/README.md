@@ -1,140 +1,195 @@
 # Node reference interop evaluator
 
-The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored in
-isolation from the Python lane: no shared reconciliation code, no shared helper, no port.
+The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored and remediated
+in isolation from the Python lane: no shared reconciliation code, no shared helper, no port, and
+no sight of the peer lane's source or output.
+
+Contract basis for this remediation: commit `930b9457db00c1d66e2d355f59a6cf5811d52d3a`,
+`INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` sha256
+`ea705ec2b8775a37aa4bdbf387a5eb5295c0e8bd8a000ad443104c3a24a6c63a`.
 
 ```
 node interop_eval.mjs --bundle DIR
-                      [--bindings FILE] [--independence-policy FILE]
-                      [--revocation FILE] [--now STR] [--freshness-window N]
+                      [--bindings FILE] [--independence-policy FILE] [--revocation FILE]
                       [--verifier FILE] [--verifier-contract FILE]
 ```
 
-One invocation evaluates one bundle and writes one JSON result object. No case discovery.
+One invocation evaluates one bundle and writes one JSON result object. No case discovery. The
+aggregate harness — not this program — performs the twelve fixed invocations and the five
+run-level duties of §8.1.
+
+## Exit and stdout (§8.5)
+
+The dividing line is **whether bundle identity was established**, and nothing else.
 
 | Exit | stdout | Condition |
 |---|---|---|
-| `0` | one result object, `MEASURED`, with a Level-1 verdict | the bundle was measured |
-| `1` | empty | manifest missing/unparseable, bundle identity unknown, a listed file absent |
+| `0` | one result object, `MEASURED`, `level1` populated | the bundle was measured |
+| `1` | empty | bundle identity could not be established: `manifest.json` absent, not parseable as strict JSON, or carrying no usable `scenario_id` from the registered twelve |
 | `2` | empty | CLI usage error (`--help` included: nothing is evaluated) |
-| `3` | one result object, `MEASUREMENT_INVALID` or `ERROR`, `level1: null` | identity parsed, scenario unmeasurable |
+| `3` | one result object, `MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | identity established, scenario not measured |
 
-Diagnostics go to stderr and carry no semantics.
+Diagnostics go to stderr, carry no semantics, and are never parsed — by this program or by the
+harness. Frozen-verifier stderr is hashed for audit only.
 
-The frozen Node class verifier is invoked as a subprocess and is never imported, vendored or
-modified. Its digest and the digest of `CLASS_VERIFIER_CONTRACT.md` are asserted before use.
-The Python lane's verifier is never invoked and never read (contract §3): its pinned digest is
-recorded in the output with `asserted: false`.
+**`exit 0` with empty stdout is unacceptable under every condition** (`NODE-IMP-1`). Three
+mechanisms hold that line: direct-invocation detection that cannot be defeated by percent-encoding
+(§ below), a synchronous complete write of the result object rather than an async
+`process.stdout.write` that a subsequent `process.exit()` could truncate, and a process-exit
+invariant that converts a silent zero into exit `3` with a diagnostic.
 
-Cross-lane envelope-digest comparison is **not** implemented, by ruling `AD15-IR-4`. This
-program emits only its own `request_envelope_digest`.
+## `NODE-IMP-1` — the recorded defect and what closes it
+
+`new URL(import.meta.url).pathname` is percent-encoded. On a repository path containing a literal
+space (or `#`, or any non-ASCII character) the direct-invocation guard compared an encoded string
+against a decoded one, evaluated false, and the program exited `0` with empty stdout — the one
+output the §8.5 table cannot defend against, since exit `0` asserts a measured result while stdout
+carries none.
+
+`isDirectInvocation()` now tests three ways, and a failure of any one is not a failure of the
+guard:
+
+1. `pathToFileURL(process.argv[1]).href === import.meta.url` — both sides are produced by Node's
+   own URL machinery, so their escaping is symmetric by construction. This is the comparison the
+   original defect had backwards.
+2. `path.resolve(argv[1])` against `fileURLToPath(import.meta.url)` — decoded on both sides.
+3. `fs.realpathSync` of both — catches a symlinked or otherwise differently spelled entry point.
+
+`selftest.mjs` §12 runs the evaluator from directories named `dir with space`,
+`dir#with#hash`, `dizin ünlü` and `dir with  two  spaces`, asserting the full exit/stdout table in
+each and asserting directly that no invocation exits `0` with empty stdout.
+
+## Frozen verifier
+
+Invoked as a subprocess; never imported, vendored, re-implemented or modified. Its digest and the
+digest of `CLASS_VERIFIER_CONTRACT.md` are asserted before use and emitted as **this lane's own
+two entries** (§8.2.1):
+
+```jsonc
+{ "class_verifier": "sha256:…", "class_verifier_contract": "sha256:…" }
+```
+
+**The Python lane's verifier digest appears nowhere** — not in the output, and not as a constant
+in this source. §3 forbids this lane from reading the peer verifier, so it cannot assert a digest
+for it; cross-lane verifier identity is the aggregate harness's duty, and the harness legitimately
+sees both trees. `selftest.mjs` asserts the absence in both the source and the output.
+
+Cross-lane envelope-digest comparison is **not** implemented, by ruling `AD15-IR-4`. This program
+emits only its own `request_envelope_digest`, per artifact.
+
+## Ordering
+
+Full bundle preflight completes before any frozen verifier is invoked (§8.3.1): manifest, symlink
+and path rules, disk/manifest closure both ways, digests, JSON parseability, bundle shape,
+operator-input composition, numeric envelope, frozen-verifier digest assertions. A failure during
+preflight is a pre-invocation `ERROR` carrying `artifacts: []` — an empty array, never entries
+with placeholder fields. Once invocation begins, `artifacts[]` carries an entry for each
+invocation that produced an exit code, and no more.
 
 ## Running
 
 ```
-python3 ../../class-verification/offline-node-deps/materialize_node_modules.py   # frozen verifier deps
+python3 ../../class-verification/offline-node-deps/materialize_node_modules.py   # frozen verifier deps, offline
 node selftest.mjs
 ```
 
+`node_modules/` is generated and git-ignored; it is never committed.
+
 `selftest.mjs` uses synthetic inputs constructed inside the file. It creates no corpus bytes and
-no scenario bundle artifacts; corpus construction is on hold (contract §12).
+no scenario bundle artifacts; corpus construction is on hold (contract §13).
 
 **Not covered by the self-test, stated plainly:** the `MEASURED` end-to-end path over sealed,
-signed artifacts — a clean `ACCEPT`, the three reconciliation-negative verdicts, and
+signed, bound artifacts — a clean `ACCEPT`, the three reconciliation-negative verdicts, and
 `IOP-B-EXE`'s Authenticated-tier failure — cannot be exercised until the corpus exists. What is
-covered is the CLI/exit table, manifest verification, numeric preflight, envelope construction
-and ordering, the §7.2 causal guard in both directions, reference resolution, all three
-predicates, and the Level-1 mapping order.
+covered is the CLI/exit table, the pinned manifest encoding, bundle and operator-input shape, the
+numeric preflight including its mandatory JSON Pointer, the closed `nonmeasurement` registry and
+its status pairing, envelope construction and ordering, the §7.2 causal guard in both directions,
+reference resolution, all three predicates, the Level-1 mapping order, and the `NODE-IMP-1` path
+regression.
 
 One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
 checks recompute their expected value with this module's own `jcs()` and `byteCompare()`, so they
 prove the *pipeline* around the canonicalizer, not the canonicalizer. Exactly one check does not —
 a canonical byte string and digest produced outside this module (Python
 `json.dumps(sort_keys=True, separators=(",", ":"))`, which coincides with RFC 8785 for ASCII keys
-and integer numbers) is asserted as a literal. Envelope-byte equality is the property AD15-IR-4
-hands to the aggregate harness, and that is where it is actually measured.
+and integer numbers) is asserted as a literal. Envelope-byte equality across lanes is the property
+`AD15-IR-4` hands to the aggregate harness, and that is where it is actually measured.
 
-## Assumed bundle manifest shape — flagged for maintainer pinning
+## Bundle manifest
 
-The evaluator contract fixes what the manifest must **carry** (§5: `scenario_id`, plus every
-shipped file with a `sha256` over its original bytes) but pins no **encoding**. The shape below
-was chosen to match the house style of the existing corpus manifests in this repository
-(`files` as a path → 64-lowercase-hex map) and is an assumption, not a contract reading.
+The encoding is now pinned exactly by §5 and is no longer an assumption. `manifest.json` in the
+bundle root; the evaluator searches for no other name or location.
 
 ```jsonc
 {
+  "manifest_version": "1",
   "scenario_id": "IOP-R-CLEAN",
-  "files": { "<bundle-relative path>": "<64 lowercase hex>" },   // every shipped file
-  "artifacts": ["<path>", ...],                                   // which files are artifacts
-  "operator_inputs": {                                            // optional
-    "bindings": "<path>",
-    "independence_policy": "<path>",
-    "revocation": "<path>"
-  },
-  "clock": { "now": "<str>", "freshness_window_seconds": "<str>" },  // optional; BOTH strings
-  "head_witness": "<path>"                                        // optional
+  "files": [
+    { "path": "artifacts/decision.json", "role": "artifact", "sha256": "<64 lowercase hex>" }
+  ]
 }
 ```
 
-Rules the evaluator enforces on it: unknown members are rejected; paths must be normalized,
-relative and inside the bundle; every referenced path must be listed in `files`; a manifest that
-violates any of these exits `1`, because a manifest that cannot be trusted cannot establish
-bundle identity.
+Enforced: the object is closed to exactly three members; each `files[]` entry is closed to exactly
+`path` / `role` / `sha256`; `sha256` is bare 64 lowercase hex, never the `sha256:…` wire form;
+`role` comes from the closed set `artifact` · `bindings` · `independence_policy` · `revocation` ·
+`clock`; `files` is sorted strictly ascending by `path` in UTF-8 byte order; paths are
+bundle-relative and normalized, with no absolute path, `..` segment, backslash or duplicate;
+`files` covers every regular file under the bundle **except the root `manifest.json`**, in both
+directions; symbolic links are forbidden anywhere under the bundle, including one whose target
+resolves inside it.
 
-`clock.freshness_window_seconds` is a **string**, not a number, so it reaches the frozen verifier
-as the bundle spelled it. Parsing a JSON number and re-emitting it would be the "synthesize /
-re-emit" §5.1 forbids, and two runtimes have no reason to re-spell one float identically.
+Bundle shape: `IOP-P-*` and `IOP-B-*` carry exactly one artifact, `IOP-R-*` exactly four — one
+each of Decision, Control, Execution and Effect. Operator inputs, official W1: exactly one
+`bindings`, one `independence_policy`, one `revocation`, and no `clock`. `head_witness` is absent
+from every official W1 bundle and the closed role set has no way to carry one, so the request
+envelope never contains one.
 
-Operator inputs may be declared in the manifest, named on the command line, or both — when both,
-they must agree. A command-line operator input must live inside the bundle and be covered by the
-manifest, so "the bundle's own operator-input bytes" (§5.1) stays an auditable statement.
-
-**If the maintainer pins a different manifest encoding, this evaluator needs a corresponding
-change.** It is deliberately the only part of the program that rests on an assumption.
+The optional operator-input flags are **assertions**, not substitutions: each must name the
+bundle's own file already carrying that role, and a disagreement is a usage error. There is no
+route by which foreign operator bytes reach the frozen verifier.
 
 ## Recorded ambiguities — not resolved here
 
-Carried in full in the branch's delivery report. In the source they are marked at the point of
-use.
+The erratum closed the ten ambiguities the pre-erratum lineage carried. These are what remains,
+recorded rather than invented. Each is marked at the point of use in the source.
 
-1. **§7.2 condition 1 vs ruling AD15-IR-4.** §7.2 makes "both lanes produced identical envelope
-   bytes" a precondition for reading frozen `exit 1` as `REJECT`, while AD15-IR-4 rules that a
-   single evaluator cannot observe the other lane's digest. The unobservable half is not
-   evaluated here; the locally observable half (manifest verified, numeric preflight clean,
-   envelope built per §5.1 from the bundle's own operator inputs) is.
-2. **§8.2 `verifier_digests` — "the three asserted digests".** Asserting the Python verifier's
-   digest would require reading the other lane's tree, which §3 forbids crossing into. All three
-   entries are emitted; only the two this lane uses are asserted.
-3. **Predicate applicability keying.** §6.1 pins applicability per scenario ID. This evaluator
-   keys it on bundle structure instead (one artifact ⇒ all `NOT_APPLICABLE`; one each of
-   decision/control/execution/effect ⇒ all three evaluated; anything else ⇒ `ERROR`), which
-   agrees with the pinned matrix on all twelve scenarios and follows §6.1's own stated rationale.
-4. **§7.1 "artifacts the scenario expects to reach `AIREP-Authenticated`".** The evaluator holds
-   no expected outcomes and must not. Any non-empty `authenticated_withheld` on any artifact is
-   treated as measurement-invalid — a superset that cannot differ on the twelve, where no
-   scenario expects a withheld Authenticated tier.
-5. **Round-trip precision.** "no value requiring more than double precision to round-trip" is
-   read as: the token must denote exactly the decimal that the shortest round-trip form of its
-   double denotes. `0.1` passes; `1.00000000000000000001` does not. The integer bound is applied
-   to the token's mathematical value, so `1e20` is rejected as an integer past 2^53−1 even though
-   it is spelled as a float.
-6. **R-A does not type-check its edge targets.** §6 names the edges Control→Decision etc., but
-   the resolution rule it inherits (frozen §0) matches on `record_id`/`chain_id` only. A
-   reference that resolves uniquely to an artifact of the wrong family is not a failure here.
-7. **Exit 1 for an absent file after identity was established.** §8.5's exit-1 row lists "a
-   required artifact absent", while the paragraph under the table says a result object is owed
-   once identity is established. The table row is followed.
-8. **`predicates` on a non-`MEASURED` result.** §8.2 requires the member always, and §6.1 closes
-   its value set to three, but none of the three means "applicable and not measured". An errored
-   four-artifact `IOP-R-*` bundle therefore reports `NOT_APPLICABLE`, which is
-   indistinguishable in that member from a genuine single-artifact scenario. A fourth value, or
-   permission to omit the member when `measurement_status != MEASURED`, would close it.
-9. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
+1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
+   strings but not what to emit when the assertion has not yet run, or when a file could not be
+   read at all. This lane emits `null` for the whole member before the assertion runs, the
+   **observed** digest (not the pinned one) when it has, and `null` for an individual member whose
+   file was unreadable. A `null` records "not computed"; emitting the pinned constant would assert
+   something that was never measured.
+2. **No registry reason for a bundle-layout violation.** §8.2.2's registry has no value for a
+   symlink under the bundle, a regular file on disk absent from `files[]`, or a non-regular file
+   (fifo, socket, device). All three are §5 bundle/manifest rules, so they are raised as
+   `manifest-invalid` with the cause named in `detail`. A dedicated reason would be clearer.
+3. **An invocation attempted but never spawned.** §8.3.1 says `artifacts[]` carries an entry for
+   each invocation attempted, but every field except `artifact_ref` is a product of an invocation.
+   A spawn that produced no exit code has no representable entry, so it is omitted and named in
+   `nonmeasurement.detail` — following that section's own rule that no implementer invents an exit
+   code, and its principle that absence is represented by absence.
+4. **An unexpected fault before identity is established.** `internal-error` is defined as a fault
+   *after* identity. Before it there is no scenario to name, so the exit-`1` band applies, per
+   §8.5's statement that the dividing line is whether identity was established and nothing else.
+   The enumeration in the exit-`1` row does not list this case.
+5. **Duplicate member names inside `manifest.json`.** "not parseable as strict JSON" is not pinned
+   to reject them. `JSON.parse` keeps the last occurrence, as most JSON libraries do, so the
+   closure check sees one member. This is left as the library default deliberately: tightening it
+   unilaterally would be a rule the peer lane has no reason to share.
+6. **An artifact with no usable `record_id`.** Ordering (§8.4) and `artifact_ref` (§8.3) both
+   assume one. Rather than refusing to evaluate such a bundle, the member is omitted from
+   `artifact_ref` and the artifact sorts under an empty key with `path` as a deterministic
+   tiebreak. Refusing would score a genuine stage-0 detection as this evaluator's own fault, which
+   is the inversion §7.2 exists to prevent. In an official bundle the tiebreak never fires.
+7. **A frozen exit code that is neither `0` nor `1`, and a frozen `exit 0` carrying no usable
+   verdict.** §8.2.2's `verifier-run-invalid` row names only "frozen `exit 1` outside §7.2's two
+   qualifying conditions", and §7.2's table enumerates only causes of `exit 1`. A frozen `exit 2`
+   (its CLI/config-error band), any other non-zero code, and an `exit 0` whose stdout is not a
+   shape-valid verdict object all leave the run invalid with no verdict, so they are raised as
+   `verifier-run-invalid` with the cause in `detail`. No other registry value fits, and inventing
+   one would need an erratum.
+8. **`--help`.** The evaluator contract pins no behaviour for it, and the frozen class-verifier
    contract pins `--help` to exit `0` — which §8.5 here forbids, since exit `0` owes a result
-   object. Treated as a usage error (exit `2`, usage on stderr). The two lanes have no shared
+   object. Treated as a usage error (exit `2`, usage text on stderr). The two lanes have no shared
    basis to agree on this until it is pinned.
-10. **Unlisted files in the bundle directory.** §5 says the manifest "lists every file the bundle
-    ships", but does not say an evaluator must detect a file present on disk and absent from the
-    manifest. Only the manifest→disk direction is verified here. Enforcing the other direction
-    would require inventing an exemption for the manifest itself and for any incidental file
-    (a README), which is why it is recorded rather than implemented.
