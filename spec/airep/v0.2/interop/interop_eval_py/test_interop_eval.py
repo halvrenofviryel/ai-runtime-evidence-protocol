@@ -2789,5 +2789,360 @@ class AuthenticatedWithheldIsScenarioIndependent(BundleCase):
             self.assertNotIn(level1, ev.SINGLE_ARTIFACT_FAMILY.values())
 
 
+# --------------------------------------------------------------------------
+# Erratum 6, E6-1 -- ruling `AD15-IR-9`: entry kind requires authoritative
+# no-follow metadata. THE ONE BEHAVIOURAL CHANGE IN THIS LANE.
+# --------------------------------------------------------------------------
+
+class EntryKindNoFollowLookup(BundleCase):
+    """`AD15-IR-9`, measured on a REAL filesystem state, not on a stubbed seam.
+
+    `EntryInspectability` above already proves the CALLER maps an `OSError` from
+    `entry_kind` to `bundle-entry-uninspectable` -- but it proves it by REPLACING
+    `entry_kind` with a raiser. That measures the mapping and says nothing about
+    whether the inspection this lane actually performs can ever fail. It cannot
+    catch this defect, and it did not: the pre-ruling `entry_kind` answered from
+    the `d_type` the directory read happened to carry, so on the filesystem state
+    below it returned `(is_symlink=False, is_dir=False, is_file=True)` and raised
+    NOTHING, while the peer lane's per-entry no-follow lookup failed `EACCES` and
+    reported the reason. Same bundle, same kernel, two different reasons.
+
+    So this class constructs the state instead: a directory INSIDE the bundle at
+    mode `0o444` -- readable, so `readdir` succeeds and the entry NAME is
+    obtained; not searchable, so any metadata lookup on the entry itself fails
+    `EACCES`. That is exactly contract 8.2.2's first boundary row.
+
+    The root is deliberately NOT the `0o444` directory: contract 5's identity
+    boundary is a DIRECT READ of `DIR/manifest.json`, which needs traverse
+    permission on the root, so a `0o444` ROOT would never establish identity and
+    would exit 1 under `AD15-IR-8` -- a different rule, and not this one.
+
+    A root-owned run defeats permission bits entirely, so it is SKIPPED there
+    rather than reported as a pass.
+    """
+
+    WITNESS_KINDS = (False, False, True)
+
+    def unsearchable_bundle(self, name):
+        """A valid single-artifact bundle whose `artifacts/` directory is
+        readable but not searchable.
+        """
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        nested = os.path.join(bundle, "artifacts")
+        # Restored before rmtree, and before any assertion can leave it locked.
+        self.addCleanup(os.chmod, nested, 0o755)
+        os.chmod(nested, 0o444)
+        return bundle, nested
+
+    def require_permission_bits(self):
+        if hasattr(os, "geteuid") and os.geteuid() == 0:
+            self.skipTest("euid 0 bypasses permission bits, so a 0o444 "
+                          "directory is still searchable and this filesystem "
+                          "state cannot be constructed")
+
+    def test_an_unsearchable_directory_makes_its_entries_uninspectable(self):
+        """The discrimination. Reverting `entry_kind` to the enumeration-time
+        hint makes this bundle report `bundle-file-unreadable` instead, because
+        the entry is then wrongly CLASSIFIED as a regular file and the failure
+        only surfaces later, when its bytes are read.
+        """
+        self.require_permission_bits()
+        bundle, _ = self.unsearchable_bundle("ir9a")
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-entry-uninspectable")
+        self.assertEqual(exc.status, "ERROR")
+
+    def test_it_is_reported_at_exit_3_with_an_empty_artifacts_array(self):
+        self.require_permission_bits()
+        bundle, _ = self.unsearchable_bundle("ir9b")
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["measurement_status"], "ERROR")
+        self.assertEqual(result["nonmeasurement"]["reason"],
+                         "bundle-entry-uninspectable")
+        self.assertIsNone(result["level1"])
+        self.assertIsNone(result["predicates"])
+        self.assertEqual(result["artifacts"], [])      # pre-invocation
+
+    def test_no_frozen_verifier_is_invoked(self):
+        self.require_permission_bits()
+        bundle, _ = self.unsearchable_bundle("ir9c")
+        stub = StubVerifier()
+        with self.assertRaises(ev.NonMeasurement):
+            self.evaluate(bundle, stub)
+        self.assertEqual(stub.calls, [])
+
+    def test_the_enumeration_time_hint_answers_without_raising_here(self):
+        """The VACUITY GUARD, and the reason the test above discriminates.
+
+        If `os.DirEntry` raised on this state, the superseded implementation
+        would have reached `bundle-entry-uninspectable` too and the
+        discrimination test would pass with and without the fix -- which is not
+        a test (Erratum 4, method note). This asserts the hint does NOT raise
+        here, so the discrimination is real on this filesystem. Where `d_type`
+        is not populated the hint falls back to a stat and the state stops
+        discriminating; that is reported as a SKIP, never as a pass.
+        """
+        self.require_permission_bits()
+        _, nested = self.unsearchable_bundle("ir9d")
+        with os.scandir(nested) as scan:
+            entries = list(scan)
+        self.assertEqual([e.name for e in entries], ["d.json"])
+        entry = entries[0]
+        try:
+            hint = (entry.is_symlink(),
+                    entry.is_dir(follow_symlinks=False),
+                    entry.is_file(follow_symlinks=False))
+        except OSError:
+            self.skipTest("this filesystem does not populate d_type, so the "
+                          "enumeration-time hint already performs a metadata "
+                          "lookup and the AD15-IR-9 divergence is not "
+                          "constructible here")
+        self.assertEqual(hint, self.WITNESS_KINDS)
+
+    def test_the_no_follow_lookup_on_the_same_entry_does_raise(self):
+        """The other half of the guard: the lookup `AD15-IR-9` mandates DOES
+        fail on the state the hint answered for, so the two are not equivalent.
+        """
+        self.require_permission_bits()
+        _, nested = self.unsearchable_bundle("ir9e")
+        with os.scandir(nested) as scan:
+            entry = list(scan)[0]
+        with self.assertRaises(OSError) as ctx:
+            ev.entry_kind(entry)
+        self.assertEqual(ctx.exception.errno, errno.EACCES)
+
+    def test_a_symlink_is_still_observed_through_the_no_follow_lookup(self):
+        """The lookup must not FOLLOW the final component: a symlink whose
+        target is an ordinary file must still be seen as a symlink, or contract
+        5's "symbolic links are forbidden anywhere under the bundle" would be
+        silently satisfied by the target's kind.
+        """
+        root = os.path.join(self.root, "ir9f")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        os.symlink(os.path.join(bundle, "artifacts", "d.json"),
+                   os.path.join(bundle, "artifacts", "link.json"))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "manifest-invalid")
+        self.assertIn("symbolic link", exc.detail)
+
+    def test_ordinary_kinds_are_still_classified_correctly(self):
+        """The change is to HOW the kind is established, not to WHAT the kinds
+        are: an ordinary bundle still measures clean.
+        """
+        bundle = write_bundle(os.path.join(self.root, "ir9g"), "IOP-P-DEC",
+                              {"artifacts/d.json": DECISION})
+        self.assertEqual(sorted(ev.scan_bundle(bundle)),
+                         ["artifacts/d.json", "operator/bindings.json",
+                          "operator/independence.json", "operator/revocation.json"])
+
+
+# --------------------------------------------------------------------------
+# Erratum 6, E6-2 -- ruling `AD15-IR-10`: run validity precedes tier withheld
+# --------------------------------------------------------------------------
+
+class RunValidityPrecedesTierWithheld(BundleCase):
+    """Contract 7.1 is evaluated ONLY AFTER every artifact invocation has passed
+    the 7.2 process- and result-shape guard.
+
+    Both channels can be live on the same bundle: one artifact exits 0 carrying
+    a non-empty `authenticated_withheld` channel while another produces a
+    non-permitted exit. Both are pinned to exit 3, and the contract never said
+    which `measurement_status` wins until `AD15-IR-10`. The ERROR wins: a
+    verifier that misbehaved AS A PROCESS cannot be trusted to have produced a
+    meaningful withheld channel either, so reporting MEASUREMENT_INVALID would
+    attribute the failure to the tier when it belongs to the run.
+
+    This lane already ordered the two that way. Contract 13 step 4 requires the
+    ordering be MEASURED rather than left to hold by accident, which is what
+    these cases do -- the withheld artifact is deliberately the FIRST one
+    invoked, so an implementation that raised on withheld as it went would
+    report `authenticated-withheld` here and fail.
+    """
+
+    WITHHELD = ["binding-absent"]
+
+    def bundle(self, name):
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        return write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+
+    def both_live(self, bad_exit=2, bad_body=None):
+        """`b-control` is invoked FIRST and withholds; `c-execution` is invoked
+        LAST and misbehaves as a process.
+        """
+        return StubVerifier(by_record={
+            "b-control": (0, verdict("b-control", klass="AIREP-Core",
+                                     auth_withheld=self.WITHHELD)),
+            "c-execution": (bad_exit, bad_body)})
+
+    def test_the_error_outcome_is_reported_when_both_are_present(self):
+        exc = self.nonmeasurement(self.bundle("ir10a"), self.both_live())
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+        self.assertEqual(exc.status, "ERROR")
+
+    def test_the_result_object_carries_error_not_measurement_invalid(self):
+        code, out, _ = self.run_cli(self.bundle("ir10b"), stub=self.both_live())
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["measurement_status"], "ERROR")
+        self.assertEqual(result["nonmeasurement"]["reason"], "verifier-run-invalid")
+        self.assertNotEqual(result["measurement_status"], "MEASUREMENT_INVALID")
+        self.assertIsNone(result["level1"])
+        self.assertIsNone(result["predicates"])
+
+    def test_a_malformed_exit_0_result_also_precedes_the_withheld_channel(self):
+        """The guard is process AND result shape. An exit-0 invocation carrying
+        a wrong-shape result is `verifier-run-invalid` too, and it likewise wins
+        over a withheld channel emitted by a different artifact.
+        """
+        stub = self.both_live(bad_exit=0, bad_body={"not": "a verdict"})
+        exc = self.nonmeasurement(self.bundle("ir10c"), stub)
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+
+    def test_a_frozen_exit_1_outside_the_7_2_conditions_also_wins(self):
+        stub = self.both_live(bad_exit=1)
+        exc = self.nonmeasurement(self.bundle("ir10d"), stub)
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+
+    def test_withheld_alone_is_still_measurement_invalid(self):
+        """The control case. Without it, `test_the_error_outcome...` would also
+        pass an implementation that reported ERROR unconditionally, which is not
+        the ruling.
+        """
+        stub = StubVerifier(by_record={
+            "b-control": (0, verdict("b-control", klass="AIREP-Core",
+                                     auth_withheld=self.WITHHELD))})
+        exc = self.nonmeasurement(self.bundle("ir10e"), stub)
+        self.assertEqual(exc.reason, "authenticated-withheld")
+        self.assertEqual(exc.status, "MEASUREMENT_INVALID")
+
+    def test_a_process_failure_alone_is_still_verifier_run_invalid(self):
+        """The other control case: the ERROR branch is not an artefact of the
+        withheld channel being present.
+        """
+        stub = StubVerifier(by_record={"c-execution": (2, None)})
+        exc = self.nonmeasurement(self.bundle("ir10f"), stub)
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+
+    def test_the_withheld_channel_is_still_reported_alongside_the_error(self):
+        """Reporting the ERROR does not DISCARD what was observed: the run-level
+        outcome wins, and the withheld reasons stay visible to a reader.
+        """
+        code, out, _ = self.run_cli(self.bundle("ir10g"), stub=self.both_live())
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["measurement_status"], "ERROR")
+        self.assertEqual([e["verifier_exit_code"] for e in result["artifacts"]
+                          if e["artifact_path"] == "artifacts/control.json"], [0])
+
+
+# --------------------------------------------------------------------------
+# Erratum 6, E6-3 -- ruling `AD15-IR-11`: a spawn failure produces no entry
+# --------------------------------------------------------------------------
+
+class SpawnFailureContributesNoEntry(BundleCase):
+    """"Attempted" means a process attempt that produced a CONCRETE PROCESS
+    RESULT.
+
+    Contract 8.3.1 step 3 says `artifacts[]` carries an entry for each
+    invocation actually attempted, while 8.3's field list makes
+    `verifier_exit_code`, `verifier_result` and `verifier_stderr_digest`
+    products of a process attempt. A spawn that fails is an attempt in the
+    ordinary sense yet produces none of the three, so the two sentences could be
+    read against each other. `AD15-IR-11` resolves it: on
+    `verifier-not-invocable` the CURRENT artifact contributes NO entry, and
+    entries for invocations that completed EARLIER in the same bundle are
+    RETAINED.
+
+    This lane already did that. Contract 13 step 4 requires it be tested
+    anyway -- a rule that holds by accident is not tested.
+    """
+
+    def bundle(self, name):
+        root = os.path.join(self.root, name)
+        os.makedirs(root)
+        return write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+
+    def spawn_fails_after(self, completed):
+        """Complete `completed` invocations, then fail to spawn. Invocation
+        order is manifest order: control, decision, effect, execution.
+        """
+        state = {"calls": 0}
+
+        def invoke(request, flags):
+            state["calls"] += 1
+            if state["calls"] > completed:
+                raise ev.NonMeasurement(
+                    "verifier-not-invocable",
+                    "frozen verifier could not be executed: synthetic spawn "
+                    "failure on call %d" % state["calls"])
+            record_id = json.loads(request.decode("utf-8"))["artifact"]["record_id"]
+            return 0, json.dumps(verdict(record_id)).encode("utf-8"), b""
+
+        return invoke
+
+    def test_the_unspawnable_invocation_contributes_no_entry(self):
+        exc = self.nonmeasurement(self.bundle("ir11a"), self.spawn_fails_after(1))
+        self.assertEqual(exc.reason, "verifier-not-invocable")
+        self.assertEqual([e["artifact_path"] for e in exc.artifacts],
+                         ["artifacts/control.json"])
+
+    def test_earlier_completed_entries_are_retained(self):
+        exc = self.nonmeasurement(self.bundle("ir11b"), self.spawn_fails_after(3))
+        self.assertEqual([e["artifact_path"] for e in exc.artifacts],
+                         ["artifacts/control.json", "artifacts/decision.json",
+                          "artifacts/effect.json"])
+
+    def test_a_first_call_spawn_failure_yields_an_empty_array(self):
+        exc = self.nonmeasurement(self.bundle("ir11c"), self.spawn_fails_after(0))
+        self.assertEqual(exc.reason, "verifier-not-invocable")
+        self.assertEqual(exc.artifacts, [])
+
+    def test_no_entry_carries_a_fabricated_exit_code_or_digest(self):
+        """The reason the ruling exists: no implementer invents an exit code, a
+        verdict or a stderr digest for a process that never ran.
+        """
+        code, out, _ = self.run_cli(self.bundle("ir11d"),
+                                    stub=self.spawn_fails_after(2))
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["measurement_status"], "ERROR")
+        self.assertEqual(result["nonmeasurement"]["reason"], "verifier-not-invocable")
+        self.assertEqual(len(result["artifacts"]), 2)
+        for entry in result["artifacts"]:
+            self.assertIsInstance(entry["verifier_exit_code"], int)
+            self.assertIsInstance(entry["verifier_result"], dict)
+            self.assertTrue(entry["verifier_stderr_digest"].startswith("sha256:"))
+        self.assertNotIn("artifacts/effect.json",
+                         [e["artifact_path"] for e in result["artifacts"]])
+
+    def test_a_completed_invocation_that_fails_still_contributes_an_entry(self):
+        """The boundary the ruling draws. A process that RAN and misbehaved
+        produced a concrete result, so it DOES contribute an entry -- unlike one
+        that never started. Without this, "no entry" could be read as covering
+        every failed invocation.
+        """
+        stub = StubVerifier(default=(2, None))
+        exc = self.nonmeasurement(self.bundle("ir11e"), stub)
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+        self.assertEqual(len(exc.artifacts), 4)
+
+    def test_the_real_seam_raises_verifier_not_invocable_when_python_is_absent(self):
+        """The mapping is exercised on the REAL subprocess seam, not only on a
+        stub that raises the exception the test wants to see.
+        """
+        original = ev.sys.executable
+        ev.sys.executable = os.path.join(self.root, "no such interpreter")
+        self.addCleanup(setattr, ev.sys, "executable", original)
+        with self.assertRaises(ev.NonMeasurement) as ctx:
+            ev.invoke_frozen_verifier(b"{}", [])
+        self.assertEqual(ctx.exception.reason, "verifier-not-invocable")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

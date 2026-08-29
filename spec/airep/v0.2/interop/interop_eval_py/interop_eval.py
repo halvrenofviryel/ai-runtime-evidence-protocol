@@ -3,13 +3,56 @@
 """AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
 Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
-``e95713e546bd49e47669526aa241227ea678dd66``
-(sha256 ``f1ca998c375b7a0ffc42aefc996d25ef254cfecc2e2d435c76f430f1b7c038bf``),
+``07e09d13fcfc05c6a996407ff1809e8d6444fa30``
+(sha256 ``fcc1e33014a1ff766153df81263a4a6eac9dc627eff0476f2835f7a6cb2c4cc0``),
 alongside ``INTEROP_CORPUS_CONTRACT.md``
-(sha256 ``ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd``),
-i.e. the canonical post-Erratum-5 contracts, over the FROZEN Python class
-verifier, which is invoked as a SUBPROCESS and is never imported, vendored or
-re-implemented (contract 3).
+(sha256 ``ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd``,
+UNCHANGED by Erratum 6), i.e. the canonical post-Erratum-6 contracts, over the
+FROZEN Python class verifier, which is invoked as a SUBPROCESS and is never
+imported, vendored or re-implemented (contract 3).
+
+Erratum 6 rulings carried here:
+
+  * E6-1  ruling ``AD15-IR-9``: ENTRY KIND REQUIRES AUTHORITATIVE NO-FOLLOW
+          METADATA. Contract 8.2.2's first boundary row said the inspection was
+          ``lstat`` OR EQUIVALENT, and the two lanes read "or equivalent"
+          differently. An enumeration-time type hint -- ``d_type`` from
+          ``readdir``, ``os.DirEntry.is_file()`` and their equivalents -- is NOT
+          kind evidence on its own, because it may answer from a value the
+          directory read happened to carry without any metadata lookup on the
+          entry, and only on filesystems that populate it. For EVERY enumerated
+          entry the evaluator MUST now perform a SEPARATE no-follow metadata
+          lookup, and where that lookup cannot complete the reason is
+          ``bundle-entry-uninspectable``. THIS IS THE ONE BEHAVIOURAL CHANGE IN
+          THIS LANE (contract 13 step 2): ``entry_kind`` previously answered
+          from ``os.DirEntry``, and was MEASURED returning
+          ``(is_symlink=False, is_dir=False, is_file=True)`` WITHOUT RAISING on
+          a directory at mode ``0o444``, where the peer lane's per-entry lookup
+          failed ``EACCES``. It now calls ``os.lstat`` per entry and derives the
+          kind from ``st_mode``. The defect is CROSS-PLATFORM DETERMINISM, not
+          semantics -- no mandatory scenario's Level-1 value moves;
+  * E6-2  ruling ``AD15-IR-10``: RUN VALIDITY PRECEDES TIER WITHHELD. Contract
+          7.1 is evaluated ONLY AFTER every artifact invocation in the scenario
+          has passed the 7.2 process- and result-shape guard. Where an
+          ERROR-class process or run invalidity and a non-empty
+          ``authenticated_withheld`` channel are both present on the same
+          bundle, the ERROR outcome is reported -- a verifier that misbehaved AS
+          A PROCESS cannot be trusted to have produced a meaningful withheld
+          channel either, so ``MEASUREMENT_INVALID`` would attribute the failure
+          to the tier when it belongs to the run. This lane already applied the
+          7.2 guard first, so the ruling CONFIRMS its construction; NO
+          BEHAVIOUR CHANGES. Contract 13 step 4 requires the ordering be TESTED
+          rather than left to hold by accident, and it now is;
+  * E6-3  ruling ``AD15-IR-11``: A SPAWN FAILURE PRODUCES NO ``artifacts[]``
+          ENTRY. "Attempted" in contract 8.3.1 rule 3 means a process attempt
+          that produced a CONCRETE PROCESS RESULT. Where the frozen verifier
+          cannot be spawned at all (``verifier-not-invocable``) the current
+          artifact contributes NO entry, while entries for invocations that
+          completed EARLIER in the same bundle are RETAINED. No implementer
+          fabricates an exit code, a verdict or a stderr digest for a process
+          that never ran. This lane already did exactly this, so the ruling
+          CONFIRMS it; NO BEHAVIOUR CHANGES, and contract 13 step 4's explicit
+          test is now present.
 
 Erratum 5 rulings carried here:
 
@@ -31,8 +74,11 @@ Erratum 5 rulings carried here:
   * E5-3  ``bundle-entry-uninspectable`` joins the closed registry -> ERROR,
           exit 3, ``artifacts: []``. It is the last gap in the filesystem
           taxonomy: an entry whose NAME was obtained by a successful enumeration
-          but whose KIND could not be determined by a no-follow inspection
-          (``lstat`` or equivalent). Calling that ``manifest-invalid`` would
+          but whose KIND could not be determined by a no-follow inspection.
+          Its "``lstat`` OR EQUIVALENT" phrasing is SUPERSEDED by ``AD15-IR-9``
+          (E6-1 above), which pins the lookup as a SEPARATE per-entry no-follow
+          metadata call and excludes enumeration-time type hints.
+          Calling that ``manifest-invalid`` would
           assert the layout is wrong when that is precisely what could not be
           established, and ``bundle-directory-unreadable`` does not fit either,
           because enumeration SUCCEEDED. This CLOSES recorded ambiguity A14
@@ -376,6 +422,19 @@ conforming official W1 bundle.
       determined, so ``manifest-invalid`` would assert a layout violation that
       could not be established. The mapping here is corrected accordingly.
 
+      REOPENED AND RE-CLOSED by Erratum 6 (E6-1, ``AD15-IR-9``), AGAINST this
+      lane's IMPLEMENTATION. E5-3 fixed WHICH REASON the case maps to and this
+      lane's mapping was then correct; what stayed unpinned was HOW the kind is
+      inspected. This lane read "no-follow inspection" as satisfied by
+      ``os.DirEntry.is_symlink()`` / ``is_dir(follow_symlinks=False)`` /
+      ``is_file(follow_symlinks=False)``, which on Linux answer from the
+      ``d_type`` cached by ``readdir`` WITHOUT any metadata lookup -- so on a
+      directory at mode ``0o444`` the kind came back ``(False, False, True)``
+      and nothing raised, and the very reason E5-3 had just added was NOT
+      REACHED at that point. The peer lane's per-entry lookup failed ``EACCES``
+      and reported it. That divergence was MEASURED, not argued, and it is why
+      ``entry_kind`` now performs an explicit ``os.lstat`` per enumerated entry.
+
   A15 CLOSED by Erratum 5 (E5-4), AGAINST this lane's construction. The
       conflict reported here -- "exactly two entries" against "never a value
       this lane did not measure", when a frozen file cannot be READ -- is
@@ -395,12 +454,13 @@ import hashlib
 import importlib.util
 import json
 import os
+import stat
 import subprocess
 import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.4"   # post-Erratum-5 (E5-1..E5-5, AD15-IR-8)
+EVALUATOR_VERSION = "0.2.5"   # post-Erratum-6 (E6-1..E6-3, AD15-IR-9/10/11)
 
 #: Contract 8.5 / E4-1: the CLI meta-action is this EXACT argv and no other.
 HELP_INVOCATION = ["--help"]
@@ -1009,16 +1069,41 @@ def scan_directory(directory: str) -> List[os.DirEntry]:
 
 
 def entry_kind(entry: os.DirEntry) -> Tuple[bool, bool, bool]:
-    """Classify one enumerated entry as ``(symlink, directory, regular file)``,
-    raising ``OSError`` verbatim.
+    """Classify one enumerated entry as ``(symlink, directory, regular file)``
+    by an AUTHORITATIVE NO-FOLLOW METADATA LOOKUP, raising ``OSError`` verbatim.
 
-    A named seam for recorded ambiguity A14: on Linux these normally answer from
-    the cached ``d_type`` and never touch the disk, so the failure path is not
-    otherwise reachable in a test.
+    Ruling ``AD15-IR-9`` (E6-1) pins what contract 8.2.2's first boundary row
+    previously left as "``lstat`` OR EQUIVALENT". A type hint obtained DURING
+    ENUMERATION -- ``d_type`` from ``readdir``, ``Dirent.isFile()``,
+    ``os.DirEntry.is_file()`` and their equivalents -- is NOT kind evidence on
+    its own: those APIs may answer from a value the directory read happened to
+    carry, WITHOUT performing any metadata lookup on the entry itself, and they
+    can only answer that way on filesystems that populate it.
+
+    This lane's pre-ruling construction did exactly that, and the divergence was
+    MEASURED rather than argued: on a directory that is readable but not
+    searchable (mode ``0o444``) holding one file, ``os.DirEntry`` answered
+    ``(is_symlink=False, is_dir=False, is_file=True)`` from the cached ``d_type``
+    and raised NOTHING, so ``bundle-entry-uninspectable`` was never reached at
+    that point, while the peer lane's per-entry no-follow lookup failed
+    ``EACCES`` and reported it. Same bundle, same kernel, two different reasons.
+
+    So the lookup is now explicit and per entry. ``os.lstat`` is ``lstat(2)``: a
+    fresh syscall against the entry itself, never a cached ``readdir`` value, and
+    it does not follow a final-component symlink -- which is what makes a symlink
+    OBSERVABLE here rather than silently resolved to its target. The kind is
+    derived from the returned ``st_mode`` alone. Any ``OSError`` propagates
+    verbatim and the caller maps it to ``bundle-entry-uninspectable``, because
+    the entry NAME was obtained while its KIND was never established.
+
+    The defect this closes is CROSS-PLATFORM DETERMINISM, not semantics: no
+    mandatory scenario's Level-1 value moves. What moves is that the reason no
+    longer depends on whether the medium the corpus happens to sit on populates
+    ``d_type`` -- a rule that holds on ``ext4`` and fails where the kernel
+    returns ``DT_UNKNOWN`` is not a determinism rule.
     """
-    return (entry.is_symlink(),
-            entry.is_dir(follow_symlinks=False),
-            entry.is_file(follow_symlinks=False))
+    mode = os.lstat(entry.path).st_mode
+    return (stat.S_ISLNK(mode), stat.S_ISDIR(mode), stat.S_ISREG(mode))
 
 
 def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]:
