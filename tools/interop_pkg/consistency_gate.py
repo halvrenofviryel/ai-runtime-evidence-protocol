@@ -14,6 +14,7 @@ from pathlib import Path
 OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(
     "/mnt/data/claude/ai-runtime-evidence-protocol/interop/independent-verifier-corpus/v0.1")
 errs: list[str] = []
+symmetric_ok: list[str] = []
 
 
 def fail(msg): errs.append(msg)
@@ -114,6 +115,30 @@ try:
     _collapsed = dict(_base, agreement="AGREE")
     if _DV(_s).is_valid(_collapsed):
         fail("REPORT_SCHEMA.json: a row can claim AGREE with null results — collapse is possible")
+
+    # RC-SYM-OBSERVED / RC-SYM-EXPECTED must both reject a class emitted with null reason
+    # channels. The rules were asymmetric once: observed_result was constrained and
+    # expected_result was not, so an expected verdict could be reported with the channels
+    # erased. Both directions are asserted here, by name, and reported either way.
+    _chans = ["authenticated_failures", "authenticated_withheld", "authenticated_caveats",
+              "witnessed_failures", "witnessed_withheld"]
+    _full = {"run_validity": "VALID", "signing_input_reconstruction": "RECONSTRUCTED",
+             "cryptographic_result": "PASS", "airep_class": "AIREP-Authenticated",
+             "reason_channels": {k: [] for k in _chans},
+             "observer_assessment": "not_applicable", "process_exit": 0}
+    _row = dict(_base, agreement="AGREE", implementation_name="x", implementation_digest="d",
+                input_package_digest="p", observed_result=dict(_full),
+                expected_result=dict(_full))
+    if not _DV(_s).is_valid(_row):
+        fail("REPORT_SCHEMA.json: a fully formed AGREE row is rejected — the rules are too strict")
+    for side, rule in (("observed_result", "RC-SYM-OBSERVED"),
+                       ("expected_result", "RC-SYM-EXPECTED")):
+        mutated = dict(_row, **{side: dict(_full, reason_channels=None)})
+        if _DV(_s).is_valid(mutated):
+            fail(f"REPORT_SCHEMA.json {rule}: {side} may emit an AIREP class with "
+                 f"reason_channels null — the five channels can be collapsed")
+        else:
+            symmetric_ok.append(f"{rule} rejects {side} class-with-null-reasons")
 except ImportError:
     pass
 
@@ -147,3 +172,5 @@ if errs:
     sys.exit(1)
 print(f"CONSISTENCY GATE OK: {len(cases)} cases, categories {dict(cat)}, "
       f"{len(tmpl)} template rows all schema-valid")
+for line in symmetric_ok:
+    print(f"  reason-channel symmetry: {line}")

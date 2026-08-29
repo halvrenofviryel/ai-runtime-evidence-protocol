@@ -1,5 +1,5 @@
 {
-  "aggregate": "a2d6941e9fd2f7f7c90db4a0af7992ecf4f20225772100807cff5b5a7e2f263a",
+  "aggregate": "6f5e218fa6f54460d08fa8ed403186042d825a76f42e1479e62f8a89385d6530",
   "aggregate_rule": "sha256 over, for each file sorted by path: utf8(path) || 0x00 || ascii(lowercase-hex sha256) || 0x0A",
   "file_count": 337,
   "files": [
@@ -2004,8 +2004,8 @@
     {
       "json": true,
       "path": "reporting/REPORT_SCHEMA.json",
-      "sha256": "d538fcc9bb29f9f30aaae7e126c0a928185e963edaf4fa0bb4dcd2872971cbde",
-      "size": 11938
+      "sha256": "52a3928a0d825c1264b31f2ea47b2f324e85ed5aafe8eb6a94fceb830744e3a5",
+      "size": 13524
     },
     {
       "json": false,

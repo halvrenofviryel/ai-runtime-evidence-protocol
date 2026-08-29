@@ -29,6 +29,7 @@
       }
     },
     {
+      "$comment": "RC-SYM-OBSERVED",
       "description": "A result that emits an AIREP class must carry all five reason channels. Without this, a verdict could be reported with reason_channels null - the exact collapse this package says is not permitted.",
       "if": {
         "properties": {
@@ -53,6 +54,53 @@
           "observed_result": {
             "properties": {
               "reason_channels": {
+                "required": [
+                  "authenticated_failures",
+                  "authenticated_withheld",
+                  "authenticated_caveats",
+                  "witnessed_failures",
+                  "witnessed_withheld"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "RC-SYM-EXPECTED",
+      "description": "Symmetric to RC-SYM-OBSERVED. A result that emits an AIREP class must carry all five reason channels, and that holds for the expected result as well as the observed one. An earlier schema constrained only observed_result, so a report could state an expected verdict with reason_channels null - the same collapse the observed side already rejected.",
+      "if": {
+        "properties": {
+          "expected_result": {
+            "properties": {
+              "airep_class": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "airep_class"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "expected_result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "expected_result": {
+            "properties": {
+              "reason_channels": {
+                "required": [
+                  "authenticated_failures",
+                  "authenticated_withheld",
+                  "authenticated_caveats",
+                  "witnessed_failures",
+                  "witnessed_withheld"
+                ],
                 "type": "object"
               }
             }
