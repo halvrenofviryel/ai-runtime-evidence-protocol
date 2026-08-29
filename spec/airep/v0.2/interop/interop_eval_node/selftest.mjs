@@ -12,7 +12,7 @@ import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   jcs, byteCompare, decodeDecimal, checkNumberToken, scanJsonNumbers,
@@ -34,11 +34,44 @@ const ARTIFACT_MEMBERS = [
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EVAL = path.join(HERE, "interop_eval.mjs");
 
+// Section 13 step 5. A block this run could not produce the precondition for is
+// NOT MEASURED, and a summary that omits it from both numbers reports green for
+// checks that never executed. That is the exact failure class Erratum 6's
+// evidence-narrowing note records against this file's own earlier counts: 668
+// reported green while 81 further checks, the AD15-IR-6 fixture among them,
+// were silently absent because verifier_node_r2/node_modules had not been
+// materialized. Skips are therefore counted, named, and -- in the default mode
+// -- fatal.
 let failures = 0;
 let checks = 0;
+let skips = 0;
+const skippedBlocks = [];
 function check(name, cond, detail) {
   checks++;
   if (!cond) { failures++; console.log(`FAIL: ${name}${detail ? " -- " + detail : ""}`); }
+}
+
+// The ONLY way to decline a block. Every site that cannot produce its
+// precondition routes through here, so no block can leave the run silently: it
+// is counted, it is named in the summary, and by default it makes the run
+// non-zero. `block` names the block; `why` says what could not be produced.
+function skip(block, why) {
+  skips++;
+  skippedBlocks.push(block);
+  console.log(`SKIPPED: ${block} -- ${why}`);
+}
+
+// Developer-only opt-in (section 13 step 5). It permits skips to be non-fatal
+// while working on one block in an environment that cannot produce another.
+// THE OFFICIAL EVIDENCE COMMAND MUST NOT USE IT: an official count is a claim
+// about every block, and this flag is exactly the licence to make that claim
+// while some did not run.
+const ALLOW_SKIPS = process.argv.slice(2).includes("--allow-skips");
+for (const a of process.argv.slice(2)) {
+  if (a !== "--allow-skips") {
+    console.log(`usage: selftest.mjs [--allow-skips]; unknown argument ${JSON.stringify(a)}`);
+    process.exit(2);
+  }
 }
 const show = (v) => JSON.stringify(v, (_k, x) => (typeof x === "bigint" ? `${x}n` : x));
 function eq(name, got, want) {
@@ -624,7 +657,7 @@ expectNonMeasured("a listed file that is not parseable JSON",
       "ERROR", (v) => check("the symlink is named", /symbolic link/i.test(v.nonmeasurement.detail),
         v.nonmeasurement.detail));
   } else {
-    console.log("SKIPPED: symlink check -- this filesystem refused symlink creation");
+    skip("symlink check", "this filesystem refused symlink creation");
   }
 }
 
@@ -771,7 +804,7 @@ for (const dirName of ["dir with space", "dir#with#hash", "dizin ünlü", "dir w
     fs.mkdirSync(copyDir, { recursive: true });
     fs.copyFileSync(EVAL, path.join(copyDir, "interop_eval.mjs"));
   } catch (e) {
-    console.log(`SKIPPED: path regression for ${JSON.stringify(dirName)} -- ${e.message}`);
+    skip(`NODE-IMP-1 path regression for ${JSON.stringify(dirName)}`, e.message);
     continue;
   }
   const copied = path.join(copyDir, "interop_eval.mjs");
@@ -838,8 +871,12 @@ const VERIFIER = path.join(HERE, "..", "..", "class-verification", "verifier_nod
 const VERIFIER_DEPS = path.join(path.dirname(VERIFIER), "node_modules", "ajv");
 
 if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
-  console.log("SKIPPED: live frozen-verifier checks -- verifier_node_r2 or its node_modules "
-    + "is not materialized (class-verification/offline-node-deps/materialize_node_modules.py)");
+  // This is the block whose silent absence Erratum 6's evidence-narrowing note
+  // records: it carries the AD15-IR-6 reverse-ranking fixture and the whole live
+  // envelope/exit-code surface. It is now counted and named like any other.
+  skip("live frozen-verifier checks (section 13 / AD15-IR-6 fixture)",
+    "verifier_node_r2 or its node_modules is not materialized -- run "
+    + "class-verification/offline-node-deps/materialize_node_modules.py");
 } else {
   const synth = (rid, type) => JSON.stringify({
     airep_version: "0.2", artifact_type: type, chain_id: "synth.chain",
@@ -1125,7 +1162,7 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
         /FIFO|non-regular/i.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
     }
   } else {
-    console.log("SKIPPED: FIFO check -- mkfifo is unavailable on this system");
+    skip("FIFO check", "mkfifo is unavailable on this system");
   }
 }
 
@@ -1204,8 +1241,9 @@ expectNonMeasured("nothing on disk at all is still bundle-file-missing",
       try { fs.readFileSync(target); } catch { denied = true; }
     } catch { /* chmod unsupported here */ }
     if (!denied) {
-      console.log("SKIPPED: bundle-file-unreadable -- this process can read a 0o000 file "
-        + "(root, or a filesystem that ignores chmod); the condition cannot be produced");
+      skip("bundle-file-unreadable",
+        "this process can read a 0o000 file (root, or a filesystem that ignores chmod); "
+        + "the condition cannot be produced");
     } else {
       check("control: the target really is unreadable before the assertion counts", denied);
       vUnreadable = expectNonMeasured("present but unreadable file", dir, "bundle-file-unreadable");
@@ -1319,8 +1357,9 @@ for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manif
       try { fs.readFileSync(path.join(dir, "manifest.json")); } catch { denied = true; }
     } catch { /* chmod unsupported here */ }
     if (!denied) {
-      console.log("SKIPPED: E4-2 inaccessible bundle root -- this process can read through a "
-        + "0o000 directory (root, or a filesystem that ignores chmod)");
+      skip("E4-2 inaccessible bundle root",
+        "this process can read through a 0o000 directory (root, or a filesystem that "
+        + "ignores chmod)");
       try { fs.chmodSync(dir, 0o755); } catch { /* best effort */ }
     } else {
       check("control: the bundle root really is inaccessible before the assertion counts", denied);
@@ -1348,7 +1387,7 @@ for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manif
       try { fs.readFileSync(mf); } catch { denied = true; }
     } catch { /* chmod unsupported here */ }
     if (!denied) {
-      console.log("SKIPPED: E4-2 unreadable root manifest -- this process can read a 0o000 file");
+      skip("E4-2 unreadable root manifest", "this process can read a 0o000 file");
       try { fs.chmodSync(mf, 0o644); } catch { /* best effort */ }
     } else {
       check("control: the root manifest really is unreadable before the assertion counts", denied);
@@ -1408,8 +1447,9 @@ for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manif
     try { fs.readdirSync(sub); } catch { denied = true; }
   } catch { /* chmod unsupported here */ }
   if (!denied) {
-    console.log("SKIPPED: bundle-directory-unreadable -- this process can enumerate a 0o000 "
-      + "directory (root, or a filesystem that ignores chmod); the condition cannot be produced");
+    skip("bundle-directory-unreadable",
+      "this process can enumerate a 0o000 directory (root, or a filesystem that ignores "
+      + "chmod); the condition cannot be produced");
     try { fs.chmodSync(sub, 0o755); } catch { /* best effort */ }
   } else {
     check("control: the directory really cannot be enumerated before the assertion counts", denied);
@@ -1700,8 +1740,9 @@ const BIG_N = 2000000;
     + "regressions below prove nothing and must be re-designed");
 
   if (!truncates) {
-    console.log("SKIPPED: pipe-truncation regressions -- this platform did not exhibit the "
-      + "defect even for the buggy pattern, so they cannot discriminate here");
+    skip("NODE-IMP-1 pipe-truncation regressions",
+      "this platform did not exhibit the defect even for the buggy pattern, so they "
+      + "cannot discriminate here");
   } else {
     // The mechanism, in isolation, driven with the EXACT defect pattern the
     // erratum names: a write immediately followed by process.exit(). Because
@@ -1920,9 +1961,9 @@ const BIG_N = 2000000;
   } catch { /* chmod unsupported here */ }
 
   if (!(namesListed && kindDeniable)) {
-    console.log("SKIPPED: bundle-entry-uninspectable -- this platform does not produce "
-      + "'readdir succeeds, lstat denied' (root, or a filesystem that ignores chmod); "
-      + "the condition cannot be produced");
+    skip("AD15-IR-9 bundle-entry-uninspectable",
+      "this platform does not produce 'readdir succeeds, lstat denied' (root, or a "
+      + "filesystem that ignores chmod); the condition cannot be produced");
     try { fs.chmodSync(sub, 0o755); } catch { /* best effort */ }
   } else {
     check("control: entry names ARE obtained from the directory", namesListed);
@@ -2008,9 +2049,9 @@ const BIG_N = 2000000;
   } catch { /* chmod unsupported here */ }
 
   if (!(manifestReadable && !rootEnumerable)) {
-    console.log("SKIPPED: AD15-IR-8 monotonic-identity worked case -- this platform does not "
-      + "produce 'manifest readable, root unenumerable' at mode 0o111; the overlap the ruling "
-      + "resolves cannot be reached here");
+    skip("AD15-IR-8 monotonic-identity worked case",
+      "this platform does not produce 'manifest readable, root unenumerable' at mode "
+      + "0o111; the overlap the ruling resolves cannot be reached here");
     try { fs.chmodSync(dir, 0o755); } catch { /* best effort */ }
   } else {
     // Both halves of the overlap measured, not assumed.
@@ -2076,8 +2117,8 @@ const BIG_N = 2000000;
 // public and deterministic, and nothing about them is a corpus fixture. The
 // artifact is NOT signed -- the whole point is to leave the tier unevaluated.
 if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
-  console.log("SKIPPED: E5-5 end-to-end scenario-independence -- the frozen verifier or its "
-    + "node_modules is not materialized");
+  skip("E5-5 end-to-end scenario-independence",
+    "the frozen verifier or its node_modules is not materialized");
 } else {
   const D64 = "0".repeat(64);
   // A schema-valid v0.2 decision whose integrity.current is the frozen
@@ -2235,5 +2276,263 @@ if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
   }
 }
 
-console.log(`${checks - failures}/${checks} checks passed`);
+// --- 18. AD15-IR-10 and AD15-IR-11 (Erratum 6) -----------------------------
+//
+// Section 13 step 4: "Both lanes carry explicit tests for the AD15-IR-10
+// ordering and the AD15-IR-11 spawn-failure behaviour, WHETHER OR NOT their
+// current code already conforms. A rule that holds by accident is not tested."
+// Source review found this lane already conforming on both. Nothing below
+// changes behaviour; it measures it.
+//
+// WHY A SPAWN INTERCEPTOR, AND WHAT IS AND IS NOT STUBBED.
+//
+// Neither ruling is reachable through a real frozen-verifier run:
+//
+//  * AD15-IR-11 is about a spawn that FAILS. This lane spawns process.execPath
+//    with the verifier as an ARGUMENT, so the spawn target always exists and a
+//    missing or broken verifier yields a started process with an exit code --
+//    a concrete process result, which is precisely the case the ruling
+//    excludes. verifier-not-invocable is structurally unreachable here by
+//    ordinary means, which is why classifyProcessShape is unit-driven above.
+//  * AD15-IR-10 needs ONE bundle carrying BOTH a non-empty
+//    authenticated_withheld channel AND an ERROR-class process/run invalidity.
+//    No real verifier emits that pair on demand.
+//
+// So the FROZEN VERIFIER is replaced, and nothing else. The module under test
+// is the real interop_eval.mjs, entered through its real exported main(), with
+// the real argument parsing, the real bundle preflight, and the real
+// frozen-identity assertion -- which reads the GENUINE frozen files and must
+// pass, or none of this is reached at all. The interceptor only decides what
+// the subprocess would have returned, which is exactly the input surface both
+// rulings govern. It is written to a temp file rather than shipped, so no
+// stubbed verifier ever sits beside the evaluator.
+{
+  const driver = path.join(tmp, "ir10_ir11_driver.mjs");
+  fs.writeFileSync(driver,
+    'import { createRequire } from "node:module";\n'
+    + 'const require = createRequire(import.meta.url);\n'
+    + 'const cp = require("node:child_process");\n'
+    + '// Patched BEFORE the evaluator is imported, so its `import { spawnSync }`\n'
+    + '// binding resolves to this function. Nothing else about the module changes.\n'
+    + 'const plan = JSON.parse(process.env.AIREP_SELFTEST_PLAN);\n'
+    + 'let calls = 0;\n'
+    + 'cp.spawnSync = function () {\n'
+    + '  const step = plan[calls] ?? plan[plan.length - 1];\n'
+    + '  calls++;\n'
+    + '  if (step.spawnFails) {\n'
+    + '    // The exact shape spawnSync returns when no process was created.\n'
+    + '    const err = new Error("spawn ENOENT");\n'
+    + '    err.code = "ENOENT";\n'
+    + '    return { pid: 0, status: null, signal: null, stdout: null, stderr: null,\n'
+    + '             error: err, output: [] };\n'
+    + '  }\n'
+    + '  return { pid: 4242, status: step.status, signal: null,\n'
+    + '           stdout: Buffer.from(step.stdout ?? ""), stderr: Buffer.from(""),\n'
+    + '           error: undefined, output: [] };\n'
+    + '};\n'
+    + 'const mod = await import(process.env.AIREP_SELFTEST_EVAL);\n'
+    + 'const code = mod.main(process.argv.slice(2));\n'
+    + '// A control the assertions can read: how many invocations were actually\n'
+    + '// attempted. Without it "artifacts[] has one entry" could pass vacuously\n'
+    + '// because the loop never reached the second artifact at all.\n'
+    + 'process.stderr.write(`SPAWN_CALLS=${calls}\\n`);\n'
+    + 'process.exitCode = code;\n');
+
+  function runIntercepted(bundleDir, plan) {
+    const p = spawnSync(process.execPath, [driver, "--bundle", bundleDir], {
+      encoding: "utf8",
+      env: { ...process.env,
+        AIREP_SELFTEST_PLAN: JSON.stringify(plan),
+        AIREP_SELFTEST_EVAL: pathToFileURL(EVAL).href },
+    });
+    const m = /SPAWN_CALLS=(\d+)/.exec(p.stderr ?? "");
+    return { code: p.status, out: p.stdout, err: p.stderr, spawnCalls: m ? Number(m[1]) : null };
+  }
+
+  // A frozen verdict that is SHAPE-VALID per the class-verifier section 2
+  // envelope, so the evaluator accepts it as an emitted verdict rather than
+  // rejecting it as a wrong-shape result.
+  const verdict = (withheld = []) => JSON.stringify({
+    class: "AIREP-Core",
+    observer_assessment: "not_applicable",
+    authenticated_failures: [],
+    authenticated_withheld: withheld,
+    authenticated_caveats: [],
+    witnessed_failures: [],
+    witnessed_withheld: [],
+  });
+
+  // A four-artifact IOP-R bundle: one each of the four families, so the pinned
+  // bundle-shape check passes and four invocations are attempted in
+  // artifact_path order.
+  const four = (name, scenarioId = "IOP-R-CLEAN") => mkBundle(name, {
+    scenarioId,
+    artifacts: {
+      "artifacts/1decision.json": '{"airep_version":"0.2","artifact_type":"decision","chain_id":"c","record_id":"r-dec","sequence":0}',
+      "artifacts/2control.json": '{"airep_version":"0.2","artifact_type":"control","chain_id":"c","record_id":"r-ctl","sequence":1}',
+      "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"r-exe","sequence":2}',
+      "artifacts/4effect.json": '{"airep_version":"0.2","artifact_type":"effect","chain_id":"c","record_id":"r-eff","sequence":3}',
+    },
+  });
+
+  // --- the interceptor itself is sound before anything rests on it ---------
+  // If a plan of four ordinary exit-0 verdicts did not produce a MEASURED
+  // result with four entries, every assertion below would be measuring the
+  // harness rather than the rulings.
+  {
+    const r = runIntercepted(four("ir-control"), [{ status: 0, stdout: verdict() }]);
+    eq("control: the interceptor drives a clean four-artifact run to exit 0", r.code, 0);
+    eq("control: all four invocations were attempted", r.spawnCalls, 4);
+    if (r.code === 0) {
+      const v = parseOne("interceptor control", r.out);
+      eq("control: the run is MEASURED", v.measurement_status, "MEASURED");
+      eq("control: artifacts[] matches the bundle shape", v.artifacts.length, 4);
+      check("control: the real frozen-identity assertion ran and passed",
+        v.verifier_digests !== null
+        && v.verifier_digests.class_verifier
+          === "sha256:e678ff5706547d4fb79ab8ad013bdf6f41e4429065a42309d6a4a6515632bde4",
+        show(v.verifier_digests));
+    }
+  }
+
+  // --- AD15-IR-10: run validity precedes tier withheld ---------------------
+  //
+  // "Where an ERROR-class process or run invalidity and an
+  // authenticated_withheld channel are both present on the same bundle, the
+  // ERROR outcome is reported."
+  //
+  // Both conditions are made live on ONE bundle: the first artifact exits 0
+  // carrying a non-empty authenticated_withheld channel (section 7.1 is live),
+  // and the second exits 2, which the frozen contract permits for no
+  // invocation (section 7.2 is live). The withheld channel is collected before
+  // either guard runs, so the ordering is genuinely contested here rather than
+  // decided by which condition happened to be noticed first.
+  {
+    const r = runIntercepted(four("ir10-both-live"),
+      [{ status: 0, stdout: verdict(["producer-binding-missing"]) },
+       { status: 2, stdout: "" }]);
+    eq("AD15-IR-10: a bundle with both conditions live exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("AD15-IR-10 both live", r.out);
+      // The control: section 7.1's precondition really was satisfied. Without
+      // this the block would pass on a bundle where only section 7.2 applied,
+      // and would measure no ordering at all.
+      const auth = v.withheld_reasons.filter((w) => w.channel === "authenticated_withheld");
+      check("control: an authenticated_withheld channel really is present on this bundle",
+        auth.length === 1 && auth[0].reasons.includes("producer-binding-missing"),
+        show(v.withheld_reasons));
+      // The ruling.
+      eq("AD15-IR-10: the ERROR outcome is reported", v.measurement_status, "ERROR");
+      eq("AD15-IR-10: and its reason is the run invalidity, not the withheld tier",
+        v.nonmeasurement.reason, "verifier-run-invalid");
+      check("AD15-IR-10: the withheld tier did NOT win",
+        v.measurement_status !== "MEASUREMENT_INVALID"
+        && v.nonmeasurement.reason !== "authenticated-withheld",
+        `${v.measurement_status} / ${v.nonmeasurement.reason}`);
+      eq("AD15-IR-10: level1 is null", v.level1, null);
+      eq("AD15-IR-10: predicates is null", v.predicates, null);
+    }
+  }
+
+  // The other half of the ordering, so the block cannot pass by an evaluator
+  // that simply never reports authenticated-withheld at all: with section 7.2
+  // NOT live, the same withheld channel DOES make the scenario
+  // MEASUREMENT_INVALID.
+  {
+    const r = runIntercepted(four("ir10-withheld-alone"),
+      [{ status: 0, stdout: verdict(["producer-binding-missing"]) },
+       { status: 0, stdout: verdict() }]);
+    eq("AD15-IR-10 counterpart: withheld alone still exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("AD15-IR-10 withheld alone", r.out);
+      eq("with no run invalidity, the withheld tier IS the outcome",
+        v.measurement_status, "MEASUREMENT_INVALID");
+      eq("and its reason is authenticated-withheld",
+        v.nonmeasurement.reason, "authenticated-withheld");
+    }
+  }
+
+  // --- AD15-IR-11: a spawn failure produces no artifacts[] entry -----------
+  //
+  // "Where the frozen verifier cannot be spawned at all
+  // (verifier-not-invocable), the current artifact contributes NO artifacts[]
+  // entry. Entries for invocations that completed earlier in the same bundle
+  // are retained."
+  //
+  // The first artifact completes; the second cannot be spawned. Both halves of
+  // the ruling are therefore load-bearing in one observation: an entry that
+  // must be retained, and an entry that must not exist.
+  {
+    const r = runIntercepted(four("ir11-spawn-fails-second"),
+      [{ status: 0, stdout: verdict() }, { spawnFails: true }]);
+    eq("AD15-IR-11: a spawn failure exits 3", r.code, 3);
+    // The control: the second invocation really was reached. Without it,
+    // "artifacts[] has one entry" would also be true of a run that stopped
+    // after the first artifact for some unrelated reason.
+    eq("control: the second invocation really was attempted", r.spawnCalls, 2);
+    if (r.code === 3) {
+      const v = parseOne("AD15-IR-11 spawn failure", r.out);
+      eq("AD15-IR-11: the reason is verifier-not-invocable",
+        v.nonmeasurement.reason, "verifier-not-invocable");
+      // The ruling, both halves.
+      eq("AD15-IR-11: the spawn failure contributed NO entry", v.artifacts.length, 1);
+      eq("AD15-IR-11: and the earlier completed entry is RETAINED",
+        v.artifacts.map((a) => a.artifact_path), ["artifacts/1decision.json"]);
+      // No placeholder anywhere: every retained entry is a real process result.
+      for (const a of v.artifacts) {
+        eq(`${a.artifact_path}: carries exactly the pinned member set`,
+          Object.keys(a).sort(), ARTIFACT_MEMBERS);
+        check(`${a.artifact_path}: its exit code is a real integer, not a placeholder`,
+          Number.isInteger(a.verifier_exit_code), show(a.verifier_exit_code));
+        check(`${a.artifact_path}: its stderr digest is a real digest, not a placeholder`,
+          typeof a.verifier_stderr_digest === "string"
+          && /^sha256:[0-9a-f]{64}$/.test(a.verifier_stderr_digest),
+          show(a.verifier_stderr_digest));
+        check(`${a.artifact_path}: it completed, so it carries a verdict`,
+          a.verifier_result !== null, show(a.verifier_result));
+      }
+    }
+  }
+
+  // The first artifact failing to spawn leaves artifacts[] EMPTY -- not one
+  // placeholder entry. The same rule, with nothing earlier to retain, so a
+  // "keep the last entry" implementation cannot satisfy both this and the case
+  // above.
+  {
+    const r = runIntercepted(four("ir11-spawn-fails-first"), [{ spawnFails: true }]);
+    eq("AD15-IR-11: a spawn failure on the FIRST artifact exits 3", r.code, 3);
+    eq("control: exactly one invocation was attempted", r.spawnCalls, 1);
+    if (r.code === 3) {
+      const v = parseOne("AD15-IR-11 first-artifact spawn failure", r.out);
+      eq("its reason is verifier-not-invocable too",
+        v.nonmeasurement.reason, "verifier-not-invocable");
+      eq("and artifacts[] is EMPTY -- there is nothing to retain and nothing to invent",
+        v.artifacts, []);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Summary (section 13 step 5)
+// ---------------------------------------------------------------------------
+// Three numbers, never two. `passed + failed` is what executed; `skipped` is
+// what did not, and it is reported beside them rather than deducted from the
+// denominator. A block that could not run is NOT_MEASURED -- it is neither a
+// pass nor a failure, and collapsing it into either loses the one fact a reader
+// needs in order to know what the count covers.
+console.log(`${checks - failures} passed / ${failures} failed / ${skips} skipped`);
+if (skips > 0) {
+  console.log(`NOT MEASURED (${skips}): ${skippedBlocks.join("; ")}`);
+}
+
+// Exit codes are kept apart so the two conditions are distinguishable by a
+// caller that only sees the status:
+//   1 -- something executed and FAILED;
+//   2 -- everything that executed passed, but some block was NOT MEASURED.
+// A failure outranks an unmeasured block: it is the stronger finding.
 if (failures > 0) process.exit(1);
+if (skips > 0 && !ALLOW_SKIPS) {
+  console.log("default mode: a skipped block is not a pass; re-run where the conditions "
+    + "can be produced, or pass --allow-skips to accept a PARTIAL, NON-OFFICIAL count");
+  process.exit(2);
+}

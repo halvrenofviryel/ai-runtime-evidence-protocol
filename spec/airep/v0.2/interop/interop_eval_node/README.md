@@ -158,12 +158,50 @@ preflight failure.
 
 ## Running
 
+**Official evidence command** — both lines, in this order, as a non-root user:
+
 ```
 python3 ../../class-verification/offline-node-deps/materialize_node_modules.py   # frozen verifier deps, offline
 node selftest.mjs
 ```
 
 `node_modules/` is generated and git-ignored; it is never committed.
+
+### The summary is three numbers (contract §13 step 5)
+
+```
+961 passed / 0 failed / 0 skipped
+```
+
+A block whose precondition this machine cannot produce is **not measured**. It is neither a pass
+nor a failure, so it is reported beside them rather than deducted from the denominator, and every
+skipped block is named:
+
+```
+807 passed / 0 failed / 2 skipped
+NOT MEASURED (2): live frozen-verifier checks (section 13 / AD15-IR-6 fixture); E5-5 end-to-end scenario-independence
+```
+
+| Exit | Meaning |
+|---|---|
+| `0` | everything that ran passed, and everything ran |
+| `1` | something ran and **failed** — the stronger finding, so it outranks an unmeasured block |
+| `2` | everything that ran passed, but some block was **not measured** (default mode), or the arguments were not understood |
+
+`--allow-skips` makes an unmeasured block non-fatal. It is **developer-only**: an official count is
+a claim about every block, and that flag is exactly the licence to make the claim while some of
+them did not run. **The official evidence command above must not use it.**
+
+**Why this exists.** This file previously reported `X/Y checks passed` with skipped blocks absent
+from *both* numbers, so a run missing its dependencies printed green — `774/774` on the inherited
+candidate — while the entire live frozen-verifier block, the `AD15-IR-6` reverse-ranking fixture
+included, never executed. Erratum 6's evidence-narrowing note records that against this lane's own
+earlier counts. A green summary that omits what it did not measure is the failure class the whole
+contract is built to prevent, so the summary now cannot omit it.
+
+Two conditions make blocks unmeasurable here and are worth knowing before reading a count:
+running as **root** (euid 0 defeats the permission bits several filesystem conditions are built
+from) and **unmaterialized frozen-verifier dependencies**.
 
 `selftest.mjs` uses synthetic inputs constructed inside the file. It creates no corpus bytes and
 no scenario bundle artifacts; corpus construction is on hold (contract §13).
@@ -182,8 +220,22 @@ the four Erratum 3 rulings (`AD15-IR-6` envelope ordering and the `record_id`-le
 §10/§11, the direct-read identity boundary in §14d, `bundle-directory-unreadable` in §14e, and
 `AD15-IR-7` in §14f), the Erratum 5 closures (§17a frozen-identity read-vs-match and preflight
 order, §17b `bundle-entry-uninspectable`, §17c `AD15-IR-8` monotonic identity, §17d
-scenario-independent `authenticated_withheld`), and **both** `NODE-IMP-1` routes (§12 path, §16
-pipe truncation).
+scenario-independent `authenticated_withheld`), the two Erratum 6 rulings measured in §18
+(`AD15-IR-10` run-validity-before-tier-withheld and `AD15-IR-11` spawn-failure entries), and
+**both** `NODE-IMP-1` routes (§12 path, §16 pipe truncation).
+
+`AD15-IR-9` needs no behavioural change in this lane: `walkBundle` already performs an explicit
+`lstat` per enumerated entry and never reads a kind off the `Dirent`, and §17b measures that on a
+constructed `0o444` directory. Its discrimination was verified by mutation — trusting the `Dirent`
+kind yields `bundle-file-unreadable` instead of `bundle-entry-uninspectable`, which is exactly the
+cross-lane divergence the ruling pins.
+
+§18 replaces **the frozen verifier subprocess and nothing else**: the module under test is the
+real `interop_eval.mjs`, entered through its real exported `main()`, with the real preflight and
+the real frozen-identity digest assertion against the genuine frozen files. Both rulings are
+unreachable through an ordinary run — this lane spawns `process.execPath` with the verifier as an
+argument, so a spawn that *fails* cannot arise from a missing verifier, and no real verifier emits
+a withheld channel and an impermissible exit on the same bundle on demand.
 
 Several of those sections carry their own controls, because a regression that cannot fail proves
 nothing: §16 first measures that the buggy write pattern really does truncate on this platform;
@@ -193,7 +245,7 @@ orderings really do yield different bytes; §14b asserts that the four filesyste
 **pairwise distinct**, which fails if any two collapse even though each individual assertion would
 still pass; §14b's unreadable case first verifies the file genuinely cannot be read before the
 assertion is allowed to count, and skips rather than fakes where the platform cannot produce the
-condition; and §14c uses a byte-for-byte *valid* manifest under a wrong name, so it discriminates
+condition — every such skip being counted and named in the summary, never absorbed; and §14c uses a byte-for-byte *valid* manifest under a wrong name, so it discriminates
 discovery rather than mere absence.
 
 §14d skips rather than fakes each permission-dependent identity condition, and asserts a control
