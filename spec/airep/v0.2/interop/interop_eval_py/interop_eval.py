@@ -3,10 +3,35 @@
 """AIREP v0.2 Python reference interop evaluator (AD15-IR-2), post-erratum.
 
 Implements ``INTEROP_REFERENCE_EVALUATOR_CONTRACT.md`` at contract basis
-``930b9457db00c1d66e2d355f59a6cf5811d52d3a``
-(sha256 ``ea705ec2b8775a37aa4bdbf387a5eb5295c0e8bd8a000ad443104c3a24a6c63a``)
-over the FROZEN Python class verifier, which is invoked as a SUBPROCESS and is
-never imported, vendored or re-implemented (contract 3).
+``b325fb2e9e6ed7fae690b4953aed4e5d1ce6c278``
+(sha256 ``42e350d09b28cb79a7e59f91fe55af96968925bf8615c8818f5c45d42c2b2fa2``),
+i.e. the canonical post-Erratum-2 contract, over the FROZEN Python class
+verifier, which is invoked as a SUBPROCESS and is never imported, vendored or
+re-implemented (contract 3).
+
+Erratum 2 rulings carried here:
+
+  * E2-1  every bundle-layout violation is ``manifest-invalid`` -- forbidden
+          symlinks, an on-disk regular file ``files[]`` does not list, a
+          ``files[]`` entry whose target is not a permitted file kind, a FIFO /
+          socket / device or other non-regular non-directory object, a manifest
+          at the wrong name or location, and the manifest closure / sort /
+          ``role`` / ``path`` / digest-encoding rules. Directories are
+          containers only and are never ``files[]`` entries;
+  * E2-2  every abnormal frozen run is ``verifier-run-invalid`` -- a
+          non-qualifying ``exit 1``, ``exit 2`` or any other impermissible exit,
+          ``exit 0`` with empty stdout, ``exit 0`` with non-strict-JSON stdout,
+          and ``exit 0`` carrying a malformed / multiple / wrong-shape result.
+          ``verifier-not-invocable`` is ONLY a process that could not be spawned
+          or executed at all; ``internal-error`` is ONLY this evaluator's own
+          unexpected internal fault;
+  * E2-3  ruling ``AD15-IR-5``: ``artifact_path`` is required and is the total
+          result identity, ``artifact_ref`` is object-or-``null``, ``artifacts[]``
+          is ordered by UTF-8 byte order of ``artifact_path``, and a
+          ``record_id`` is NEVER synthesized. R-A is unchanged -- reference
+          resolution still uses ``record_id`` (additionally ``chain_id`` where
+          the reference carries one), and the manifest path never participates
+          in it.
 
 Composition, in the contract's own order:
 
@@ -73,20 +98,71 @@ conforming official W1 bundle.
       so no envelope-rooted pointer can address them. No harness duty (8.1)
       compares ``json_pointer`` across lanes.
 
-  A3  The closed reason registry (8.2.2) has no row for a symlink under the
-      bundle, an on-disk file absent from ``files[]``, or duplicate object
-      members in the manifest. All three are section-5 file-set/path rules, so
-      they are reported as ``manifest-invalid``.
+  A3  CLOSED by Erratum 2. Symlinks and an on-disk file absent from ``files[]``
+      are now enumerated normatively under ``manifest-invalid``, which is what
+      this lane already did.
 
-  A4  The registry has no row for the frozen verifier exiting 0 with
-      unparseable stdout, or exiting 2. Neither is ``verifier-not-invocable``
-      (it executed) nor ``verifier-run-invalid`` (that row is scoped to exit 1),
-      so both are reported as ``internal-error``.
+  A4  CLOSED by Erratum 2, AGAINST this lane's pre-erratum reading. ``exit 0``
+      with unparseable stdout and ``exit 2`` were reported as ``internal-error``
+      here; both are now ``verifier-run-invalid``. ``internal-error`` is
+      henceforth this evaluator's own fault only.
 
   A5  Contract 8.2 lists ``withheld_reasons`` as a result member and qualifies
       it "whenever any ``*_withheld`` channel is non-empty". It is emitted
       unconditionally, as ``[]`` when nothing is withheld, so the object shape
-      is fixed.
+      is fixed. Its per-entry shape is unpinned; ``artifact_path`` is used as
+      the identity there too, for consistency with ``AD15-IR-5``.
+
+  A6  OPEN -- reported, not resolved by invention. Contract 5.1 pins
+      ``related_artifacts`` ordering as "ascending UTF-8 byte order of
+      ``record_id``", and ``AD15-IR-5`` now permits an artifact with no usable
+      ``record_id``. For a MULTI-artifact bundle carrying such an artifact the
+      envelope ordering is therefore UNDEFINED, and with it the
+      ``request_envelope_digest`` that harness duty 2 compares across lanes.
+      ``AD15-IR-5`` moved ``artifacts[]`` ordering to ``artifact_path`` but left
+      5.1's envelope ordering on ``record_id``, so the gap is real.
+
+      It is unreachable in the official W1 corpus -- the four ``IOP-R-*``
+      fixtures are built individually sound (contract 7, step-1 rationale) and
+      every single-artifact scenario has ``related_artifacts: []``, which needs
+      no ordering. This lane therefore FAILS CLOSED rather than choosing an
+      order a peer lane could choose differently: a multi-artifact bundle with
+      an unidentifiable artifact is ``bundle-shape-invalid``. A single-artifact
+      bundle is unaffected and a missing ``record_id`` reaches the frozen
+      stage-0 evaluation it belongs to, exactly as ``AD15-IR-5`` requires.
+
+  A7  OPEN -- reported. Contract 5 pins bundle FAMILY COMPOSITION, which can
+      only be checked by reading ``artifact_type``. An artifact broken at stage 0
+      hard enough to lose its ``artifact_type`` would therefore be converted
+      into this evaluator's own ``bundle-shape-invalid`` preflight failure --
+      the same class of defect ``AD15-IR-5`` closed for ``record_id``. The
+      difference is that ``record_id`` was needed only for RESULT IDENTITY,
+      while ``artifact_type`` is needed for a genuinely pinned PREFLIGHT rule,
+      so the composition check is kept. Unreachable for the official corpus,
+      whose ``IOP-B-*`` transformations target a single field each.
+
+  A8  Duplicate manifest object members are unpinned. Contract 8.5 pins exit 1
+      to exactly three conditions, and a duplicated member is still parseable as
+      strict JSON (RFC 8259 permits it), so identity IS established. Both
+      runtimes decode duplicates last-wins by default, so identity is taken from
+      the decoded value and the duplicate is then reported as
+      ``manifest-invalid`` at exit 3 under E2-1's manifest-rule surface. The
+      pre-erratum reading put this in the exit-1 band, which contradicted 8.5.
+
+  A9  A listed file that is present and of a permitted kind but UNREADABLE has
+      no registry row. It is not a layout violation, not an external subprocess
+      failure, and not this evaluator's own fault. It is reported as
+      ``bundle-file-missing`` -- the file is not available as bundle bytes --
+      which is this lane's pre-erratum behaviour, retained rather than changed.
+
+  A10 "A manifest with the wrong name or location" is listed under
+      ``manifest-invalid``, whose registry row requires the manifest to have
+      parsed with a usable ``scenario_id`` first. The two are reconciled by
+      construction: identity comes only from ``manifest.json`` at the bundle
+      root (absent => exit 1, contract 8.5), so a manifest placed anywhere else
+      is just a regular file under the bundle and is caught either as an
+      unlisted on-disk file or by the closed ``role`` set. No separate code path
+      is needed and none is invented.
 """
 from __future__ import annotations
 
@@ -100,7 +176,7 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.0"
+EVALUATOR_VERSION = "0.2.1"   # post-Erratum-2 result shape (AD15-IR-5)
 
 # --------------------------------------------------------------------------
 # JCS (RFC 8785) canonicalizer -- loaded from the REPOSITORY, not from PyPI,
@@ -325,19 +401,25 @@ def _reject_constant(token: str) -> Any:
     raise ValueError("strict JSON forbids the literal %s" % token)
 
 
-def _reject_duplicate_members(pairs: Sequence[Tuple[str, Any]]) -> dict:
-    seen: Dict[str, Any] = {}
-    for key, value in pairs:
-        if key in seen:
-            raise _DuplicateMember(key)
-        seen[key] = value
-    return seen
+class _DuplicateRecorder:
+    """Last-wins object decoding that REMEMBERS duplicated member names.
 
+    Ambiguity A8: a duplicated member is still parseable as strict JSON, so
+    contract 8.5 leaves bundle identity established and the violation belongs at
+    exit 3 as ``manifest-invalid``. Last-wins is the default of both runtimes,
+    so identity cannot diverge across lanes while the duplicate is reported.
+    """
 
-class _DuplicateMember(Exception):
-    def __init__(self, key: str) -> None:
-        super().__init__(key)
-        self.key = key
+    def __init__(self) -> None:
+        self.duplicates: List[str] = []
+
+    def __call__(self, pairs: Sequence[Tuple[str, Any]]) -> dict:
+        out: Dict[str, Any] = {}
+        for key, value in pairs:
+            if key in out and key not in self.duplicates:
+                self.duplicates.append(key)
+            out[key] = value
+        return out
 
 
 # --------------------------------------------------------------------------
@@ -408,13 +490,27 @@ class Manifest:
         return [e for e in self.entries if e.role == role]
 
 
-def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str]:
+def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str, List[str]]:
     """Establish bundle identity, or raise ``BundleIdentityError`` (exit 1).
 
     Contract 8.5 pins the exit-1 band to exactly three conditions:
     ``manifest.json`` absent, not parseable as strict JSON, or carrying no
     usable ``scenario_id`` from the registered twelve. Everything downstream of
-    this function is exit 3 with a named reason.
+    this function is exit 3 with a named reason -- including a duplicated
+    manifest member, which is parseable strict JSON and therefore does NOT
+    withhold identity (ambiguity A8).
+
+    Identity comes only from ``manifest.json`` at the bundle ROOT. A manifest
+    at any other name or location is not consulted; it is an ordinary regular
+    file under the bundle and is caught by the file-set or ``role`` rules
+    (ambiguity A10).
+
+    A SYMLINKED root manifest is deliberately NOT diverted here. E2-1 enumerates
+    "a forbidden symlink anywhere under the bundle" under ``manifest-invalid``,
+    and 8.5 pins the exit-1 band to exactly three conditions of which "present
+    but a link" is not one. Identity is therefore taken from the link's target
+    and ``scan_bundle`` reports the symlink as ``manifest-invalid`` at exit 3,
+    so the harness receives a result object naming the scenario.
     """
     path = os.path.join(bundle_dir, MANIFEST_FILENAME)
     try:
@@ -422,18 +518,13 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str]:
             raw = handle.read()
     except OSError as exc:
         raise BundleIdentityError("manifest unreadable at %s: %s" % (path, exc))
+    recorder = _DuplicateRecorder()
     try:
         doc = json.loads(
             raw.decode("utf-8"),
             parse_constant=_reject_constant,
-            object_pairs_hook=_reject_duplicate_members,
+            object_pairs_hook=recorder,
         )
-    except _DuplicateMember:
-        # Parsed as a document but carries an ambiguous member. Identity is not
-        # trustworthy from an ambiguous object, so this stays in the exit-1
-        # band rather than naming a scenario read out of a duplicated key.
-        raise BundleIdentityError(
-            "manifest carries duplicate object members; identity is ambiguous")
     except (UnicodeDecodeError, ValueError) as exc:
         raise BundleIdentityError("manifest is not parseable as strict JSON: %s" % exc)
     if not isinstance(doc, dict):
@@ -442,17 +533,23 @@ def load_manifest_identity(bundle_dir: str) -> Tuple[dict, str]:
     if not isinstance(scenario_id, str) or scenario_id not in SCENARIO_IDS:
         raise BundleIdentityError(
             "manifest carries no usable scenario_id from the registered twelve")
-    return doc, scenario_id
+    return doc, scenario_id, recorder.duplicates
 
 
 def _bad_manifest(detail: str) -> NonMeasurement:
     return NonMeasurement("manifest-invalid", detail)
 
 
-def validate_manifest(doc: dict, scenario_id: str) -> Manifest:
+def validate_manifest(doc: dict, scenario_id: str,
+                      duplicates: Sequence[str] = ()) -> Manifest:
     """Apply the pinned manifest encoding (contract 5). Failures are
-    ``manifest-invalid`` at exit 3 -- identity is already established.
+    ``manifest-invalid`` at exit 3 -- identity is already established, and
+    Erratum 2 makes that reason cover the whole manifest-rule surface.
     """
+    if duplicates:
+        raise _bad_manifest(
+            "manifest carries duplicate object member(s): %s"
+            % ", ".join(sorted(duplicates)))
     extra = sorted(set(doc) - MANIFEST_MEMBERS)
     if extra:
         raise _bad_manifest("manifest carries unknown member(s): %s" % ", ".join(extra))
@@ -575,10 +672,28 @@ def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]
             "bundle carries file(s) absent from files[]: %s" % ", ".join(unlisted))
     present = set(on_disk)
     for entry in manifest.entries:
-        if entry.path not in present:
-            raise NonMeasurement(
-                "bundle-file-missing",
-                "files[] lists %r but no such regular file is present" % entry.path)
+        if entry.path in present:
+            continue
+        # Erratum 2 separates the two cases the pre-erratum code conflated. A
+        # files[] entry whose target EXISTS but is not a permitted file kind --
+        # a directory being the ordinary case, since directories are containers
+        # only and are never files[] entries -- is a LAYOUT violation and so
+        # `manifest-invalid`. Only a target that is not there at all is
+        # `bundle-file-missing`. `scan_bundle` has already rejected every
+        # symlink and every non-regular non-directory object under the bundle,
+        # so anything reached here is a directory or is absent.
+        full = os.path.join(bundle_dir, *entry.path.split("/"))
+        if os.path.isdir(full):
+            raise _bad_manifest(
+                "files[] entry %r names a directory; directories are containers "
+                "only and are never files[] entries" % entry.path)
+        if os.path.exists(full):
+            raise _bad_manifest(
+                "files[] entry %r names an object that is not a permitted file "
+                "kind" % entry.path)
+        raise NonMeasurement(
+            "bundle-file-missing",
+            "files[] lists %r but no such regular file is present" % entry.path)
 
     contents: Dict[str, bytes] = {}
     for entry in manifest.entries:
@@ -587,6 +702,9 @@ def verify_bundle_files(bundle_dir: str, manifest: Manifest) -> Dict[str, bytes]
             with open(full, "rb") as handle:
                 data = handle.read()
         except OSError as exc:
+            # Ambiguity A9: present and of a permitted kind, but unreadable. No
+            # registry row fits; the pre-erratum mapping is retained rather than
+            # a new one invented.
             raise NonMeasurement(
                 "bundle-file-missing", "%r could not be read: %s" % (entry.path, exc))
         measured = sha256_hex(data)
@@ -618,17 +736,33 @@ def parse_bundle_files(manifest: Manifest, contents: Dict[str, bytes]) -> Dict[s
 # --------------------------------------------------------------------------
 
 class Artifact:
+    """One bundle artifact.
+
+    Ruling ``AD15-IR-5``: ``path`` -- the manifest-relative path -- is the TOTAL
+    result identity and always exists, because the manifest lists every file.
+    ``record_id`` is wire semantics and may be absent; an artifact that must be
+    rejected at stage 0 may carry no usable one, and this evaluator MUST NOT
+    synthesize it.
+    """
+
     __slots__ = ("path", "value", "record_id", "chain_id", "artifact_type")
 
     def __init__(self, path: str, value: dict) -> None:
         self.path = path
         self.value = value
-        self.record_id = value["record_id"]
+        record_id = value.get("record_id")
+        self.record_id: Optional[str] = record_id if isinstance(record_id, str) \
+            and record_id else None
         self.chain_id = value.get("chain_id")
-        self.artifact_type = value["artifact_type"]
+        self.artifact_type = value.get("artifact_type")
 
     @property
-    def ref(self) -> Dict[str, str]:
+    def ref(self) -> Optional[Dict[str, str]]:
+        """The structured reference, or ``None`` when no usable ``record_id``
+        exists (``AD15-IR-5``). Never a fabricated identity.
+        """
+        if self.record_id is None:
+            return None
         ref: Dict[str, str] = {"record_id": self.record_id}
         if isinstance(self.chain_id, str):
             ref["chain_id"] = self.chain_id
@@ -657,11 +791,14 @@ def build_artifacts(manifest: Manifest, parsed: Dict[str, Any]) -> List[Artifact
         value = parsed[entry.path]
         if not isinstance(value, dict):
             raise _bad_shape("artifact %r is not a JSON object" % entry.path)
-        record_id = value.get("record_id")
+        # AD15-IR-5: there is deliberately NO record_id precondition here. An
+        # artifact with no usable record_id must reach the frozen stage-0
+        # evaluation it belongs to rather than be converted into this
+        # evaluator's own preflight failure.
         artifact_type = value.get("artifact_type")
-        if not isinstance(record_id, str) or not record_id:
-            raise _bad_shape("artifact %r carries no usable record_id" % entry.path)
         if artifact_type not in ARTIFACT_TYPES:
+            # Ambiguity A7: kept because contract 5 pins FAMILY COMPOSITION,
+            # which cannot be checked without artifact_type.
             raise _bad_shape(
                 "artifact %r carries artifact_type %r, outside the four families"
                 % (entry.path, artifact_type))
@@ -683,11 +820,27 @@ def build_artifacts(manifest: Manifest, parsed: Dict[str, Any]) -> List[Artifact
                 "%s requires exactly one each of Decision, Control, Execution and "
                 "Effect; the bundle carries %s" % (scenario_id, ", ".join(present)))
 
-    ids = [a.record_id for a in artifacts]
+    ids = [a.record_id for a in artifacts if a.record_id is not None]
     if len(set(ids)) != len(ids):
         raise _bad_shape("the bundle carries two artifacts with the same record_id")
 
-    artifacts.sort(key=lambda a: byte_key(a.record_id))
+    if len(artifacts) > 1 and any(a.record_id is None for a in artifacts):
+        # Ambiguity A6, failed closed. Contract 5.1 orders `related_artifacts`
+        # by record_id, so a multi-artifact bundle carrying an unidentifiable
+        # artifact has no defined envelope and therefore no defined
+        # request_envelope_digest for harness duty 2 to compare. Choosing an
+        # order here is exactly the cross-lane divergence the dual exercise
+        # exists to catch, so no order is chosen.
+        unidentified = sorted(a.path for a in artifacts if a.record_id is None)
+        raise _bad_shape(
+            "%s carries %d artifacts, of which %s have no usable record_id; "
+            "contract 5.1 orders related_artifacts by record_id, so the request "
+            "envelope is undefined for this bundle (recorded ambiguity A6)"
+            % (scenario_id, len(artifacts), ", ".join(repr(p) for p in unidentified)))
+
+    # AD15-IR-5 / contract 8.4: result ordering is UTF-8 byte order of
+    # artifact_path, which always exists -- not of record_id, which may not.
+    artifacts.sort(key=lambda a: byte_key(a.path))
     return artifacts
 
 
@@ -786,9 +939,15 @@ def build_envelope(primary: Artifact, artifacts: List[Artifact]) -> dict:
     single-artifact scenario it is the EMPTY ARRAY -- present, never absent.
     ``head_witness`` is never added: contract 5 pins it absent from every
     official W1 bundle and the closed role set cannot express one.
+
+    Envelope ordering stays on ``record_id``: ``AD15-IR-5`` moved ``artifacts[]``
+    ordering to ``artifact_path`` and left contract 5.1 untouched. Every related
+    artifact reaching here has a usable ``record_id`` -- a single-artifact bundle
+    has no related artifacts at all, and ``build_artifacts`` fails a
+    multi-artifact bundle closed when one is missing (ambiguity A6).
     """
     related = sorted((a for a in artifacts if a is not primary),
-                     key=lambda a: byte_key(a.record_id))
+                     key=lambda a: byte_key(a.record_id or ""))
     return {
         "artifact": primary.value,
         "related_artifacts": [a.value for a in related],
@@ -803,6 +962,51 @@ def envelope_bytes(envelope: dict) -> bytes:
 # --------------------------------------------------------------------------
 # Frozen-verifier invocation (contract 3: subprocess, never imported)
 # --------------------------------------------------------------------------
+
+def _run_invalid(detail: str, entries: List[dict]) -> NonMeasurement:
+    """Erratum 2: every abnormal frozen run, and only those, land here.
+
+    The frozen process STARTED but the invocation did not produce one of the
+    process/result shapes the frozen contract permits.
+    """
+    return NonMeasurement("verifier-run-invalid", detail, artifacts=entries)
+
+
+def _verdict_from_stdout(artifact: "Artifact", stdout: bytes,
+                         entries: List[dict]) -> dict:
+    """Decode the single verdict object an ``exit 0`` invocation owes us.
+
+    Erratum 2 enumerates the exit-0 failures, all `verifier-run-invalid`:
+    empty stdout, stdout that is not parseable as STRICT JSON, and stdout
+    carrying a malformed, multiple or wrong-shape result instead of the single
+    expected verdict object.
+
+    Strictness is the contract's own word. ``NaN`` / ``Infinity`` are rejected
+    because JSON has no such literals; a second concatenated document is
+    rejected because ``json.loads`` refuses trailing data. Duplicate members are
+    left at the runtimes' shared last-wins default and are deliberately NOT
+    rejected here -- RFC 8259 permits them and rejecting them would be this
+    lane inventing a rule the contract does not pin.
+    """
+    if not stdout.strip():
+        raise _run_invalid(
+            "frozen verifier exited 0 for %s with empty stdout" % artifact.path,
+            entries)
+    try:
+        decoded = json.loads(stdout.decode("utf-8"), parse_constant=_reject_constant)
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise _run_invalid(
+            "frozen verifier exited 0 for %s but stdout is not parseable as "
+            "strict JSON: %s" % (artifact.path, exc),
+            entries)
+    if not isinstance(decoded, dict):
+        raise _run_invalid(
+            "frozen verifier exited 0 for %s but stdout carries a %s, not the "
+            "single expected verdict object"
+            % (artifact.path, type(decoded).__name__),
+            entries)
+    return decoded
+
 
 def invoke_frozen_verifier(request: bytes, flags: List[str]) -> Tuple[int, bytes, bytes]:
     """Run the frozen Python class verifier on one request envelope.
@@ -867,10 +1071,10 @@ def predicate_r_a(artifacts: List[Artifact]) -> Tuple[str, List[str]]:
     """
     problems: List[str] = []
     for artifact in artifacts:
-        for member in REFERENCE_EDGES.get(artifact.artifact_type, ()):
+        for member in REFERENCE_EDGES.get(artifact.artifact_type or "", ()):
             outcome = resolve_reference(artifact.value.get(member), artifacts)
             if outcome != "resolved":
-                problems.append("%s /%s %s" % (artifact.record_id, member, outcome))
+                problems.append("%s /%s %s" % (artifact.path, member, outcome))
     return (FAIL if problems else PASS), problems
 
 
@@ -898,11 +1102,13 @@ def predicate_r_c(artifacts: List[Artifact],
     unpinned definition (contract 6).
     """
     effect = _sole(artifacts, "effect")
-    verdict = verdicts.get(effect.record_id)
+    # Keyed by artifact_path: AD15-IR-5 makes it the total result identity, and
+    # it is the only key guaranteed to exist and to be unique.
+    verdict = verdicts.get(effect.path)
     if not isinstance(verdict, dict):
         raise NonMeasurement(
             "internal-error",
-            "R-C has no frozen verdict for the Effect %r" % effect.record_id)
+            "R-C has no frozen verdict for the Effect %r" % effect.path)
     wire = effect.value.get("observer_relationship")
     effective = verdict.get("observer_assessment")
     if wire == "independent" and effective == "unknown":
@@ -983,10 +1189,11 @@ def evaluate_bundle(args, invoke=None) -> dict:
     if invoke is None:
         invoke = invoke_frozen_verifier
     bundle_dir = os.path.abspath(args.bundle)
-    doc, scenario_id = load_manifest_identity(bundle_dir)   # exit-1 band ends here
+    # exit-1 band ends here
+    doc, scenario_id, duplicates = load_manifest_identity(bundle_dir)
     verifier_digests, digest_problem = measure_frozen_digests()
     try:
-        return _evaluate(args, bundle_dir, doc, scenario_id, invoke,
+        return _evaluate(args, bundle_dir, doc, scenario_id, duplicates, invoke,
                          verifier_digests, digest_problem)
     except NonMeasurement as exc:
         # Identity IS established from here on, so the caller owes a result
@@ -994,12 +1201,26 @@ def evaluate_bundle(args, invoke=None) -> dict:
         exc.scenario_id = scenario_id
         exc.verifier_digests = verifier_digests
         raise
+    except (UsageError, BundleIdentityError):
+        raise
+    except Exception as exc:                # noqa: BLE001 -- deliberate net
+        # Contract 8.2.2: `internal-error` exists so that an unexpected fault
+        # AFTER identity is established still produces a result object naming
+        # the scenario, rather than a crash the harness has to infer. Erratum 2
+        # narrows it to exactly this -- the evaluator's OWN fault.
+        wrapped = NonMeasurement(
+            "internal-error",
+            "unexpected %s in the evaluator: %s" % (type(exc).__name__, exc))
+        wrapped.scenario_id = scenario_id
+        wrapped.verifier_digests = verifier_digests
+        raise wrapped from exc
 
 
-def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
+def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str,
+              duplicates: Sequence[str], invoke,
               verifier_digests: Dict[str, str], digest_problem: Optional[str]) -> dict:
     # ---- contract 8.3.1 step 1: the WHOLE preflight, before any invocation ---
-    manifest = validate_manifest(doc, scenario_id)
+    manifest = validate_manifest(doc, scenario_id, duplicates)
     contents = verify_bundle_files(bundle_dir, manifest)
     parsed = parse_bundle_files(manifest, contents)
     artifacts = build_artifacts(manifest, parsed)
@@ -1038,21 +1259,17 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
             raise
         verdict: Optional[dict] = None
         if code == 0:
-            try:
-                verdict = json.loads(stdout.decode("utf-8"))
-            except (UnicodeDecodeError, ValueError) as exc:
-                raise NonMeasurement(
-                    "internal-error",
-                    "frozen verifier exited 0 for %s but stdout is not parseable "
-                    "JSON: %s" % (artifact.record_id, exc),
-                    artifacts=entries)
-            if not isinstance(verdict, dict):
-                raise NonMeasurement(
-                    "internal-error",
-                    "frozen verifier exited 0 for %s but stdout is not a JSON "
-                    "object" % artifact.record_id,
-                    artifacts=entries)
+            # E2-2: an exit-0 invocation that does not carry exactly one
+            # well-formed verdict object is `verifier-run-invalid` -- the frozen
+            # process started and misbehaved. It is NOT `internal-error`, which
+            # is now this evaluator's own fault only, and NOT
+            # `verifier-not-invocable`, which is now spawn failure only.
+            verdict = _verdict_from_stdout(artifact, stdout, entries)
         entries.append({
+            # AD15-IR-5: artifact_path is required and is the entry's identity;
+            # artifact_ref is the structured reference or null. No record_id is
+            # ever synthesized to fill it.
+            "artifact_path": artifact.path,
             "artifact_ref": artifact.ref,
             "request_envelope_digest": digest_str(request),
             "verifier_exit_code": code,
@@ -1061,7 +1278,7 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
             "verifier_result": verdict,
             "verifier_stderr_digest": digest_str(stderr),
         })
-        verdicts[artifact.record_id] = verdict
+        verdicts[artifact.path] = verdict
 
     # ---- contract 7.2: the causal guard on a non-zero frozen exit -----------
     # Reaching this point means the request was preflight-clean in the sense 7.2
@@ -1071,23 +1288,25 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
     # implementable here -- it is an aggregate-harness gate (AD15-IR-4, 8.1).
     for entry in entries:
         code = entry["verifier_exit_code"]
-        record_id = entry["artifact_ref"]["record_id"]
+        path = entry["artifact_path"]
         if code == 0:
             continue
         if code == 1:
             if scenario_id in EXIT1_REJECT_SCENARIOS:
                 continue                   # a targeted stage-0 / stage-1 failure
-            raise NonMeasurement(
-                "verifier-run-invalid",
+            raise _run_invalid(
                 "frozen verifier exit 1 for %s under %s is outside the two "
-                "contract-7.2 conditions, so it is this evaluator's error rather "
-                "than the artifact's" % (record_id, scenario_id),
-                artifacts=entries)
-        raise NonMeasurement(
-            "internal-error",
-            "frozen verifier exited %d for %s; only 0 and 1 are classifiable"
-            % (code, record_id),
-            artifacts=entries)
+                "contract-7.2 conditions, so it does not qualify as a Level-1 "
+                "REJECT" % (path, scenario_id),
+                entries)
+        # E2-2: exit 2, or any other exit the frozen contract does not permit
+        # for this invocation. Previously reported as `internal-error`, which is
+        # now reserved for this evaluator's OWN unexpected fault -- an external
+        # subprocess protocol failure is never `internal-error`.
+        raise _run_invalid(
+            "frozen verifier exited %d for %s; the frozen contract permits no "
+            "such exit for this invocation" % (code, path),
+            entries)
 
     # ---- contract 8.2 withheld_reasons, contract 7.1 ------------------------
     withheld_reasons: List[dict] = []
@@ -1100,6 +1319,8 @@ def _evaluate(args, bundle_dir: str, doc: dict, scenario_id: str, invoke,
         wit = list(verdict.get("witnessed_withheld") or [])
         if auth or wit:
             withheld_reasons.append({
+                # Ambiguity A5: identified by artifact_path, per AD15-IR-5.
+                "artifact_path": entry["artifact_path"],
                 "artifact_ref": entry["artifact_ref"],
                 "authenticated_withheld": auth,
                 "witnessed_withheld": wit,

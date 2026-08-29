@@ -158,11 +158,15 @@ class StubVerifier:
 
     def __call__(self, request, flags):
         envelope = json.loads(request.decode("utf-8"))
-        record_id = envelope["artifact"]["record_id"]
+        # AD15-IR-5 permits an artifact with no usable record_id, so the stub
+        # must not assume one.
+        record_id = envelope["artifact"].get("record_id")
         self.calls.append((record_id, envelope, list(flags)))
         code, body = self.by_record.get(record_id, self.default)
         if body is None and code == 0:
             body = verdict(record_id)
+        if isinstance(body, bytes):
+            return code, body, self.stderr          # raw stdout, bypassing json
         stdout = b"" if body is None else json.dumps(body).encode("utf-8")
         return code, stdout, self.stderr
 
@@ -251,13 +255,23 @@ class ManifestIdentityBand(BundleCase):
                                                             if k != "scenario_id"})
         self.assertEqual(self.run_cli(bundle)[0], 1)
 
-    def test_duplicate_manifest_members_is_exit_1(self):
+    def test_duplicate_manifest_members_is_exit_3_not_exit_1(self):
+        """Ambiguity A8. A duplicated member is still parseable as strict JSON,
+        so contract 8.5 leaves identity established; the violation is reported
+        as manifest-invalid at exit 3 under Erratum 2's manifest-rule surface.
+        Identity is taken last-wins, the shared default of both runtimes.
+        """
         bundle = write_bundle(
             self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
             manifest_overrides=lambda m: (
-                b'{"scenario_id": "IOP-P-DEC", "scenario_id": "IOP-P-CTL", '
+                b'{"scenario_id": "IOP-P-CTL", "scenario_id": "IOP-P-DEC", '
                 b'"manifest_version": "1", "files": []}'))
-        self.assertEqual(self.run_cli(bundle)[0], 1)
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")   # last wins
+        self.assertEqual(result["nonmeasurement"]["reason"], "manifest-invalid")
+        self.assertIn("duplicate", result["nonmeasurement"]["detail"])
 
     def test_established_identity_never_falls_back_to_exit_1(self):
         """A structurally invalid manifest with a usable scenario_id is exit 3."""
@@ -379,6 +393,69 @@ class ManifestEncoding(BundleCase):
                               drop_from_disk=("artifacts/d.json",))
         exc = self.nonmeasurement(bundle)
         self.assertEqual(exc.reason, "bundle-file-missing")
+
+    # -- Erratum 2, E2-1: the whole bundle-layout surface is manifest-invalid --
+
+    def test_files_entry_naming_a_directory_is_manifest_invalid(self):
+        """E2-1. Directories are containers only and are never files[] entries.
+        The target EXISTS but is not a permitted file kind, so this is a layout
+        violation, NOT bundle-file-missing.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              drop_from_disk=("artifacts/d.json",))
+        os.makedirs(os.path.join(bundle, "artifacts", "d.json"))
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "manifest-invalid")
+        self.assertIn("directory", exc.detail)
+
+    def test_fifo_under_the_bundle_is_manifest_invalid(self):
+        """E2-1: a FIFO, socket, device or any other non-regular, non-directory
+        object under the bundle.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        try:
+            os.mkfifo(os.path.join(bundle, "artifacts", "pipe"))
+        except (AttributeError, OSError) as exc:      # pragma: no cover
+            self.skipTest("this platform cannot create a FIFO: %s" % exc)
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "manifest-invalid")
+        self.assertIn("non-regular", exc.detail)
+
+    def test_a_nested_directory_is_normal_and_needs_no_entry(self):
+        """E2-1: directories are containers only. An empty one is not a finding,
+        and a populated one contributes only its files.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        os.makedirs(os.path.join(bundle, "artifacts", "empty"))
+        result = self.evaluate(bundle)
+        self.assertEqual(result["measurement_status"], "MEASURED")
+
+    def test_a_misplaced_manifest_is_caught_as_an_unlisted_file(self):
+        """Ambiguity A10: identity comes only from manifest.json at the bundle
+        root; a manifest anywhere else is an ordinary regular file.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION},
+                              extra_disk_files={"nested/manifest.json": b"{}"})
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "manifest-invalid")
+        self.assertIn("nested/manifest.json", exc.detail)
+
+    def test_a_symlinked_root_manifest_is_manifest_invalid_at_exit_3(self):
+        """E2-1 puts "a forbidden symlink ANYWHERE under the bundle" under
+        manifest-invalid, and 8.5 pins exit 1 to three conditions of which
+        "present but a link" is not one. Identity is established from the
+        target, then the symlink is reported against the named scenario.
+        """
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
+        real = os.path.join(self.root, "elsewhere.json")
+        shutil.move(os.path.join(bundle, "manifest.json"), real)
+        os.symlink(real, os.path.join(bundle, "manifest.json"))
+        code, out, _ = self.run_cli(bundle)
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["nonmeasurement"]["reason"], "manifest-invalid")
+        self.assertIn("manifest.json", result["nonmeasurement"]["detail"])
 
     def test_digest_mismatch(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/d.json": DECISION})
@@ -801,10 +878,12 @@ class ResultShape(BundleCase):
         self.assertNotIn("verifier_node", source)
 
     def test_artifact_entry_shape(self):
+        """AD15-IR-5: artifact_path is required and is the entry's identity."""
         entry = self.measured()["artifacts"][0]
         self.assertEqual(set(entry), {
-            "artifact_ref", "request_envelope_digest", "verifier_exit_code",
-            "verifier_result", "verifier_stderr_digest"})
+            "artifact_path", "artifact_ref", "request_envelope_digest",
+            "verifier_exit_code", "verifier_result", "verifier_stderr_digest"})
+        self.assertEqual(entry["artifact_path"], "artifacts/a.json")
         self.assertEqual(entry["artifact_ref"],
                          {"record_id": "a-decision", "chain_id": "chain-synthetic"})
         self.assertTrue(entry["verifier_stderr_digest"].startswith("sha256:"))
@@ -819,11 +898,17 @@ class ResultShape(BundleCase):
         bundle = write_bundle(self.root, "IOP-R-CLEAN", four_artifacts())
         self.assertEqual(len(self.evaluate(bundle)["artifacts"]), 4)
 
-    def test_artifacts_are_ordered_by_record_id_utf8_bytes(self):
+    def test_artifacts_are_ordered_by_artifact_path_utf8_bytes(self):
+        """AD15-IR-5 / contract 8.4. Ordering moved off record_id, which an
+        artifact rejected at stage 0 may not have. The bundle here is built so
+        the two orderings DIFFER, or the assertion would prove nothing.
+        """
         bundle = write_bundle(self.root, "IOP-R-CLEAN", four_artifacts())
-        ids = [e["artifact_ref"]["record_id"]
-               for e in self.evaluate(bundle)["artifacts"]]
-        self.assertEqual(ids, sorted(ids, key=lambda s: s.encode("utf-8")))
+        entries = self.evaluate(bundle)["artifacts"]
+        paths = [e["artifact_path"] for e in entries]
+        self.assertEqual(paths, sorted(paths, key=lambda s: s.encode("utf-8")))
+        ids = [e["artifact_ref"]["record_id"] for e in entries]
+        self.assertNotEqual(ids, sorted(ids, key=lambda s: s.encode("utf-8")))
 
     def test_pre_invocation_error_emits_an_empty_artifacts_array(self):
         bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION},
@@ -1013,6 +1098,217 @@ class ExitTable(BundleCase):
         result = json.loads(self.run_cli(bundle, stub=StubVerifier())[1])
         self.assertEqual(result["scenario_id"], "IOP-P-DEC")
         self.assertEqual(len(result["artifacts"]), 1)
+
+
+# --------------------------------------------------------------------------
+# Erratum 2, E2-2 -- every abnormal frozen run is verifier-run-invalid
+# --------------------------------------------------------------------------
+
+class AbnormalFrozenRun(BundleCase):
+    """Contract 8.2.2, Erratum 2.
+
+    The frozen process STARTED but did not produce a process/result shape the
+    frozen contract permits. Every case below was `internal-error` in this
+    lane's pre-erratum candidate except the non-qualifying `exit 1`.
+    """
+
+    def abnormal(self, stub):
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        exc = self.nonmeasurement(bundle, stub)
+        self.assertEqual(exc.reason, "verifier-run-invalid")
+        self.assertEqual(exc.status, "ERROR")
+        return exc
+
+    def test_exit_0_with_empty_stdout(self):
+        exc = self.abnormal(StubVerifier(default=(0, b"")))
+        self.assertIn("empty stdout", exc.detail)
+
+    def test_exit_0_with_whitespace_only_stdout(self):
+        self.abnormal(StubVerifier(default=(0, b"   \n")))
+
+    def test_exit_0_with_non_json_stdout(self):
+        exc = self.abnormal(StubVerifier(default=(0, b"not json at all")))
+        self.assertIn("strict JSON", exc.detail)
+
+    def test_exit_0_with_nan_is_not_strict_json(self):
+        self.abnormal(StubVerifier(default=(0, b'{"observer_assessment": NaN}')))
+
+    def test_exit_0_with_multiple_results(self):
+        """Two concatenated documents are not the single expected verdict."""
+        self.abnormal(StubVerifier(default=(0, b'{"a": 1}\n{"b": 2}')))
+
+    def test_exit_0_with_a_wrong_shape_result(self):
+        exc = self.abnormal(StubVerifier(default=(0, b'["not", "an", "object"]')))
+        self.assertIn("single expected verdict object", exc.detail)
+
+    def test_exit_2(self):
+        """The case that diverged across the two lanes before Erratum 2."""
+        exc = self.abnormal(StubVerifier(default=(2, None)))
+        self.assertIn("exited 2", exc.detail)
+
+    def test_any_other_impermissible_exit(self):
+        for code in (3, 42, 127, -9):
+            with self.subTest(code=code):
+                root = tempfile.mkdtemp(prefix="airep interop test ")
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+                bundle = write_bundle(root, "IOP-P-DEC",
+                                      {"artifacts/a.json": DECISION})
+                with self.assertRaises(ev.NonMeasurement) as ctx:
+                    ev.evaluate_bundle(Args(bundle),
+                                       invoke=StubVerifier(default=(code, None)))
+                self.assertEqual(ctx.exception.reason, "verifier-run-invalid")
+
+    def test_abnormal_run_still_lists_the_attempted_invocation(self):
+        """Contract 8.3.1 rule 3, and the entry must carry artifact_path."""
+        exc = self.abnormal(StubVerifier(default=(2, None)))
+        self.assertEqual(len(exc.artifacts), 1)
+        self.assertEqual(exc.artifacts[0]["artifact_path"], "artifacts/a.json")
+        self.assertEqual(exc.artifacts[0]["verifier_exit_code"], 2)
+
+    def test_not_invocable_is_only_a_spawn_failure(self):
+        """Erratum 2 narrows verifier-not-invocable to a process that could not
+        be spawned or executed AT ALL. A process that ran and misbehaved is not
+        it.
+        """
+        def cannot_spawn(request, flags):
+            raise ev.NonMeasurement(
+                "verifier-not-invocable",
+                "frozen verifier could not be executed: [Errno 2] no such file")
+
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        exc = self.nonmeasurement(bundle, cannot_spawn)
+        self.assertEqual(exc.reason, "verifier-not-invocable")
+        self.assertEqual(exc.artifacts, [])       # nothing was ever attempted
+
+    def test_internal_error_is_the_evaluators_own_fault_only(self):
+        """Erratum 2: an external subprocess protocol failure is never
+        internal-error. A fault raised by the evaluator's own code still is,
+        and still produces a result object naming the scenario.
+        """
+        def explode(request, flags):
+            raise RuntimeError("evaluator bug")
+
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        code, out, _ = self.run_cli(bundle, stub=explode)
+        self.assertEqual(code, 3)
+        result = json.loads(out)
+        self.assertEqual(result["scenario_id"], "IOP-P-DEC")
+        self.assertEqual(result["nonmeasurement"]["reason"], "internal-error")
+        self.assertIn("evaluator bug", result["nonmeasurement"]["detail"])
+
+    def test_no_abnormal_run_is_ever_reported_as_internal_error(self):
+        """The whole point of E2-2, asserted directly."""
+        for stub in (StubVerifier(default=(0, b"")),
+                     StubVerifier(default=(0, b"{")),
+                     StubVerifier(default=(0, b"[]")),
+                     StubVerifier(default=(2, None)),
+                     StubVerifier(default=(9, None))):
+            with self.subTest(stub=stub.default):
+                root = tempfile.mkdtemp(prefix="airep interop test ")
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+                bundle = write_bundle(root, "IOP-P-DEC",
+                                      {"artifacts/a.json": DECISION})
+                with self.assertRaises(ev.NonMeasurement) as ctx:
+                    ev.evaluate_bundle(Args(bundle), invoke=stub)
+                self.assertNotEqual(ctx.exception.reason, "internal-error")
+
+
+# --------------------------------------------------------------------------
+# Erratum 2, E2-3 / AD15-IR-5 -- artifact_path is the total result identity
+# --------------------------------------------------------------------------
+
+class ArtifactPathIdentity(BundleCase):
+    def test_missing_record_id_reaches_the_frozen_verifier(self):
+        """AD15-IR-5's stated consequence: a missing record_id is no longer
+        converted into the evaluator's own preflight failure, it reaches the
+        stage-0 evaluation it belongs to.
+        """
+        doc = {k: v for k, v in DECISION.items() if k != "record_id"}
+        bundle = write_bundle(self.root, "IOP-B-DEC", {"artifacts/a.json": doc})
+        stub = StubVerifier(default=(1, None))     # stage-1 invalidity, exit 1
+        result = self.evaluate(bundle, stub)
+        self.assertEqual(len(stub.calls), 1)       # it WAS invoked
+        self.assertEqual(result["measurement_status"], "MEASURED")
+        self.assertEqual(result["level1"], "REJECT")
+
+    def test_artifact_ref_is_null_when_no_usable_record_id_exists(self):
+        doc = {k: v for k, v in CONTROL.items() if k != "record_id"}
+        bundle = write_bundle(self.root, "IOP-B-CTL", {"artifacts/a.json": doc})
+        entry = self.evaluate(bundle,
+                              StubVerifier(default=(1, None)))["artifacts"][0]
+        self.assertIsNone(entry["artifact_ref"])
+        self.assertEqual(entry["artifact_path"], "artifacts/a.json")
+
+    def test_an_empty_record_id_is_not_usable(self):
+        doc = dict(DECISION, record_id="")
+        bundle = write_bundle(self.root, "IOP-B-DEC", {"artifacts/a.json": doc})
+        entry = self.evaluate(bundle,
+                              StubVerifier(default=(1, None)))["artifacts"][0]
+        self.assertIsNone(entry["artifact_ref"])
+
+    def test_a_non_string_record_id_is_not_usable(self):
+        doc = dict(DECISION, record_id=17)
+        bundle = write_bundle(self.root, "IOP-B-DEC", {"artifacts/a.json": doc})
+        entry = self.evaluate(bundle,
+                              StubVerifier(default=(1, None)))["artifacts"][0]
+        self.assertIsNone(entry["artifact_ref"])
+
+    def test_no_record_id_is_ever_synthesized(self):
+        """AD15-IR-5: never, for any reason. Neither the result object nor the
+        envelope sent to the frozen verifier may gain one.
+        """
+        doc = {k: v for k, v in DECISION.items() if k != "record_id"}
+        bundle = write_bundle(self.root, "IOP-B-DEC", {"artifacts/a.json": doc})
+        stub = StubVerifier(default=(1, None))
+        result = self.evaluate(bundle, stub)
+        self.assertNotIn("record_id", stub.calls[0][1]["artifact"])
+        self.assertNotIn("record_id", json.dumps(result["artifacts"][0]))
+
+    def test_r_a_still_resolves_by_record_id_not_by_path(self):
+        """AD15-IR-5: R-A is unchanged. The manifest path is harness identity
+        only and never participates in reference resolution -- so a reference
+        naming a bundle PATH resolves to nothing.
+        """
+        arts = four_artifacts(
+            control={"decision_ref": {"record_id": "artifacts/decision.json"}})
+        bundle = write_bundle(self.root, "IOP-R-XREF", arts)
+        result = self.evaluate(bundle)
+        self.assertEqual(result["predicates"]["R_A"], "FAIL")
+
+    def test_multi_artifact_bundle_without_record_id_fails_closed(self):
+        """Recorded ambiguity A6. Contract 5.1 orders related_artifacts by
+        record_id, so such a bundle has no defined envelope. No order is chosen.
+        """
+        arts = four_artifacts()
+        del arts["artifacts/effect.json"]["record_id"]
+        bundle = write_bundle(self.root, "IOP-R-CLEAN", arts)
+        exc = self.nonmeasurement(bundle)
+        self.assertEqual(exc.reason, "bundle-shape-invalid")
+        self.assertIn("artifacts/effect.json", exc.detail)
+        self.assertEqual(exc.artifacts, [])       # failed in preflight
+
+    def test_withheld_reasons_are_identified_by_artifact_path(self):
+        bundle = write_bundle(self.root, "IOP-P-DEC", {"artifacts/a.json": DECISION})
+        stub = StubVerifier(by_record={
+            "a-decision": (0, dict(verdict("a-decision"),
+                                   witnessed_withheld=["head-witness-absent"]))})
+        entry = self.evaluate(bundle, stub)["withheld_reasons"][0]
+        self.assertEqual(entry["artifact_path"], "artifacts/a.json")
+
+    def test_ordering_is_stable_under_manifest_path_renaming(self):
+        """Determinism (8.4) now keys on artifact_path, so renaming the files
+        reorders artifacts[] -- and the order still matches the paths.
+        """
+        arts = {
+            "artifacts/z.json": DECISION,
+            "artifacts/y.json": CONTROL,
+            "artifacts/x.json": EXECUTION,
+            "artifacts/w.json": EFFECT,
+        }
+        bundle = write_bundle(self.root, "IOP-R-CLEAN", arts)
+        paths = [e["artifact_path"] for e in self.evaluate(bundle)["artifacts"]]
+        self.assertEqual(paths, ["artifacts/w.json", "artifacts/x.json",
+                                 "artifacts/y.json", "artifacts/z.json"])
 
 
 if __name__ == "__main__":
