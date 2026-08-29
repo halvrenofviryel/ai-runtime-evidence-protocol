@@ -415,7 +415,7 @@ mode that `AD15-IR-2` exists to prevent, in miniature.
 #### Aggregate harness duties (normative)
 
 The official harness performs **exactly twelve invocations per lane** — one per scenario, from a
-fixed list, never discovered — and enforces four run-level properties no evaluator can:
+fixed list, never discovered — and enforces five run-level properties no evaluator can:
 
 1. **Completeness.** All twelve invocations returned `measurement_status: MEASURED`. A missing
    result object, a crash, a non-zero exit or a timeout is recorded as a **non-qualifying
@@ -835,5 +835,5 @@ are frozen as evidence, not as official evaluators. The remaining sequence is:
 7. **Official Python and Node evaluator identities are frozen.**
 8. **Only then is corpus construction opened.**
 
-**Corpus bytes remain on HOLD until step 6**, matching the status line at the head of this
-document.
+**Corpus bytes remain on HOLD through step 7. Step 8 is the only point at which corpus
+construction opens, matching the status line at the head of this document.**
