@@ -587,7 +587,7 @@ An earlier draft said "the three asserted digests from §3". That is unsatisfiab
 lane from touching the other lane's verifier, so no evaluator can assert a digest it is not
 permitted to read. Both isolated authors hit this independently.
 
-Each evaluator emits **exactly two** entries, both of which it recomputed itself:
+**When `verifier_digests` is non-null, it contains exactly two entries, both recomputed by that evaluator:**
 
 ```jsonc
 { "class_verifier": "sha256:…",          // its own lane's frozen verifier
@@ -634,7 +634,7 @@ implementer:
 | `verifier-not-invocable` | the frozen verifier process could not be spawned or executed **at all** | `ERROR` |
 | `verifier-run-invalid` | the frozen verifier ran but did not produce a process/result shape the frozen contract permits — see the enumeration below | `ERROR` |
 | `internal-error` | an unexpected evaluator fault after bundle identity was established | `ERROR` |
-| `authenticated-withheld` | §7.1 — an artifact expected to reach Authenticated was withheld | **`MEASUREMENT_INVALID`** |
+| `authenticated-withheld` | §7.1 — on the mandatory W1 surface, any emitted frozen-verifier verdict has a non-empty `authenticated_withheld` channel | **`MEASUREMENT_INVALID`** |
 
 **`manifest-invalid` covers the whole bundle-layout surface (Erratum 2).** Both isolated
 remediation contexts independently reached this reading; it is now normative rather than inferred.
@@ -758,7 +758,17 @@ verdict** — §6.4 is explicit that no result is emitted. The entry is therefor
 
 #### 8.3.1 When `artifacts[]` may be populated (normative)
 
-Every field above except `artifact_ref` is a product of an invocation. A numeric-preflight or
+The fields above are produced at three different times, and only the last group depends on a
+process actually running:
+
+- **`artifact_path` and `artifact_ref` are known before invocation** — the first comes from the
+  manifest, the second is derived from the artifact itself.
+- **`request_envelope_digest` is produced by successful request-envelope construction**, after
+  preflight and before subprocess execution.
+- **Only `verifier_exit_code`, `verifier_result` and `verifier_stderr_digest` are products of a
+  frozen-verifier process attempt.**
+
+The operational rule is unchanged; this only states correctly why it holds. A numeric-preflight or
 frozen-digest failure occurs **before** any invocation, so those fields do not exist — and an
 implementer told to emit them anyway would have to fabricate an exit code or a digest. The ordering
 is therefore pinned:
@@ -826,7 +836,7 @@ object *about*. Exit code and stdout are therefore pinned together.
 | `0` | **exactly one** result object, `measurement_status: MEASURED`, with a Level-1 verdict | the bundle was measured |
 | `1` | **no result object** — stdout empty | **bundle identity could not be established under §5's direct-read identity boundary — and only that** (bundle root inaccessible · root `manifest.json` absent · present but unopenable or unreadable · not parseable as strict JSON · no registered `scenario_id` obtainable) |
 | `2` | **no result object** — stdout empty | CLI usage error |
-| `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and withheld-when-Authenticated-expected |
+| `3` | **exactly one** result object, `measurement_status: MEASUREMENT_INVALID` or `ERROR`, `level1: null`, `predicates: null`, `nonmeasurement` populated | bundle identity was established, but the scenario could not be measured — **every** §8.2.2 registry reason, including a missing listed file, an unparseable listed file, manifest structural violations, digest mismatch, shape violation, numeric preflight, verifier digest/invocation failure, and `authenticated-withheld` under §7.1 |
 
 #### Ruling `AD15-IR-8` — identity establishment is monotonic
 
