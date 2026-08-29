@@ -4,19 +4,20 @@ The Node lane of `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` (AD15-IR-2). Authored
 in isolation from the Python lane: no shared reconciliation code, no shared helper, no port, and
 no sight of the peer lane's source or output.
 
-Contract basis: the canonical post-Erratum-4 head
-`cd7b634f46e1106aca8f228d9633150cbc111855`, with both canonical contracts asserted before any
+Contract basis: the canonical post-Erratum-5 head
+`e95713e546bd49e47669526aa241227ea678dd66`, with both canonical contracts asserted before any
 source was edited:
 
 | File | sha256 |
 |---|---|
-| `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` | `fa87cb246d4bb006ca1cb6aa461252815215376d6291dfee3aa51bb79ce7b1d2` |
+| `INTEROP_REFERENCE_EVALUATOR_CONTRACT.md` | `f1ca998c375b7a0ffc42aefc996d25ef254cfecc2e2d435c76f430f1b7c038bf` |
 | `INTEROP_CORPUS_CONTRACT.md` | `ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd` |
 
 Lineage, frozen as evidence and never rewritten: `da22e066a6aceaa72b9bda2fb8813205120fe0ff`
 (pre-Erratum-1), `801a1dc1a056ab65e20d735c83cf04a28c1fb45d` (Erratum-2 candidate),
 `4b14328d67ea36f7657db8b3b4765bf3e187e639` (pre-Erratum-3 micro-remediation candidate),
-`c801d5058c5538de0fd0fb414a68041538806f0e` (post-Erratum-3 final candidate, r1). None of those is
+`c801d5058c5538de0fd0fb414a68041538806f0e` (post-Erratum-3 final candidate, r1),
+`7c873428f54d2707d414492eeb931e565a3f04bc` (post-Erratum-4 candidate, r2). None of those is
 an official evaluator identity; the ref named `w1/interop-eval-node-official` predates its
 demotion to evidence, which is why this lane lives on `w1/interop-eval-node-final`.
 
@@ -74,6 +75,29 @@ two entries** (§8.2.1):
 { "class_verifier": "sha256:…", "class_verifier_contract": "sha256:…" }
 ```
 
+**Frozen-identity preflight order (Erratum 5, E5-4).** The read is pinned to run **immediately
+after bundle identity, before any other post-identity preflight**:
+
+1. bundle identity is established by the §5 direct read of the root manifest;
+2. immediately afterwards, this lane's own frozen pair is read and SHA-256'd;
+3. if **either cannot be read** → exit `3`, `frozen-identity-unreadable`,
+   **`verifier_digests: null`**, `artifacts: []`;
+4. if both are read, the exact two-entry object is built from the **recomputed** values;
+5. if a recomputed value does not match its pin → `verifier-digest-mismatch`, and the **actual
+   recomputed** two-entry object is **retained** — a reader needs to see what was actually there,
+   not what was expected;
+6. only then do bundle traversal and the remaining preflight begin.
+
+Because step 2 precedes all other post-identity work, **every other post-identity result carries a
+populated `verifier_digests`**, and no placeholder is ever emitted. `null` is reserved for
+`frozen-identity-unreadable` **alone**.
+
+This supersedes what this lane did before: the assertion ran at the *end* of preflight, so every
+manifest, layout, shape or numeric failure emitted `verifier_digests: null`, and an unreadable
+frozen file was reported as a **mismatch** carrying a two-entry object with `null` members. Both
+halves were wrong — it fabricated a placeholder for a file it never read, and asserted a
+comparison it never performed.
+
 **The Python lane's verifier digest appears nowhere** — not in the output, and not as a constant
 in this source. §3 forbids this lane from reading the peer verifier, so it cannot assert a digest
 for it; cross-lane verifier identity is the aggregate harness's duty, and the harness legitimately
@@ -86,7 +110,8 @@ emits only its own `request_envelope_digest`, per artifact.
 
 Full bundle preflight completes before any frozen verifier is invoked (§8.3.1): manifest, symlink
 and path rules, disk/manifest closure both ways, digests, JSON parseability, bundle shape,
-operator-input composition, numeric envelope, frozen-verifier digest assertions. A failure during
+operator-input composition, numeric envelope. The **frozen-verifier identity read is no longer
+last** — Erratum 5 moved it to step 2, immediately after bundle identity. A failure during
 preflight is a pre-invocation `ERROR` carrying `artifacts: []` — an empty array, never entries
 with placeholder fields. Once invocation begins, `artifacts[]` carries an entry for each
 invocation that produced an exit code, and no more.
@@ -155,7 +180,10 @@ the four Erratum 3 rulings (`AD15-IR-6` envelope ordering and the `record_id`-le
 §13, the four-way filesystem reason boundary in §14b, no-manifest-discovery in §14c, and the
 `--help` meta-action in §10/§11), the four Erratum 4 rulings (the narrowed help carve-out in
 §10/§11, the direct-read identity boundary in §14d, `bundle-directory-unreadable` in §14e, and
-`AD15-IR-7` in §14f), and **both** `NODE-IMP-1` routes (§12 path, §16 pipe truncation).
+`AD15-IR-7` in §14f), the Erratum 5 closures (§17a frozen-identity read-vs-match and preflight
+order, §17b `bundle-entry-uninspectable`, §17c `AD15-IR-8` monotonic identity, §17d
+scenario-independent `authenticated_withheld`), and **both** `NODE-IMP-1` routes (§12 path, §16
+pipe truncation).
 
 Several of those sections carry their own controls, because a regression that cannot fail proves
 nothing: §16 first measures that the buggy write pattern really does truncate on this platform;
@@ -176,8 +204,21 @@ nested directory yields no directory reason at all; §14f pairs the duplicate-`r
 with an otherwise identical unique-`record_id` control, so the assertion is about the absence of a
 gate rather than about some other property of the fixture.
 
-Beyond those in-suite controls, each Erratum 3 and Erratum 4 fix was **mutation-tested**: the fix
-was reverted in turn and the corresponding checks confirmed to fail. A test that passes both with
+§17a requires the unreadable and mismatch cases to differ in **`verifier_digests` nullability**,
+not merely in the reason string, and sweeps seven distinct post-identity failures to assert each
+carries a populated member — the assertion that actually measures the preflight-order move. §17b
+and §17c measure the permission condition they depend on before asserting anything, and skip
+rather than fake it; §17b additionally requires `bundle-entry-uninspectable`,
+`bundle-directory-unreadable` and `manifest-invalid` to be pairwise distinct, with a negative
+control that an ordinary bundle never yields the new reason. §17d carries a control that the probe
+artifact really reaches the Authenticated tier with a non-empty withheld channel and **no**
+failures, and a negative control in which a resolved producer binding leaves
+`authenticated_withheld` empty while `witnessed_withheld` stays populated — which must be a
+`MEASURED` `REJECT`, not a measurement failure. Without that pair, an implementation treating *any*
+withheld channel as invalid would pass.
+
+Beyond those in-suite controls, each Erratum 3, Erratum 4 and Erratum 5 fix was
+**mutation-tested**: the fix was reverted in turn and the corresponding checks confirmed to fail. A test that passes both with
 and without the fix measures nothing, and that is not assumed here.
 
 One limit of that coverage, stated because it would otherwise be overclaimed: the envelope-digest
@@ -358,19 +399,61 @@ keyed on **invocation kind** rather than on stdout in general, so narrowing the 
 not weaken what an evaluation exiting `0` must satisfy: it must still have written a result
 object.
 
+## Erratum 5 — what changed in this lane
+
+Five closures landed. Three changed behaviour here, one added a registry row, and one closed a
+recorded ambiguity by pinning the reading this lane had already taken.
+
+| Closure | Change here |
+|---|---|
+| **E5-1** / `AD15-IR-8` identity is monotonic | No behavioural change — this lane already resolved the `0o111` overlap to exit `3` with `bundle-directory-unreadable`, on §8.5's dividing-line sentence. The ruling pins it, so **recorded ambiguity 8 is closed and the case is now regressed** rather than deliberately left unasserted. |
+| **E5-3** `bundle-entry-uninspectable` | New registry row, and a real behavioural change. Entry kind is now determined by an **explicit `lstat`**, not read off the `Dirent`. An entry whose name was enumerated but whose kind could not be inspected is no longer folded into `manifest-invalid`. |
+| **E5-4** frozen-identity preflight | Behavioural change on two axes: the read **moved to step 2**, and **unreadable is separated from mismatch**, with `verifier_digests: null` reserved for the former. **Closes recorded ambiguity 1.** |
+| **E5-5** scenario-independent withheld | No behavioural change — this lane never had an expected-tier table — but the rule is now **structurally** unable to reach one: the decision is a pure function taking only the withheld records, with no `scenario_id` parameter. |
+| **E5-2** | Contract text only; nothing here. |
+
+**E5-3 is the one with a measured surprise.** `readdirSync(..., { withFileTypes: true })` populates
+a `Dirent`'s kind from the directory's `d_type`, and on a readable-but-non-searchable directory
+(mode `0o444`) it still reports "regular file" while `lstat` on the same entry fails `EACCES`.
+Trusting `d_type` would therefore claim to have learned a kind that was never established — and
+would make the new reason unreachable on exactly the filesystems that populate `d_type`, so the
+behaviour would depend on the filesystem rather than on the bundle. The explicit `lstat` makes
+kind determination uniform. Measured here, not assumed:
+
+```
+readdir OK, names: [ 'f.txt' ]   Dirent.isFile() = true
+lstat  f.txt -> EACCES
+```
+
+**E5-5 removes an oracle rather than a behaviour.** The superseded wording made the rule depend on
+what a scenario *expected*, which requires a per-scenario expected-tier table no evaluator has and
+none should have — consulting an expected-outcome oracle is what a measuring instrument must not
+do. The self-test measures the removal two ways: the decision function's arity is asserted, and the
+same artifact under **all eight** single-artifact scenario ids is required to give **one** outcome.
+Under a reintroduced oracle the four `IOP-B-*` bundles return `MEASURED` / `level1: ACCEPT` at exit
+`0` — a qualifying green result laundered from a tier that was never evaluated, which is precisely
+the failure §7.1 exists to prevent.
+
+**The `NODE-IMP-1` regressions are preserved unchanged and still pass**, both routes, including the
+control that measures the buggy async-write-then-exit pattern actually truncating on this platform.
+The `AD15-IR-6` reverse-ranking fixture is likewise preserved: `record_id` rank remains the exact
+reverse of `artifact_path` rank, so no choice of primary lets the two orderings coincide.
+
 ## Recorded ambiguities — not resolved here
 
 Erratum 2 closed three of the eight this lane carried, Erratum 3 closed two more (3 and 7 below,
-struck through) while surfacing a new one (5), and Erratum 4 closed that one in turn while
-surfacing one more (8). **Five remain**, recorded rather than invented, and each is marked at the
-point of use in the source.
+struck through) while surfacing a new one (5), Erratum 4 closed that one in turn while surfacing
+one more (8), and Erratum 5 closed both 1 and 8. **Three remain**, recorded rather than invented,
+and each is marked at the point of use in the source.
 
-1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
-   strings but not what to emit when the assertion has not yet run, or when a file could not be
-   read at all. This lane emits `null` for the whole member before the assertion runs, the
-   **observed** digest (not the pinned one) when it has, and `null` for an individual member whose
-   file was unreadable. A `null` records "not computed"; emitting the pinned constant would assert
-   something that was never measured.
+1. ~~**`verifier_digests` before or across a failed assertion.**~~ **CLOSED by E5-4.** The gap
+   recorded here — that §8.2.1 pinned the shape as two strings but not what to emit when the
+   assertion had not run, or when a file could not be read at all — is now pinned in full: a
+   dedicated `frozen-identity-unreadable` reason with `verifier_digests: null`, the recomputed
+   two-entry object retained across a mismatch, and a preflight order that puts the read
+   immediately after identity so **every other** post-identity result carries a populated member.
+   This lane's earlier resolution — `null` members inside a two-entry object, reported as a
+   mismatch — is superseded on both counts.
 2. **An invocation attempted but never spawned.** §8.3.1 says `artifacts[]` carries an entry for
    each invocation attempted, but every field except `artifact_ref` is a product of an invocation.
    A spawn that produced no exit code has no representable entry, so it is omitted and named in
@@ -401,7 +484,15 @@ point of use in the source.
    outside the evaluation exit table altogether. This lane's earlier resolution (exit `2`, usage
    on stderr) is superseded; it now matches the frozen lane: exit `0`, help on stdout, no result
    object.
-8. **A bundle root that can be traversed but not enumerated.** E4-2 lists "the bundle root itself
+8. ~~**A bundle root that can be traversed but not enumerated.**~~ **CLOSED by `AD15-IR-8`
+   (E5-1).** The reading this lane took is now the pinned one, and the erratum records that both
+   isolated lanes reached it independently and were measured returning identical results on the
+   same bundle — convergence **under a rule**, which is stronger than convergence from silence.
+   The note below is retained as the record of how it was resolved here; the one thing that has
+   changed is the last paragraph: **the case is now regressed.** Identity establishment is
+   monotonic, so no later traversal failure can retroactively unestablish it.
+
+   E4-2 lists "the bundle root itself
    cannot be accessed" as an exit-`1` identity condition; E4-3 says a directory that cannot be
    enumerated *after identity is established* is `bundle-directory-unreadable` at exit `3`. On a
    POSIX filesystem those two overlap for one concrete case: a bundle directory with mode
@@ -424,8 +515,9 @@ point of use in the source.
    exit: 3   reason: bundle-directory-unreadable   scenario_id: IOP-P-DEC
    ```
 
-   **Recorded rather than pinned.** No self-test asserts this case, deliberately: the resolution
-   follows from §8.5's dividing-line sentence rather than from anything E4-2 or E4-3 says
-   directly, and hardening it here would assert a reading the peer lane has no particular reason
-   to share. It is unreachable by the official harness, which builds its own bundles. If the two
-   lanes disagree, the disagreement is a contract finding, not an implementation defect.
+   **Now pinned, and now regressed.** The earlier note said no self-test asserted this case,
+   deliberately, because the resolution followed from §8.5's dividing-line sentence rather than
+   from anything E4-2 or E4-3 said directly. `AD15-IR-8` states it outright, so the reason to hold
+   back is gone: the self-test now measures both halves of the overlap (manifest readable, root
+   unenumerable) as controls before asserting exit `3` with `bundle-directory-unreadable`, and
+   skips rather than fakes where the platform cannot produce the mode.

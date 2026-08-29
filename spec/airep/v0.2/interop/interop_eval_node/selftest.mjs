@@ -19,6 +19,7 @@ import {
   checkBundlePath, resolveRef, predicateRA, predicateRB, predicateRC, mapLevel1,
   verdictShapeViolation, isDirectInvocation, parseArgs,
   classifyProcessShape, classifyVerdictStdout, writeStdoutSync,
+  authenticatedWithheldViolation,
 } from "./interop_eval.mjs";
 
 // Section 8.3 entry shape, with artifact_path REQUIRED (AD15-IR-5).
@@ -1743,6 +1744,495 @@ const BIG_N = 2000000;
   }
   check("a large result never becomes exit 0 with empty stdout",
     !(r.code === 0 && r.out === ""));
+}
+
+// ---------------------------------------------------------------------------
+// 17. Erratum 5 -- the five closures
+// ---------------------------------------------------------------------------
+
+// --- 17a. E5-4: frozen-identity UNREADABLE is not frozen-identity MISMATCH --
+//
+// The superseded implementation ran the frozen-digest assertion at the END of
+// preflight and reported an unreadable frozen file as verifier-digest-mismatch,
+// emitting a two-entry verifier_digests whose members were null. Both halves
+// were wrong: it fabricated a placeholder for a file it never read, and it
+// asserted a comparison it never performed.
+//
+// The point of this block is the SEPARATION. Each condition must produce its
+// own reason AND its own verifier_digests shape; a test that checked only one
+// would not notice the two collapsing back into one.
+{
+  const dir = mkBundle("e54-frozen");
+  const absent = path.join(tmp, "no-such-frozen-file.mjs");
+  check("control: the substitute frozen path really is absent", !fs.existsSync(absent));
+
+  // (1) own class verifier unreadable -> frozen-identity-unreadable, null.
+  const vNoVerifier = (() => {
+    const r = run(["--bundle", dir, "--verifier", absent]);
+    eq("an unreadable frozen verifier exits 3", r.code, 3);
+    if (r.code !== 3) return null;
+    const v = parseOne("frozen verifier unreadable", r.out);
+    eq("its reason is frozen-identity-unreadable",
+      v.nonmeasurement.reason, "frozen-identity-unreadable");
+    eq("its status is ERROR", v.measurement_status, "ERROR");
+    eq("verifier_digests is NULL -- no digest is fabricated for a file never read",
+      v.verifier_digests, null);
+    eq("artifacts[] is empty: the failure is pre-invocation", v.artifacts, []);
+    eq("level1 is null", v.level1, null);
+    eq("predicates is null", v.predicates, null);
+    return v;
+  })();
+
+  // (2) frozen CLASS CONTRACT unreadable -> the same reason. Both members of
+  //     the identity pair are covered, not just the verifier.
+  const vNoContract = (() => {
+    const r = run(["--bundle", dir, "--verifier-contract", absent]);
+    eq("an unreadable frozen class contract exits 3", r.code, 3);
+    if (r.code !== 3) return null;
+    const v = parseOne("frozen contract unreadable", r.out);
+    eq("its reason is frozen-identity-unreadable too",
+      v.nonmeasurement.reason, "frozen-identity-unreadable");
+    eq("verifier_digests is NULL there as well", v.verifier_digests, null);
+    eq("artifacts[] is empty", v.artifacts, []);
+    return v;
+  })();
+
+  // (3) present and READABLE but the wrong bytes -> verifier-digest-mismatch,
+  //     and the ACTUAL RECOMPUTED two-entry object is RETAINED. A reader needs
+  //     to see what was actually there, not what was expected.
+  const stub = path.join(tmp, "e54_stub_verifier.mjs");
+  const stubBody = "process.exit(0);\n";
+  fs.writeFileSync(stub, stubBody);
+  const vMismatch = (() => {
+    const r = run(["--bundle", dir, "--verifier", stub]);
+    eq("a readable frozen verifier with the wrong bytes exits 3", r.code, 3);
+    if (r.code !== 3) return null;
+    const v = parseOne("frozen verifier mismatch", r.out);
+    eq("its reason is verifier-digest-mismatch",
+      v.nonmeasurement.reason, "verifier-digest-mismatch");
+    check("verifier_digests is NOT null when both files were read",
+      v.verifier_digests !== null, show(v.verifier_digests));
+    eq("it carries EXACTLY the two own-lane entries",
+      Object.keys(v.verifier_digests).sort(), ["class_verifier", "class_verifier_contract"]);
+    // The load-bearing half: the retained value is the RECOMPUTED one. Computed
+    // here independently of the evaluator, from the stub's own bytes.
+    eq("the retained class_verifier digest is the ACTUAL recomputed value",
+      v.verifier_digests.class_verifier, "sha256:" + sha(Buffer.from(stubBody)));
+    eq("artifacts[] is empty: the failure is pre-invocation", v.artifacts, []);
+    return v;
+  })();
+
+  // THE DISCRIMINATION ITSELF. Collapsing unreadable into mismatch -- the
+  // defect E5-4 closed -- fails here even though several individual assertions
+  // above would still pass under the collapse.
+  if (vNoVerifier && vMismatch) {
+    check("unreadable and mismatch are DIFFERENT reasons",
+      vNoVerifier.nonmeasurement.reason !== vMismatch.nonmeasurement.reason,
+      `${vNoVerifier.nonmeasurement.reason} vs ${vMismatch.nonmeasurement.reason}`);
+    check("and they differ in verifier_digests nullability, not only in the reason string",
+      (vNoVerifier.verifier_digests === null) !== (vMismatch.verifier_digests === null),
+      `${show(vNoVerifier.verifier_digests)} vs ${show(vMismatch.verifier_digests)}`);
+  }
+  if (vNoContract && vMismatch) {
+    check("the contract half is separated from mismatch too",
+      vNoContract.nonmeasurement.reason !== vMismatch.nonmeasurement.reason);
+  }
+
+  // E5-4 ORDERING. Step 2 runs IMMEDIATELY after bundle identity and before all
+  // other post-identity preflight, so EVERY other post-identity result carries a
+  // POPULATED verifier_digests. Under the superseded ordering -- assertion last
+  // -- every one of these emitted null, so this sweep is what measures the move.
+  {
+    const populated = [
+      ["manifest closure violation", mkBundle("e54-ord-closure",
+        { mutate: (m) => { m.extra = 1; } }), "manifest-invalid"],
+      ["manifest sort violation", mkBundle("e54-ord-sort",
+        { mutate: (m) => { m.files.reverse(); } }), "manifest-invalid"],
+      ["digest mismatch", mkBundle("e54-ord-digest",
+        { corrupt: "artifacts/a.json" }), "manifest-digest-mismatch"],
+      ["absent listed file", mkBundle("e54-ord-missing", {
+        mutate: (m) => {
+          m.files.push({ path: "zz-ghost.json", role: "artifact", sha256: "0".repeat(64) });
+          m.files.sort((a, b) => byteCompare(a.path, b.path));
+        },
+      }), "bundle-file-missing"],
+      ["unparseable listed file", mkBundle("e54-ord-json",
+        { artifacts: { "artifacts/a.json": "{ not json" } }), "bundle-json-invalid"],
+      ["bundle shape violation", mkBundle("e54-ord-shape", {
+        scenarioId: "IOP-R-CLEAN",
+        artifacts: { "artifacts/a.json": '{"record_id":"r","artifact_type":"decision"}' },
+      }), "bundle-shape-invalid"],
+      ["numeric preflight violation", mkBundle("e54-ord-num", {
+        artifacts: { "artifacts/a.json": '{"record_id":"r","artifact_type":"decision","n":1e20}' },
+      }), "numeric-preflight-violation"],
+    ];
+    for (const [label, bdir, wantReason] of populated) {
+      const r = run(["--bundle", bdir]);
+      eq(`${label}: exits 3`, r.code, 3);
+      if (r.code !== 3) continue;
+      const v = JSON.parse(r.out);
+      eq(`${label}: reason`, v.nonmeasurement.reason, wantReason);
+      // The ordering assertion.
+      check(`${label}: carries a POPULATED verifier_digests (step 2 preceded it)`,
+        v.verifier_digests !== null, show(v.verifier_digests));
+      if (v.verifier_digests !== null) {
+        eq(`${label}: with exactly the two own-lane entries`,
+          Object.keys(v.verifier_digests).sort(),
+          ["class_verifier", "class_verifier_contract"]);
+      }
+    }
+    // And the reservation stated directly: null is for frozen-identity-unreadable
+    // ALONE. Nothing else in this whole file may emit it.
+    check("verifier_digests: null is reserved for frozen-identity-unreadable alone",
+      populated.every(([, bdir]) => {
+        const v = JSON.parse(run(["--bundle", bdir]).out || "{}");
+        return v.verifier_digests !== null;
+      }));
+  }
+}
+
+// --- 17b. E5-3: bundle-entry-uninspectable ---------------------------------
+//
+// The last gap in the filesystem taxonomy: an entry whose NAME was obtained but
+// whose KIND could not be determined. Enumeration SUCCEEDED, so
+// bundle-directory-unreadable does not fit; the layout was never inspected, so
+// manifest-invalid would assert exactly what could not be established.
+//
+// The condition is produced with a directory that is READABLE but not
+// SEARCHABLE (mode 0o444): readdir returns the names, and lstat on each name
+// fails EACCES. A CONTROL measures that this really happens here before any
+// assertion is allowed to count -- otherwise the block would pass by measuring
+// an ordinary readable directory.
+{
+  const dir = mkBundle("e53-uninspectable");
+  const sub = path.join(dir, "artifacts");
+  let namesListed = false;
+  let kindDeniable = false;
+  try {
+    fs.chmodSync(sub, 0o444);
+    try {
+      const names = fs.readdirSync(sub);
+      namesListed = names.length > 0;
+      for (const n of names) {
+        try { fs.lstatSync(path.join(sub, n)); } catch { kindDeniable = true; }
+      }
+    } catch { /* enumeration itself failed: not this condition */ }
+  } catch { /* chmod unsupported here */ }
+
+  if (!(namesListed && kindDeniable)) {
+    console.log("SKIPPED: bundle-entry-uninspectable -- this platform does not produce "
+      + "'readdir succeeds, lstat denied' (root, or a filesystem that ignores chmod); "
+      + "the condition cannot be produced");
+    try { fs.chmodSync(sub, 0o755); } catch { /* best effort */ }
+  } else {
+    check("control: entry names ARE obtained from the directory", namesListed);
+    check("control: and their kind really cannot be determined", kindDeniable);
+    const v = expectNonMeasured("an entry whose kind cannot be inspected", dir,
+      "bundle-entry-uninspectable");
+    if (v) {
+      eq("the scenario is named -- identity was established", v.scenario_id, "IOP-P-DEC");
+      eq("artifacts[] is empty: pre-invocation", v.artifacts, []);
+      check("the detail says the kind could not be determined",
+        /kind could not be determined/i.test(v.nonmeasurement.detail),
+        v.nonmeasurement.detail);
+      check("it does not claim the layout is wrong",
+        !/violat|forbidden|not closed|must be sorted/i.test(v.nonmeasurement.detail),
+        v.nonmeasurement.detail);
+    }
+    fs.chmodSync(sub, 0o755);
+
+    // THE DISCRIMINATION: the new reason is distinct from BOTH neighbours it
+    // sits between -- the enumeration failure above it and the layout violation
+    // below it. E5-3 exists precisely because it was being folded into one of
+    // these two.
+    let vDirUnread = null;
+    {
+      const d2 = mkBundle("e53-contrast-dir");
+      const s2 = path.join(d2, "artifacts");
+      let denied = false;
+      try {
+        fs.chmodSync(s2, 0o000);
+        try { fs.readdirSync(s2); } catch { denied = true; }
+      } catch { /* chmod unsupported */ }
+      if (denied) {
+        vDirUnread = expectNonMeasured("an unenumerable directory, for contrast", d2,
+          "bundle-directory-unreadable");
+        fs.chmodSync(s2, 0o755);
+      }
+    }
+    const vLayout = expectNonMeasured("a genuine layout violation, for contrast",
+      mkBundle("e53-contrast-layout", { mutate: (m) => { m.files.reverse(); } }),
+      "manifest-invalid");
+    const observed = [v, vDirUnread, vLayout]
+      .filter((x) => x !== null && x !== undefined).map((x) => x.nonmeasurement.reason);
+    eq("uninspectable, directory-unreadable and layout-invalid are pairwise distinct",
+      observed.length, new Set(observed).size);
+    check("the boundary was exercised over at least three conditions",
+      observed.length >= 3, show(observed));
+    if (v) {
+      check("an uninspectable entry is NOT reported as manifest-invalid",
+        v.nonmeasurement.reason !== "manifest-invalid");
+      check("an uninspectable entry is NOT reported as bundle-directory-unreadable",
+        v.nonmeasurement.reason !== "bundle-directory-unreadable");
+    }
+  }
+}
+// Negative control: an ordinary readable bundle never yields the new reason.
+// Without this, an implementation that returned bundle-entry-uninspectable for
+// every entry would pass the block above.
+{
+  const r = run(["--bundle", mkBundle("e53-normal", { corrupt: "artifacts/a.json" })]);
+  check("a fully inspectable bundle never yields bundle-entry-uninspectable",
+    !/bundle-entry-uninspectable/.test(r.out), r.out.slice(0, 300));
+}
+
+// --- 17c. E5-1 / AD15-IR-8: identity establishment is MONOTONIC ------------
+//
+// The worked case the ruling pins. Bundle root at mode 0o111: traverse
+// permission lets open(DIR/manifest.json) succeed while readdir(DIR) fails
+// EACCES. E4-2 lists "the bundle root cannot be accessed" as an exit-1 identity
+// condition and E4-3 makes an unenumerable directory after identity
+// bundle-directory-unreadable at exit 3 -- on POSIX they meet exactly here.
+//
+// The ruling: the manifest read succeeded and yielded a registered scenario_id,
+// so identity WAS established and no later failure can retroactively unestablish
+// it. The result is bundle-directory-unreadable at exit 3, NOT exit 1.
+{
+  const dir = mkBundle("e51-monotonic");
+  let manifestReadable = false;
+  let rootEnumerable = true;
+  try {
+    fs.chmodSync(dir, 0o111);
+    try { fs.readFileSync(path.join(dir, "manifest.json")); manifestReadable = true; } catch { /* no */ }
+    try { fs.readdirSync(dir); } catch { rootEnumerable = false; }
+  } catch { /* chmod unsupported here */ }
+
+  if (!(manifestReadable && !rootEnumerable)) {
+    console.log("SKIPPED: AD15-IR-8 monotonic-identity worked case -- this platform does not "
+      + "produce 'manifest readable, root unenumerable' at mode 0o111; the overlap the ruling "
+      + "resolves cannot be reached here");
+    try { fs.chmodSync(dir, 0o755); } catch { /* best effort */ }
+  } else {
+    // Both halves of the overlap measured, not assumed.
+    check("control: the root manifest IS readable at mode 0o111", manifestReadable);
+    check("control: the root is NOT enumerable at mode 0o111", !rootEnumerable);
+
+    const r = run(["--bundle", dir]);
+    // The load-bearing assertion: exit 3, not exit 1. An implementation reading
+    // E4-2's "root cannot be accessed" as governing here would exit 1 silently.
+    eq("an unlistable-but-readable bundle root exits 3, NOT 1", r.code, 3);
+    check("it emits a result object rather than the exit-1 silence", r.out.trim().length > 0);
+    if (r.out.trim().length > 0) {
+      const v = parseOne("monotonic identity", r.out);
+      eq("its reason is bundle-directory-unreadable",
+        v.nonmeasurement.reason, "bundle-directory-unreadable");
+      eq("identity survived: the scenario is named", v.scenario_id, "IOP-P-DEC");
+      eq("artifacts[] is empty: pre-invocation", v.artifacts, []);
+      check("verifier_digests is populated -- step 2 ran before traversal",
+        v.verifier_digests !== null, show(v.verifier_digests));
+    }
+    fs.chmodSync(dir, 0o755);
+  }
+}
+
+// --- 17d. E5-5: authenticated_withheld is SCENARIO-INDEPENDENT -------------
+//
+// The removed wording was "for any artifact the scenario expects to reach
+// AIREP-Authenticated", which requires a per-scenario expected-tier table no
+// evaluator has and none should have. A measuring instrument that consults an
+// expected-outcome oracle is not measuring.
+//
+// The rule is now: ANY emitted verdict carrying a non-empty
+// authenticated_withheld channel makes the scenario MEASUREMENT_INVALID,
+// REGARDLESS OF SCENARIO ID.
+
+// The structural half: the decision function cannot reach a scenario id,
+// because it is not given one. Re-introducing the oracle would require changing
+// this signature.
+{
+  eq("the section 7.1 rule takes exactly one parameter -- no scenario id",
+    authenticatedWithheldViolation.length, 1);
+  eq("an empty withheld set is no violation",
+    authenticatedWithheldViolation([]), null);
+  const authOnly = [{ artifact_path: "artifacts/a.json", artifact_ref: null,
+    channel: "authenticated_withheld", reasons: ["producer-binding-missing"] }];
+  const witOnly = [{ artifact_path: "artifacts/a.json", artifact_ref: null,
+    channel: "witnessed_withheld", reasons: ["no-witness-supplied"] }];
+  const viol = authenticatedWithheldViolation(authOnly);
+  check("an authenticated_withheld record IS a violation", viol !== null);
+  // Guarded so a regression here reports as failures rather than aborting the
+  // run before the end-to-end sweep below can report its own.
+  eq("and it carries the pinned reason", viol && viol.reason, "authenticated-withheld");
+  eq("paired with MEASUREMENT_INVALID, not ERROR", viol && viol.status, "MEASUREMENT_INVALID");
+  // The channel filter is exact: W1 carries no witness, so no-witness-supplied
+  // is an ordinary diagnostic surface and must NOT be a measurement failure.
+  eq("a witnessed_withheld record alone is NOT a violation",
+    authenticatedWithheldViolation(witOnly), null);
+}
+
+// The end-to-end half, through the REAL frozen verifier. This needs an artifact
+// that actually reaches the Authenticated tier, so it is built here to be
+// schema-valid and hash-valid: the frozen stage-0 and stage-1 constructions are
+// public and deterministic, and nothing about them is a corpus fixture. The
+// artifact is NOT signed -- the whole point is to leave the tier unevaluated.
+if (!fs.existsSync(VERIFIER) || !fs.existsSync(VERIFIER_DEPS)) {
+  console.log("SKIPPED: E5-5 end-to-end scenario-independence -- the frozen verifier or its "
+    + "node_modules is not materialized");
+} else {
+  const D64 = "0".repeat(64);
+  // A schema-valid v0.2 decision whose integrity.current is the frozen
+  // INTEGRITY-2 recomputation: tag-bytes LF jcs-bytes over the artifact with
+  // integrity.current and integrity.signature deleted.
+  function validDecision() {
+    const art = {
+      airep_version: "0.2", artifact_type: "decision",
+      chain_id: "synth.chain", record_id: "synth-dec", sequence: 0,
+      subject: { producer: "synth.producer", timestamp_utc: "2026-01-01T00:00:00Z" },
+      scope: { covers: ["c"], does_not_cover: ["d"] },
+      input: { input_ref: "in", input_digest: "sha256:" + D64 },
+      claim: { assertion: "a", basis: ["b"] },
+      directive: { verb: "release", policy_basis: ["p"] },
+      output: { result_ref: "out", result_digest: "sha256:" + D64 },
+      evidence: [{ type: "other", ref: "r", resolvable: false, content_hash: "sha256:" + D64 }],
+      integrity: {
+        previous: "sha256:" + D64, current: "sha256:" + D64,
+        signature: { alg: "ed25519", value: "ab".repeat(64) },
+      },
+    };
+    const body = JSON.parse(JSON.stringify(art));
+    delete body.integrity.current;
+    delete body.integrity.signature;
+    const pre = Buffer.concat([
+      Buffer.from(`AIREP/${art.airep_version}/hash/${art.artifact_type}`, "ascii"),
+      Buffer.from([0x0a]),
+      Buffer.from(jcs(body), "utf8"),
+    ]);
+    art.integrity.current = "sha256:" + sha(pre);
+    return JSON.stringify(art);
+  }
+
+  const ARTIFACT = validDecision();
+
+  // CONTROL: the artifact really does reach the Authenticated tier and really
+  // does leave authenticated_withheld non-empty. Without this the sweep below
+  // could pass while measuring an artifact rejected at stage 0.
+  {
+    const probe = path.join(tmp, "e55-probe.json");
+    fs.writeFileSync(probe, JSON.stringify({ artifact: JSON.parse(ARTIFACT), related_artifacts: [] }));
+    const bfile = path.join(tmp, "e55-b.json"); fs.writeFileSync(bfile, BINDINGS);
+    const pfile = path.join(tmp, "e55-p.json"); fs.writeFileSync(pfile, POLICY);
+    const rfile = path.join(tmp, "e55-r.json"); fs.writeFileSync(rfile, REVOCATION);
+    const p = spawnSync(process.execPath,
+      [VERIFIER, "--request", probe, "--bindings", bfile,
+        "--independence-policy", pfile, "--revocation", rfile], { encoding: "utf8" });
+    eq("control: the probe artifact passes stage 0 and 1 (frozen exits 0)", p.status, 0);
+    let verdict = null;
+    try { verdict = JSON.parse(p.stdout); } catch { /* asserted below */ }
+    check("control: the frozen verifier emitted a verdict", verdict !== null, p.stderr.slice(0, 300));
+    if (verdict) {
+      check("control: authenticated_withheld really is non-empty",
+        Array.isArray(verdict.authenticated_withheld) && verdict.authenticated_withheld.length > 0,
+        show(verdict.authenticated_withheld));
+      check("control: and no authenticated_failures were produced, so this is a WITHHELD case "
+        + "rather than a REJECT",
+        Array.isArray(verdict.authenticated_failures) && verdict.authenticated_failures.length === 0,
+        show(verdict.authenticated_failures));
+    }
+  }
+
+  // THE DISCRIMINATION. The SAME artifact and the SAME operator inputs, under
+  // every single-artifact scenario id. An expected-tier oracle would treat the
+  // IOP-P-* family (expected to reach Authenticated) differently from the
+  // IOP-B-* family (expected to be rejected), so a rule that consulted one
+  // would diverge across this sweep. The rule must not.
+  const singleArtifactScenarios = [
+    "IOP-P-DEC", "IOP-P-CTL", "IOP-P-EXE", "IOP-P-EFF",
+    "IOP-B-DEC", "IOP-B-CTL", "IOP-B-EXE", "IOP-B-EFF",
+  ];
+  const outcomes = [];
+  for (const scenarioId of singleArtifactScenarios) {
+    const dir = mkBundle(`e55-${scenarioId}`, {
+      scenarioId, artifacts: { "artifacts/a.json": ARTIFACT },
+    });
+    const r = run(["--bundle", dir]);
+    eq(`${scenarioId}: a withheld Authenticated tier exits 3`, r.code, 3);
+    if (r.code !== 3) { outcomes.push(`exit${r.code}`); continue; }
+    const v = parseOne(`e55 ${scenarioId}`, r.out);
+    eq(`${scenarioId}: measurement_status is MEASUREMENT_INVALID`,
+      v.measurement_status, "MEASUREMENT_INVALID");
+    eq(`${scenarioId}: reason is authenticated-withheld`,
+      v.nonmeasurement.reason, "authenticated-withheld");
+    eq(`${scenarioId}: level1 is null -- withheld is neither ACCEPT nor REJECT`, v.level1, null);
+    eq(`${scenarioId}: predicates is null`, v.predicates, null);
+    // The withheld reasons are reported VERBATIM (section 8.2).
+    const auth = v.withheld_reasons.filter((w) => w.channel === "authenticated_withheld");
+    check(`${scenarioId}: the withheld reasons are reported verbatim`,
+      auth.length === 1 && auth[0].reasons.includes("producer-binding-missing"),
+      show(v.withheld_reasons));
+    outcomes.push(`${v.measurement_status}/${v.nonmeasurement.reason}`);
+  }
+  // The scenario-independence assertion itself: ONE distinct outcome across all
+  // eight. This is what an expected-tier oracle cannot satisfy -- it would split
+  // the IOP-P-* family from the IOP-B-* family, giving two.
+  eq("every single-artifact scenario gave the SAME outcome -- the rule consults no oracle",
+    new Set(outcomes).size, 1);
+  eq("and that outcome is the pinned one", outcomes[0], "MEASUREMENT_INVALID/authenticated-withheld");
+  eq("all eight scenarios were actually exercised", outcomes.length, 8);
+
+  // NEGATIVE CONTROL, and the second half of E5-5's channel precision. With the
+  // producer binding RESOLVED and the revocation state ACTIVE, the very same
+  // artifact leaves authenticated_withheld EMPTY while witnessed_withheld stays
+  // non-empty (no-witness-supplied). That must NOT be MEASUREMENT_INVALID: it is
+  // a definitive Authenticated-tier failure, which section 7 step 1 makes a
+  // REJECT. Without this control, an implementation that treated ANY withheld
+  // channel as a measurement failure would pass everything above.
+  {
+    const boundBindings = JSON.stringify({
+      bindings: {
+        "synth.binding": {
+          subject_identity: "synth.producer", role: "producer",
+          public_key_hex: "1".repeat(64), suite: "ed25519", trusted: true,
+        },
+      },
+      producer_bindings: { "synth.producer": "synth.binding" },
+      witness_bindings: {},
+    });
+    const activeRevocation = JSON.stringify({
+      snapshot_id: "synth.snapshot", bindings: { "synth.binding": { state: "active" } },
+    });
+    const dir = mkBundle("e55-negative", {
+      scenarioId: "IOP-P-DEC",
+      artifacts: { "artifacts/a.json": ARTIFACT },
+      operator: {
+        bindings: boundBindings, independence_policy: POLICY, revocation: activeRevocation,
+      },
+    });
+    const r = run(["--bundle", dir]);
+    eq("a bound producer with an active revocation state is MEASURED, exit 0", r.code, 0);
+    if (r.code === 0) {
+      const v = parseOne("e55 negative control", r.out);
+      eq("its status is MEASURED, not MEASUREMENT_INVALID", v.measurement_status, "MEASURED");
+      // Section 7 step 1: a completed verdict left at AIREP-Core with a
+      // populated authenticated_failures channel IS a REJECT.
+      eq("a definitive Authenticated-tier failure maps to REJECT", v.level1, "REJECT");
+      eq("no nonmeasurement object", v.nonmeasurement, null);
+      const auth = v.withheld_reasons.filter((w) => w.channel === "authenticated_withheld");
+      eq("authenticated_withheld really is empty here", auth.length, 0);
+      // The half that makes this discriminate: witnessed_withheld IS non-empty,
+      // and it did not make the scenario measurement-invalid.
+      const wit = v.withheld_reasons.filter((w) => w.channel === "witnessed_withheld");
+      check("control: witnessed_withheld IS non-empty, so the case is real",
+        wit.length === 1 && wit[0].reasons.includes("no-witness-supplied"),
+        show(v.withheld_reasons));
+      check("witnessed_withheld did NOT make the scenario measurement-invalid",
+        v.measurement_status === "MEASURED", v.measurement_status);
+      eq("the frozen verdict is carried verbatim", v.artifacts.length, 1);
+      check("and it records the Authenticated-tier failure",
+        v.artifacts[0].verifier_result
+        && v.artifacts[0].verifier_result.authenticated_failures.includes("producer-signature-invalid"),
+        show(v.artifacts[0].verifier_result && v.artifacts[0].verifier_result.authenticated_failures));
+    }
+  }
 }
 
 console.log(`${checks - failures}/${checks} checks passed`);

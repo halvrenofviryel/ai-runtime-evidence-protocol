@@ -2,7 +2,7 @@
 // AIREP v0.2 reference interop evaluator -- Node lane.
 //
 // Implements INTEROP_REFERENCE_EVALUATOR_CONTRACT.md (AD15-IR-2), canonical
-// post-Erratum-4 basis cd7b634f46e1106aca8f228d9633150cbc111855, sections 5-8.
+// post-Erratum-5 basis e95713e546bd49e47669526aa241227ea678dd66, sections 5-8.
 // The contract's own sha256 is recorded in README.md and deliberately not here:
 // every 64-hex literal in this file is a frozen-verifier digest this lane
 // asserts, and the self-test requires that set to be exactly two (section
@@ -32,7 +32,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // 0. Constants
 // ---------------------------------------------------------------------------
 
-const EVALUATOR_VERSION = "interop_eval_node/0.2.3";
+const EVALUATOR_VERSION = "interop_eval_node/0.2.4";
 
 // The registered twelve (section 8.1). A manifest whose scenario_id is not one
 // of these carries "no usable scenario_id" and therefore establishes no bundle
@@ -153,10 +153,42 @@ const REASON_STATUS = Object.freeze({
   // listed file being absent is still bundle-file-missing, and a listed regular
   // file whose bytes will not read is still bundle-file-unreadable.
   "bundle-directory-unreadable": "ERROR",
+  // Erratum 5 (E5-3). The last gap in the filesystem taxonomy, between the
+  // listed-file cases Erratum 3 separated and the enumeration case Erratum 4
+  // separated: an entry whose NAME was obtained but whose KIND could not be
+  // determined. Calling that manifest-invalid asserts the layout is wrong when
+  // that is precisely what could not be established, and
+  // bundle-directory-unreadable does not fit either, because enumeration
+  // SUCCEEDED. The full boundary, in order of what was actually learned:
+  //
+  //   name obtained, no-follow kind inspection cannot complete
+  //                                            -> bundle-entry-uninspectable
+  //   kind determined: symlink / forbidden non-regular object -> manifest-invalid
+  //   kind determined: a directory that cannot be enumerated
+  //                                            -> bundle-directory-unreadable
+  //   kind determined: a regular file whose bytes cannot be read
+  //                                            -> bundle-file-unreadable
+  //
+  // Each row says only what was actually learned, and stops there. Reporting a
+  // layout violation when the layout could not be inspected is the same error
+  // as reporting a missing file when the medium was merely unreadable.
+  "bundle-entry-uninspectable": "ERROR",
   "bundle-json-invalid": "ERROR",
   "bundle-shape-invalid": "ERROR",
   "numeric-preflight-violation": "ERROR",
   "verifier-digest-mismatch": "ERROR",
+  // Erratum 5 (E5-4). Section 8.2.1 required EXACTLY TWO self-recomputed
+  // verifier_digests entries while the contract separately required a
+  // frozen-identity assertion. When a frozen file cannot be READ those two
+  // demands conflict: a digest that cannot be computed cannot be emitted, and
+  // no implementer may fabricate one. This reason is the resolution -- it is
+  // the ONLY result for which verifier_digests is null.
+  //
+  // It is deliberately distinct from verifier-digest-mismatch. Unreadable says
+  // we could not learn what is there; mismatch says we learned exactly what is
+  // there and it is not what was pinned. Collapsing them would lose the one
+  // distinction a reader needs to tell a broken checkout from a tampered one.
+  "frozen-identity-unreadable": "ERROR",
   // Erratum 2 narrowed these three, and the narrowing is the point: the first
   // says we could not start it, the second says the thing we started
   // misbehaved, the third says WE did. An external subprocess protocol failure
@@ -472,7 +504,24 @@ export function checkBundlePath(p) {
 // an identity to name a reason against. Introducing a pre-read existence or
 // enumeration check would split that band and produce a reason where the
 // contract requires silence.
-export function loadManifest(bundleDir, onIdentity = null) {
+//
+// Erratum 5 (E5-4) SPLITS this function in two, and the split is the whole
+// point of the pinned preflight order in section 8.2.1. Establishing identity
+// and validating the manifest's STRUCTURE are now separate steps, because the
+// frozen-identity read has to happen BETWEEN them:
+//
+//   1. readManifestIdentity() -- the section 5 direct read; identity or exit 1;
+//   2. readFrozenIdentity()   -- immediately afterwards, before any other
+//                                post-identity preflight;
+//   3. validateManifestStructure() -- closure, sort, role, path, digest
+//                                encoding; part of "the remaining preflight".
+//
+// Keeping structure inside the identity function would have put every manifest
+// rule ahead of step 2, and section 8.2.1 requires that EVERY post-identity
+// result carry a populated verifier_digests. A manifest-invalid result emitted
+// before the frozen pair was read would have carried null instead -- which the
+// contract reserves for frozen-identity-unreadable alone.
+export function readManifestIdentity(bundleDir) {
   const manifestPath = path.join(bundleDir, MANIFEST_NAME);
   let text;
   try {
@@ -502,13 +551,18 @@ export function loadManifest(bundleDir, onIdentity = null) {
     throw new IdentityError(
       "manifest carries no usable scenario_id from the registered twelve; bundle identity unknown");
   }
-  // ---- bundle identity is established from here on; every failure below owes
-  // ---- a result object NAMING THIS SCENARIO (section 8.5). The caller is told
-  // ---- immediately, so a manifest rule broken on the very next line still
-  // ---- produces a named result rather than a nameless one.
-  const scenarioId = doc.scenario_id;
-  if (onIdentity !== null) onIdentity(scenarioId);
+  // ---- bundle identity is ESTABLISHED, and by ruling AD15-IR-8 (Erratum 5,
+  // ---- E5-1) that establishment is MONOTONIC: no later filesystem, traversal
+  // ---- or preflight failure can retroactively unestablish it. Every failure
+  // ---- from here on owes a result object NAMING THIS SCENARIO at exit 3
+  // ---- (section 8.5), never the exit-1 silence band.
+  return { doc, scenarioId: doc.scenario_id, manifestPath };
+}
 
+// Step 3 of the section 8.2.1 order: the manifest's structural rules. Reached
+// only after identity is established AND the frozen identity pair has been
+// read, so every raise below carries a populated verifier_digests.
+export function validateManifestStructure(doc) {
   const closure = closedMemberViolation(doc, MANIFEST_MEMBERS);
   if (closure !== null) {
     throw new NonMeasurement("manifest-invalid", `manifest object is not closed: ${closure}`);
@@ -559,7 +613,7 @@ export function loadManifest(bundleDir, onIdentity = null) {
     entries.push({ path: entry.path, role: entry.role, sha256: entry.sha256 });
   }
 
-  return { scenarioId, entries, manifestPath };
+  return entries;
 }
 
 // Every regular file under the bundle, recursively, bundle-relative, with
@@ -587,7 +641,7 @@ export function loadManifest(bundleDir, onIdentity = null) {
 // none. Section 8.5 already routes it to exit 1. A wrongly-named file sitting
 // BESIDE a valid root manifest needs no special rule either -- it is an
 // unlisted regular file, caught by the closure check below, or a listed entry
-// with an invalid role, caught in loadManifest. Neither is a new code path.
+// with an invalid role, caught in validateManifestStructure. Neither is a new code path.
 export function walkBundle(bundleDir) {
   const found = [];
   const stack = [""];
@@ -598,7 +652,7 @@ export function walkBundle(bundleDir) {
     try {
       dirents = fs.readdirSync(abs, { withFileTypes: true });
     } catch (e) {
-      // Erratum 4 (E4-3). Identity is already established -- loadManifest ran
+      // Erratum 4 (E4-3). Identity is already established -- readManifestIdentity ran
       // first and read DIR/manifest.json DIRECTLY -- so what failed here is the
       // measurement of the layout, not the layout itself. bundle-file-missing
       // would be false (nothing is known to be absent) and manifest-invalid
@@ -609,14 +663,35 @@ export function walkBundle(bundleDir) {
     }
     for (const d of dirents) {
       const childRel = rel === "" ? d.name : `${rel}/${d.name}`;
-      if (d.isSymbolicLink()) {
+      // Erratum 5 (E5-3). The entry NAME is now in hand; its KIND is a separate
+      // question that can fail on its own, and the contract names lstat as the
+      // no-follow inspection. It is performed EXPLICITLY here rather than read
+      // off the Dirent, for a measured reason: readdirSync populates a Dirent's
+      // kind from the directory's d_type, which on a readable-but-non-searchable
+      // directory (mode 0o444) still reports "regular file" while lstat on the
+      // same entry fails EACCES. Trusting d_type would therefore claim to have
+      // learned a kind that was never actually established, and would make the
+      // reason unreachable on exactly the filesystems that populate d_type --
+      // i.e. the behaviour would depend on the filesystem rather than on the
+      // bundle. An explicit lstat makes kind determination uniform.
+      //
+      // lstat, never stat: a link must be classified, never followed.
+      let st;
+      try {
+        st = fs.lstatSync(path.join(bundleDir, childRel));
+      } catch (e) {
+        throw new NonMeasurement("bundle-entry-uninspectable",
+          `directory entry ${childRel} was enumerated, but its filesystem kind could not be `
+          + `determined: ${e.message}`);
+      }
+      if (st.isSymbolicLink()) {
         // Forbidden even when the target resolves inside the bundle: a digest
         // over a link's target is not a digest over the bundle's own bytes.
         throw new NonMeasurement("manifest-invalid",
           `symbolic links are forbidden anywhere under the bundle: ${childRel}`);
       }
-      if (d.isDirectory()) { stack.push(childRel); continue; }
-      if (d.isFile()) {
+      if (st.isDirectory()) { stack.push(childRel); continue; }
+      if (st.isFile()) {
         // The root manifest.json is excluded from files[] by section 5 (it
         // cannot hash itself), so it is excluded from the disk side of the
         // closure check as well. A nested file of the same name is an ordinary
@@ -748,30 +823,66 @@ export function parseArgs(argv) {
 // 8. Frozen-verifier identity and invocation
 // ---------------------------------------------------------------------------
 
-// Section 8.2.1: exactly two entries, both recomputed here. The peer lane's
-// verifier digest is absent by construction -- there is no constant for it in
-// this file and no code path that could emit one.
-function assertVerifierDigests(verifierPath, contractPath) {
-  const observed = { class_verifier: null, class_verifier_contract: null };
-  const failures = [];
+// Section 8.2.1, frozen-identity preflight, in the order Erratum 5 (E5-4)
+// pinned. It runs as step 2 -- IMMEDIATELY after bundle identity, before any
+// other post-identity preflight -- and it separates READ failure from MATCH
+// failure, which the superseded implementation conflated:
+//
+//   3. if EITHER file cannot be read -> frozen-identity-unreadable,
+//      verifier_digests NULL, artifacts [];
+//   4. if both are read, the exact two-entry object is built from the
+//      RECOMPUTED values;
+//   5. if a recomputed value does not match its pin -> verifier-digest-mismatch,
+//      and the ACTUAL recomputed two-entry object is RETAINED -- a reader needs
+//      to see what was actually there, not what was expected.
+//
+// The old code returned a two-entry object with null members for an unreadable
+// file and reported it as a MISMATCH. Both halves were wrong: it fabricated a
+// placeholder digest for a file it never read, and it asserted a comparison it
+// never performed. Absence is represented by absence.
+//
+// The peer lane's verifier digest is absent by construction -- there is no
+// constant for it in this file and no code path that could emit one.
+//
+// `setDigests` receives the two-entry object the moment BOTH reads succeed, so
+// a subsequent mismatch still carries the recomputed values into the result.
+function readFrozenIdentity(verifierPath, contractPath, setDigests) {
   const checks = [
     ["class_verifier", verifierPath, PINNED_VERIFIER_DIGEST],
     ["class_verifier_contract", contractPath, PINNED_VERIFIER_CONTRACT_DIGEST],
   ];
-  for (const [key, file, pinned] of checks) {
-    let hex = null;
+
+  // ---- step 3: read both, or fail without inventing a digest --------------
+  const hexes = {};
+  const unreadable = [];
+  for (const [key, file] of checks) {
     try {
-      hex = sha256Hex(fs.readFileSync(file));
+      hexes[key] = sha256Hex(fs.readFileSync(file));
     } catch (e) {
-      failures.push(`${key}: unreadable at ${file}: ${e.message}`);
-      continue;
-    }
-    observed[key] = "sha256:" + hex;
-    if (hex !== pinned) {
-      failures.push(`${key}: pinned sha256:${pinned}, observed sha256:${hex}`);
+      unreadable.push(`${key} at ${file}: ${e.message}`);
     }
   }
-  return { observed, failures };
+  if (unreadable.length > 0) {
+    // verifier_digests stays null: setDigests is deliberately NOT called.
+    throw new NonMeasurement("frozen-identity-unreadable",
+      "this lane's own frozen identity could not be read, so its digest cannot be recomputed: "
+      + unreadable.join("; "));
+  }
+
+  // ---- step 4: the exact two-entry object, from RECOMPUTED values ---------
+  setDigests({
+    class_verifier: "sha256:" + hexes.class_verifier,
+    class_verifier_contract: "sha256:" + hexes.class_verifier_contract,
+  });
+
+  // ---- step 5: compare; the recomputed object is already retained ---------
+  const mismatches = checks
+    .filter(([key, , pinned]) => hexes[key] !== pinned)
+    .map(([key, , pinned]) => `${key}: pinned sha256:${pinned}, observed sha256:${hexes[key]}`);
+  if (mismatches.length > 0) {
+    throw new NonMeasurement("verifier-digest-mismatch",
+      `frozen-verifier identity assertion failed: ${mismatches.join("; ")}`);
+  }
 }
 
 // The evaluator reads three members of the frozen verdict as semantic input:
@@ -994,6 +1105,51 @@ export function predicateRC(byFamily, resultsByPath) {
   return { outcome: "PASS", detail: [] };
 }
 
+// Section 7.1, as rewritten by Erratum 5 (E5-5): the rule is SCENARIO-
+// INDEPENDENT.
+//
+// The superseded wording was "for any artifact the scenario expects to reach
+// AIREP-Authenticated", which presumes a per-scenario expected-tier table NO
+// EVALUATOR HAS, AND NONE SHOULD HAVE: consulting an expected-outcome oracle is
+// exactly what a measuring instrument must not do. The replacement needs no
+// table at all:
+//
+//   on the mandatory W1 surface, ANY emitted frozen-verifier verdict carrying a
+//   non-empty authenticated_withheld channel makes the scenario
+//   MEASUREMENT_INVALID, REGARDLESS OF SCENARIO ID.
+//
+// That is why this function takes ONLY the withheld channel records. It has no
+// scenario_id parameter, no expected-tier table and no way to reach one -- the
+// oracle is removed structurally, not merely left unused. Re-introducing the
+// dependency would require changing this signature, which is the property the
+// discrimination test in the self-test measures.
+//
+// The rule is sound on this surface because of how the mandatory twelve are
+// built: operator inputs are complete by construction, no mandatory scenario
+// targets Authenticated-withheld behaviour, stage-0/stage-1 invalid artifacts
+// emit no verdict at all (section 7.2 handles those), and IOP-B-EXE targets a
+// definitive authenticated_failures rather than a withheld channel. So a
+// withheld channel here means the MEASUREMENT INFRASTRUCTURE or the operator
+// inputs failed -- never a scenario's semantic outcome.
+//
+// It does NOT extend to witnessed_withheld: W1 carries no witness, so
+// no-witness-supplied is an ordinary diagnostic surface, not a measurement
+// failure. Hence the channel filter below is exact.
+//
+// Withheld is neither REJECT (nothing was refused) nor ACCEPT (nothing was
+// established). Treating it as ACCEPT would let a corpus shipped with a broken
+// binding store report twelve green results while measuring almost nothing.
+export function authenticatedWithheldViolation(withheldReasons) {
+  const withheldAuth = withheldReasons.filter((w) => w.channel === "authenticated_withheld");
+  if (withheldAuth.length === 0) return null;
+  const named = withheldAuth
+    .map((w) => `${w.artifact_path}: ${w.reasons.join(",")}`)
+    .join("; ");
+  return new NonMeasurement("authenticated-withheld",
+    `the Authenticated tier could not be evaluated -- ${named}; fix the operator inputs and `
+    + "re-run rather than scoring this scenario");
+}
+
 // Level-1 mapping in the pinned order (section 7). Step 1 precedes the rest
 // because a bundle containing a cryptographically broken artifact has no
 // meaningful reconciliation verdict; step 2 precedes step 3 because
@@ -1069,8 +1225,24 @@ function scenarioArtifactCount(scenarioId) {
 function preflight(flags, ctx) {
   const bundleDir = flags.bundle;
 
-  // ---- manifest -----------------------------------------------------------
-  const manifest = loadManifest(bundleDir, (id) => { ctx.scenarioId = id; });
+  // ---- step 1: bundle identity, by the section 5 DIRECT READ --------------
+  // The first filesystem operation performed on the bundle. Nothing is
+  // enumerated, stat-ed or listed beforehand, which is what collapses the five
+  // E4-2 conditions into one exit-1 band.
+  const identity = readManifestIdentity(bundleDir);
+  ctx.scenarioId = identity.scenarioId;
+
+  // ---- step 2: this lane's frozen identity, IMMEDIATELY afterwards --------
+  // Section 8.2.1 pins this BEFORE any other post-identity preflight. Because
+  // it runs here, every other post-identity result carries a populated
+  // verifier_digests, and no placeholder is ever emitted.
+  const verifierPath = flags.verifier ?? DEFAULT_VERIFIER;
+  const contractPath = flags["verifier-contract"] ?? DEFAULT_VERIFIER_CONTRACT;
+  readFrozenIdentity(verifierPath, contractPath, (d) => { ctx.verifierDigests = d; });
+
+  // ---- step 6: bundle traversal and the remaining preflight ---------------
+  const manifestEntries = validateManifestStructure(identity.doc);
+  const manifest = { scenarioId: identity.scenarioId, entries: manifestEntries };
 
   // ---- symlink and path rules; disk/manifest closure both ways ------------
   const onDisk = walkBundle(bundleDir);
@@ -1287,15 +1459,12 @@ function preflight(flags, ctx) {
     }
   }
 
-  // ---- frozen-verifier digest assertions ----------------------------------
-  const verifierPath = flags.verifier ?? DEFAULT_VERIFIER;
-  const contractPath = flags["verifier-contract"] ?? DEFAULT_VERIFIER_CONTRACT;
-  const digests = assertVerifierDigests(verifierPath, contractPath);
-  ctx.verifierDigests = digests.observed;
-  if (digests.failures.length > 0) {
-    throw new NonMeasurement("verifier-digest-mismatch",
-      `frozen-verifier identity assertion failed: ${digests.failures.join("; ")}`);
-  }
+  // The frozen-verifier identity assertion is NOT here. Erratum 5 (E5-4) moved
+  // it to step 2, immediately after bundle identity, so that every post-identity
+  // result carries a populated verifier_digests. Leaving it at the end of
+  // preflight -- where it used to be -- meant a manifest, layout, shape or
+  // numeric failure emitted verifier_digests: null, and the contract reserves
+  // null for frozen-identity-unreadable alone.
 
   return { manifest, artifacts, byFamily, operatorPaths, verifierPath, bundleDir };
 }
@@ -1418,20 +1587,8 @@ function evaluateBundle(flags, ctx) {
   }
 
   // ---- section 7.1: authenticated_withheld is never a qualifying result ---
-  // Every scenario in an official run expects each artifact to reach the
-  // Authenticated tier evaluation -- the binding store resolves all four
-  // producer identities by construction -- so a withheld channel means the
-  // operator inputs or the harness are wrong, not the artifact. Withheld is the
-  // absence of a measurement, and it is neither REJECT nor ACCEPT.
-  const withheldAuth = ctx.withheldReasons.filter((w) => w.channel === "authenticated_withheld");
-  if (withheldAuth.length > 0) {
-    const named = withheldAuth
-      .map((w) => `${w.artifact_path}: ${w.reasons.join(",")}`)
-      .join("; ");
-    throw new NonMeasurement("authenticated-withheld",
-      `the Authenticated tier could not be evaluated -- ${named}; fix the operator inputs and `
-      + "re-run rather than scoring this scenario");
-  }
+  const withheld = authenticatedWithheldViolation(ctx.withheldReasons);
+  if (withheld !== null) throw withheld;
 
   // ---- predicate applicability (section 6.1) ------------------------------
   // The eight single-artifact scenarios have no bundle graph, no
