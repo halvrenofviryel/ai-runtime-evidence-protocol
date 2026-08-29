@@ -1,7 +1,7 @@
 {
-  "aggregate": "ed775f89ba7e60dcbe0b3bf0b05b555a739e082d339c6431b209924e7f8aca1d",
+  "aggregate": "518d26e9aa629d0bba01d4d363d9c2edbda9a7d2025e8bd19fd5ddbe809cf163",
   "aggregate_rule": "sha256 over, for each file sorted by path: utf8(path) || 0x00 || ascii(lowercase-hex sha256) || 0x0A",
-  "file_count": 316,
+  "file_count": 317,
   "files": [
     {
       "json": false,
@@ -18,8 +18,8 @@
     {
       "json": false,
       "path": "CASE_SELECTION.md",
-      "sha256": "1f26a2885475e295624effef03f9ecb4c89c0ed3471f87559364f9fedc789c44",
-      "size": 9078
+      "sha256": "bd8c23b66d646357bda9b6130076d93c5494a6edfb192e1e8bd2fdb0e5119bd8",
+      "size": 8662
     },
     {
       "json": false,
@@ -48,14 +48,20 @@
     {
       "json": false,
       "path": "README.md",
-      "sha256": "d6e7ce366a10ef9c84900958be51ea6fdd2b604c090ae83008164774a2ec8b55",
-      "size": 6843
+      "sha256": "42c40d733867950faf1f90cea3ad9d4a06695c2775ca8ae737c37acac4aafda2",
+      "size": 7325
     },
     {
       "json": true,
       "path": "SOURCE_BASIS.json",
       "sha256": "337dd92a8fedc1a764c8848bb4fa67c403ee223ff7cff2ea62eb61fd5acbb3c7",
       "size": 16851
+    },
+    {
+      "json": false,
+      "path": "START_HERE.md",
+      "sha256": "52a99a02ca8a4b2ed48779c79ae0c10e544763952ab435440366e73dcff13dac",
+      "size": 4555
     },
     {
       "json": true,

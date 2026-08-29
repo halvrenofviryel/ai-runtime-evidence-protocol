@@ -1,5 +1,9 @@
 # AIREP v0.2 Independent-Verifier Corpus v0.1
 
+> ### ▶ New here? Read [`START_HERE.md`](./START_HERE.md) first.
+> It is the one recipient path: verify the archive, run the package checker, read the normative
+> text in order, implement the six fixed vectors, then work the cases and file the report.
+
 A compact, release-pinned test target for a verifier written **from AIREP's published text
 rather than from AIREP's code**.
 
@@ -19,8 +23,11 @@ expected outputs and the byte material needed to check them.
 | Wire version | `0.2` |
 
 The source content is pinned by the resolved commit SHA and per-file digests. **The unsigned tag
-does not cryptographically authenticate the author or maintainer identity.** `main` may have
-advanced since; no byte here was taken from `main`.
+does not cryptographically authenticate the author or maintainer identity.** `main` may have advanced since.
+
+**No normative source byte or frozen expected outcome was taken from moving `main`.**
+Package-authored documentation, manifests and projections were created on the packaging branch
+and are identified as such — see `METHOD.md` for the `provenance_kind` labels.
 
 ## What AIREP v0.2 signs with
 
