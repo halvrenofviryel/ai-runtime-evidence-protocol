@@ -361,9 +361,9 @@ object.
 ## Recorded ambiguities — not resolved here
 
 Erratum 2 closed three of the eight this lane carried, Erratum 3 closed two more (3 and 7 below,
-struck through) while surfacing a new one (5), and Erratum 4 closed that one in turn. **Four
-remain**, recorded rather than invented, and each is marked at the point of use in the source. No
-new ambiguity was found this round.
+struck through) while surfacing a new one (5), and Erratum 4 closed that one in turn while
+surfacing one more (8). **Five remain**, recorded rather than invented, and each is marked at the
+point of use in the source.
 
 1. **`verifier_digests` before or across a failed assertion.** §8.2.1 pins the shape as two
    strings but not what to emit when the assertion has not yet run, or when a file could not be
@@ -401,3 +401,31 @@ new ambiguity was found this round.
    outside the evaluation exit table altogether. This lane's earlier resolution (exit `2`, usage
    on stderr) is superseded; it now matches the frozen lane: exit `0`, help on stdout, no result
    object.
+8. **A bundle root that can be traversed but not enumerated.** E4-2 lists "the bundle root itself
+   cannot be accessed" as an exit-`1` identity condition; E4-3 says a directory that cannot be
+   enumerated *after identity is established* is `bundle-directory-unreadable` at exit `3`. On a
+   POSIX filesystem those two overlap for one concrete case: a bundle directory with mode
+   `0o111`, where `open(DIR/manifest.json)` succeeds because traverse permission is granted but
+   `readdir(DIR)` fails `EACCES` because read permission is not. Read from the erratum text alone,
+   both readings are defensible.
+
+   **This lane resolves it to exit `3` with `bundle-directory-unreadable`**, and does so on the
+   contract's own words rather than on preference: §8.5 states that "the dividing line is
+   **whether bundle identity was established**, and nothing else", and identity *was* established
+   — the manifest read succeeded and yielded a registered `scenario_id`, so there is a scenario to
+   name a reason after. E4-2's condition 1 is then read as covering the cases where the root's
+   inaccessibility makes the manifest read itself fail, which is how all five of its conditions
+   behave uniformly.
+
+   Measured, not assumed:
+
+   ```
+   mode 0o111: manifest readable = true | root enumerable = false
+   exit: 3   reason: bundle-directory-unreadable   scenario_id: IOP-P-DEC
+   ```
+
+   **Recorded rather than pinned.** No self-test asserts this case, deliberately: the resolution
+   follows from §8.5's dividing-line sentence rather than from anything E4-2 or E4-3 says
+   directly, and hardening it here would assert a reading the peer lane has no particular reason
+   to share. It is unreachable by the official harness, which builds its own bundles. If the two
+   lanes disagree, the disagreement is a contract finding, not an implementation defect.
