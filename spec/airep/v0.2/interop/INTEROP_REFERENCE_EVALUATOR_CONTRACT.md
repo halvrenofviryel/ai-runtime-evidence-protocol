@@ -1,13 +1,11 @@
 # Reference interop evaluator contract (AD15-IR-2)
 
-Status: **UNDER ERRATUM — NOT YET CANONICAL. CORPUS CONSTRUCTION ON HOLD.**
-This document carries an erratum that has not been source-reviewed and canonicalized. **Remediation
-may not proceed against it** until §13 step 2 is complete; the sequence in §13 governs, and this
-line never authorizes a step ahead of it. **Corpus bytes remain on HOLD** until both remediated
-evaluators are source-reviewed and frozen (§13 step 11).
+**Lifecycle authority:** canonical status is established externally by the maintainer's pinned
+commit, Git blob identity and SHA-256 record; **this document does not self-assert whether the
+current blob is canonical.**
 
-*This line states a lifecycle position and therefore goes stale by design. It is rewritten at every
-canonicalization, and §13 is the single source of truth for what may proceed.*
+The sequence in §13 is authoritative. Corpus construction remains on **HOLD** before completion of
+§13 step 10 and opens only at step 11. **No header text authorizes a step ahead of §13.**
 
 ## 1. Why this exists
 
@@ -1711,7 +1709,7 @@ required test, report zero skips, and look complete. The criterion:
 
   | Block ID | What it must exercise |
   |---|---|
-  | `W1-BLK-IR4` | **lane-local half of `AD15-IR-4`**: the request envelope is built per §5.1 and its digest is a function of the envelope bytes alone — identical bundle gives an identical digest across repeat runs, and any envelope change moves it. The cross-lane comparison itself is aggregate-harness duty 2 and MUST NOT be attempted here |
+  | `W1-BLK-IR4` | **lane-local half of `AD15-IR-4`**: construct the request envelope exactly per §5.1; prove **repeat determinism** for identical input; **independently recompute** SHA-256 over the actual RFC 8785 canonical envelope bytes and require `request_envelope_digest` to equal that value. MUST include **controlled envelope mutations** that change the canonical bytes, verifying the evaluator hashes the mutated bytes rather than reusing or carrying forward a prior digest. This block does **not** assert that SHA-256 is injective, nor that every pair of distinct envelopes has distinct digests. Cross-lane equality remains aggregate-harness duty 2 and MUST NOT be attempted here |
   | `W1-BLK-IR5` | `artifact_path` is the total result identity: `artifacts[]` ordered by it, `artifact_ref` `null` where no string `record_id` exists, and **no `record_id` is ever synthesized** |
   | `W1-BLK-IR6` | `related_artifacts` ordered by `artifact_path`, proved on a fixture where **`record_id` order is the reverse of `artifact_path` order** — the two orders must actually disagree, or the test proves nothing |
   | `W1-BLK-IR7` | duplicate semantic IDs are **not** preflight invalidity: a bundle with a duplicated `record_id` still reaches frozen stage evaluation and is not rejected by the evaluator |
@@ -1891,9 +1889,11 @@ lanes returned opposite Level-1 verdicts for a single-artifact scenario, because
 all `NOT_APPLICABLE` and nothing else compared the verdicts. Level-1 is the qualifying result, so
 it is now compared directly.
 
-Status also moved from `DRAFT — awaiting maintainer acceptance` to
-`ACCEPTED FOR POST-ERRATUM REMEDIATION`, so the document state matches the gate state. That is
-bookkeeping, not a semantic change.
+Erratum 1 also moved a self-asserted status line from `DRAFT — awaiting maintainer acceptance` to
+`ACCEPTED FOR POST-ERRATUM REMEDIATION`. **That line no longer exists** — `E8-6` removed
+self-asserted lifecycle state from this document entirely, because a blob that declares its own
+canonical status is either wrong when pinned or unreviewed when corrected. Canonical status is
+established externally; §13 governs what may proceed.
 
 ### Erratum 2 — record (2026-08-29)
 
@@ -2243,6 +2243,9 @@ preserved as historical evidence and are **not** official identities:
 
 | # | Change | Raised by |
 |---|---|---|
+| E8-8 | §13 made **invariant** too. Fixing the header left §13 asserting "Official freeze is held by Erratum 8", "Remaining sequence", and an erratum-named step 2 — the same defect one section down, in the same round. Round-specific expectations moved into this record, which is dated and historical by construction | maintainer source review |
+| E8-6 | the header made **invariant**: it no longer self-asserts a lifecycle position at all. `E8-5`'s rewrite still said "not yet canonical" and admitted it "goes stale by design" — which created a self-reference loop, since pinning those bytes would canonicalize a blob claiming not to be canonical, and rewriting the line after review would pin bytes that were never reviewed. Canonical status is now established externally, by the maintainer's pinned commit, blob and digest | maintainer source review |
+| E8-7 | `W1-BLK-IR4` stripped of "any envelope change moves it" — an **unprovable universal** over an infinite input domain, and false as a contract invariant because SHA-256 is not injective. It now requires repeat determinism, an independent recomputation of the digest over the actual canonical bytes, and controlled mutations proving the evaluator re-hashes rather than carries a digest forward | maintainer source review |
 | E8-5 | the header status line rewritten to defer to §13. It read "post-erratum dual remediation may proceed against this document" — an unconditional authorization that contradicted §13's requirement to canonicalize first, and had survived an earlier sweep because it was checked for erratum-count staleness rather than lifecycle staleness | pre-pin review |
 | E8-1 | `withheld_reasons` on a fatal path is the projection of the accepted verdicts **actually retained**; `[]` means none was observed among them, not that none exists | both lanes converged; pinned rather than left to agreement |
 | E8-2 | stage 6 carries **two** reasons — a definite `ENOENT` on read is `bundle-file-missing` and outranks `bundle-file-unreadable` | **measured cross-lane divergence** |
@@ -2264,6 +2267,23 @@ should be run. Green self-tests and a convergence on one field were treated as t
 divergence neither lane had flagged sat unmeasured. The lesson is narrow and worth keeping: **a
 lane's declared ambiguity is a divergence candidate, not a footnote.**
 
+**On where lifecycle state is allowed to live.** `E8-6` removed self-asserted state from the header;
+the very next pass found §13 doing the same thing — "official freeze is held by", "remaining
+sequence", a step naming its own erratum. Two fixes, one section apart, in one round. The rule that
+falls out is worth more than either fix: **a pinned artifact may state a fixed order, never a present
+position.** Position is external state, carried by the maintainer's pinned commit, blob and digest. A
+document that names where it currently stands is wrong the moment the sequence advances — and if it
+is corrected afterwards, the bytes that were reviewed are not the bytes that were pinned. Anything
+round-specific belongs in that round's erratum record, which is dated and cannot go stale.
+
+**On `E8-7`, and a fourth flavour of unsatisfiable rule.** Three mandatory rules in Erratum 7 were
+unsatisfiable because the fixture could not be built — peer material, an impossible inequality, a
+forbidden Cartesian cell. `W1-BLK-IR4` was unsatisfiable for a different reason: the fixture is
+trivial, but the *proposition* is not provable. "Any envelope change moves the digest" quantifies
+over an infinite domain, and is not even true as a contract invariant, since SHA-256 is not
+injective. A test obligation can therefore fail in two distinct ways — an impossible fixture, or an
+impossible proof — and only the first was being checked for.
+
 **On block coverage, which turned out to be systemic.** Closing the `E8-1` gap prompted a sweep of
 every ruling against the registry, and it found the registry began at `W1-BLK-IR9`: **`AD15-IR-4`
 through `AD15-IR-8` had no block at all.** Five normative rulings — including `AD15-IR-8`'s `0o111`
@@ -2284,50 +2304,53 @@ committed. **A ruling and its block obligation are one change, not two.**
 fields are Class-1: two implementations happening to agree is not a rule, and the next remediation
 round has no reason to preserve an agreement the contract never stated.
 
+**Expected remediation surface for this erratum.** Python: `E8-1` through `E8-4`, and the five newly
+pinned blocks `W1-BLK-IR4` … `W1-BLK-IR8`; its `E8-2` behaviour is already correct and needs a
+discrimination test rather than a change. Node: the same rulings, with `E8-2` and `E8-3` requiring
+**behavioural** change. Both lanes carry discrimination tests for all twenty blocks.
+
+**Erratum-7 candidates preserved as evidence, not identities**: Python
+`a90e6279a2351953518ae94431ad4af6bb86abea`, Node `1d7b664405d68da0b0d600481be0592d46456e71`, against
+the Erratum-7 canonical pin `51c14fe11ae7a94e9c55e30490a754bbe4ccf505`.
+
 **No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
 
-## 13. Sequencing
+## 13. Sequencing (invariant)
 
-Erratum 7 is **canonical and pinned** at `51c14fe11ae7a94e9c55e30490a754bbe4ccf505`. Both Erratum-7
-remediation candidates are preserved as historical evidence and are **not** official identities:
+**This section states a fixed order, not a present position.** Which step the work currently stands
+at is external state, recorded by the maintainer's pinned commit, Git blob identity and SHA-256
+record — never by this document. Round-specific expectations belong in that round's erratum record,
+which is dated and historical by construction.
 
-| Lane | Erratum-7 candidate |
-|---|---|
-| Python | `a90e6279a2351953518ae94431ad4af6bb86abea` |
-| Node | `1d7b664405d68da0b0d600481be0592d46456e71` |
+**Ref discipline, always true.** No ref in this chain is ever rewritten or deleted, a round's
+candidates always take new refs rather than moving an existing one, and every `-official`, `-final`,
+`-r1`, `-r2`, `-r3`, `-freeze` and per-erratum candidate ref is preserved. A remediation candidate is
+**evidence, not an identity**, until step 10.
 
-Every earlier `-official`, `-final`, `-r1`, `-r2`, `-r3` and `-freeze` ref is preserved alongside
-them. No ref in this chain is ever rewritten or deleted, and a round's candidates always take new
-refs rather than moving an existing one.
-
-**Official freeze is held by Erratum 8.** Source review of the two Erratum-7 candidates found a
-measured Class-1 divergence (`E8-2`) and a second one at the Source-A gate (`E8-3`), while both
-lanes' self-tests were entirely green.
-
-Remaining sequence:
+The order:
 
 1. **A full-contract adversarial pass runs before a canonical SHA is requested.** It reads the whole
-   document, not the diff, and includes a **block-coverage sweep**: every normative ruling must have
-   a mandatory block obligation that fails if the ruling is implemented wrongly.
-2. **Erratum 8 is source-reviewed and canonicalized** — the maintainer pins a new head and the
-   evaluator-contract digest. The corpus contract is unchanged and keeps its existing digest.
-3. **Python remediation** in a fresh isolated context, on a new ref. Expected surface: `E8-1` through
-   `E8-4`, and the five newly pinned blocks `W1-BLK-IR4` … `W1-BLK-IR8`. `E8-2` behaviour is already
-   correct in this lane and needs a discrimination test rather than a change.
-4. **Node remediation** in a fresh isolated context, on a new ref, against the same rulings.
-   `E8-2` and `E8-3` require **behavioural** change in this lane.
-5. **Both lanes carry explicit discrimination tests for every pinned block**, now twenty. A rule that
-   holds by accident is not tested.
+   document, not the diff, and includes a **block-coverage sweep** — every normative ruling must have
+   a mandatory block obligation that fails if the ruling is implemented wrongly — and an
+   **obligation-satisfiability sweep**, classifying each obligation as buildable-with-finite-proof,
+   impossible fixture, or unprovable proposition.
+2. **The current erratum is source-reviewed and canonicalized** — the maintainer pins a head and the
+   evaluator-contract digest. The corpus contract keeps its own pin unless an erratum changes it.
+3. **Python remediation** in a fresh isolated context, on a new ref.
+4. **Node remediation** in a fresh isolated context, on a new ref.
+5. **Both lanes carry explicit discrimination tests for every pinned block.** A rule that holds by
+   accident is not tested.
 6. **The Node selftest reports `passed / failed / skipped` and exits non-zero on any skip** in its
    default mode. The official evidence command does not use the developer-only skip opt-in.
 7. **Peer material remains invisible** throughout.
 8. **The canonical lineage is merged into each branch**, no squash or rewrite.
-9. Tests, adversarial review, and **cross-source review of the two candidates against each other** —
-   the step that found `E8-2` and `E8-3`, and the one green self-tests cannot replace.
+9. Tests, adversarial review, and **cross-source review of the two candidates against each other**.
+   Two lanes have reported fully green self-tests while diverging on a Class-1 field; this step is
+   what caught it, and self-test totals cannot replace it.
 10. **Official Python and Node evaluator identities are frozen.**
 11. **Only then is corpus construction opened.**
 
 A difference blocks step 10 only if it moves something on the Class-1 surface defined in §8.7.
 
-**Corpus bytes remain on HOLD through step 10. Step 11 is the only point at which corpus
-construction opens, matching the status line at the head of this document.**
+**Corpus bytes remain on HOLD through step 10; step 11 is the only point at which corpus
+construction opens.**
