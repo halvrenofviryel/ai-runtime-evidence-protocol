@@ -1750,17 +1750,17 @@ multi-fault fixture discriminates almost none of it. The block MUST cover each o
    chosen. `AD15-IR-13` says *"an evaluator may select either
    failure"*, so requiring ascending path selection or an empty internal key would narrow a freedom
    the contract deliberately leaves open;
-7. **stage 11's sequential exception** — no tie-break arises there;
-8. **stage-4 manifest closure versus stage-5 filesystem closure**, both producing `manifest-invalid`;
-9. **deterministic sorted traversal** — the reported failure does not change with OS enumeration
+6. **stage 11's sequential exception** — no tie-break arises there;
+7. **stage-4 manifest closure versus stage-5 filesystem closure**, both producing `manifest-invalid`;
+8. **deterministic sorted traversal** — the reported failure does not change with OS enumeration
    order;
-10. **the name-key branch its own platform supplies**, and that **no** normalization, case folding
-    or locale mapping is applied. A lane whose API yields only lossless raw bytes cannot construct
-    the Unicode-native branch, and vice versa; the unreachable branch is recorded `NOT_MEASURED` on
-    that platform rather than skipped silently or counted as covered;
-11. a **non-UTF-8 directory name** as an unlisted entry;
-12. a **manifest path with an unpaired surrogate** at stage 4;
-13. `internal-error` staying outside the order and never masking an already-determined failure.
+9. **the name-key branch its own platform supplies**, and that **no** normalization, case folding
+   or locale mapping is applied. A lane whose API yields only lossless raw bytes cannot construct
+   the Unicode-native branch, and vice versa; the unreachable branch is recorded `NOT_MEASURED` on
+   that platform rather than skipped silently or counted as covered;
+10. a **non-UTF-8 directory name** as an unlisted entry;
+11. a **manifest path with an unpaired surrogate** at stage 4;
+12. `internal-error` staying outside the order and never masking an already-determined failure.
 
 **`W1-BLK-PARITY` is a per-lane block and MUST be executable without peer material.** The real
 cross-lane comparison is **aggregate-harness duty 6**, which sees both trees; §4 forbids a lane's
@@ -1882,10 +1882,14 @@ green lane registries. The harness therefore carries its own closed registry, on
 
 The same execution criterion applies: a pinned ID with no execution record is reported as skipped, an
 unknown or duplicate ID makes the run non-qualifying, and the default mode exits non-zero on any
-skip. **This registry is an addition beyond the maintainer's rulings**, made because the aggregate
-branches — the peer comparison and duty 6 — have no lane-local obligation that could ever fail on
-them. It is a minimum discrimination suite on the same terms as the lane registry, not a
-completeness proof of the harness duties. Strike it if the §8.1 harness duties are meant to stand without one.
+skip.
+
+**This aggregate registry is normative** and applies under the same minimum-discrimination-suite
+principle as the per-lane registry.
+
+It exists because peer-visible aggregate duties cannot be exercised by a lane-local runner. Its
+presence does not turn the registry into a completeness proof of §8.1; the six aggregate duties
+remain the normative authority.
 
 - This pins **what must be exercised**, not how. The two lanes derive their test code independently
   from the same contract, exactly as they derive their evaluators; sharing an ID vocabulary is not
