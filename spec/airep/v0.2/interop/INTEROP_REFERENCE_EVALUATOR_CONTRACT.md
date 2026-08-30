@@ -1003,14 +1003,64 @@ and an open nested object cannot be one. `verifier-run-invalid` is defined above
 rejected by either contract precisely so this case has a reason — narrowing it to the frozen
 contract alone would have left a rejection with no registry entry.
 
-Discrimination tests MUST cover the cross-product of:
+**Testing splits in two, because the full cross-product is unbuildable.** The frozen
+`common.schema.json` makes `record_id` and `chain_id` **both required strings** in `artifact_core`.
+An artifact carrying an absent, null, boolean or numeric `record_id` therefore cannot pass stage-0
+schema validation, so it can never produce an `exit 0` verdict and can never reach stage 1. Demanding
+those cells would require a correct implementation to build impossible fixtures.
+
+**Projection-function tests** exercise `artifact_ref_from_artifact` **directly**, over the full value
+matrix, with no requirement that the value could ever yield a frozen verdict:
 
 ```
 record_id:  absent, null, boolean, number, empty string, non-empty string
 chain_id:   absent, null, boolean, number, empty string, non-empty string
-process:    exit 0 verdict, qualifying stage-0 exit 1,
-            qualifying stage-1 exit 1, abnormal termination, spawn failure
 ```
+
+**Source-selection tests are organised by *source*, not by process-outcome name.** An outcome list
+is not exhaustive and invites exactly the error of declaring one outcome the only carrier of some
+value. There are three sources, and together they cover every path:
+
+```
+Source A -- the accepted exit-0 verdict.
+  Emitted artifact_ref is verifier_result.artifact_ref, copied verbatim.
+  Reachable only with a schema-valid artifact, so record_id and chain_id
+  are strings by construction.
+  MUST also test the negative gate: an exit-0 verdict whose artifact_ref
+  carries an extra member is verifier-run-invalid, not a verbatim copy.
+
+Source B -- every OTHER emitted entry.
+  Emitted artifact_ref is artifact_ref_from_artifact(parsed artifact),
+  the preliminary projection. This is not a two-item list; it is every
+  entry that is not Source A, and it includes at least:
+    - qualifying stage-0 or stage-1 exit 1 (7.2);
+    - NON-qualifying exit 1 -- 7.2 admits only IOP-B-DEC, IOP-B-CTL and
+      IOP-B-EFF, so the same malformed artifact under any other scenario
+      lands here as verifier-run-invalid;
+    - exit 2, which emits no verdict;
+    - exit 0 whose output the result-shape gate rejects;
+    - abnormal termination (AD15-IR-15), which can occur BEFORE the frozen
+      verifier reaches stage 0 and therefore carries any artifact at all.
+
+Source C -- no entry, therefore no artifact_ref.
+  Spawn failure (AD15-IR-11) and every pre-invocation failure.
+```
+
+**Schema-invalid `record_id` / `chain_id` values MUST be tested on Source B**, and on more than one
+Source-B path — at minimum a qualifying stage-0 `exit 1`, a **non-qualifying** exit 1, and an
+**abnormal termination**. These cells are reachable: stage-0 schema validity gates only the *verdict*,
+not the *entry*.
+
+**What is dropped, exactly.** Only the cells the frozen schema makes unreachable: a schema-invalid
+`record_id` or `chain_id` combined with **Source A**, since a verdict cannot exist for an artifact
+that failed stage 0. Every other combination remains required, now through Source B. An earlier
+draft of this correction claimed the qualifying stage-0 `exit 1` was the *only* outcome that could
+carry an invalid ID; that was false, and it dropped reachable cells — hence the source-based
+formulation above, which cannot make that error because Source B is defined by exclusion rather
+than by enumeration.
+
+`$defs/artifact_ref` in the frozen schema makes `chain_id` **optional**, which is the frozen basis
+for the projection's omit-rather-than-null rule.
 
 #### Ruling `AD15-IR-16` — `withheld_reasons` has a pinned entry shape
 
@@ -1076,8 +1126,8 @@ process actually running:
 - **`artifact_path` is known before invocation** — it comes from the manifest.
 - **A preliminary `artifact_ref` is known before invocation**, derived from the artifact by
   `AD15-IR-18`'s projection. On the **`exit 0` path it is replaced** by the accepted verdict's
-  closed `artifact_ref`; on every other path — a qualifying `exit 1`, abnormal termination — the
-  preliminary value **is** the emitted one.
+  closed `artifact_ref`; on **every other emitted entry** the preliminary value **is** the emitted
+  one — see `AD15-IR-18`'s Source B, which is defined by exclusion and is not a list of outcomes.
 - **`request_envelope_digest` is produced by successful request-envelope construction**, after
   preflight and before subprocess execution.
 - **Only `verifier_exit_code`, `verifier_result` and `verifier_stderr_digest` are products of a
@@ -1600,7 +1650,7 @@ required test, report zero skips, and look complete. The criterion:
   | `W1-BLK-JCS` | the stage-8 canonicalization rules, that repair is refused, **and** that a numeric JCS-domain failure such as `1e400` is reported as `numeric-preflight-violation` at stage 10 **with its `json_pointer`** rather than `bundle-json-invalid` at stage 8 |
   | `W1-BLK-LIVE` | the live frozen-verifier path, against the genuine frozen files |
   | `W1-BLK-PARITY` | the §8.7 four-class model and the duty-6 projection — see below |
-  | `W1-BLK-ARTIFACT-REF` | `AD15-IR-18`'s projection over the full `record_id` × `chain_id` × process-outcome cross-product |
+  | `W1-BLK-ARTIFACT-REF` | `AD15-IR-18`'s complete projection-function value matrix, **plus** its three sources — including the Source-A negative gate and schema-invalid IDs on at least three distinct Source-B paths. Only `schema-invalid × Source A` is excluded, as the frozen schema makes it unreachable |
   | `W1-BLK-JSON-BYTES` | `AD15-IR-20`: UTF-8 BOM, malformed UTF-8, UTF-16LE, UTF-16BE, UTF-32LE and UTF-32BE, for **both** the root manifest and a listed JSON file |
   | `W1-BLK-PATH` | `AD15-IR-19`, over the case list below |
 
@@ -2080,11 +2130,21 @@ canonical bytes inverts that: anything inside it is compared by construction, an
 adds is an unknown member and therefore invalid rather than quietly uncompared.
 
 | E7-SR-4 | `W1-BLK-PARITY` made **peer-safe and satisfiable**: the cross-lane comparison is harness duty 6, the per-lane block proves the projection is invariant under Class-3/Class-4 substitution and moves under any Class-1 change. The mandatory stderr-digest inequality was **unsatisfiable** — both frozen verifiers write stderr only in usage/invalid branches, so on a normal verdict both digests are SHA-256 of the empty string | pre-pin review |
+| E7-SR-9 | the E7-SR-8 correction had **over-narrowed**: it claimed the qualifying stage-0 `exit 1` was the only outcome that could carry a schema-invalid ID, which §7.2 (qualifying only for `IOP-B-DEC`/`CTL`/`EFF`) and `AD15-IR-15` (death can precede stage 0) both falsify. Source-selection testing is now organised by **source, defined by exclusion**, not by an outcome list; the Source-A negative gate is named explicitly | pre-pin review |
+| E7-SR-8 | `W1-BLK-ARTIFACT-REF`'s full `record_id` × `chain_id` × process-outcome cross-product was **unsatisfiable**: the frozen schema requires both to be strings, so schema-invalid values can never reach an `exit 0` verdict or stage 1. Projection-function totality testing is now separate from reachable process / source-selection testing | maintainer source review |
 | E7-SR-7 | the widened definition's Boolean fixed. "Not accepted by A **or** B" parses as rejected by *both*; the rule is rejected by **either**, so it now reads "accepted by both … and …". A stale "the frozen contract does not permit" restatement, which independently excluded the new case, corrected with it | pre-pin review |
 | E7-SR-6 | `verifier-run-invalid` widened to cover a shape rejected by **this** contract's result-shape gate, not only the frozen one — the `artifact_ref` closure is a gate W1 adds, and the narrower definition left it with no registry entry; and §8.3.1's field-timing passage corrected, since `artifact_ref` on the `exit 0` path comes from the verdict, not from the artifact | pre-pin review |
 | E7-SR-5 | `W1-BLK-IR17` regained "top-level"; §8.4's determinism restatement rewritten to the four-class model — it still said the lanes may differ on `verifier_digests` wholesale, which is now false for `class_verifier_contract`; the exit-0 `artifact_ref` closure pinned **at the result-shape gate** | pre-pin review |
 
-**On E7-SR-4, and what it says about writing tests into a contract.** `W1-BLK-PARITY` as first
+**On E7-SR-4 and E7-SR-8, and what they say about writing tests into a contract.** Both are the same
+defect, and E7-SR-8 was written into round three *while closing* E7-SR-4. A test obligation is
+normative text and can be wrong in a way prose cannot: prose that overreaches is merely unclear,
+whereas a mandatory check that cannot be satisfied makes a **correct** implementation non-qualifying.
+Three such rules have now been written and removed — a lane-local block demanding peer material, an
+inequality the frozen sources make impossible, and a Cartesian product the frozen schema forbids.
+Each was added in the act of demanding more verification.
+
+**On E7-SR-4 specifically.** `W1-BLK-PARITY` as first
 written demanded a lane-local runner compare its result against its peer's, in a document whose §4
 forbids a lane from seeing its peer. It also demanded an inequality that the frozen sources make
 impossible. Both were written while closing a finding about a surface that was not being compared —
