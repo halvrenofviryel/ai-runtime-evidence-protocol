@@ -49,8 +49,9 @@ Two programs, one per lane:
 
 Each:
 
-1. invokes **its own** frozen class verifier **as a subprocess** for every artifact, and takes the
-   per-artifact schema / hash / signature / class / reason result from that output verbatim;
+1. invokes **its own** frozen class verifier **as a subprocess** for every artifact — in the order
+   and subject to the fatal-run abort pinned by `AD15-IR-12` — and takes the per-artifact schema /
+   hash / signature / class / reason result from that output verbatim;
 2. implements bundle-level AD-03 reconciliation in **its own language, as independent code**;
 3. emits one Level-1 verdict per scenario.
 
@@ -154,8 +155,64 @@ layout rules make it `manifest-invalid`.
   `revocation` · `clock`.
 - `files` MUST be sorted ascending by `path` in UTF-8 byte order, and MUST list every regular file
   under the bundle directory **except the root `manifest.json`**, exactly as defined above.
-- `path` is bundle-relative and normalized. An absolute path, a path containing a `..` segment, a
-  backslash, or a **duplicate** `path` is a hard `ERROR`.
+- `path` is bundle-relative and satisfies the canonical grammar of `AD15-IR-19` **as written**. A
+  **duplicate** `path` is a hard `ERROR`.
+
+**Ruling `AD15-IR-19` — the path grammar is lexical and closed.** "Bundle-relative and normalized"
+named a property without saying how to test it, and "normalized" invites an evaluator to normalize a
+path *into* acceptance. The grammar is exact:
+
+```abnf
+path    = segment *("/" segment)
+segment = 1*(ALPHA / DIGIT / "." / "_" / "-")
+```
+
+with all of the following also required:
+
+```
+segment must not equal "." or ".."
+no leading slash
+no trailing slash
+no empty segment
+no doubled slash
+no backslash
+no colon or drive prefix
+no NUL or control character
+no non-ASCII character
+no normalization or repair
+```
+
+> **A path is accepted only when its original JSON string already satisfies the canonical grammar.
+> An evaluator never normalizes a path into acceptance.**
+
+A violation is `manifest-invalid` at stage 4 — it is a property of the manifest document, testable
+before the filesystem is consulted.
+
+**Duplicate members in the manifest itself are pinned (`AD15-IR-17`).** RFC 8259 permits an object
+to repeat a member name, both runtimes decode such an object last-wins by default, and a lane
+recorded this as unpinned and relied on that default. Relying on a runtime default is the same
+defect as relying on traversal order: it is not a rule, it is a coincidence that two implementations
+currently agree.
+
+> The evaluator **detects duplicate member names while parsing the manifest**, before taking any
+> value from the decoded object. It MUST NOT take first-wins, last-wins, or whatever its parser
+> happens to do.
+>
+> - Only a duplicate **top-level** manifest member named `scenario_id` enters the exit-`1` band: no
+>   registered `scenario_id` is *deterministically* obtainable, which is already the fifth condition
+>   of §5's direct-read identity boundary. This adds no new condition to that band.
+> - A member named `scenario_id` duplicated or illegally present **inside `files[]` or any other
+>   nested manifest object does not erase a valid top-level identity**. It is `manifest-invalid` at
+>   **stage 4**, exit `3`.
+> - **Any other** duplicated member in the manifest is likewise `manifest-invalid` at **stage 4**,
+>   exit `3`. Identity was established, so a result object is owed (`AD15-IR-8`).
+
+The nesting distinction is the point: reading a nested `scenario_id` as identity-destroying would let
+a member buried in `files[]` suppress a result object the evaluator can perfectly well produce, which
+is exactly the exit-1/exit-3 confusion `AD15-IR-8` exists to prevent.
+
+This is the same rule E7-22 pins for listed artifact and operator-input files at stage 8, applied to
+the manifest, which is read earlier and therefore could not be covered by that stage.
 
 The evaluator verifies every file against its manifest digest **before** parsing anything; a
 mismatch is a hard `ERROR` and no verdict is emitted. This is the layer that protects artifact
@@ -270,6 +327,57 @@ artifact provenance, and it is the *only* place original bytes matter.
 **Layer 2 — the request envelope is canonical.** The evaluator parses each artifact file into a
 JSON value, assembles the closed §0 envelope from those values, and serializes it as:
 
+> **Ruling `AD15-IR-20` — the JSON byte domain is closed.** Before any parse, the byte encoding of
+> `manifest.json` and of every listed artifact and operator-input JSON file is constrained:
+>
+> ```
+> - UTF-8 only;
+> - no UTF-8 BOM;
+> - no UTF-16 or UTF-32 acceptance;
+> - decoding must be strict and lossless;
+> - malformed UTF-8 is rejected;
+> - replacement decoding with U+FFFD is forbidden;
+> - bytes are never repaired or transcoded into acceptance.
+> ```
+>
+> Failure is assigned by which file it is, because the two sit on opposite sides of the identity
+> boundary:
+>
+> | File | Outcome |
+> |---|---|
+> | `manifest.json` | identity **not established** — exit `1`, empty stdout |
+> | a listed artifact or operator-input file | `bundle-json-invalid` at **stage 8**, exit `3` |
+>
+> A BOM is called out separately because it is the case a lenient runtime most often accepts
+> silently: one lane strips it and parses, the other rejects, and the divergence is invisible until
+> a corpus carries one.
+>
+> **A document can parse cleanly and still have no canonical form**, and that is checked in
+> preflight, never at envelope assembly. RFC 8785 constrains its input in three ways beyond strict
+> JSON syntax, and each one is assigned here so the domain is closed rather than described:
+>
+> | RFC 8785 input requirement | Violation | Stage | Reason |
+> |---|---|---|---|
+> | strings are valid Unicode | an **unpaired surrogate** anywhere | 8 | `bundle-json-invalid` |
+> | objects have no duplicate member names | the **same member name twice** in one object | 8 | `bundle-json-invalid` |
+> | numbers are IEEE-754 doubles | a value outside §5.1's envelope, e.g. `1e400` | **10** | `numeric-preflight-violation`, with its `json_pointer` |
+>
+> **That table is the whole of stage 8's canonicalizability question** — the first two rows and
+> nothing else. It is not shorthand for "whatever RFC 8785 rejects": the numeric row is *also* a
+> canonicalization failure, and folding it into stage 8 would lose the `json_pointer` that
+> §5.1 requires and §8.7 makes normative.
+>
+> **No evaluator may repair any of these.** Not by substituting `U+FFFD`, not by dropping a code
+> unit, not by taking the first or the last of two duplicate members. Repair is the failure mode
+> being prevented: left to the runtime, one lane raises, another silently canonicalizes `{"k":1}`
+> where a third canonicalizes `{"k":2}`, and the two produce **different
+> `request_envelope_digest` values over the same file** while both reporting success. The digest
+> would then attest to something the file did not say.
+>
+> The first row draws the same boundary the manifest-`path` rule draws at stage 4, applied to file
+> contents rather than to the manifest.
+
+
 ```
 request-envelope-bytes = RFC 8785 (JCS) canonicalization of the envelope
 request_envelope_digest = "sha256:" || lowercase-hex( SHA-256( request-envelope-bytes ) )
@@ -309,6 +417,14 @@ the other, which is precisely the divergence this preflight exists to prevent.
 A bundle containing any number outside this envelope is a hard **`ERROR`**, no measurement, and
 the offending JSON Pointer is reported. This is checked in preflight, before any envelope is
 assembled.
+
+**The pointer is RFC 6901, evaluated against the individual file in which the violation occurs** —
+the artifact or operator-input document as parsed, **never** the request envelope. The check happens
+before any envelope exists, so an envelope-relative pointer would name a document that has not been
+built; and the two bases give different strings for the same violation (`/profiles/x` against the
+artifact versus `/artifact/profiles/x` against the envelope), which is a normative divergence under
+§8.7. RFC 6901 already fixes the rest: `~` escapes to `~0`, `/` to `~1`, and array indices are
+decimal with no leading zeros.
 
 The bound is compatible with the core constraint — `sequence` is a non-negative integer and cannot
 exceed it in any realistic chain — and it closes the profile hole without adding a schema
@@ -524,7 +640,7 @@ mode that `AD15-IR-2` exists to prevent, in miniature.
 #### Aggregate harness duties (normative)
 
 The official harness performs **exactly twelve invocations per lane** — one per scenario, from a
-fixed list, never discovered — and enforces five run-level properties no evaluator can:
+fixed list, never discovered — and enforces six run-level properties no evaluator can:
 
 1. **Completeness.** All twelve invocations returned `measurement_status: MEASURED`. A missing
    result object, a crash, a non-zero exit or a timeout is recorded as a **non-qualifying
@@ -557,7 +673,17 @@ fixed list, never discovered — and enforces five run-level properties no evalu
    it is checked directly, both for cross-lane parity and against the corpus contract's frozen
    expectation.
 
-A run failing any of the five is **non-qualifying as a whole**. Eleven measured scenarios plus one
+6. **Cross-lane normative projection equality.** For each of the twelve expected scenario IDs,
+   construct the closed cross-lane projection defined by §8.7 and compare the **RFC 8785 canonical
+   bytes** of the two projections. They MUST be identical.
+
+   Duties 2, 4 and 5 each compare one field. Together they still leave most of the result object
+   uncompared: two lanes could agree on every envelope digest, every predicate and every Level-1
+   verdict while disagreeing on `nonmeasurement.reason`, on `artifacts[]` membership, on
+   `artifact_ref`, or on `scenario_id` itself. Duty 6 compares the whole normative projection at
+   once, which is why it is stated as a projection rather than a longer list of field duties.
+
+A run failing any of the **six** is **non-qualifying as a whole**. Eleven measured scenarios plus one
 unmeasured is not a claim about twelve.
 
 ### 8.2 Result object
@@ -567,8 +693,11 @@ unmeasured is not a claim about twelve.
 - `level1` — the Level-1 verdict when `measurement_status` is `MEASURED`; **`null` otherwise**;
 - `predicates` — `{ "R_A": …, "R_B": …, "R_C": … }` when `MEASURED`; **`null` otherwise**;
 - `nonmeasurement` — `null` when `MEASURED`; **required object otherwise**, shape in §8.2.2;
-- `artifacts` — one entry per artifact in the bundle, shape pinned in §8.3;
-- `withheld_reasons` — verbatim, whenever any `*_withheld` channel is non-empty;
+- `artifacts` — the invocations that produced a concrete process result, per §8.3.1 and rulings
+  `AD15-IR-11` and `AD15-IR-12`. The full bundle artifact count is required **only** when
+  `measurement_status` is `MEASURED`. Shape pinned in §8.3;
+- `withheld_reasons` — **emitted unconditionally**, `[]` when nothing is withheld. Its entry shape
+  is pinned by `AD15-IR-16`, because §8.7 makes this member normative;
 - `verifier_digests` — this lane's asserted digests only, shape in §8.2.1;
 - `evaluator_version`.
 
@@ -646,13 +775,14 @@ implementer:
 | `bundle-directory-unreadable` | after identity is established, bundle traversal cannot complete because a directory cannot be enumerated | `ERROR` |
 | `bundle-entry-uninspectable` | a directory entry name was obtained, but its filesystem kind could not be determined | `ERROR` |
 | `frozen-identity-unreadable` | the evaluator's own frozen verifier or frozen class contract could not be read, so its digest cannot be recomputed | `ERROR` |
-| `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON | `ERROR` |
+| `bundle-json-invalid` | a listed artifact or operator-input file exists but is not parseable JSON, or parses and then violates one of §5's two stage-8 canonicalization rules — an unpaired surrogate, or a duplicate object member name | `ERROR` |
 | `bundle-shape-invalid` | artifact count, family composition or operator-input composition outside §5 | `ERROR` |
 | `numeric-preflight-violation` | a number outside §5.1's envelope — **`json_pointer` mandatory** | `ERROR` |
 | `verifier-digest-mismatch` | a frozen digest assertion failed | `ERROR` |
 | `verifier-not-invocable` | the frozen verifier process could not be spawned or executed **at all** | `ERROR` |
-| `verifier-run-invalid` | the frozen verifier ran but did not produce a process/result shape the frozen contract permits — see the enumeration below | `ERROR` |
+| `verifier-run-invalid` | the frozen verifier ran but did not produce a process/result shape accepted by **both** the frozen contract **and** this contract's own result-shape gate — i.e. rejected by either — see the enumeration below | `ERROR` |
 | `internal-error` | an unexpected evaluator fault after bundle identity was established | `ERROR` |
+| `operator-input-assertion-mismatch` | `AD15-IR-14` — a supplied operator-input flag contradicts the manifest, detectable only after identity was established | `ERROR` |
 | `authenticated-withheld` | §7.1 — on the mandatory W1 surface, any emitted frozen-verifier verdict has a non-empty `authenticated_withheld` channel | **`MEASUREMENT_INVALID`** |
 
 **`manifest-invalid` covers the whole bundle-layout surface (Erratum 2).** Both isolated
@@ -707,7 +837,14 @@ the entry itself, and they can only answer that way on filesystems that populate
 `Dirent` and calls `lstat` per entry; that call fails `EACCES`, giving `bundle-entry-uninspectable`.
 The Python lane's kind inspection returned `(is_symlink=False, is_dir=False, is_file=True)` from the
 cached `d_type` **without raising**, so `bundle-entry-uninspectable` was not reached at that point.
-Same bundle, same kernel, two different reasons.
+Those two observations are what the source review establishing this ruling actually had.
+
+A **subsequent development measurement, reported by the maintainer after that pin**, ran the Python
+lane's r3 head to completion on the same filesystem state and recorded reason
+**`bundle-file-unreadable`**, with a `detail` asserting the entry was "present and a permitted
+regular file" — a kind that had never been established. That is consistent with the pinned reading
+and strengthens its rationale, but it is later development evidence, not part of the source review
+that produced the ruling.
 
 **Why the enumeration-time hint loses.** It asserts a kind that was never established. Worse, it
 makes the reason reachable only on filesystems that *omit* `d_type`, so a conforming evaluator's
@@ -744,6 +881,7 @@ exact:
 | path absent, or a definite `ENOENT` on read | `bundle-file-missing` |
 | file present, permitted regular-file kind, but open/read fails or I/O errors | **`bundle-file-unreadable`** |
 | bytes read successfully but do not parse as JSON | `bundle-json-invalid` |
+| bytes parse as JSON but break a stage-8 canonicalization rule — unpaired surrogate, or duplicate object member name | `bundle-json-invalid` |
 | bytes read successfully but the digest does not match | `manifest-digest-mismatch` |
 
 Each says a different true thing about what went wrong. Collapsing them loses the distinction a
@@ -751,15 +889,20 @@ reader needs to know whether the bundle is incomplete, the medium is faulty, or 
 wrong.
 
 **`authenticated-withheld` is the only reason that maps to `MEASUREMENT_INVALID`.** Everything else
-is `ERROR`. The distinction is real: a withheld tier means the measurement was attempted and could
-not conclude, while every other row means the run never got far enough to attempt it.
+is `ERROR`. An `ERROR` covers two distinct situations and does not separate them: a
+**pre-invocation** failure, where the run never got far enough to attempt a measurement, and a
+**post-start run invalidity**, where the frozen verifier process began and then produced something
+**either** contract's result-shape gate refuses. `verifier-run-invalid` is the second kind by
+definition, so this row must never be read as saying every non-withheld reason failed before any
+attempt.
 
 **`verifier-run-invalid` covers every abnormal frozen run (Erratum 2).** The two remediation
 contexts diverged here — one reached for `internal-error`, the other for `verifier-run-invalid` —
 so the reading is pinned rather than left to the implementer. It means:
 
-> the frozen verifier process **started successfully**, but the invocation did not produce one of
-> the process/result shapes the frozen contract permits.
+> the frozen verifier process **started successfully**, but the invocation did not produce a
+> process/result shape accepted by **both** the frozen contract **and** this contract's own
+> result-shape gate. Equivalently: **rejected by either** is enough.
 
 Specifically:
 
@@ -768,7 +911,10 @@ Specifically:
 - `exit 0` with **empty** stdout;
 - `exit 0` whose stdout is **not parseable as strict JSON**;
 - `exit 0` carrying a **malformed, multiple, or wrong-shape** result instead of the single expected
-  verdict object.
+  verdict object;
+- a process that **did not exit normally at all** — killed by a signal or otherwise abnormally
+  terminated (`AD15-IR-15`). It started, so it is not `verifier-not-invocable`; it produced no
+  permitted shape, so it belongs here.
 
 **`verifier-not-invocable` is now narrower**: it is only for a process that could not be spawned or
 executed at all.
@@ -802,19 +948,186 @@ verdict** — §6.4 is explicit that no result is emitted. The entry is therefor
 | Field | Type | Meaning |
 |---|---|---|
 | `artifact_path` | string, **required** | the artifact's manifest-relative path. This is the entry's identity |
-| `artifact_ref` | object **or `null`** | the structured reference when a usable `record_id` exists; **`null`** when it does not |
+| `artifact_ref` | object **or `null`** | the closed projection `AD15-IR-18` pins; **`null`** when the source carries no string `record_id` |
 | `request_envelope_digest` | string | `sha256:…` over the §5.1 canonical envelope bytes |
-| `verifier_exit_code` | integer | the frozen verifier's exit code, verbatim |
-| `verifier_result` | object **or `null`** | the verdict verbatim when one was emitted; **`null` whenever `verifier_exit_code` is 1**, because no verdict exists |
+| `verifier_exit_code` | integer **or `null`** | the frozen verifier's exit code, verbatim, when the process **exited normally**; **`null`** when it was terminated abnormally (`AD15-IR-15`) |
+| `verifier_result` | object **or `null`** | the verdict verbatim when one was emitted; **`null`** whenever no verdict exists — `verifier_exit_code` of `1`, or abnormal termination |
 | `verifier_stderr_digest` | string | `sha256:…` over the captured stderr, for audit |
+
+#### Ruling `AD15-IR-18` — `artifact_ref` has one closed projection
+
+§8.7 makes `artifact_ref` a cross-lane equality field, and it was described only as "the structured
+reference when a usable `record_id` exists". That leaves two lanes to invent the same object from
+the same artifact by luck. It is now one function, total over every JSON value:
+
+```
+artifact_ref_from_artifact(value):
+
+1. If value is not a JSON object, return null.
+2. If value.record_id is not a JSON string, return null.
+3. Otherwise return an object containing exactly:
+     "record_id": value.record_id
+   and, only when value.chain_id is a JSON string:
+     "chain_id": value.chain_id
+4. A missing or non-string chain_id is OMITTED, never represented as null.
+5. Empty strings remain strings; the evaluator does not add a
+   minLength rule absent from the frozen schema.
+6. No coercion, Unicode normalization, case mapping, repair,
+   synthesis, or stringification is permitted.
+```
+
+Step 4 matters because an omitted member and a `null` member are different JSON values and therefore
+different RFC 8785 canonical bytes. Step 6 restates `AD15-IR-5`'s absolute bar on synthesizing a
+`record_id`, extended to every form of quiet repair.
+
+**Where the value comes from is pinned too**, because the same artifact yields it at different
+times:
+
+| Situation | Source of `artifact_ref` |
+|---|---|
+| a valid frozen `exit 0` verdict exists | copied **verbatim** from `verifier_result.artifact_ref`, after the result-shape gate has accepted it — and **the gate MUST reject a verdict whose `artifact_ref` carries any member other than `record_id` and `chain_id`**, as `verifier-run-invalid` |
+| no verdict exists — including a qualifying stage-0 or stage-1 `exit 1` | `artifact_ref_from_artifact` over the **parsed artifact value** |
+| abnormal termination (`AD15-IR-15`) | the same pre-invocation projection already computed for that artifact |
+| spawn failure (`AD15-IR-11`) | no entry exists, so no `artifact_ref` |
+
+**The non-null object is closed**: exactly `record_id`, plus `chain_id` when and only when the
+source carried a string one. No other member, at any time — including on the verbatim-copy path. The
+frozen class-verifier contract enumerates `artifact_ref` without declaring that nested object closed,
+so without the gate obligation above one evaluator could accept an extra member and copy it while
+another rejected the verdict. The closure is enforced **at the gate**, so the copy is verbatim over a
+value already known to be closed.
+
+This is a gate **this contract adds**, not a re-reading of the frozen one. The frozen contract
+permits the extra member; W1 does not, because `artifact_ref` is a Class-1 cross-lane equality field
+and an open nested object cannot be one. `verifier-run-invalid` is defined above to cover a shape
+rejected by either contract precisely so this case has a reason — narrowing it to the frozen
+contract alone would have left a rejection with no registry entry.
+
+**Testing splits in two, because the full cross-product is unbuildable.** The frozen
+`common.schema.json` makes `record_id` and `chain_id` **both required strings** in `artifact_core`.
+An artifact carrying an absent, null, boolean or numeric `record_id` therefore cannot pass stage-0
+schema validation, so it can never produce an `exit 0` verdict and can never reach stage 1. Demanding
+those cells would require a correct implementation to build impossible fixtures.
+
+**Projection-function tests** exercise `artifact_ref_from_artifact` **directly**, over the full value
+matrix, with no requirement that the value could ever yield a frozen verdict:
+
+```
+record_id:  absent, null, boolean, number, empty string, non-empty string
+chain_id:   absent, null, boolean, number, empty string, non-empty string
+```
+
+**Source-selection tests are organised by *source*, not by process-outcome name.** An outcome list
+is not exhaustive and invites exactly the error of declaring one outcome the only carrier of some
+value. There are three sources, and together they cover every path:
+
+```
+Source A -- the accepted exit-0 verdict.
+  Emitted artifact_ref is verifier_result.artifact_ref, copied verbatim.
+  Reachable only with a schema-valid artifact, so record_id and chain_id
+  are strings by construction.
+  MUST also test the negative gate: an exit-0 verdict whose artifact_ref
+  carries an extra member is verifier-run-invalid, not a verbatim copy.
+
+Source B -- every OTHER emitted entry.
+  Emitted artifact_ref is artifact_ref_from_artifact(parsed artifact),
+  the preliminary projection. This is not a two-item list; it is every
+  entry that is not Source A, and it includes at least:
+    - qualifying stage-0 or stage-1 exit 1 (7.2);
+    - NON-qualifying exit 1 -- 7.2 admits only IOP-B-DEC, IOP-B-CTL and
+      IOP-B-EFF, so the same malformed artifact under any other scenario
+      lands here as verifier-run-invalid;
+    - exit 2, which emits no verdict;
+    - exit 0 whose output the result-shape gate rejects;
+    - abnormal termination (AD15-IR-15), which can occur BEFORE the frozen
+      verifier reaches stage 0 and therefore carries any artifact at all.
+
+Source C -- no entry, therefore no artifact_ref.
+  Spawn failure (AD15-IR-11) and every pre-invocation failure.
+```
+
+**Schema-invalid `record_id` / `chain_id` values MUST be tested on Source B**, and on more than one
+Source-B path — at minimum a qualifying stage-0 `exit 1`, a **non-qualifying** exit 1, and an
+**abnormal termination**. These cells are reachable: stage-0 schema validity gates only the *verdict*,
+not the *entry*.
+
+**What is dropped, exactly.** Only the cells the frozen schema makes unreachable: a schema-invalid
+`record_id` or `chain_id` combined with **Source A**, since a verdict cannot exist for an artifact
+that failed stage 0. Every other combination remains required, now through Source B. An earlier
+draft of this correction claimed the qualifying stage-0 `exit 1` was the *only* outcome that could
+carry an invalid ID; that was false, and it dropped reachable cells — hence the source-based
+formulation above, which cannot make that error because Source B is defined by exclusion rather
+than by enumeration.
+
+`$defs/artifact_ref` in the frozen schema makes `chain_id` **optional**, which is the frozen basis
+for the projection's omit-rather-than-null rule.
+
+#### Ruling `AD15-IR-16` — `withheld_reasons` has a pinned entry shape
+
+A lane recorded that this member's **per-entry** shape was unpinned and chose one for itself. That
+was tolerable while the member sat outside the parity surface. §8.7 now makes `withheld_reasons`
+normative, so an unpinned entry shape is two lanes emitting different objects for the same withheld
+channel and calling it conformance.
+
+> `withheld_reasons` is **always present**, an array, and `[]` when nothing is withheld. Each entry
+> is exactly:
+>
+> | Member | Type | Meaning |
+> |---|---|---|
+> | `artifact_path` | string | the artifact the channel came from — the same identity key `AD15-IR-5` pins |
+> | `channel` | string | the frozen channel name, verbatim: `authenticated_withheld` or `witnessed_withheld` |
+> | `reason` | string | the withheld reason string, **verbatim** from the frozen verdict, never re-worded |
+>
+> The array is ordered by `(artifact_path, channel, reason)` in UTF-8 byte order, and carries no
+> other member.
+
+Verbatim matters here for the same reason it matters in `verifier_result`: a withheld reason is the
+frozen verifier's output, and an evaluator that paraphrases it has substituted its own text for a
+measurement.
+
+#### Ruling `AD15-IR-15` — abnormal termination has no portable exit code
+
+A frozen verifier killed by a signal plainly *started*, so it is `verifier-run-invalid`, and
+`AD15-IR-12` therefore requires it to contribute an entry. But there is no portable integer to put
+in `verifier_exit_code`. Language runtimes disagree: one conventionally reports signal death as a
+negative return code, another reports no status at all plus a separate signal name. An entry
+demanding an integer "verbatim" forces one lane to fabricate a value, emit a schema violation, or
+classify the run differently from its peer — and `AD15-IR-12` made that difference observable
+through `artifacts[]`.
+
+> **Three process outcomes, distinguished.** The middle row is the one this ruling exists for:
+>
+> | What happened | `artifacts[]` entry | `verifier_exit_code` | `verifier_result` | `verifier_stderr_digest` |
+> |---|---|---|---|---|
+> | the process **never started** — `verifier-not-invocable`, `AD15-IR-11` | **none** | not applicable | not applicable | not applicable |
+> | the process **started and did not exit normally** — `verifier-run-invalid` | **present** | **`null`** | **`null`** | **present** |
+> | the process **exited normally** | **present** | **integer**, verbatim | the verdict, or **`null` whenever no verdict exists** (§8.3 — exit `1` and exit `2` both emit none) | **present** |
+>
+> **No signal name, signal number or synthesized exit code appears in any normative field** — not in
+> `verifier_exit_code`, not in `verifier_result`, and not in any other `artifacts[]` entry field or
+> `nonmeasurement` member except `detail`.
+
+**Abnormal termination is the absence of an exit code, not the absence of a process attempt**, and
+it is emphatically **not** the same shape as `AD15-IR-11`. A spawn failure yields no entry because
+nothing was attempted. An abnormally terminated process yields a **full entry** — `artifact_path`,
+`artifact_ref`, `request_envelope_digest` and a stderr digest over what the child actually wrote —
+in which exactly two measurements are missing. Treating the two as one shape would discard the
+evidence of a run that genuinely happened.
+
+The signal is useful to a human, so `detail` **may** carry it, and two lanes may word that
+differently without it being a divergence — `detail` is outside the parity surface under §8.7. The
+prohibition is on letting a signal reach a field anything compares.
 
 #### 8.3.1 When `artifacts[]` may be populated (normative)
 
 The fields above are produced at three different times, and only the last group depends on a
 process actually running:
 
-- **`artifact_path` and `artifact_ref` are known before invocation** — the first comes from the
-  manifest, the second is derived from the artifact itself.
+- **`artifact_path` is known before invocation** — it comes from the manifest.
+- **A preliminary `artifact_ref` is known before invocation**, derived from the artifact by
+  `AD15-IR-18`'s projection. On the **`exit 0` path it is replaced** by the accepted verdict's
+  closed `artifact_ref`; on **every other emitted entry** the preliminary value **is** the emitted
+  one — see `AD15-IR-18`'s Source B, which is defined by exclusion and is not a list of outcomes.
 - **`request_envelope_digest` is produced by successful request-envelope construction**, after
   preflight and before subprocess execution.
 - **Only `verifier_exit_code`, `verifier_result` and `verifier_stderr_digest` are products of a
@@ -825,14 +1138,14 @@ frozen-digest failure occurs **before** any invocation, so those fields do not e
 implementer told to emit them anyway would have to fabricate an exit code or a digest. The ordering
 is therefore pinned:
 
-1. **The evaluator completes the whole bundle preflight first** — manifest, symlink and path rules,
-   file presence, digests, JSON parseability, bundle shape, operator-input composition, numeric
-   envelope, frozen-verifier digest assertions. **No frozen verifier is invoked until every one of
-   these has passed.**
+1. **The evaluator completes the whole bundle preflight first**, in the stage order §8.6 pins.
+   **No frozen verifier is invoked until every preflight stage has passed.** The stages and their
+   barriers are defined there and are not restated here.
 2. A failure during preflight is a **pre-invocation `ERROR`**: the result object carries
    **`artifacts: []`** — an empty array, not entries with null or placeholder fields.
 3. Once invocation begins, `artifacts[]` contains an entry for **each invocation actually
-   attempted**, and only those. A bundle abandoned partway lists what was attempted and no more.
+   attempted**, and only those. Invocation order, and the point at which a failing bundle stops,
+   are pinned by `AD15-IR-12`; the sense of "attempted" is pinned by `AD15-IR-11`.
 4. In a `MEASURED` result, `artifacts[]` length MUST equal the bundle's artifact count from §5 —
    one for a P/B scenario, four for an `IOP-R-*` scenario. A `MEASURED` result with any other count
    is itself a defect.
@@ -855,6 +1168,33 @@ lanes raised it and both resolved it the same way; that resolution is now the ru
 
 No implementer fabricates an exit code, a verdict or a stderr digest for a process that never ran.
 It is step 2's empty array applied one step later in the sequence.
+
+#### Ruling `AD15-IR-12` — canonical invocation order and fatal-run fail-fast
+
+`AD15-IR-11` pinned what a spawn failure contributes to `artifacts[]`, but not the two things that
+make the contribution observable: the order invocations happen in, and whether the scenario
+continues after one fails. Adversarial review found that a four-artifact bundle failing at its
+second artifact admitted `[A]`, `[C, D]` and `[A, C, D]` — all three conforming. Both are pinned
+here.
+
+> **Order.** Artifact invocations proceed in **ascending UTF-8 byte order of `artifact_path`** — the
+> same key `AD15-IR-5` and `AD15-IR-6` already use for identity and envelope ordering.
+>
+> **Fail-fast on a fatal run.**
+>
+> - `verifier-not-invocable` — the current artifact contributes **no** entry, entries for
+>   invocations that already completed are retained, and the scenario **aborts immediately**.
+> - `verifier-run-invalid` — a concrete process result exists, so the current artifact **does**
+>   contribute its entry, and the scenario **aborts immediately**.
+> - A clean exit-`0` verdict never aborts, **even when it carries a non-empty
+>   `authenticated_withheld` channel**: under `AD15-IR-10` the remaining artifacts must still be
+>   evaluated for run validity before §7.1 is applied at all.
+
+The worked case is now single-valued: a bundle `[A, B, C, D]` whose **B** cannot be spawned yields
+`artifacts[] = [A]`. `[C, D]` and `[A, C, D]` are no longer conforming.
+
+§3's "for every artifact" is subject to this abort. It states the invocation obligation, not a
+guarantee that every artifact is reached on a failing bundle.
 
 #### Ruling `AD15-IR-5` — the manifest path is the total result identity
 
@@ -883,15 +1223,29 @@ belongs to, instead of being converted into the evaluator's own preflight failur
 **`stderr` is never a source of semantic classification.** It is hashed for audit and may be
 retained alongside the run, but an evaluator MUST NOT parse it, match on it, or let its content
 influence any predicate, Level-1 verdict or `measurement_status`. Classification comes from the
-exit code and the emitted verdict only. Reading prose to decide a verdict would make the
+exit code, the emitted verdict, and — under `AD15-IR-15` — whether the process exited normally at
+all; from nothing else. Reading prose to decide a verdict would make the
 measurement depend on a surface neither the frozen contract nor this one pins.
 
 ### 8.4 Determinism
 
-Identical bundle plus identical operator inputs gives byte-identical output. Ordering of any
-collection is by UTF-8 byte order of the relevant identifier — **`artifact_path`** for
-`artifacts[]` (`AD15-IR-5`; it was `record_id`, which an artifact rejected at stage 0 may not
-have) — matching the corpus contract's existing ordering rule.
+**Within one evaluator at one version**, identical bundle plus identical operator inputs gives
+byte-identical output across repeat runs. This is a *repeat-determinism* requirement, not a
+cross-lane one. Two lanes legitimately differ on `verifier_digests.class_verifier`,
+`evaluator_version`, the audit-only evidence and the diagnostic-only data §8.7's classes define —
+but **not** on `verifier_digests.class_verifier_contract`, which is Class-1 cross-lane equality data.
+What they must agree on is the §8.7 projection, not their bytes.
+
+Ordering of any collection **whose identifiers come from JSON strings** is by UTF-8 byte order of
+the relevant identifier — **`artifact_path`** for `artifacts[]` (`AD15-IR-5`; it was `record_id`,
+which an artifact rejected at stage 0 may not have) — matching the corpus contract's existing
+ordering rule. The same key governs manifest `files[]` sorting, invocation order under
+`AD15-IR-12`, and request-envelope ordering under §5.1.
+
+**Filesystem directory entries are the one collection this does not govern.** Their names come from
+the operating system, not from JSON, and need not be valid UTF-8 at all; §8.6 orders them by its
+platform-neutral **name key**. For a name that *is* valid UTF-8 the two keys coincide, so this is a widening, not a second
+rule in conflict with the first.
 
 ### 8.5 Process exit and stdout (normative)
 
@@ -925,6 +1279,26 @@ Both isolated lanes reached this independently and were measured returning ident
 same bundle. That is convergence under a rule, which is stronger than convergence from silence —
 but it is **development evidence, not official parity.** Official parity does not exist until the
 corpus runs.
+
+#### Ruling `AD15-IR-14` — a post-identity operator assertion mismatch is result-bearing
+
+One lane recorded an open ambiguity against this dividing line and declined to resolve it: a
+supplied operator-input flag that contradicts the manifest is a usage problem, but it is only
+*detectable* after the manifest has been read — that is, after identity is established. Reporting it
+as a CLI usage error (exit `2`, empty stdout) contradicts the rule that an established identity is
+owed a result object.
+
+> A **CLI syntax error** — unknown option, missing value, malformed argument — remains exit `2` with
+> empty stdout, because it is detectable before anything is read.
+>
+> A **semantic or path mismatch between a supplied operator-input flag and the manifest**, being
+> detectable only after identity is established, is reason **`operator-input-assertion-mismatch`**,
+> `ERROR`, **exit `3`**, with a result object naming the scenario.
+
+The mandatory twelve are unaffected: the official harness passes no operator-input flags, so this
+reason is unreachable in an official run. It is pinned anyway, because "unreachable in the official
+run" is precisely the class of gap that produced the `--help` divergence in Erratum 4 and the
+entry-kind divergence in Erratum 6.
 
 #### `--help` is a CLI meta-action, not an evaluation (Erratum 3)
 
@@ -982,6 +1356,366 @@ what the other eleven said.
 
 A non-zero exit is never itself a Level-1 result, and `0` is unreachable while the bundle is
 unmeasured. The twelve-of-twelve requirement lives in the aggregate gate (§8.1), not here.
+
+### 8.6 Canonical evaluation pipeline and total failure precedence (normative)
+
+`AD15-IR-10` ordered one pair of failures against each other. That approach does not scale: every
+unordered pair is a latent divergence, and the lanes cannot find them without implementing first.
+This section replaces pairwise ordering with a **total** one.
+
+#### Ruling `AD15-IR-13` — total failure precedence
+
+Evaluation is a fixed sequence of stages. **A stage runs to completion over the whole bundle before
+the next stage begins**, and the first stage that produces a failure determines the reported reason.
+No later stage overrides an earlier stage's failure, and no implementation may interleave stages for
+efficiency in a way that changes which failure is reported.
+
+| # | Stage | Reasons it can produce |
+|---|---|---|
+| 1 | CLI and meta-action handling | exit `2` (syntax); the `--help` carve-out |
+| 2 | Direct-read bundle identity (§5) | the exit-`1` band — no result object |
+| 3 | Frozen-verifier identity: read, then match (§8.2.1) | `frozen-identity-unreadable`, `verifier-digest-mismatch` |
+| 4 | Manifest structure and closure | `manifest-invalid` |
+| 5 | Canonical traversal — entry kind (`AD15-IR-9`), layout closure, listed-file presence | `bundle-entry-uninspectable`, `bundle-directory-unreadable`, `manifest-invalid`, `bundle-file-missing` |
+| 6 | **All** listed-file reads | `bundle-file-unreadable` |
+| 7 | **All** digest checks | `manifest-digest-mismatch` |
+| 8 | JSON parsing, then §5's **two** stage-8 canonicalization rules — unpaired surrogate, duplicate member name | `bundle-json-invalid` |
+| 9 | Bundle and operator-input shape; operator assertions (`AD15-IR-14`) | `bundle-shape-invalid`, `operator-input-assertion-mismatch` |
+| 10 | Numeric preflight (§5.1) | `numeric-preflight-violation` |
+| 11 | Artifact invocation, in `AD15-IR-12` order and subject to its abort | `verifier-not-invocable`, `verifier-run-invalid` |
+| 12 | §7.1 `authenticated_withheld`, after stage 11 completes (`AD15-IR-10`) | `authenticated-withheld` |
+| 13 | Predicates and Level-1 verdict | — |
+
+**The barriers are the whole point.** Stages 6 and 7 are separate so that a bundle with one
+unreadable file and a *different* file's digest mismatch reports `bundle-file-unreadable`: every read
+completes before any digest is checked. Stages 5 and 6 are separate for the same reason — one
+missing file plus a different file's digest mismatch reports `bundle-file-missing`. An implementation
+validating each path end-to-end in manifest order would report the mismatch instead, and both
+readings satisfied the old "complete the whole bundle preflight first".
+
+**Within a stage, precedence is by mechanism first, then by path.** A path tie-break alone is not
+enough: a stage can produce several different reasons, and not every failure has one offending path
+(a composition rule is violated by a *set* of files, not by one). `stage_rank` is already fixed by
+the stage barriers, so the remaining components are — the last of them conditional:
+
+1. **Mechanism.** Each stage row above lists its reasons **in precedence order**. A failure of an
+   earlier-listed reason is reported over a later-listed one, regardless of paths.
+2. **Path.** Where a failure has one or more offending paths, its internal path key is the
+   ascending-first path. **A pathless whole-bundle violation uses the empty byte string as its
+   internal path key.** The internal key is not emitted.
+
+   The earlier wording claimed every set-level failure has a sorted-first path, which is false for a
+   composition rule violated by the bundle as a whole rather than by any file. The empty string is
+   what makes the ordering total in that case; no real path is empty, so it never collides.
+3. **Location within the file.** Path is not enough where one file can fail the same way twice: two
+   numbers in the same artifact both outside §5.1's envelope share a stage, a reason and a path, and
+   `numeric-preflight-violation` carries a normative `json_pointer`. Where a reason carries a
+   `json_pointer`, the **ascending UTF-8 byte order of the pointer string** decides.
+
+   Byte order, not numeric order: `/a/10` sorts before `/a/9` because `1` precedes `9` as a byte.
+   That is deliberate. The requirement is a total, implementation-independent order, and a rule that
+   compares array indices numerically has to parse them, which invites the two lanes to disagree
+   about what is an index.
+
+**The comparison key is three components, plus a conditional fourth:**
+
+```
+(stage_rank,
+ reason_rank_within_stage,
+ canonical_artifact_path
+ [, json_pointer — for numeric-preflight-violation only])
+```
+
+The fourth is conditional because a locator is **normative only where it is emitted**, and there is
+exactly one reason for which it is.
+
+**Two failures sharing the first three components produce results that are identical on the §8.7
+parity surface, except in one case.** `nonmeasurement` carries `reason`, `detail` and `json_pointer`, and §8.2.2 permits
+`json_pointer` for **`numeric-preflight-violation` and no other reason**. `detail` is outside the
+parity surface (§8.7); `canonical_artifact_path` is not an emitted member; a pre-invocation failure
+emits `artifacts: []` whichever offending item was selected. So for every reason but one, which of
+two same-stage same-reason failures an evaluator selects **cannot be observed**.
+
+> **The locator is normative exactly where it is emitted.**
+>
+> | Reason | Locator | Totality |
+> |---|---|---|
+> | `numeric-preflight-violation` | the emitted `json_pointer`: RFC 6901 against the document the violation is in (§5.1), ascending UTF-8 byte order | **required, and total** — a parsed document has one value per pointer |
+> | every other reason | none is emitted | **not required.** An evaluator may select either failure; the result object is the same either way |
+
+An earlier draft of this section assigned a locator kind to every reason in a table. Adversarial
+review showed that table was **both wrong and unnecessary**: wrong because several of its
+assignments were not total — an RFC 6901 pointer cannot name one of two duplicate members, a bare
+entry name collides across directories, and several whole-bundle composition rules all mapped to the
+same empty locator — and unnecessary because none of those locators is ever emitted. Manufacturing a
+total order over unobservable choices would have forced enumerating and ranking every sub-rule of
+`manifest-invalid` and `bundle-shape-invalid`, adding a large normative surface that no output
+depends on and that two lanes would then have to agree on for no measurable reason.
+
+**The parity surface is what must agree, not an evaluator's internal selection.** That is the same
+principle §8.7 states, applied one level down.
+
+**Discovery order may never decide anything observable.** Filesystem traversal order, parser
+reporting order and iteration order over a manifest are implementation surfaces. The stage barriers,
+the reason precedence within a stage, the path key, and — for `numeric-preflight-violation` — the
+emitted pointer are all fixed independently of them. Where the contract leaves a selection free, it
+is because the selection changes no emitted value; that is a stated exemption, not a fallback to
+discovery order.
+
+So the worked stage-9 case is single-valued: a manifest with two `independence_policy` files
+(`bundle-shape-invalid`) and a `--bindings` flag pointing at the revocation file
+(`operator-input-assertion-mismatch`) reports **`bundle-shape-invalid`** — the bundle's own
+composition is settled before any assertion an operator makes *about* it.
+
+**Stage 11 is the one exception**, and it is not a tie-break at all: artifact invocation is
+sequential in `AD15-IR-12`'s order and stops at the first fatal run, so the reported reason is
+whichever fatal run is reached first. No comparison between reasons arises.
+
+**Stage 4 and stage 5 both produce `manifest-invalid`, and the split is deliberate.** Stage 4 is
+**manifest-object closure** — rules the JSON document violates on its own terms: unknown members,
+sort, `role`, `path` syntax, digest encoding. Stage 5 is **filesystem layout closure** — rules the
+bundle on disk violates: a forbidden symlink, a non-regular object, an unlisted entry. A manifest
+that is malformed on its own terms is reported before the disk is consulted.
+
+**Traversal order is never the operating system's.** `readdir` order is unspecified and varies by
+filesystem, so a lane reporting the first failure in enumeration order is not deterministic. Every
+directory's entries are sorted before that directory is inspected or descended into.
+
+**The sort key is the entry name exactly as the operating system supplies it, never a normalized
+form.** "Raw bytes" alone is a POSIX-shaped rule and would make this contract Linux-only; other
+platforms expose a Unicode-native directory API and never hand back bytes. The key is therefore
+defined over what the API actually provides:
+
+- **Lossless raw name bytes** — the key is those bytes, compared as unsigned bytes.
+- **A Unicode-native name** — the key is the UTF-8 encoding of the **exact string returned**, with
+  **no normalization applied**.
+- **A name that cannot be represented losslessly**, or that contains an unpaired surrogate — it
+  cannot equal any manifest `path`, which is a JSON string, so it is an unlisted entry and a
+  deterministic `manifest-invalid` at stage 5.
+
+**NFC or NFD conversion, case folding, locale-dependent mapping and any platform-specific name
+normalization are forbidden** — at this key and anywhere else a name is compared. A normalizing key
+makes two byte-distinct entries collide on one platform and not on another, which is the
+cross-platform determinism defect `AD15-IR-9` exists to close, reintroduced one layer down.
+
+Where a name is valid UTF-8 and needs no normalization all three bullets yield the same key, so this
+widens the ordinary case rather than competing with it.
+
+**A directory entry whose name is not valid UTF-8 is an unlisted entry.** A manifest `path` is a
+JSON string, so no such entry can ever be listed in `files[]`. It is reported by stage 5's layout
+closure as `manifest-invalid`, exactly as any other unlisted entry is — and its sort position is
+already well defined by the byte key above.
+
+**A manifest `path` containing an unpaired surrogate is `manifest-invalid` at stage 4.** Strict JSON
+admits an escape such as `\ud800` with no pair, which does not encode to well-formed UTF-8 and so
+cannot denote any filesystem name. It fails on the manifest's own terms, before the disk is
+consulted.
+
+`internal-error` is not a stage: it is raised wherever an unexpected evaluator fault occurs after
+identity is established. It cannot mask a failure an earlier stage had already determined — a stage
+that has produced its failure has produced the reported reason, and a later fault does not replace
+it.
+
+**The order is total over the failures an evaluator detects by design; `internal-error` is outside
+it by nature.** An unexpected fault cannot be enumerated in advance, so a lane that faults partway
+through a stage may report `internal-error` where its peer reached a registry failure later in the
+same stage. That is **not** a conforming difference to be reconciled: on the mandatory twelve,
+`internal-error` is itself a defect in the lane that raised it, and a run producing one is
+non-qualifying and must be investigated rather than compared.
+
+### 8.7 The normative surface (normative)
+
+Not every observable difference between two conforming evaluators is a defect, and this contract has
+so far left that boundary implicit. Without it, adversarial review over invalid-input space never
+terminates.
+
+The earlier binary model was internally contradictory. It called **every** `artifacts[]` field and
+**`verifier_digests`** normative, while `verifier_stderr_digest` and each lane's own class-verifier
+digest are *expected* to differ — the two frozen verifiers are different programs. It also omitted
+`scenario_id` entirely, and no harness duty compared the complete normative projection. A field is
+therefore placed in exactly one of **four** classes.
+
+#### Class 1 — cross-lane equality fields
+
+These MUST be equal between the two lanes for a scenario to qualify:
+
+- process **exit code** and stdout / result-object shape;
+- `scenario_id`;
+- `measurement_status`;
+- `level1`;
+- `predicates`;
+- `nonmeasurement.reason`;
+- `nonmeasurement.json_pointer`;
+- `artifacts[]` **membership and order**;
+- `artifact_path`;
+- `artifact_ref`;
+- `request_envelope_digest`;
+- `verifier_exit_code`;
+- `verifier_result`;
+- `withheld_reasons`;
+- `verifier_digests.class_verifier_contract` — the two lanes assert the **same** frozen contract.
+
+#### Class 2 — lane-local normative assertions
+
+Each MUST hold **within** its lane, and is never compared across lanes:
+
+- `verifier_digests.class_verifier` equals **that lane's own** frozen verifier pin;
+- `evaluator_version` satisfies that lane's own pinned version rule and the §8.4 repeat-determinism
+  requirement;
+- mandatory-block execution is complete against the canonical block registry, in each lane
+  independently.
+
+#### Class 3 — audit-only result evidence
+
+- `verifier_stderr_digest` remains **required**, and MUST equal SHA-256 over the exact captured
+  stderr bytes. It is **not** compared against the peer lane: the two frozen verifiers legitimately
+  emit different diagnostic stderr, so requiring equality would fail a conforming pair.
+
+#### Class 4 — diagnostic-only
+
+Never compared, never a source of any normative value:
+
+- `nonmeasurement.detail`;
+- raw stderr content;
+- signal names and numbers;
+- stack traces;
+- operating-system error prose;
+- help text;
+- timing and resource-use diagnostics.
+
+**No normative reason may be derived from diagnostic prose.** An evaluator that picks a reason by
+matching on an OS error message has made its output depend on a surface neither contract pins, and
+on a platform's phrasing of it.
+
+#### `scenario_id` is bound at four points
+
+Omitting it from the surface left the scenario label itself uncompared. It is bound exactly:
+
+```
+result.scenario_id
+  == the expected scenario ID selected by the aggregate harness
+  == manifest.scenario_id
+  == peer_result.scenario_id
+```
+
+#### The cross-lane normative projection
+
+Class 1 is compared as a **closed JSON value**, not field-by-field and never by string comparison of
+serializations. The projection is the result object with exactly these removed:
+
+```
+nonmeasurement.detail
+evaluator_version
+verifier_digests.class_verifier
+artifacts[*].verifier_stderr_digest
+```
+
+Everything else is retained — including `verifier_digests.class_verifier_contract`. Equality is
+equality of the closed JSON value, **operationalized through its RFC 8785 canonical bytes**, so that
+member order, whitespace and number spelling cannot make two equal values compare unequal, nor two
+unequal values compare equal.
+
+**A result object carrying an unknown member at any closed level is invalid** — it is not silently
+dropped from the projection. Excluding it would let a lane smuggle an uncompared field into a result
+that still passed the projection; the closed member set exists to prevent exactly that.
+
+**This surface is the evaluator's output, not a lane's test runner.** A lane's self-test summary —
+total check counts, block names, optional-test counts, summary formatting — is diagnostic and is
+**not** compared across lanes. Two lanes running different numbers of checks is expected: they are
+separately authored. The one thing the runners must agree on is the item already listed above,
+**whether every mandatory block executed**, and that is a per-lane property, not a cross-lane
+comparison of totals.
+
+#### What "a mandatory test block actually executed" means
+
+Adversarial review found this phrase carried no criterion, so a lane could simply never register a
+required test, report zero skips, and look complete. The criterion:
+
+- **The required block IDs are pinned here, not declared by the implementation.** A registry a lane
+  writes for itself is not a control: an implementer can delete the block *and* its own registry
+  entry and still report `0 skipped`, which is the exact failure this rule exists to catch. Every
+  lane's runner accounts for **exactly** this closed set:
+
+  | Block ID | What it must exercise |
+  |---|---|
+  | `W1-BLK-IR9` | entry kind by authoritative no-follow lookup, discriminating against the enumeration-time hint |
+  | `W1-BLK-IR10` | run validity evaluated before tier withheld, on a bundle where both are live |
+  | `W1-BLK-IR11` | a spawn failure contributes no entry while earlier entries are retained |
+  | `W1-BLK-IR12` | invocation order, and the abort at the first fatal run |
+  | `W1-BLK-IR13` | stage barriers on a multi-fault bundle, and the comparison key including the conditional `json_pointer` component |
+  | `W1-BLK-IR14` | a post-identity operator assertion mismatch is result-bearing at exit `3` |
+  | `W1-BLK-IR15` | the three process outcomes, distinguished |
+  | `W1-BLK-IR16` | `withheld_reasons` present unconditionally as `[]`, and the pinned entry shape and order |
+  | `W1-BLK-IR17` | duplicate manifest members: a duplicated **top-level** `scenario_id` in the exit-`1` band, a **nested** `scenario_id` and every other duplicate `manifest-invalid` at stage 4, and none of them resolved by the parser's default |
+  | `W1-BLK-JCS` | the stage-8 canonicalization rules, that repair is refused, **and** that a numeric JCS-domain failure such as `1e400` is reported as `numeric-preflight-violation` at stage 10 **with its `json_pointer`** rather than `bundle-json-invalid` at stage 8 |
+  | `W1-BLK-LIVE` | the live frozen-verifier path, against the genuine frozen files |
+  | `W1-BLK-PARITY` | the §8.7 four-class model and the duty-6 projection — see below |
+  | `W1-BLK-ARTIFACT-REF` | `AD15-IR-18`'s complete projection-function value matrix, **plus** its three sources — including the Source-A negative gate and schema-invalid IDs on at least three distinct Source-B paths. Only `schema-invalid × Source A` is excluded, as the frozen schema makes it unreachable |
+  | `W1-BLK-JSON-BYTES` | `AD15-IR-20`: UTF-8 BOM, malformed UTF-8, UTF-16LE, UTF-16BE, UTF-32LE and UTF-32BE, for **both** the root manifest and a listed JSON file |
+  | `W1-BLK-PATH` | `AD15-IR-19`, over the case list below |
+
+**`W1-BLK-PARITY` is a per-lane block and MUST be executable without peer material.** The real
+cross-lane comparison is **aggregate-harness duty 6**, which sees both trees; §4 forbids a lane's
+runner from seeing its peer, so a lane-local block demanding a Python-versus-Node comparison would be
+unsatisfiable except by breaking isolation. What each lane proves alone is that **the model
+separates the classes** — which is peer-safe, because it is a property of the projection, not of the
+peer:
+
+```
+projection(result)                        # the lane's own result
+  == projection(result with verifier_stderr_digest replaced)
+  == projection(result with verifier_digests.class_verifier replaced)
+
+projection(result)
+  != projection(result with any Class-1 field altered)
+```
+
+**No inequality of the two lanes' stderr digests may be asserted.** Both frozen verifiers write
+stderr only in their usage-error and invalid branches, so on a normal verdict path both streams are
+empty and both digests are SHA-256 of the empty byte string. Requiring them to differ would make a
+conforming pair fail. The class-verifier digests do differ by construction (§3), but that too is
+aggregate-harness evidence, not something a lane can check alone.
+
+The block MUST then mutate **each top-level and nested result field individually**
+and record, for each, whether the mutation:
+
+```
+- causes cross-lane projection failure;
+- causes lane-local pin failure;
+- causes audit-evidence failure; or
+- is legitimately diagnostic-only.
+```
+
+A mutation of `scenario_id` MUST be detected — that is the field the earlier surface omitted
+entirely. A mutation of a Class-3 or Class-4 field MUST be shown **not** to move the projection; that
+is the half of the model a passing comparison never exercises.
+
+**`W1-BLK-PATH` case list**, each asserted against `AD15-IR-19` as written:
+
+```
+empty path        "."               ".."
+"./a.json"        "a/./b.json"      "a/../b.json"
+"a//b.json"       "/a.json"         "a.json/"
+"C:artifact.json" "a\b.json"
+control-character path               non-ASCII path
+valid canonical controls
+```
+
+- **A block executed** when its assertions ran and their outcomes are counted in the summary, proved
+  machine-readably by at least one assertion-counter increment **and** a block-completion record
+  carrying the ID. A block that "ran" without incrementing any counter asserted nothing.
+- **Any pinned ID with no execution record is reported as skipped.** That is what makes an *omitted*
+  block visible rather than invisible.
+- **An unknown or duplicate block ID makes the run non-qualifying** — unknown because the set above
+  is closed, duplicate because two records under one ID make "did it run" unanswerable.
+- The summary distinguishes three states — passed, failed, and not measured — and the default mode
+  exits non-zero if any pinned block is in the third.
+- This pins **what must be exercised**, not how. The two lanes derive their test code independently
+  from the same contract, exactly as they derive their evaluators; sharing an ID vocabulary is not
+  shared state and does not touch §4 isolation.
+
+Two lanes may differ on a non-normative surface without an erratum. This is not a licence for
+carelessness there; it states what a divergence report must establish before it blocks a freeze.
 
 ## 9. Provenance — extends the participation contract
 
@@ -1262,47 +1996,198 @@ therefore attest only to the checks that actually executed:
 
 This invalidates no prior W1 step: no `-official`, `-r1` or `-r2` ref was ever an official evaluator
 identity, and `MEASURED END-TO-END PATH` has never been claimed. It narrows what those counts prove.
-The r3 Node candidate materialized the dependencies before measuring, which is how the gap
-surfaced — 668 reported green while 81 further checks, including the `AD15-IR-6` fixture, were
-`NOT_MEASURED` rather than passing. §13 step 5 closes the class.
+The gap surfaced when the r3 Node candidate materialized the dependencies before measuring, and the
+`AD15-IR-6` fixture was among the checks inside the previously skipped block. Exact per-run figures
+belong to that run's own provenance record, not to this contract. §13 closes the class.
+
+**No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
+
+### Erratum 7 — record (2026-08-29)
+
+Raised by a **pre-pin adversarial review** rather than by a remediation round — the first erratum in
+this chain found before the lanes implemented against it. Both Erratum-6 candidates are frozen as
+evidence, not identities:
+
+| Lane | r3 (closure) | **Erratum-6 remediation** |
+|---|---|---|
+| Python | `41516a292bf07b4c7875c2e370dd2fcb1396a20a` | `e6d0bed831bd43b2b4dc9a3276e05562749bf51e` |
+| Node | `809c610840a841531ade33fb077d29afb49343f0` | `4babeb4a809f45ed4e2e9bbe1f530ef2d0a82651` |
+
+| # | Change | Raised by |
+|---|---|---|
+| E7-1 | `AD15-IR-12` — canonical invocation order and fatal-run fail-fast | adversarial review |
+| E7-2 | `AD15-IR-13` — total failure precedence: a canonical stage pipeline with barriers, a within-stage tie-break, and deterministic traversal order | adversarial review |
+| E7-3 | the top-level `artifacts` field description stopped asserting one entry per bundle artifact | adversarial review |
+| E7-4 | the `ERROR` prose stopped claiming every non-withheld reason failed before any attempt | adversarial review |
+| E7-5 | the `AD15-IR-9` evidence record narrowed to what its own source review established | adversarial review |
+| E7-6 | per-run selftest figures removed from the normative text | adversarial review |
+| E7-7 | `AD15-IR-14` — a post-identity operator assertion mismatch is result-bearing | Python lane's declared open ambiguity |
+| E7-8 | `AD15-IR-15` — abnormal process termination records a null exit code and null result; no signal name or synthesized code enters a **normative** field (see E7-14) | pre-pin review |
+| E7-9 | intra-stage precedence is by **mechanism then path**, every failure carries a key, and stage 11 is carved out as sequential | pre-pin review |
+| E7-10 | the canonical traversal key is **raw bytes**, not a decoded string; non-UTF-8 entry names and unpaired surrogates in manifest paths are pinned | pre-pin review |
+| E7-11 | §8.7 made exhaustive, with a **fail-closed default** and `evaluator_version` declared lane-specific | pre-pin review |
+| E7-12 | "mandatory test block executed" given a criterion: a declared registry, with unexecuted entries reported as skipped | pre-pin review |
+| E7-13 | §8.6's totality claim scoped honestly around `internal-error`; §8.4 scoped to repeat determinism, not cross-lane | pre-pin review |
+| E7-14 | `AD15-IR-15`'s signal prohibition scoped to **normative fields**; `detail` may carry the signal. It had forbidden what its next sentence required | pre-pin review, **second pass** |
+| E7-15 | a **third tie-break level**: where a reason carries a `json_pointer`, ascending byte order of the pointer decides. Two bad numbers in one file shared a stage, a reason and a path | pre-pin review, second pass |
+| E7-16 | §8.4's "ordering of **any** collection is by UTF-8 byte order" narrowed to JSON-string identifiers, with filesystem entries explicitly excepted | pre-pin review, second pass |
+| E7-17 | §8.7's fail-closed default confined to the **result object**; lane self-test totals declared diagnostic | pre-pin review, second pass |
+| E7-18 | an unpaired surrogate anywhere in a parsed **listed artifact or operator-input document** is `bundle-json-invalid` at stage 8; repair by substitution is forbidden. Strict JSON admits it, RFC 8785 cannot canonicalize it | pre-pin review, **third pass** |
+| E7-19 | `json_pointer` pinned to RFC 6901 **against the file the violation is in**, never the envelope — the two bases give different normative strings | pre-pin review, third pass |
+| E7-20 | the precedence rule called itself "two-level" while listing three; the E7-8 record row still carried the unconditional signal prohibition | pre-pin review, third pass |
+| E7-21 | stage 8 narrowed away from "canonicalizability" in general; §5.1 numeric failures stay at stage 10 with their pointer. The broad wording had silently captured `1e400` | pre-pin review, **fourth pass** |
+| E7-30 | the five-tuple's locator scoped to **where it is emitted**. Pass 7 required an assignment per `(stage, reason)`; pass 8 showed that table was not total *and* that none of its locators is emitted. §8.2.2 permits `json_pointer` for `numeric-preflight-violation` alone, so every other intra-reason selection is unobservable and is now an explicit exemption | pre-pin review, **seventh and eighth passes** |
+| E7-34 | the "byte-identical result objects" claim corrected to "identical on the §8.7 parity surface" — `detail` and `evaluator_version` legitimately differ — and the key described as three components plus a conditional fourth rather than a five-tuple whose last two are undefined for almost every reason | pre-pin review, **ninth pass** |
+| E7-33 | `W1-BLK-JCS` extended to require the stage-8/stage-10 boundary discrimination — that `1e400` is a stage-10 `numeric-preflight-violation` with its pointer, not a stage-8 `bundle-json-invalid` | pre-pin review, eighth pass |
+| E7-31 | `W1-BLK-IR16` and `W1-BLK-IR17` added to the closed block set; adding two rulings without extending it had left both untestable | pre-pin review, seventh pass |
+| E7-32 | two operative "raw bytes" restatements and the "three-level" framing corrected after the platform-neutral key and the five-tuple replaced them; `AD15-IR-15`'s normal-exit row now covers exit `2` | pre-pin review, seventh pass |
+| E7-28 | `AD15-IR-16` — `withheld_reasons` entry shape pinned. A lane had chosen one for itself while the member sat outside the parity surface; §8.7 had just moved it inside | **declared-ambiguity sweep** (lane A5) |
+| E7-29 | `AD15-IR-17` — duplicate **manifest** member names pinned. E7-22 closed this for artifact files at stage 8; the manifest is read earlier, and a lane was relying on its runtime's last-wins default | **declared-ambiguity sweep** (lane A8) |
+| E7-23 | `AD15-IR-15` restated as a **three-outcome table**; the surviving "same shape as `AD15-IR-11`" sentence removed. Abnormal termination is the absence of an exit code, **not** of a process attempt | maintainer |
+| E7-24 | the traversal key made **platform-neutral** — raw bytes where the API gives them, the exact Unicode-native name UTF-8-encoded otherwise, normalization forbidden. "Raw bytes the OS returns" was a POSIX-only rule | maintainer |
+| E7-25 | the parity surface bounded by a **closed result member set**; an unknown machine-readable member is schema-invalid, not implicitly normative. Diagnostics, signal names, OS error strings and timing explicitly excluded | maintainer |
+| E7-26 | precedence completed with a canonical locator, originally as a five-tuple; "the first one I encountered" forbidden at every key. **Superseded by E7-30**, which reduced the key to three components plus a conditional `json_pointer` | maintainer |
+| E7-27 | mandatory-block IDs **pinned by this contract** rather than self-declared, with execution proved by counter increment plus completion record, and unknown/duplicate IDs making a run non-qualifying | maintainer |
+| E7-22 | RFC 8785's input domain closed as an explicit three-row table. **Duplicate object member names** had no treatment at all — two lanes could canonicalize `{"k":1}` and `{"k":2}` from the same file and emit different `request_envelope_digest` values while both reporting success | pre-pin review, **fifth pass** |
+
+**On E7-2, and why it is the largest change here.** Every erratum before this one ordered failures
+*pairwise*, as divergences surfaced. That method cannot converge: each unordered pair is a latent
+divergence, and the lanes cannot find them without implementing first, which costs a full round
+each time. §8.6 replaces it with a total order over stages, with the barriers stated explicitly
+because the barriers — not the stage list — are what make a multi-fault bundle single-valued.
+
+**On E7-1.** `AD15-IR-11` closed what a spawn failure contributes and, in doing so, made two
+previously invisible things observable: invocation order and the continue-or-abort policy. A ruling
+that makes something observable inherits the duty to pin it.
+
+**On the pre-pin review, and what it caught.** Erratum 6 was reviewed *after* it was pinned, and two
+of its own defects (E7-3, E7-5) were found there. From this erratum onward a full-contract
+adversarial pass runs **before** a canonical SHA is requested. It paid for itself on its first run:
+E7-8 through E7-13 are all defects **in the Erratum 7 candidate itself**, three of them rated
+blocking, found before either lane implemented against them. Every one would otherwise have cost a
+remediation round to discover.
+
+The second pass then found that **the closures had introduced three new blocking defects of their
+own** (E7-14 through E7-16). That is the more useful lesson: a fix to a normative document is new
+normative text and inherits the same review duty as the text it replaces. E7-14 is the sharpest
+case — a prohibition whose very next sentence required what it forbade, written while closing a
+finding about contradictory requirements. Review therefore runs until a pass returns no blocker, not
+once per erratum.
+
+Later passes found more of the same kind — a rule announcing itself as two-level while enumerating
+three, a record row still carrying a prohibition the text had already scoped, a narrowing whose
+wording silently captured a neighbouring stage — alongside genuine holes no earlier pass had reached
+(E7-18, E7-19, E7-22). The pattern held across every round and is worth stating plainly: **roughly
+half of what each pass finds was introduced by the previous pass's closures.** That is not an
+argument against closing findings. It is the measured cost of editing a normative document, and it
+is why the pin waits for a pass that returns nothing rather than for a fixed number of passes.
+
+The deepest defect in this erratum was found last. **Duplicate object member names** (E7-22) had no
+treatment anywhere: RFC 8785 excludes them from its input domain, strict JSON parsers disagree about
+them, and two lanes could have canonicalized `{"k":1}` and `{"k":2}` from the same bytes and emitted
+different `request_envelope_digest` values **while both reported success**. That is the worst class
+of defect this contract can carry — not a divergent error, but divergent evidence over identical
+input with no error raised. Four passes read past it. It is the reason §5 now closes RFC 8785's
+input domain as an explicit table rather than describing it in prose. The pass reads the whole document rather than the diff — restatement sweep, declared-open-ambiguity sweep, total precedence,
+filesystem and process fault matrix, result-shape contradictions, and test vacuity. That is a
+working process, deliberately **not** written into this contract as methodology: a contract that
+carries its own development history becomes a second source of truth, which is the defect this
+chain keeps paying for.
+
+**On §8.7.** The normative surface is stated so a divergence report has to establish that it moves
+something observable before it blocks a freeze. Without that boundary, review over invalid-input
+space does not terminate. It is an addition beyond the six review findings and the lane's ambiguity,
+made because `AD15-IR-13` is otherwise unbounded in scope.
+
+**Numbering note.** §8.6 and §8.7 are appended rather than inserted so that no existing
+cross-reference to §8.4 or §8.5 is renumbered.
+
+**No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
+
+### Erratum 7 round three — record (2026-08-30)
+
+Raised by **maintainer canonical source review** of the round-two candidate
+`f546d2bc3fff0335a9d245e78cd6de7ac1091651`, which is preserved unchanged as round-two provenance.
+
+| # | Change | Raised by |
+|---|---|---|
+| E7-SR-1 | §8.7's binary model replaced by **four classes** — cross-lane equality, lane-local assertion, audit-only, diagnostic-only — plus the `scenario_id` four-point binding, the closed projection, and harness **duty 6** comparing its RFC 8785 canonical bytes | maintainer source review |
+| E7-SR-2 | `AD15-IR-18` — one closed `artifact_ref` projection, total over every JSON value, with its source pinned per process outcome | maintainer source review |
+| E7-SR-3 | `AD15-IR-19` lexical path grammar; `AD15-IR-20` closed JSON byte domain; `AD15-IR-17` restricted to a **top-level** duplicate `scenario_id` | maintainer source review |
+| E7-SR-N1 | the empty-set path-key claim corrected — a pathless whole-bundle violation uses the empty byte string | maintainer source review |
+
+**On E7-SR-1, which is the substantive one.** The binary model was not merely incomplete, it was
+**contradictory**: it declared every `artifacts[]` field and all of `verifier_digests` normative,
+while `verifier_stderr_digest` and each lane's own class-verifier digest are *expected* to differ —
+the two frozen verifiers are different programs. A lane obeying it literally would have failed a
+conforming peer. It also omitted `scenario_id`, so the scenario label itself was never compared, and
+no duty compared the complete projection: duties 2, 4 and 5 each check one field, leaving
+`nonmeasurement.reason`, `artifacts[]` membership and `artifact_ref` uncompared across lanes.
+
+**On comparing a projection rather than listing fields.** Field-by-field duties grow by one entry per
+erratum and silently omit whatever nobody thought of. A closed projection compared as RFC 8785
+canonical bytes inverts that: anything inside it is compared by construction, and anything a lane
+adds is an unknown member and therefore invalid rather than quietly uncompared.
+
+| E7-SR-4 | `W1-BLK-PARITY` made **peer-safe and satisfiable**: the cross-lane comparison is harness duty 6, the per-lane block proves the projection is invariant under Class-3/Class-4 substitution and moves under any Class-1 change. The mandatory stderr-digest inequality was **unsatisfiable** — both frozen verifiers write stderr only in usage/invalid branches, so on a normal verdict both digests are SHA-256 of the empty string | pre-pin review |
+| E7-SR-9 | the E7-SR-8 correction had **over-narrowed**: it claimed the qualifying stage-0 `exit 1` was the only outcome that could carry a schema-invalid ID, which §7.2 (qualifying only for `IOP-B-DEC`/`CTL`/`EFF`) and `AD15-IR-15` (death can precede stage 0) both falsify. Source-selection testing is now organised by **source, defined by exclusion**, not by an outcome list; the Source-A negative gate is named explicitly | pre-pin review |
+| E7-SR-8 | `W1-BLK-ARTIFACT-REF`'s full `record_id` × `chain_id` × process-outcome cross-product was **unsatisfiable**: the frozen schema requires both to be strings, so schema-invalid values can never reach an `exit 0` verdict or stage 1. Projection-function totality testing is now separate from reachable process / source-selection testing | maintainer source review |
+| E7-SR-7 | the widened definition's Boolean fixed. "Not accepted by A **or** B" parses as rejected by *both*; the rule is rejected by **either**, so it now reads "accepted by both … and …". A stale "the frozen contract does not permit" restatement, which independently excluded the new case, corrected with it | pre-pin review |
+| E7-SR-6 | `verifier-run-invalid` widened to cover a shape rejected by **this** contract's result-shape gate, not only the frozen one — the `artifact_ref` closure is a gate W1 adds, and the narrower definition left it with no registry entry; and §8.3.1's field-timing passage corrected, since `artifact_ref` on the `exit 0` path comes from the verdict, not from the artifact | pre-pin review |
+| E7-SR-5 | `W1-BLK-IR17` regained "top-level"; §8.4's determinism restatement rewritten to the four-class model — it still said the lanes may differ on `verifier_digests` wholesale, which is now false for `class_verifier_contract`; the exit-0 `artifact_ref` closure pinned **at the result-shape gate** | pre-pin review |
+
+**On E7-SR-4 and E7-SR-8, and what they say about writing tests into a contract.** Both are the same
+defect, and E7-SR-8 was written into round three *while closing* E7-SR-4. A test obligation is
+normative text and can be wrong in a way prose cannot: prose that overreaches is merely unclear,
+whereas a mandatory check that cannot be satisfied makes a **correct** implementation non-qualifying.
+Three such rules have now been written and removed — a lane-local block demanding peer material, an
+inequality the frozen sources make impossible, and a Cartesian product the frozen schema forbids.
+Each was added in the act of demanding more verification.
+
+**On E7-SR-4 specifically.** `W1-BLK-PARITY` as first
+written demanded a lane-local runner compare its result against its peer's, in a document whose §4
+forbids a lane from seeing its peer. It also demanded an inequality that the frozen sources make
+impossible. Both were written while closing a finding about a surface that was not being compared —
+the reflex was to demand more comparison, and the check is where that reflex does the most damage,
+because an unsatisfiable mandatory block makes a conforming implementation non-qualifying.
 
 **No corpus-contract change.** The mandatory twelve and the expected matrix are unaffected.
 
 ## 13. Sequencing
 
-The closure remediation round is complete. Both candidates are frozen as **post-Erratum-5 closure
-candidates (r3)** on `w1/interop-eval-py-final-r3` and `w1/interop-eval-node-final-r3`. Every
-earlier `-official`, `-r1` and `-r2` ref is frozen alongside them — no ref in this chain is ever
-rewritten or deleted.
+The Erratum-6 remediation round is complete. Both candidates are frozen on
+`w1/interop-eval-py-freeze` and `w1/interop-eval-node-freeze`, alongside the closure candidates on
+`w1/interop-eval-py-final-r3` and `w1/interop-eval-node-final-r3` and every earlier `-official`,
+`-final`, `-r1` and `-r2` ref. No ref in this chain is ever rewritten or deleted, and a round's
+candidates always take new refs rather than moving an existing one.
 
-`w1/interop-eval-py-final` and `w1/interop-eval-node-final` hold the same commits as the r3 refs and
-are **not** official identities. They are not moved again: the post-Erratum-6 candidates take new
-refs, so no reader has to work out which commit a given ref meant at a given time.
+**Neither remediation head is an official identity.** Official freeze is held by this erratum.
 
 Remaining sequence:
 
-1. **Erratum 6 is source-reviewed and canonicalized** — the maintainer pins a new head and the
+1. **A full-contract adversarial pass runs before a canonical SHA is requested.** It reads the whole
+   document, not the diff. Any blocker it finds is closed on the candidate first.
+2. **Erratum 7 is source-reviewed and canonicalized** — the maintainer pins a new head and the
    evaluator-contract digest. The corpus contract is unchanged and keeps its existing digest.
-2. **Python remediation** in a fresh isolated context: only `41516a292bf07b4c7875c2e370dd2fcb1396a20a`
-   plus the new canonical contracts, on `w1/interop-eval-py-freeze`. Behavioural change: an explicit
-   no-follow metadata lookup per enumerated entry (`AD15-IR-9`), with a discrimination test.
-3. **Node remediation** in a fresh isolated context: only `809c610840a841531ade33fb077d29afb49343f0`
-   plus the new canonical contracts, on `w1/interop-eval-node-freeze`. `AD15-IR-9` requires no
-   evaluator behavioural change in this lane; the round covers contract-alignment tests and selftest
-   hardening.
-4. **Both lanes carry explicit tests** for the `AD15-IR-10` ordering and the `AD15-IR-11`
-   spawn-failure behaviour, whether or not their current code already conforms. A rule that holds by
-   accident is not tested.
-5. **The Node selftest must not report success while silently skipping a mandatory block.** The
-   official summary carries `passed / failed / skipped`, and in the default mode `skipped > 0` exits
-   non-zero. A developer-only opt-in may permit skips; the official evidence command may not use it.
-6. **Peer material remains invisible** throughout.
-7. **The canonical lineage is merged into each branch**, no squash or rewrite.
-8. Tests and source review.
-9. **Official Python and Node evaluator identities are frozen.**
-10. **Only then is corpus construction opened.**
+3. **Python remediation** in a fresh isolated context, on a new ref. Behavioural changes: the
+   `AD15-IR-12` invocation order and abort; the `AD15-IR-13` stage pipeline, including its
+   comparison key with its conditional `json_pointer` component and the platform-neutral traversal
+   name key; `AD15-IR-14`; `AD15-IR-15`; `AD15-IR-16`; `AD15-IR-17`; the `AD15-IR-18` `artifact_ref`
+   projection; the `AD15-IR-19` path grammar; the `AD15-IR-20` byte domain; and the §8.7 four-class
+   model with harness duty 6.
+4. **Node remediation** in a fresh isolated context, on a new ref, against the same rulings.
+5. **Both lanes carry explicit discrimination tests** for every ruling they implement, including a
+   multi-fault bundle proving the stage barriers, and a bundle proving the invocation abort. A rule
+   that holds by accident is not tested.
+6. **The Node selftest reports `passed / failed / skipped` and exits non-zero on any skip** in its
+   default mode. The official evidence command does not use the developer-only skip opt-in.
+7. **Peer material remains invisible** throughout.
+8. **The canonical lineage is merged into each branch**, no squash or rewrite.
+9. Tests, adversarial review, and source review.
+10. **Official Python and Node evaluator identities are frozen.**
+11. **Only then is corpus construction opened.**
 
-Step 2 is the only behavioural change in this round; steps 3-5 are alignment and instrumentation.
+A difference blocks step 10 only if it moves something on the normative surface defined in §8.7.
 
-**Corpus bytes remain on HOLD through step 9. Step 10 is the only point at which corpus
+**Corpus bytes remain on HOLD through step 10. Step 11 is the only point at which corpus
 construction opens, matching the status line at the head of this document.**
