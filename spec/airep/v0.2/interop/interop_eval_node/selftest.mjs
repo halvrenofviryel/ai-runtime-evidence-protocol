@@ -22,6 +22,7 @@ import {
   authenticatedWithheldViolation, artifactRefFromArtifact,
   checkJsonByteDomain, hasUnpairedSurrogate, scanJsonDocument,
   compareStageFailures, resultShapeViolation, normativeProjection, projectionBytes,
+  STAGE, STAGE_REASON_ORDER, reasonRank,
   RESULT_MEMBERS as EVAL_RESULT_MEMBERS,
 } from "./interop_eval.mjs";
 
@@ -64,6 +65,30 @@ function skip(block, why) {
   console.log(`SKIPPED: ${block} -- ${why}`);
 }
 
+// A BRANCH that is STRUCTURALLY UNREACHABLE on this runtime, recorded rather
+// than skipped silently or counted as covered.
+//
+// This is NOT the same thing as skip(). W1-BLK-IR13 item 9 is the case it exists
+// for: the section 8.6 name key is defined over WHAT THE PLATFORM'S API ACTUALLY
+// PROVIDES, and the contract says in terms that "a lane whose API yields only
+// lossless raw bytes cannot construct the Unicode-native branch, and vice versa;
+// the unreachable branch is recorded NOT_MEASURED on that platform rather than
+// skipped silently or counted as covered."
+//
+// Node's readdirSync({ encoding: "buffer" }) yields lossless raw name bytes on
+// every platform this lane runs on, so the Unicode-native branch cannot be
+// constructed here AT ALL -- not for an environmental reason a re-run could
+// change. Routing it through skip() would make the OFFICIAL evidence command
+// permanently non-zero and would therefore assert that the pinned BLOCK did not
+// execute, which is false: the block's obligation is "the name-key branch ITS OWN
+// PLATFORM SUPPLIES", and that branch is measured. The three states section 8.7
+// pins are per-BLOCK; this is a per-BRANCH record inside a block that ran.
+const notMeasuredBranches = [];
+function notMeasuredBranch(branch, why) {
+  notMeasuredBranches.push(`${branch} -- ${why}`);
+  console.log(`NOT MEASURED (branch): ${branch} -- ${why}`);
+}
+
 // ---------------------------------------------------------------------------
 // The CANONICAL MANDATORY BLOCK REGISTRY (section 8.7)
 // ---------------------------------------------------------------------------
@@ -96,7 +121,23 @@ function skip(block, why) {
 // Sharing an ID vocabulary with the peer lane is not shared state and does not
 // touch section 4 isolation: the two lanes derive their test code independently
 // from the same contract, exactly as they derive their evaluators.
+// E8-10 / E8-11. The registry began at W1-BLK-IR9: AD15-IR-4 through AD15-IR-8
+// had NO BLOCK AT ALL, so five normative rulings -- including AD15-IR-8's 0o111
+// worked case, a MEASURED convergence in Erratum 5 -- could each be violated by
+// a lane while every mandatory block reported green. The set is now TWENTY.
+//
+// E8-12 states what this registry is, and it is worth carrying here because it
+// bounds what a block may demand: it is a MINIMUM DISCRIMINATION SUITE, not a
+// completeness proof. Absence of a block for a normative branch does not make
+// that branch non-normative and does not grant implementation freedom; and no
+// block may require an impossible fixture, an unprovable universal, peer
+// material, or narrow a freedom the contract leaves open.
+//
+// The SIX-ID AGGREGATE registry (W1-AGG-D1 .. D6) is the HARNESS's, not this
+// lane's: by section 4 a lane-local runner can never exercise anything requiring
+// peer material. It is deliberately absent from this file and is not attempted.
 const MANDATORY_BLOCKS = Object.freeze([
+  "W1-BLK-IR4", "W1-BLK-IR5", "W1-BLK-IR6", "W1-BLK-IR7", "W1-BLK-IR8",
   "W1-BLK-IR9", "W1-BLK-IR10", "W1-BLK-IR11", "W1-BLK-IR12", "W1-BLK-IR13",
   "W1-BLK-IR14", "W1-BLK-IR15", "W1-BLK-IR16", "W1-BLK-IR17", "W1-BLK-JCS",
   "W1-BLK-LIVE", "W1-BLK-PARITY", "W1-BLK-ARTIFACT-REF", "W1-BLK-JSON-BYTES",
@@ -401,7 +442,11 @@ function verdicts(byFamily, observerAssessment) {
 // 8. Frozen-verdict shape assertion
 // ---------------------------------------------------------------------------
 
+// E8-3 makes artifact_ref REQUIRED, TYPED and CLOSED on an accepted verdict, so
+// a well-shaped verdict now carries one. The fixture is updated rather than the
+// gate weakened: the ruling is what changed.
 const OK_VERDICT = {
+  artifact_ref: { chain_id: "c", record_id: "r" },
   class: "AIREP-Authenticated", observer_assessment: "not_applicable",
   authenticated_failures: [], authenticated_withheld: [], authenticated_caveats: [],
   witnessed_failures: [], witnessed_withheld: [],
@@ -701,6 +746,21 @@ function expectNonMeasured(name, dir, reason, status = "ERROR", extra = null) {
   check(`${name} detail is a non-empty string`,
     typeof v.nonmeasurement.detail === "string" && v.nonmeasurement.detail.length > 0);
   if (extra !== null) extra(v, r);
+  return v;
+}
+
+// The same assertions, for cases that need extra argv (a --verifier override,
+// an operator-input flag). expectNonMeasured() takes a bundle directory; this
+// takes the whole argument vector.
+function expectNonMeasuredWith(name, args, reason, status = "ERROR") {
+  const r = run(args);
+  eq(`${name} exits 3`, r.code, 3);
+  if (r.code !== 3) return null;
+  const v = parseOne(name, r.out);
+  eq(`${name} reason`, v.nonmeasurement.reason, reason);
+  eq(`${name} status`, v.measurement_status, status);
+  eq(`${name} level1 is null`, v.level1, null);
+  eq(`${name} predicates is null`, v.predicates, null);
   return v;
 }
 
@@ -1008,6 +1068,13 @@ fs.writeFileSync(driver,
   + '    return { pid: 0, status: null, signal: null, stdout: null, stderr: null,\n'
   + '             error: err, output: [] };\n'
   + '  }\n'
+  + '  if (step.throws) {\n'
+  + '    // Not a process outcome at all: spawnSync itself raises. The evaluator\n'
+  + '    // has no registry reason for that, so it must reach the generic fault\n'
+  + '    // path and report internal-error -- which is what W1-BLK-IR13 item 12\n'
+  + '    // needs in order to show internal-error staying OUTSIDE the stage order.\n'
+  + '    throw new Error("synthetic evaluator-internal fault at invocation");\n'
+  + '  }\n'
   + '  if (step.signal) {\n'
   + '    // AD15-IR-15 middle row: the process STARTED (a real pid) and did not\n'
   + '    // exit normally. Node reports that as status null plus a signal name --\n'
@@ -1029,6 +1096,67 @@ fs.writeFileSync(driver,
   + '// because the loop never reached the second artifact at all.\n'
   + 'process.stderr.write(`SPAWN_CALLS=${calls}\\n`);\n'
   + 'process.exitCode = code;\n');
+
+// ---------------------------------------------------------------------------
+// 11b. The FILESYSTEM interceptor
+// ---------------------------------------------------------------------------
+// Two obligations need a filesystem state that cannot be produced by writing
+// files, and both are pinned Class-1 behaviour:
+//
+//   * E8-2 -- a listed file PRESENT at stage 5 and giving a DEFINITE ENOENT on
+//     read at stage 6. That is a race against the evaluator's own traversal;
+//     writing and deleting files cannot land inside it deterministically.
+//   * W1-BLK-IR13 item 8 -- the reported failure does not change with the
+//     OPERATING SYSTEM'S enumeration order. readdir order is unspecified and
+//     this filesystem happens to be stable, so the only way to measure the
+//     property is to hand the evaluator a different order.
+//
+// Same discipline as the spawn interceptor: the real interop_eval.mjs is
+// entered through its real exported main(), with the real preflight and the real
+// frozen-identity assertion over the GENUINE frozen files. Only the two
+// filesystem primitives named in the plan are diverted, and only for paths that
+// match a declared suffix -- the manifest read and the frozen-identity reads go
+// through untouched.
+const fsDriver = path.join(tmp, "fs_driver.mjs");
+fs.writeFileSync(fsDriver,
+  'import { createRequire } from "node:module";\n'
+  + 'const require = createRequire(import.meta.url);\n'
+  + 'const fsmod = require("node:fs");\n'
+  + 'const plan = JSON.parse(process.env.AIREP_SELFTEST_FSPLAN);\n'
+  + 'const realRead = fsmod.readFileSync;\n'
+  + 'const realReaddir = fsmod.readdirSync;\n'
+  + 'fsmod.readFileSync = function (p, ...rest) {\n'
+  + '  const sp = typeof p === "string" ? p : String(p);\n'
+  + '  for (const rule of plan.readFileErrors ?? []) {\n'
+  + '    if (sp.endsWith(rule.suffix)) {\n'
+  + '      const err = new Error(`${rule.code}: synthetic, open ${sp}`);\n'
+  + '      err.code = rule.code;\n'
+  + '      err.syscall = "open";\n'
+  + '      err.path = sp;\n'
+  + '      throw err;\n'
+  + '    }\n'
+  + '  }\n'
+  + '  return realRead.call(this, p, ...rest);\n'
+  + '};\n'
+  + 'fsmod.readdirSync = function (p, ...rest) {\n'
+  + '  const out = realReaddir.call(this, p, ...rest);\n'
+  + '  // The OS order this lane is handed is stable; reversing it is what makes\n'
+  + '  // "the reported failure does not change with enumeration order" measurable\n'
+  + '  // rather than asserted.\n'
+  + '  return plan.reverseReaddir ? [...out].reverse() : out;\n'
+  + '};\n'
+  + 'const mod = await import(process.env.AIREP_SELFTEST_EVAL);\n'
+  + 'process.exitCode = mod.main(process.argv.slice(2));\n');
+
+function runFsIntercepted(bundleDir, fsplan, extraArgs = []) {
+  const p = spawnSync(process.execPath, [fsDriver, "--bundle", bundleDir, ...extraArgs], {
+    encoding: "utf8",
+    env: { ...process.env,
+      AIREP_SELFTEST_FSPLAN: JSON.stringify(fsplan),
+      AIREP_SELFTEST_EVAL: pathToFileURL(EVAL).href },
+  });
+  return { code: p.status, out: p.stdout, err: p.stderr };
+}
 
 function runIntercepted(bundleDir, plan, extraArgs = []) {
   const p = spawnSync(process.execPath, [driver, "--bundle", bundleDir, ...extraArgs], {
@@ -1955,7 +2083,9 @@ for (const wrongName of ["MANIFEST.json", "bundle.json", "manifest.JSON", "manif
 
 // Result band, for a frozen exit 0.
 {
+  // E8-3: an accepted verdict now REQUIRES a typed, closed artifact_ref.
   const GOOD = {
+    artifact_ref: { chain_id: "c", record_id: "r" },
     class: "AIREP-Core", observer_assessment: "not_applicable",
     authenticated_failures: [], authenticated_withheld: [], authenticated_caveats: [],
     witnessed_failures: [], witnessed_withheld: [],
@@ -2781,6 +2911,545 @@ function utf32(str, littleEndian) {
 // vocabulary is not shared state, and nothing here reads, imports or compares
 // against any Python material.
 
+// ===========================================================================
+// The five BACKFILLED blocks: W1-BLK-IR4 .. W1-BLK-IR8 (E8-10)
+// ===========================================================================
+// The registry began at W1-BLK-IR9 because it was written during Erratum 7 and
+// only ever covered the rulings that erratum touched; nothing swept backwards.
+// AD15-IR-4 through AD15-IR-8 therefore had NO BLOCK AT ALL, and each could be
+// violated by a lane while every mandatory block reported green.
+//
+// Every digest constant below was computed OUTSIDE this program, by
+// python3 json.dumps(sort_keys=True, separators=(",", ":")) over the same JSON
+// value, which coincides with RFC 8785 for the ASCII keys and integer numbers
+// these fixtures use. That is what makes the recomputation INDEPENDENT: a test
+// that re-derived the digest with the evaluator's own jcs() would prove only
+// that the module agrees with itself.
+
+// --- W1-BLK-IR4: the LANE-LOCAL half of AD15-IR-4 --------------------------
+//
+// The aggregate branches -- pair key, mismatch making a run non-qualifying,
+// mismatch never reaching an evaluator exit code -- are W1-AGG-D2 and MUST NOT
+// be attempted here. A single invocation has no access to the peer lane's
+// digest; it cannot observe, let alone enforce, a property of a run it is not
+// part of. Nothing in this block reads, models or simulates a peer result.
+//
+// E8-7 also removed an UNPROVABLE UNIVERSAL from this block: "any envelope
+// change moves the digest" quantifies over an infinite domain and is not even
+// true as a contract invariant, since SHA-256 is not injective. THIS BLOCK
+// ASSERTS NO INJECTIVITY. What it asserts is repeat determinism, an independent
+// recomputation, and controlled mutations that change the canonical bytes.
+beginBlock("W1-BLK-IR4");
+{
+  const IR4_BASE_DIGESTS = {
+    "artifacts/1decision.json": "sha256:d11be51b5917a15bfa1d6257f28f6feedae504b73bfa6f1aef835ddd4d99bd27",
+    "artifacts/2control.json": "sha256:5fedaff3f876ff15e2689d85bad952c068db094ebe28dfee62477c3fbf31c052",
+    "artifacts/3execution.json": "sha256:a0dea157d96932c9dd83f7cc1ee4bf7e3e5c4e63d825cbbf461f76cd1d3bcf5b",
+    "artifacts/4effect.json": "sha256:dead3bb70cc580803484c1205b4b5b12f82afcd2123999ea977b66d91b7a2426",
+  };
+  const SINGLE_DIGEST =
+    "sha256:2c2199bc26d98d650c8382f5d631c24bff92e08b1638e25a6ec577cca890cf75";
+
+  const clean = [{ status: 0, stdout: verdict() }];
+
+  // (1) THE ENVELOPE IS BUILT EXACTLY PER SECTION 5.1, and its digest equals an
+  //     INDEPENDENT recomputation of SHA-256 over the actual RFC 8785 canonical
+  //     bytes. Both halves matter: an evaluator could canonicalize correctly and
+  //     hash something else, or hash correctly over the wrong value.
+  const base = runIntercepted(four("ir4-base"), clean);
+  eq("AD15-IR-4: a four-artifact bundle is measured", base.code, 0);
+  let baseEntries = [];
+  if (base.code === 0) {
+    const v = parseOne("ir4 base", base.out);
+    baseEntries = v.artifacts;
+    eq("AD15-IR-4: one entry per artifact", v.artifacts.length, 4);
+    for (const e of v.artifacts) {
+      eq(`AD15-IR-4: ${e.artifact_path} envelope digest equals the INDEPENDENT recomputation`,
+        e.request_envelope_digest, IR4_BASE_DIGESTS[e.artifact_path]);
+      check(`AD15-IR-4: ${e.artifact_path} digest is the pinned sha256: wire form`,
+        /^sha256:[0-9a-f]{64}$/.test(e.request_envelope_digest), e.request_envelope_digest);
+    }
+  }
+
+  // Section 5.1's single-artifact rule: related_artifacts is the EMPTY ARRAY --
+  // not absent, not populated with unrelated artifacts. The independent digest
+  // is over {"artifact":A,"related_artifacts":[]}, so an evaluator that omitted
+  // the member would not match it.
+  {
+    const r = runIntercepted(mkBundle("ir4-single"), clean);
+    eq("AD15-IR-4: a single-artifact bundle is measured", r.code, 0);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      eq("AD15-IR-4: the single-artifact envelope carries an EMPTY related_artifacts",
+        v.artifacts[0].request_envelope_digest, SINGLE_DIGEST);
+    }
+  }
+
+  // (2) REPEAT DETERMINISM on identical input (section 8.4). Byte-identical
+  //     output, not merely an equal digest: the requirement is over the whole
+  //     result object.
+  {
+    const again = runIntercepted(four("ir4-base"), clean);
+    eq("AD15-IR-4: a repeat run over identical input exits the same", again.code, base.code);
+    check("AD15-IR-4: and its output is BYTE-IDENTICAL", again.out === base.out,
+      "repeat run differed");
+  }
+
+  // (3) CONTROLLED MUTATIONS, proving the evaluator RE-HASHES rather than
+  //     carrying a digest forward. Each mutation changes the canonical bytes of
+  //     the envelope, so each emitted digest must move -- and the mutation is
+  //     named, finite and checked, never a universal claim over all inputs.
+  {
+    const mutated = mkBundle("ir4-mutated", {
+      scenarioId: "IOP-R-CLEAN",
+      artifacts: {
+        "artifacts/1decision.json": '{"airep_version":"0.2","artifact_type":"decision","chain_id":"c","record_id":"r-dec","sequence":0}',
+        "artifacts/2control.json": '{"airep_version":"0.2","artifact_type":"control","chain_id":"c","record_id":"r-ctl","sequence":1}',
+        "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"r-exe","sequence":2}',
+        // The ONE controlled change: sequence 3 -> 4 on the effect.
+        "artifacts/4effect.json": '{"airep_version":"0.2","artifact_type":"effect","chain_id":"c","record_id":"r-eff","sequence":4}',
+      },
+    });
+    const r = runIntercepted(mutated, clean);
+    eq("AD15-IR-4: the mutated bundle is measured too", r.code, 0);
+    if (r.code === 0 && baseEntries.length === 4) {
+      const v = JSON.parse(r.out);
+      // The effect appears in EVERY other artifact's related_artifacts, so a
+      // single value change moves all four digests. An evaluator carrying a
+      // digest forward would move none of them.
+      for (const e of v.artifacts) {
+        const before = baseEntries.find((b) => b.artifact_path === e.artifact_path);
+        check(`AD15-IR-4: mutating one artifact value moves ${e.artifact_path}'s digest`,
+          e.request_envelope_digest !== before.request_envelope_digest,
+          `${e.artifact_path} digest did not move`);
+      }
+    }
+  }
+
+  // The CONTROL that makes the mutation test a test of the CANONICAL BYTES
+  // rather than of the file bytes: the same VALUES written with a different
+  // member order in the file must give the SAME digests. JCS is a function of
+  // the JSON value (section 5.1, byte rule, Layer 2), so a lane hashing file
+  // bytes instead would fail here while passing everything above.
+  {
+    const reordered = mkBundle("ir4-reordered", {
+      scenarioId: "IOP-R-CLEAN",
+      artifacts: {
+        "artifacts/1decision.json": '{"sequence":0,"record_id":"r-dec","chain_id":"c","artifact_type":"decision","airep_version":"0.2"}',
+        "artifacts/2control.json": '{"sequence":1,"record_id":"r-ctl","chain_id":"c","artifact_type":"control","airep_version":"0.2"}',
+        "artifacts/3execution.json": '{"sequence":2,"record_id":"r-exe","chain_id":"c","artifact_type":"execution","airep_version":"0.2"}',
+        "artifacts/4effect.json": '{"sequence":3,"record_id":"r-eff","chain_id":"c","artifact_type":"effect","airep_version":"0.2"}',
+      },
+    });
+    const r = runIntercepted(reordered, clean);
+    eq("AD15-IR-4: the member-reordered bundle is measured", r.code, 0);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      for (const e of v.artifacts) {
+        eq(`AD15-IR-4: ${e.artifact_path} digest is UNMOVED by file member order`,
+          e.request_envelope_digest, IR4_BASE_DIGESTS[e.artifact_path]);
+      }
+    }
+  }
+
+  // The peer half, stated as a NEGATIVE property of this file rather than as an
+  // assertion about a run it cannot see: no output of this evaluator names a
+  // peer digest, and this block never constructs one.
+  check("AD15-IR-4: the lane emits ONLY its own request_envelope_digest per artifact",
+    baseEntries.every((e) => typeof e.request_envelope_digest === "string"
+      && Object.keys(e).filter((k) => /envelope/.test(k)).length === 1));
+}
+endBlock("W1-BLK-IR4");
+
+// --- W1-BLK-IR5: artifact_path is the TOTAL result identity ----------------
+beginBlock("W1-BLK-IR5");
+{
+  // A bundle whose record_id order is the REVERSE of its artifact_path order,
+  // so an evaluator still ordering by record_id is caught rather than passing
+  // by coincidence.
+  const reverseRanked = (name) => mkBundle(name, {
+    scenarioId: "IOP-R-CLEAN",
+    artifacts: {
+      "artifacts/1decision.json": '{"airep_version":"0.2","artifact_type":"decision","chain_id":"c","record_id":"z-dec"}',
+      "artifacts/2control.json": '{"airep_version":"0.2","artifact_type":"control","chain_id":"c","record_id":"y-ctl"}',
+      "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"x-exe"}',
+      "artifacts/4effect.json": '{"airep_version":"0.2","artifact_type":"effect","chain_id":"c","record_id":"w-eff"}',
+    },
+  });
+
+  // (1) artifacts[] IS ORDERED BY artifact_path.
+  {
+    const r = runIntercepted(reverseRanked("ir5-order"), [{ status: 0, stdout: verdict() }]);
+    eq("AD15-IR-5: the reverse-ranked bundle is measured", r.code, 0);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      eq("AD15-IR-5: artifacts[] is in ascending artifact_path byte order",
+        v.artifacts.map((e) => e.artifact_path),
+        ["artifacts/1decision.json", "artifacts/2control.json",
+          "artifacts/3execution.json", "artifacts/4effect.json"]);
+      check("control: record_id order really is the REVERSE here, so the two disagree",
+        byteCompare("z-dec", "w-eff") > 0);
+    }
+  }
+
+  // (2) artifact_ref is NULL where the source carries no string record_id, and
+  //     (3) NO record_id is ever synthesized. Driven on a SOURCE-B path, because
+  //     on an accepted exit-0 verdict the ref comes from the verdict instead.
+  {
+    const dir = mkBundle("ir5-norecordid", {
+      artifacts: { "artifacts/a.json": '{"chain_id":"c","artifact_type":"decision"}' },
+    });
+    const r = runIntercepted(dir, [{ status: 2, stderr: "usage" }]);
+    eq("AD15-IR-5: a record_id-less artifact still reaches an invocation", r.spawnCalls, 1);
+    eq("AD15-IR-5: exit 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir5 no record_id", r.out);
+      eq("AD15-IR-5: it is the INVOCATION that failed, not a preflight refusal",
+        v.nonmeasurement.reason, "verifier-run-invalid");
+      eq("AD15-IR-5: the entry exists, so the artifact reached frozen stage 0",
+        v.artifacts.length, 1);
+      eq("AD15-IR-5: artifact_path is present and is the entry's identity",
+        v.artifacts[0].artifact_path, "artifacts/a.json");
+      eq("AD15-IR-5: artifact_ref is null -- no usable record_id", v.artifacts[0].artifact_ref, null);
+      check("AD15-IR-5: NO record_id was synthesized anywhere in the output",
+        !/record_id/.test(r.out), r.out.slice(0, 300));
+    }
+  }
+  // The consequence the ruling exists to secure, stated as its own check: a
+  // missing record_id reaches the frozen evaluation it belongs to instead of
+  // being converted into the evaluator's own preflight failure.
+  {
+    const dir = mkBundle("ir5-reaches-stage0", {
+      artifacts: { "artifacts/a.json": '{"chain_id":"c","artifact_type":"decision"}' },
+    });
+    const r = runIntercepted(dir, [{ status: 0, stdout: verdict() }]);
+    eq("AD15-IR-5: a record_id-less artifact is NOT refused in preflight", r.code, 0);
+    eq("AD15-IR-5: exactly one invocation was attempted", r.spawnCalls, 1);
+  }
+
+  // (4) R-A STILL KEYS ON record_id, NEVER ON artifact_path. The manifest path
+  //     is harness and result identity only -- it is not wire semantics and
+  //     never participates in reference resolution.
+  {
+    const arts = [
+      { bundlePath: "artifacts/1decision.json", value: { record_id: "iop-dec", chain_id: "c" } },
+      { bundlePath: "artifacts/2control.json", value: { record_id: "iop-ctl", chain_id: "c" } },
+    ];
+    eq("AD15-IR-5: a reference by record_id resolves",
+      resolveRef({ record_id: "iop-dec" }, arts).state, "resolved");
+    eq("AD15-IR-5: a reference naming an ARTIFACT_PATH does not resolve",
+      resolveRef({ record_id: "artifacts/1decision.json" }, arts).state, "unresolved");
+    check("AD15-IR-5: and no artifact_path ever appears as a resolution key",
+      resolveRef({ record_id: "artifacts/2control.json" }, arts).matches === 0);
+  }
+}
+endBlock("W1-BLK-IR5");
+
+// --- W1-BLK-IR6: related_artifacts ordering is artifact_path too -----------
+beginBlock("W1-BLK-IR6");
+{
+  // The digests below were computed OUTSIDE this program over the two candidate
+  // orderings of the SAME three related artifacts, so the block discriminates
+  // between them rather than merely asserting that some digest was emitted.
+  const PATH_ORDER = "sha256:303cda757e6d9bc83b6d5a6e58ce684dd995e0f2ce54d92547393e4ea000446c";
+  const RECORD_ID_ORDER = "sha256:fb0eb750d69f55b9868bc592c30fda7bece0905e9da9353535977c8e37e4c4a8";
+
+  // record_id order is the EXACT REVERSE of artifact_path order, which is what
+  // makes the two candidate envelopes different bytes.
+  const dir = mkBundle("ir6-reverse", {
+    scenarioId: "IOP-R-CLEAN",
+    artifacts: {
+      "artifacts/1decision.json": '{"airep_version":"0.2","artifact_type":"decision","chain_id":"c","record_id":"z-dec"}',
+      "artifacts/2control.json": '{"airep_version":"0.2","artifact_type":"control","chain_id":"c","record_id":"y-ctl"}',
+      "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"x-exe"}',
+      "artifacts/4effect.json": '{"airep_version":"0.2","artifact_type":"effect","chain_id":"c","record_id":"w-eff"}',
+    },
+  });
+  const r = runIntercepted(dir, [{ status: 0, stdout: verdict() }]);
+  eq("AD15-IR-6: the reverse-ranked bundle is measured", r.code, 0);
+  if (r.code === 0) {
+    const v = JSON.parse(r.out);
+    const first = v.artifacts.find((e) => e.artifact_path === "artifacts/1decision.json");
+    eq("AD15-IR-6: related_artifacts is ordered by artifact_path",
+      first.request_envelope_digest, PATH_ORDER);
+    check("AD15-IR-6: it is NOT the record_id ordering",
+      first.request_envelope_digest !== RECORD_ID_ORDER, "record_id ordering was emitted");
+    check("control: the two orderings really do give different envelope bytes",
+      PATH_ORDER !== RECORD_ID_ORDER);
+  }
+
+  // The case that made record_id ordering UNUSABLE: an artifact with NO usable
+  // record_id at all. Under the superseded ordering the envelope had no defined
+  // form -- one lane sorted it under an empty key, the other refused to build it
+  // -- and therefore no defined request_envelope_digest, which is exactly what
+  // aggregate duty 2 compares. artifact_path always exists, so the envelope
+  // stays well-defined.
+  const NORID = {
+    "artifacts/1decision.json": "sha256:aa28a03948cc42eac124e06dca1bfecf4ce8cb63c227ed6f2bd112da6eb888f8",
+    "artifacts/2control.json": "sha256:c97c63b17764dab913f2ce00efed8f990205d49be2d6836143b165849a9b5291",
+    "artifacts/3execution.json": "sha256:b6bfbeba37d67597cfc3f8ea32be332a15c1aeddb5af0d55cfd73a86e6cc7915",
+    "artifacts/4effect.json": "sha256:a48ef7f624973fdf7c08a507738ed07a076789e9bebd265e288a21b1317fda60",
+  };
+  const dir2 = mkBundle("ir6-norecordid", {
+    scenarioId: "IOP-R-CLEAN",
+    artifacts: {
+      "artifacts/1decision.json": '{"airep_version":"0.2","artifact_type":"decision","chain_id":"c","record_id":"r-dec"}',
+      "artifacts/2control.json": '{"airep_version":"0.2","artifact_type":"control","chain_id":"c","record_id":"r-ctl"}',
+      "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"r-exe"}',
+      // No record_id at all. It still has an artifact_path, so the envelope is
+      // a function of the bundle alone.
+      "artifacts/4effect.json": '{"airep_version":"0.2","artifact_type":"effect","chain_id":"c"}',
+    },
+  });
+  const r2 = runIntercepted(dir2, [{ status: 0, stdout: verdict() }]);
+  eq("AD15-IR-6: a bundle carrying a record_id-less artifact is still measured", r2.code, 0);
+  if (r2.code === 0) {
+    const v = JSON.parse(r2.out);
+    eq("AD15-IR-6: every artifact has an envelope, including the record_id-less one",
+      v.artifacts.length, 4);
+    for (const e of v.artifacts) {
+      eq(`AD15-IR-6: ${e.artifact_path} envelope is defined and path-ordered`,
+        e.request_envelope_digest, NORID[e.artifact_path]);
+    }
+  }
+}
+endBlock("W1-BLK-IR6");
+
+// --- W1-BLK-IR7: duplicate semantic IDs are not preflight invalidity -------
+//
+// Two branches, DISCRIMINATED INDEPENDENTLY (E8-9). The block previously tested
+// only the first, so an evaluator that allowed duplicate record_id and rejected
+// a duplicate (chain_id, record_id) tuple passed every mandatory block while
+// violating the ruling.
+//
+// The obligation is ABSENCE OF A PREFLIGHT GATE, not absence of a later
+// reconciliation finding: an exact duplicate tuple may perfectly properly fail
+// R-A afterwards, so NOTHING HERE REQUIRES THE RESULT TO BE ACCEPT.
+beginBlock("W1-BLK-IR7");
+{
+  const dupBundle = (name, decRid, decChain, ctlRid, ctlChain, extra = {}) => mkBundle(name, {
+    scenarioId: "IOP-R-CLEAN",
+    artifacts: {
+      "artifacts/1decision.json": JSON.stringify({
+        airep_version: "0.2", artifact_type: "decision", chain_id: decChain, record_id: decRid }),
+      "artifacts/2control.json": JSON.stringify({
+        airep_version: "0.2", artifact_type: "control", chain_id: ctlChain, record_id: ctlRid,
+        ...(extra.control ?? {}) }),
+      "artifacts/3execution.json": '{"airep_version":"0.2","artifact_type":"execution","chain_id":"c","record_id":"r-exe"}',
+      "artifacts/4effect.json": JSON.stringify({
+        airep_version: "0.2", artifact_type: "effect", chain_id: "c", record_id: "r-eff",
+        ...(extra.effect ?? {}) }),
+    },
+  });
+  const LEVEL1 = ["ACCEPT", "REJECT", "RECONCILIATION_MISMATCH", "INDEPENDENCE_NOT_ESTABLISHED"];
+
+  // BRANCH A -- duplicate record_id with DISTINCT chain_id.
+  {
+    const r = runIntercepted(dupBundle("ir7-branch-a", "dup", "c1", "dup", "c2"),
+      [{ status: 0, stdout: verdict() }]);
+    eq("AD15-IR-7 branch A: duplicate record_id, distinct chain_id -- exit 0", r.code, 0);
+    eq("AD15-IR-7 branch A: ALL FOUR artifacts reached frozen stage evaluation", r.spawnCalls, 4);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      eq("AD15-IR-7 branch A: no preflight reason was raised", v.nonmeasurement, null);
+      check("AD15-IR-7 branch A: the verdict is a Level-1 value, and is NOT required to be ACCEPT",
+        LEVEL1.includes(v.level1), show(v.level1));
+    }
+  }
+
+  // BRANCH B -- duplicate EXACT (chain_id, record_id) tuple. This is the branch
+  // frozen R-10 governs FOR A BATCH; it must NOT be generalized into a
+  // bundle-level preflight, because this evaluator submits each artifact as a
+  // SEPARATE request.
+  {
+    const r = runIntercepted(dupBundle("ir7-branch-b", "dup", "c", "dup", "c"),
+      [{ status: 0, stdout: verdict() }]);
+    eq("AD15-IR-7 branch B: duplicate (chain_id, record_id) -- exit 0", r.code, 0);
+    eq("AD15-IR-7 branch B: ALL FOUR artifacts reached frozen stage evaluation", r.spawnCalls, 4);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      eq("AD15-IR-7 branch B: frozen R-10 was NOT generalized into a bundle preflight",
+        v.nonmeasurement, null);
+      check("AD15-IR-7 branch B: and the result is not required to be ACCEPT either",
+        LEVEL1.includes(v.level1), show(v.level1));
+    }
+  }
+
+  // A REAL AMBIGUOUS LOOKUP: R-A fails CLOSED and the evaluator does not pick
+  // one. Without this the block would prove only that a gate is absent, not that
+  // the predicate the gate would have made unreachable actually fires.
+  {
+    const r = runIntercepted(
+      dupBundle("ir7-ambiguous", "dup", "c", "dup", "c",
+        { effect: { decision_ref: { record_id: "dup" }, execution_ref: { record_id: "r-exe" } },
+          control: { decision_ref: { record_id: "dup" } } }),
+      [{ status: 0, stdout: verdict() }]);
+    eq("AD15-IR-7: an ambiguous lookup still MEASURES -- it is a finding, not a refusal",
+      r.code, 0);
+    if (r.code === 0) {
+      const v = JSON.parse(r.out);
+      eq("AD15-IR-7: R-A FAILS CLOSED on the ambiguity", v.predicates.R_A, "FAIL");
+      eq("AD15-IR-7: and the scenario is MEASURED, not an evaluator refusal",
+        v.measurement_status, "MEASURED");
+      eq("AD15-IR-7: the ambiguity is a RECONCILIATION finding", v.level1,
+        "RECONCILIATION_MISMATCH");
+    }
+    // The resolution semantics themselves, so "fails closed" is proved to mean
+    // AMBIGUOUS rather than merely "not resolved".
+    const arts = [
+      { bundlePath: "artifacts/1decision.json", value: { record_id: "dup", chain_id: "c" } },
+      { bundlePath: "artifacts/2control.json", value: { record_id: "dup", chain_id: "c" } },
+    ];
+    const res = resolveRef({ record_id: "dup" }, arts);
+    eq("AD15-IR-7: more than one match is AMBIGUOUS", res.state, "ambiguous");
+    eq("AD15-IR-7: and it counts both, so neither was picked", res.matches, 2);
+    check("AD15-IR-7: no target is returned -- the evaluator MUST NOT pick one",
+      res.target === undefined, show(res.target));
+    // Control: the same reference against a unique record_id resolves, so the
+    // ambiguity above is attributable to the duplicate and not to the lookup.
+    eq("control: a unique record_id resolves normally",
+      resolveRef({ record_id: "dup" }, [arts[0]]).state, "resolved");
+  }
+}
+endBlock("W1-BLK-IR7");
+
+// --- W1-BLK-IR8: identity establishment is MONOTONIC -----------------------
+//
+// Once the root manifest.json bytes have been read, parsed as strict JSON and
+// yielded a REGISTERED scenario_id, bundle identity is established, and no later
+// filesystem, traversal or preflight failure unestablishes it.
+//
+// "More than one case" is not enough -- two traversal fixtures would leave two
+// categories untested -- so the three categories are discriminated SEPARATELY.
+beginBlock("W1-BLK-IR8");
+{
+  const owed = (label, r) => {
+    eq(`AD15-IR-8 (${label}): exit 3, NEVER exit 1`, r.code, 3);
+    if (r.code !== 3) return null;
+    const v = parseOne(`ir8 ${label}`, r.out);
+    eq(`AD15-IR-8 (${label}): the result object NAMES the scenario`, v.scenario_id, "IOP-P-DEC");
+    eq(`AD15-IR-8 (${label}): level1 is null`, v.level1, null);
+    eq(`AD15-IR-8 (${label}): predicates is null`, v.predicates, null);
+    check(`AD15-IR-8 (${label}): stdout is a result object, not silence`, r.out.trim() !== "");
+    return v;
+  };
+
+  // CATEGORY 1 -- a LISTED-FILE or DIGEST failure after identity.
+  {
+    const dir = mkBundle("ir8-missing");
+    fs.rmSync(path.join(dir, "artifacts", "a.json"));
+    const v = owed("listed file missing", run(["--bundle", dir]));
+    if (v) eq("AD15-IR-8 (listed file missing): reason", v.nonmeasurement.reason,
+      "bundle-file-missing");
+  }
+  {
+    const v = owed("digest mismatch",
+      run(["--bundle", mkBundle("ir8-digest", { corrupt: "artifacts/a.json" })]));
+    if (v) eq("AD15-IR-8 (digest mismatch): reason", v.nonmeasurement.reason,
+      "manifest-digest-mismatch");
+  }
+
+  // CATEGORY 2 -- a TRAVERSAL failure. THE WORKED 0o111 CASE: traverse
+  // permission lets open(DIR/manifest.json) succeed while readdir(DIR) fails
+  // EACCES. The manifest read succeeded and yielded a registered scenario_id, so
+  // identity WAS established -- bundle-directory-unreadable at exit 3, not
+  // exit 1.
+  {
+    const dir = mkBundle("ir8-mode111");
+    let denied = false;
+    try {
+      fs.chmodSync(dir, 0o111);
+      try { fs.readdirSync(dir); } catch { denied = true; }
+    } catch { /* chmod unsupported on this filesystem */ }
+    if (!denied) {
+      // Reported as a SKIP, never as a pass. The contract permits a harness
+      // unable to construct permission fixtures to skip this case.
+      skip("W1-BLK-IR8 traversal category (0o111 worked case)",
+        "this process can enumerate a 0o111 directory (euid 0, or a filesystem "
+        + "ignoring chmod), so the worked case cannot be produced here");
+    } else {
+      const r = run(["--bundle", dir]);
+      const v = owed("0o111 traversal", r);
+      if (v) {
+        eq("AD15-IR-8 (0o111 traversal): reason", v.nonmeasurement.reason,
+          "bundle-directory-unreadable");
+        check("AD15-IR-8 (0o111 traversal): identity survived a failure of the MEDIUM",
+          v.nonmeasurement.reason !== "manifest-invalid", v.nonmeasurement.reason);
+      }
+      // Control: the manifest really WAS readable through the execute bit, so
+      // the exit-3 result above is attributable to readdir and not to a bundle
+      // the evaluator could not open at all.
+      let manifestReadable = false;
+      try { JSON.parse(fs.readFileSync(path.join(dir, "manifest.json"), "utf8")); manifestReadable = true; }
+      catch { /* not readable */ }
+      check("control: open(DIR/manifest.json) succeeds under 0o111", manifestReadable);
+      fs.chmodSync(dir, 0o755);
+    }
+  }
+
+  // CATEGORY 3 -- a NON-FILESYSTEM preflight failure. Four distinct producers,
+  // because "manifest structure, bundle shape, numeric preflight or frozen-digest
+  // mismatch" is a list of four and one of them is not the category.
+  {
+    const v = owed("manifest structure",
+      run(["--bundle", mkBundle("ir8-structure", { mutate: (m) => { m.surprise = 1; } })]));
+    if (v) eq("AD15-IR-8 (manifest structure): reason", v.nonmeasurement.reason, "manifest-invalid");
+  }
+  {
+    const dir = mkBundle("ir8-shape", {
+      artifacts: {
+        "artifacts/a.json": '{"record_id":"r1","chain_id":"c","artifact_type":"decision"}',
+        "artifacts/b.json": '{"record_id":"r2","chain_id":"c","artifact_type":"decision"}',
+      },
+    });
+    const v = owed("bundle shape", run(["--bundle", dir]));
+    if (v) eq("AD15-IR-8 (bundle shape): reason", v.nonmeasurement.reason, "bundle-shape-invalid");
+  }
+  {
+    const dir = mkBundle("ir8-numeric", {
+      artifacts: {
+        "artifacts/a.json":
+          '{"record_id":"r","chain_id":"c","artifact_type":"decision","profiles":{"p":1e400}}',
+      },
+    });
+    const v = owed("numeric preflight", run(["--bundle", dir]));
+    if (v) {
+      eq("AD15-IR-8 (numeric preflight): reason", v.nonmeasurement.reason,
+        "numeric-preflight-violation");
+      eq("AD15-IR-8 (numeric preflight): and its json_pointer", v.nonmeasurement.json_pointer,
+        "/profiles/p");
+    }
+  }
+  {
+    // A readable file whose digest is not the pin: identity is established, so a
+    // result object is owed even though the evaluator refuses to run.
+    const wrong = path.join(tmp, "ir8-wrong-verifier.mjs");
+    fs.writeFileSync(wrong, "// not the frozen verifier\n");
+    const v = owed("frozen digest mismatch",
+      run(["--bundle", mkBundle("ir8-frozen"), "--verifier", wrong]));
+    if (v) {
+      eq("AD15-IR-8 (frozen digest mismatch): reason", v.nonmeasurement.reason,
+        "verifier-digest-mismatch");
+      check("AD15-IR-8 (frozen digest mismatch): the RECOMPUTED digests are retained",
+        v.verifier_digests !== null && /^sha256:/.test(v.verifier_digests.class_verifier),
+        show(v.verifier_digests));
+    }
+  }
+
+  // THE CONTROL THAT MAKES MONOTONICITY MEAN SOMETHING: exit 1 is still
+  // reachable. Without it every assertion above could be satisfied by an
+  // evaluator that never exits 1 at all.
+  {
+    const noIdentity = path.join(tmp, "ir8-no-identity");
+    fs.mkdirSync(noIdentity, { recursive: true });
+    fs.writeFileSync(path.join(noIdentity, "manifest.json"), "{ not json");
+    const r = run(["--bundle", noIdentity]);
+    eq("control: identity NOT established is still exit 1", r.code, 1);
+    check("control: and it writes no result object", r.out === "", r.out.slice(0, 200));
+  }
+}
+endBlock("W1-BLK-IR8");
+
 // --- W1-BLK-PATH: AD15-IR-19, the lexical path grammar ---------------------
 //
 // The contract's own case list, asserted against the grammar AS WRITTEN. Each
@@ -2810,7 +3479,19 @@ beginBlock("W1-BLK-PATH");
     ["a drive prefix", "C:artifact.json"],
     ["a backslash", BACKSLASH],
     ["a control character", "a" + CTRL + ".json"],
+    // NUL is listed apart from other controls because some runtimes TRUNCATE at
+    // it rather than rejecting it.
     ["a NUL", "a" + NUL + ".json"],
+    // E8-10: the grammar is a CLOSED ALPHABET, not a blocklist. A case list of
+    // only exotic characters lets an evaluator pass while accepting an ordinary
+    // space or "@", which the ABNF forbids just as firmly as a backslash.
+    ["an ordinary space", "a b.json"],
+    ["a leading space", " a.json"],
+    ["a trailing space", "a.json "],
+    ["an ordinary disallowed ASCII character (@)", "a@b.json"],
+    ["another ordinary disallowed ASCII character (+)", "a+b.json"],
+    ["a tilde", "a~b.json"],
+    ["a percent", "a%20b.json"],
     ["a non-ASCII character", NON_ASCII],
     ["an unpaired surrogate", String.fromCharCode(0xD800) + ".json"],
     ["the root manifest, which files[] excludes", "manifest.json"],
@@ -2847,6 +3528,10 @@ beginBlock("W1-BLK-PATH");
     ["a leading slash", "/artifacts/a.json"],
     ["a drive prefix", "C:a.json"],
     ["a backslash", BACKSLASH],
+    // The closed-alphabet half, end to end: these are what a blocklist-shaped
+    // implementation lets through.
+    ["an ordinary space", "artifacts/a b.json"],
+    ["an at sign", "artifacts/a@b.json"],
   ]) {
     const dir = mkBundle(`path-e2e-${name.replace(/[^a-z]+/gi, "-")}`, {
       mutate: (m) => {
@@ -2906,21 +3591,60 @@ beginBlock("W1-BLK-JSON-BYTES");
       !/manifest-invalid|bundle-json-invalid/.test(r.err), r.err.slice(0, 200));
   }
 
-  // (b) A LISTED FILE: identity IS established, so a result object is owed.
+  // (b) A LISTED ARTIFACT FILE: identity IS established, so a result object is
+  //     owed. bundle-json-invalid at stage 8, exit 3.
   for (const [name, buf] of Object.entries(encodings)) {
     const dir = mkBundle(`bytes-listed-${name.replace(/[^a-z0-9]+/gi, "-")}`, {
       artifacts: { "artifacts/a.json": buf },
     });
-    expectNonMeasured(`AD15-IR-20: a ${name} listed artifact`, dir, "bundle-json-invalid");
+    const v = expectNonMeasured(`AD15-IR-20: a ${name} listed artifact`, dir,
+      "bundle-json-invalid");
+    if (v) {
+      check(`AD15-IR-20: no repair or transcoding into acceptance for a ${name} artifact`,
+        v.measurement_status === "ERROR" && v.level1 === null,
+        "the document was accepted after repair");
+    }
   }
-  // And an operator-input file, which is the other half of "every listed
-  // artifact and operator-input JSON file".
-  {
-    const dir = mkBundle("bytes-listed-operator", {
-      operator: { bindings: encodings["UTF-8 BOM"], independence_policy: POLICY,
-        revocation: REVOCATION },
+  // (c) A LISTED OPERATOR-INPUT FILE -- the third position the ruling names, and
+  //     E8-10 requires all SIX encodings here too, not only the BOM. An operator
+  //     input is read on the same path as an artifact but is composed
+  //     differently, so a lane gating only artifact files would pass with one
+  //     encoding tested and fail the rest.
+  for (const [name, buf] of Object.entries(encodings)) {
+    const dir = mkBundle(`bytes-operator-${name.replace(/[^a-z0-9]+/gi, "-")}`, {
+      operator: { bindings: buf, independence_policy: POLICY, revocation: REVOCATION },
     });
-    expectNonMeasured("AD15-IR-20: a BOM on a listed operator input", dir, "bundle-json-invalid");
+    const v = expectNonMeasured(`AD15-IR-20: a ${name} listed OPERATOR INPUT`, dir,
+      "bundle-json-invalid");
+    if (v) {
+      check(`AD15-IR-20: and its detail names the operator-input file`,
+        /operator/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      check(`AD15-IR-20: no repair or transcoding into acceptance for a ${name} operator input`,
+        v.measurement_status === "ERROR" && v.level1 === null,
+        "the document was accepted after repair");
+    }
+  }
+  // (d) NO REPAIR AT ANY OF THE THREE POSITIONS, stated as its own property.
+  //     The BOM is the case a lenient runtime accepts silently: Node's default
+  //     TextDecoder STRIPS it, so an evaluator using the default decoder would
+  //     accept all three positions while reporting success.
+  {
+    const bom = encodings["UTF-8 BOM"];
+    check("AD15-IR-20: the default decoder WOULD have repaired the BOM document",
+      JSON.parse(new TextDecoder("utf-8").decode(bom)).record_id === "r");
+    check("AD15-IR-20: and the pinned gate refuses it instead",
+      checkJsonByteDomain(bom) !== null, show(checkJsonByteDomain(bom)));
+    // The manifest position, where the same repair would have established an
+    // identity the bundle does not have.
+    const dir = path.join(tmp, "bytes-norepair-manifest");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "manifest.json"),
+      Buffer.concat([Buffer.from([0xEF, 0xBB, 0xBF]),
+        Buffer.from(JSON.stringify({ manifest_version: "1", scenario_id: "IOP-P-DEC", files: [] }))]));
+    const r = run(["--bundle", dir]);
+    eq("AD15-IR-20: a BOM manifest that WOULD parse after repair still exits 1", r.code, 1);
+    check("AD15-IR-20: and no identity was established from the repaired bytes",
+      r.out === "" && !/IOP-P-DEC/.test(r.out), r.out.slice(0, 200));
   }
 }
 endBlock("W1-BLK-JSON-BYTES");
@@ -3126,6 +3850,78 @@ beginBlock("W1-BLK-JCS");
         v.nonmeasurement.json_pointer.startsWith("/artifact/"), false);
     }
   }
+
+  // (2b) E8-10: stage-8 rule two END TO END, WITH REPAIR REFUSED. The block
+  //      previously delegated the whole of this rule to W1-BLK-IR17, which
+  //      measures it on the MANIFEST; the rule the JCS block owns is the one for
+  //      a LISTED file, and "repair refused for each" is required of both rules,
+  //      not only of the surrogate.
+  {
+    const dup = '{"record_id":"r","chain_id":"c","artifact_type":"decision","k":1,"k":2}';
+    check("control: JSON.parse silently resolves the duplicate last-wins",
+      JSON.parse(dup).k === 2, show(JSON.parse(dup).k));
+    const v = expectNonMeasured("stage 8: a duplicate member name in a listed file",
+      mkBundle("jcs-duplicate-member", { artifacts: { "artifacts/a.json": dup } }),
+      "bundle-json-invalid");
+    if (v) {
+      check("stage 8: the duplicate is NAMED, so it is not a generic parse failure",
+        /repeats the member/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      check("stage 8: neither first-wins nor last-wins was applied -- no repair",
+        /neither first-wins nor last-wins/.test(v.nonmeasurement.detail),
+        v.nonmeasurement.detail);
+    }
+  }
+
+  // (3b) E8-10: BOTH section 5.1 NUMERIC BRANCHES at stage 10, each with its
+  //      json_pointer. The block previously carried only 1e400 -- the
+  //      "not IEEE-754 representable" branch -- so a lane that accepted an
+  //      integer beyond 2^53-1, or a value needing more than binary64 to
+  //      round-trip, passed it.
+  for (const [name, token, pointer] of [
+    ["1e400 -- not IEEE-754 representable", "1e400", "/profiles/p"],
+    ["1.0000000000000001 -- more precision than binary64 can round-trip",
+      "1.0000000000000001", "/profiles/p"],
+    ["1e20 -- integer-valued beyond 2^53-1", "1e20", "/profiles/p"],
+    ["9007199254740992 -- the boundary's ADJACENT rejection", "9007199254740992",
+      "/profiles/p"],
+  ]) {
+    const doc = '{"record_id":"r","chain_id":"c","artifact_type":"decision",'
+      + `"profiles":{"p":${token}}}`;
+    const v = expectNonMeasured(`stage 10: ${name}`,
+      mkBundle(`jcs-num-${token.replace(/[^a-z0-9]+/gi, "-")}`,
+        { artifacts: { "artifacts/a.json": doc } }),
+      "numeric-preflight-violation");
+    if (v) {
+      check(`stage 10: ${name} is NOT folded into stage 8`,
+        v.nonmeasurement.reason !== "bundle-json-invalid", v.nonmeasurement.reason);
+      eq(`stage 10: ${name} carries its json_pointer`, v.nonmeasurement.json_pointer, pointer);
+    }
+    check(`the pure numeric gate rejects ${name}`, checkNumberToken(token) !== null, token);
+  }
+
+  // ACCEPTANCE CONTROLS, so the block cannot pass on an evaluator that
+  // OVER-REJECTS. Each is a value the envelope permits, and 9007199254740991
+  // sits immediately below the rejection above it.
+  for (const [name, token] of [
+    ["1.5 -- exactly representable and not integral", "1.5"],
+    ["9007199254740991 -- the boundary itself", "9007199254740991"],
+    ["0.1 -- a value whose double round-trips", "0.1"],
+    ["-9007199254740991 -- the negative boundary", "-9007199254740991"],
+  ]) {
+    check(`the pure numeric gate ACCEPTS ${name}`, checkNumberToken(token) === null,
+      show(checkNumberToken(token)));
+    const doc = '{"record_id":"r","chain_id":"c","artifact_type":"decision",'
+      + `"profiles":{"p":${token}}}`;
+    const r = runIntercepted(
+      mkBundle(`jcs-ok-${token.replace(/[^a-z0-9]+/gi, "-")}`,
+        { artifacts: { "artifacts/a.json": doc } }),
+      [{ status: 0, stdout: verdict() }]);
+    eq(`stage 10 ACCEPTS ${name} end to end`, r.code, 0);
+  }
+  check("control: the boundary and its adjacent rejection really are adjacent",
+    checkNumberToken("9007199254740991") === null
+    && checkNumberToken("9007199254740992") !== null);
+
   // The control that makes the boundary a boundary: a document that is
   // genuinely unparseable still lands on stage 8.
   expectNonMeasured("control: an unparseable listed file is still stage-8",
@@ -3349,6 +4145,527 @@ beginBlock("W1-BLK-IR13");
       eq("the byte-smaller pointer wins even though it is declared last",
         v.nonmeasurement.json_pointer, "/profiles/a");
     }
+  }
+
+
+  // =========================================================================
+  // E8-10: the twelve-item branch list. AD15-IR-13 is the largest ruling in the
+  // contract and a single multi-fault fixture discriminates almost none of it.
+  // =========================================================================
+
+  // ITEM 1, continued -- THE REMAINING STAGE BARRIERS. The fixtures above cover
+  // 4/7, 5/6, 5/7, 6/7, 7/8 and 9/10; these close 2/3, 3/4, 4/5, 8/9, 10/11 and
+  // 11/12, so every barrier at which two failures can be live is measured.
+
+  // 2/3 -- identity (the exit-1 band) before frozen identity. A bundle whose
+  // manifest will not parse AND whose --verifier cannot be read is exit 1 with
+  // NO result object: there is no scenario to name one after.
+  {
+    const dir = path.join(tmp, "ir13-stage2-vs-3");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "manifest.json"), "{ not json");
+    const absent = path.join(tmp, "ir13-absent-verifier.mjs");
+    const r = run(["--bundle", dir, "--verifier", absent]);
+    eq("stage 2 before stage 3: identity failure exits 1", r.code, 1);
+    check("stage 2 before stage 3: and writes NO result object", r.out === "", r.out.slice(0, 200));
+    // Control: with identity established the same unreadable verifier IS
+    // reported, so stage 3 really was live.
+    const v = expectNonMeasuredWith("control: the unreadable verifier alone",
+      ["--bundle", mkBundle("ir13-stage3-alone"), "--verifier", absent],
+      "frozen-identity-unreadable");
+    if (v) eq("control: and verifier_digests is null, because neither could be computed",
+      v.verifier_digests, null);
+  }
+
+  // 3/4 -- frozen identity before manifest structure. The manifest carries an
+  // unknown member AND the pinned verifier digest does not match.
+  {
+    const wrong = path.join(tmp, "ir13-wrong-verifier.mjs");
+    fs.writeFileSync(wrong, "// readable, and not the frozen verifier\n");
+    const dir = mkBundle("ir13-stage3-vs-4", { mutate: (m) => { m.surprise = 1; } });
+    expectNonMeasuredWith("stage 3 before stage 4: frozen identity beats manifest closure",
+      ["--bundle", dir, "--verifier", wrong], "verifier-digest-mismatch");
+    expectNonMeasured("control: the manifest fault alone",
+      mkBundle("ir13-stage4-alone", { mutate: (m) => { m.surprise = 1; } }), "manifest-invalid");
+  }
+
+  // 4/5 -- manifest closure before filesystem closure. A manifest that is
+  // malformed ON ITS OWN TERMS is reported before the disk is consulted, and the
+  // two reasons differ here so the barrier is observable.
+  {
+    const dir = mkBundle("ir13-stage4-vs-5", { mutate: (m) => { m.surprise = 1; } });
+    fs.rmSync(path.join(dir, "artifacts", "a.json"));
+    expectNonMeasured("stage 4 before stage 5: manifest closure beats a missing file",
+      dir, "manifest-invalid");
+    const alone = mkBundle("ir13-stage5-missing-alone");
+    fs.rmSync(path.join(alone, "artifacts", "a.json"));
+    expectNonMeasured("control: the missing file alone", alone, "bundle-file-missing");
+  }
+
+  // 8/9 -- JSON parsing before shape. The bundle carries TWO artifacts for a
+  // single-artifact scenario (stage 9) and one of them will not parse (stage 8).
+  {
+    const dir = mkBundle("ir13-stage8-vs-9", {
+      artifacts: {
+        "artifacts/a.json": "{not json at all",
+        "artifacts/b.json": '{"record_id":"r2","chain_id":"c","artifact_type":"decision"}',
+      },
+    });
+    expectNonMeasured("stage 8 before stage 9: a parse failure beats a shape violation",
+      dir, "bundle-json-invalid");
+    expectNonMeasured("control: the shape violation alone", mkBundle("ir13-stage9-alone", {
+      artifacts: {
+        "artifacts/a.json": '{"record_id":"r1","chain_id":"c","artifact_type":"decision"}',
+        "artifacts/b.json": '{"record_id":"r2","chain_id":"c","artifact_type":"decision"}',
+      },
+    }), "bundle-shape-invalid");
+  }
+
+  // 10/11 -- numeric preflight before invocation. NO frozen verifier is invoked
+  // until every preflight stage has passed (section 8.3.1 step 1), so the plan
+  // below -- which would fail at the first spawn -- is never reached.
+  {
+    const dir = mkBundle("ir13-stage10-vs-11", {
+      artifacts: { "artifacts/a.json":
+        '{"record_id":"r","chain_id":"c","artifact_type":"decision","profiles":{"p":1e400}}' },
+    });
+    const r = runIntercepted(dir, [{ spawnFails: true }]);
+    eq("stage 10 before stage 11: the numeric violation exits 3", r.code, 3);
+    eq("stage 10 before stage 11: NO invocation was attempted at all", r.spawnCalls, 0);
+    if (r.code === 3) {
+      const v = parseOne("ir13 stage10 vs 11", r.out);
+      eq("stage 10 before stage 11: reason", v.nonmeasurement.reason,
+        "numeric-preflight-violation");
+      eq("stage 10 before stage 11: and artifacts[] is empty", v.artifacts, []);
+    }
+    // Control: without the numeric fault the same plan DOES reach the spawn, so
+    // stage 11 really was live.
+    const r2 = runIntercepted(mkBundle("ir13-stage11-alone"), [{ spawnFails: true }]);
+    eq("control: the spawn failure alone is reached", r2.spawnCalls, 1);
+    if (r2.code === 3) {
+      eq("control: and reaches its own reason",
+        JSON.parse(r2.out).nonmeasurement.reason, "verifier-not-invocable");
+    }
+  }
+
+  // 11/12 -- invocation before the withheld tier (AD15-IR-10 as a BARRIER). A
+  // verifier that misbehaved AS A PROCESS cannot be trusted to have produced a
+  // meaningful withheld channel either.
+  {
+    const plan = [
+      { status: 0, stdout: verdict(["withheld-on-artifact-1"]) },
+      { status: 2, stdout: "" },
+    ];
+    const r = runIntercepted(four("ir13-stage11-vs-12"), plan);
+    eq("stage 11 before stage 12: exit 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir13 stage11 vs 12", r.out);
+      eq("stage 11 before stage 12: the RUN invalidity is reported",
+        v.nonmeasurement.reason, "verifier-run-invalid");
+      eq("stage 11 before stage 12: so the status is ERROR, not MEASUREMENT_INVALID",
+        v.measurement_status, "ERROR");
+      check("control: the withheld channel really was live on this bundle",
+        v.withheld_reasons.length === 1, show(v.withheld_reasons));
+    }
+    const r2 = runIntercepted(four("ir13-stage12-alone"),
+      [{ status: 0, stdout: verdict(["withheld-on-artifact-1"]) }]);
+    if (r2.code === 3) {
+      eq("control: the withheld tier alone IS the outcome",
+        JSON.parse(r2.out).nonmeasurement.reason, "authenticated-withheld");
+    }
+  }
+
+  // ITEM 2 -- WITHIN-STAGE REASON PRECEDENCE, for every stage listing more than
+  // one reason: stage 3, stage 5, stage 6 (E8-2) and stage 9 (above).
+
+  // Stage 3: frozen-identity-unreadable BEFORE verifier-digest-mismatch.
+  {
+    const absent = path.join(tmp, "ir13-absent-verifier.mjs");
+    const wrongContract = path.join(tmp, "ir13-wrong-contract.md");
+    fs.writeFileSync(wrongContract, "# readable, and not the frozen contract\n");
+    expectNonMeasuredWith("stage 3 mechanism order: unreadable beats digest mismatch",
+      ["--bundle", mkBundle("ir13-stage3-order"), "--verifier", absent,
+        "--verifier-contract", wrongContract],
+      "frozen-identity-unreadable");
+    expectNonMeasuredWith("control: the readable-but-wrong contract alone is a MISMATCH",
+      ["--bundle", mkBundle("ir13-stage3-order-ctl"), "--verifier-contract", wrongContract],
+      "verifier-digest-mismatch");
+  }
+
+  // Stage 5: manifest-invalid BEFORE bundle-file-missing. This fixture is ALSO
+  // ITEM 3 -- MECHANISM BEFORE PATH: the manifest-invalid entry is `zzz.json`,
+  // which sorts AFTER the missing `artifacts/a.json`, so an implementation
+  // tie-breaking on path first would report the missing file.
+  {
+    const dir = mkBundle("ir13-stage5-order");
+    fs.writeFileSync(path.join(dir, "zzz.json"), "{}");
+    fs.rmSync(path.join(dir, "artifacts", "a.json"));
+    const v = expectNonMeasured(
+      "stage 5 mechanism order: an unlisted file beats a missing listed file", dir,
+      "manifest-invalid");
+    if (v) {
+      check("item 3: the earlier-ranked reason wins on a LATER-sorting path",
+        /zzz\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      check("control: artifacts/a.json really does sort first",
+        byteCompare("artifacts/a.json", "zzz.json") < 0);
+    }
+  }
+
+  // Stage 6, E8-2 -- bundle-file-missing BEFORE bundle-file-unreadable, and a
+  // DEFINITE ENOENT ON READ is bundle-file-missing even though stage 5 had
+  // already established the file's presence.
+  //
+  // This is a MEASURED CROSS-LANE DIVERGENCE and a BEHAVIOURAL CHANGE IN THIS
+  // LANE: the superseded code reported the ENOENT case as
+  // bundle-file-unreadable, on the reasoning that bundle-file-missing belonged
+  // to a stage that had already settled.
+  //
+  // The state -- present at stage 5, gone before stage 6 -- is a race against
+  // the evaluator's own traversal, so it is produced through the filesystem
+  // interceptor rather than by deleting a file and hoping.
+  {
+    const two = {
+      "artifacts/a.json": '{"record_id":"r1","chain_id":"c","artifact_type":"decision"}',
+      "artifacts/b.json": '{"record_id":"r2","chain_id":"c","artifact_type":"decision"}',
+    };
+    // (a) ENOENT on read alone -> bundle-file-missing, NOT unreadable.
+    {
+      const r = runFsIntercepted(
+        mkBundle("ir13-e82-enoent", { scenarioId: "IOP-R-CLEAN", artifacts: two }),
+        { readFileErrors: [{ suffix: "artifacts/b.json", code: "ENOENT" }] });
+      eq("E8-2: a definite ENOENT while READING a listed file exits 3", r.code, 3);
+      if (r.code === 3) {
+        const v = parseOne("ir13 E8-2 enoent", r.out);
+        eq("E8-2: it is bundle-file-missing, not bundle-file-unreadable",
+          v.nonmeasurement.reason, "bundle-file-missing");
+        check("E8-2: and it names the file that vanished",
+          /b\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+        check("E8-2: the detail records that the ENOENT came from the READ",
+          /ENOENT|read/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      }
+    }
+    // (b) The CONTROL that makes (a) a discrimination rather than a coincidence:
+    //     any OTHER read error on the same file is still bundle-file-unreadable.
+    {
+      const r = runFsIntercepted(
+        mkBundle("ir13-e82-eacces", { scenarioId: "IOP-R-CLEAN", artifacts: two }),
+        { readFileErrors: [{ suffix: "artifacts/b.json", code: "EACCES" }] });
+      eq("E8-2 control: an EACCES on the same file exits 3", r.code, 3);
+      if (r.code === 3) {
+        eq("E8-2 control: and it IS bundle-file-unreadable",
+          JSON.parse(r.out).nonmeasurement.reason, "bundle-file-unreadable");
+      }
+    }
+    // (c) BOTH LIVE WITHIN STAGE 6, on paths chosen so that a path-first
+    //     implementation would report the unreadable one: artifacts/a.json
+    //     (EACCES) sorts BEFORE artifacts/b.json (ENOENT), and missing must
+    //     still win.
+    {
+      const r = runFsIntercepted(
+        mkBundle("ir13-e82-both", { scenarioId: "IOP-R-CLEAN", artifacts: two }),
+        { readFileErrors: [
+          { suffix: "artifacts/a.json", code: "EACCES" },
+          { suffix: "artifacts/b.json", code: "ENOENT" }] });
+      eq("E8-2: with both live in stage 6, exit 3", r.code, 3);
+      if (r.code === 3) {
+        const v = parseOne("ir13 E8-2 both", r.out);
+        eq("E8-2: bundle-file-missing OUTRANKS bundle-file-unreadable",
+          v.nonmeasurement.reason, "bundle-file-missing");
+        check("E8-2: the earlier-ranked reason won on the LATER-sorting path",
+          /b\.json/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      }
+    }
+    // (d) The stage-6 row itself, as declared data rather than as an inference
+    //     from one fixture: two reasons, in that order.
+    eq("E8-2: the stage-6 row declares exactly two reasons, missing first",
+      STAGE_REASON_ORDER[STAGE.FILE_READS], ["bundle-file-missing", "bundle-file-unreadable"]);
+    check("E8-2: and the rank really does order them",
+      reasonRank(STAGE.FILE_READS, "bundle-file-missing")
+        < reasonRank(STAGE.FILE_READS, "bundle-file-unreadable"));
+  }
+
+  // ITEM 5 -- SAME-REASON SELECTION DOES NOT MOVE THE PARITY SURFACE. Given two
+  // same-stage, same-reason failures, the SECTION 8.7 PROJECTION is identical
+  // whichever the evaluator selects.
+  //
+  // The block asserts that invariance ON THE PROJECTION ONLY. `detail` is
+  // Class 4 and may legitimately name whichever failure was selected, so
+  // requiring the whole emitted result to be identical would narrow the same
+  // freedom one level down (E8-14). NOTHING HERE ASSERTS WHICH FAILURE WAS
+  // CHOSEN: AD15-IR-13 says an evaluator may select either, and requiring
+  // ascending path selection or an empty internal key would narrow a freedom the
+  // contract deliberately leaves open (E8-13).
+  {
+    const dir = mkBundle("ir13-same-reason", {
+      scenarioId: "IOP-R-CLEAN",
+      artifacts: {
+        "artifacts/a.json": '{"record_id":"r1","chain_id":"c","artifact_type":"decision"}',
+        "artifacts/b.json": '{"record_id":"r2","chain_id":"c","artifact_type":"control"}',
+      },
+    });
+    fs.rmSync(path.join(dir, "artifacts", "a.json"));
+    fs.rmSync(path.join(dir, "artifacts", "b.json"));
+    const v = expectNonMeasured("two same-stage same-reason failures", dir,
+      "bundle-file-missing");
+    if (v) {
+      const other = JSON.parse(JSON.stringify(v));
+      // The ONLY thing that could differ between the two selections is `detail`.
+      other.nonmeasurement.detail =
+        "files[] lists artifacts/b.json but no such file is present under the bundle";
+      check("item 5: the two selections really do give different DETAIL",
+        other.nonmeasurement.detail !== v.nonmeasurement.detail);
+      eq("item 5: and an IDENTICAL section 8.7 projection",
+        projectionBytes(other), projectionBytes(v));
+      check("item 5: detail is Class 4, so it is removed from the projection",
+        !/no such file/.test(projectionBytes(v)), projectionBytes(v).slice(0, 300));
+    }
+  }
+
+  // ITEM 6 -- STAGE 11'S SEQUENTIAL EXCEPTION. Artifact invocation is sequential
+  // in AD15-IR-12's order and stops at the first fatal run, so the reported
+  // reason is whichever fatal run is REACHED FIRST. No comparison between
+  // reasons arises, and the two orderings below prove it by swapping them.
+  {
+    const a = runIntercepted(four("ir13-stage11-seq-a"), [
+      { status: 0, stdout: verdict() }, { status: 2, stdout: "" },
+      { spawnFails: true }, { status: 0, stdout: verdict() }]);
+    eq("item 6: the run-invalid at position 2 is reported", a.code, 3);
+    if (a.code === 3) {
+      const v = parseOne("ir13 stage11 seq a", a.out);
+      eq("item 6: reason", v.nonmeasurement.reason, "verifier-run-invalid");
+      eq("item 6: the scenario aborted there -- position 3 was never reached", a.spawnCalls, 2);
+      eq("item 6: and the failing artifact contributed its entry", v.artifacts.length, 2);
+    }
+    const b = runIntercepted(four("ir13-stage11-seq-b"), [
+      { status: 0, stdout: verdict() }, { spawnFails: true },
+      { status: 2, stdout: "" }, { status: 0, stdout: verdict() }]);
+    eq("item 6: with the two swapped, the spawn failure is reported instead", b.code, 3);
+    if (b.code === 3) {
+      const v = parseOne("ir13 stage11 seq b", b.out);
+      eq("item 6: reason", v.nonmeasurement.reason, "verifier-not-invocable");
+      eq("item 6: the scenario aborted at the same position", b.spawnCalls, 2);
+      eq("item 6: and the spawn failure contributed NO entry", v.artifacts.length, 1);
+    }
+  }
+
+  // ITEM 7 -- STAGE-4 MANIFEST CLOSURE VERSUS STAGE-5 FILESYSTEM CLOSURE, BOTH
+  // PRODUCING manifest-invalid. The split is deliberate: stage 4 is what the
+  // JSON document violates on its own terms, stage 5 is what the bundle on disk
+  // violates.
+  {
+    expectNonMeasured("item 7: stage 4 alone -- manifest closure",
+      mkBundle("ir13-item7-stage4", { mutate: (m) => { m.surprise = 1; } }), "manifest-invalid");
+    const disk = mkBundle("ir13-item7-stage5");
+    fs.writeFileSync(path.join(disk, "zzz.json"), "{}");
+    const v5 = expectNonMeasured("item 7: stage 5 alone -- filesystem closure", disk,
+      "manifest-invalid");
+    if (v5) check("item 7: and stage 5's detail names the DISK violation",
+      /zzz\.json/.test(v5.nonmeasurement.detail), v5.nonmeasurement.detail);
+    // Both live: the manifest is reported before the disk is consulted.
+    const both = mkBundle("ir13-item7-both", { mutate: (m) => { m.surprise = 1; } });
+    fs.writeFileSync(path.join(both, "zzz.json"), "{}");
+    const vb = expectNonMeasured("item 7: with both live, the manifest is reported first", both,
+      "manifest-invalid");
+    if (vb) {
+      check("item 7: the detail names the MANIFEST rule, not the unlisted file",
+        !/zzz\.json/.test(vb.nonmeasurement.detail), vb.nonmeasurement.detail);
+    }
+  }
+
+  // ITEM 8 -- DETERMINISTIC SORTED TRAVERSAL: the reported failure does not
+  // change with OS enumeration order. readdir order is unspecified and varies by
+  // filesystem, so a lane reporting the first failure in enumeration order is
+  // not deterministic. This filesystem happens to be stable, so the only way to
+  // MEASURE the property is to hand the evaluator a different order.
+  {
+    const mk = (name) => {
+      const d = mkBundle(name);
+      fs.writeFileSync(path.join(d, "aaa-unlisted.json"), "{}");
+      fs.writeFileSync(path.join(d, "zzz-unlisted.json"), "{}");
+      return d;
+    };
+    const forward = runFsIntercepted(mk("ir13-order-fwd"), { reverseReaddir: false });
+    const reverse = runFsIntercepted(mk("ir13-order-rev"), { reverseReaddir: true });
+    eq("item 8: both enumeration orders exit 3", `${forward.code}/${reverse.code}`, "3/3");
+    if (forward.code === 3 && reverse.code === 3) {
+      const f = JSON.parse(forward.out);
+      const r = JSON.parse(reverse.out);
+      eq("item 8: the same reason is reported in both orders",
+        f.nonmeasurement.reason, r.nonmeasurement.reason);
+      eq("item 8: and the SAME offending entry is selected",
+        f.nonmeasurement.detail, r.nonmeasurement.detail);
+      check("item 8: two candidates really were present, so the order mattered",
+        /aaa-unlisted|zzz-unlisted/.test(f.nonmeasurement.detail), f.nonmeasurement.detail);
+    }
+    // Control: the interceptor really did reverse what the evaluator was handed.
+    {
+      const d = mk("ir13-order-probe");
+      const names = fs.readdirSync(d);
+      check("control: the reversing interceptor changes the list it returns",
+        [...names].reverse().join(",") !== names.join(","), names.join(","));
+    }
+  }
+
+  // ITEM 9 -- THE NAME-KEY BRANCH THIS PLATFORM SUPPLIES, and that NO
+  // normalization, case folding or locale mapping is applied.
+  //
+  // Section 8.6 defines the key over WHAT THE API ACTUALLY PROVIDES, in two
+  // mutually exclusive branches. Node's readdirSync({ encoding: "buffer" })
+  // yields LOSSLESS RAW NAME BYTES, so this lane is on the first branch and
+  // cannot construct the Unicode-native branch at all.
+  {
+    const probe = path.join(tmp, "ir13-namekey-probe");
+    fs.mkdirSync(probe, { recursive: true });
+    const rawName = Buffer.from([0x61, 0xFF, 0xFE, 0x62]);   // not valid UTF-8
+    let lossless = false;
+    try {
+      fs.writeFileSync(Buffer.concat([Buffer.from(probe + "/"), rawName]), "{}");
+      const back = fs.readdirSync(probe, { encoding: "buffer" });
+      lossless = back.length === 1 && Buffer.compare(back[0], rawName) === 0;
+    } catch { lossless = false; }
+    check("item 9: this platform's directory API yields LOSSLESS RAW NAME BYTES",
+      lossless, "the raw name did not survive a round trip");
+    // The unreachable branch, RECORDED rather than skipped silently or counted
+    // as covered.
+    notMeasuredBranch("W1-BLK-IR13 item 9, Unicode-native name-key branch",
+      "Node's readdirSync({ encoding: \"buffer\" }) always returns lossless raw bytes on this "
+      + "runtime, so a Unicode-native directory API -- the other of the two mutually exclusive "
+      + "branches section 8.6 defines -- cannot be constructed by this lane at all");
+
+    // NO NORMALIZATION. Two names that are NFC and NFD forms of the same string
+    // are DISTINCT byte sequences and must stay distinct: a normalizing key
+    // makes them collide on one platform and not on another, which is the
+    // cross-platform determinism defect AD15-IR-9 exists to close, one layer
+    // down.
+    const NFC = "caf\u00e9.json";       // U+00E9
+    const NFD = "cafe\u0301.json";      // e + U+0301
+    check("item 9: NFC and NFD really are different byte sequences",
+      Buffer.compare(Buffer.from(NFC, "utf8"), Buffer.from(NFD, "utf8")) !== 0);
+    check("item 9: and normalizing them WOULD collide, which is what is forbidden",
+      NFC.normalize("NFC") === NFD.normalize("NFC"));
+    const nrm = mkBundle("ir13-normalization");
+    let bothWritten = false;
+    try {
+      fs.writeFileSync(path.join(nrm, NFC), "{}");
+      fs.writeFileSync(path.join(nrm, NFD), "{}");
+      bothWritten = fs.readdirSync(nrm).filter((n) => /caf/.test(n)).length === 2;
+    } catch { bothWritten = false; }
+    if (!bothWritten) {
+      skip("W1-BLK-IR13 item 9 normalization fixture",
+        "this filesystem folds NFC and NFD to one name, so two distinct entries "
+        + "cannot be created");
+    } else {
+      const v = expectNonMeasured("item 9: an unlisted non-ASCII entry is manifest-invalid",
+        nrm, "manifest-invalid");
+      if (v) {
+        check("item 9: it is reported as an UNLISTED ENTRY, with no name repaired into a match",
+          /absent from files\[\]|not representable/.test(v.nonmeasurement.detail),
+          v.nonmeasurement.detail);
+      }
+      // The source-level half, in the same idiom W1-BLK-IR9 uses for lstat: the
+      // traversal takes buffer names, compares them as unsigned bytes, and never
+      // calls a normalizer.
+      const src = fs.readFileSync(EVAL, "utf8");
+      const body = src.slice(src.indexOf("export function traverseBundle"),
+        src.indexOf("// 7. CLI"));
+      check("item 9: the traversal enumerates with encoding \"buffer\"",
+        /readdirSync\([^)]*encoding:\s*"buffer"/.test(body), "buffer encoding not requested");
+      check("item 9: and sorts by UNSIGNED BYTES (Buffer.compare)",
+        /\.sort\(Buffer\.compare\)/.test(body), "Buffer.compare sort not found");
+      check("item 9: no normalization, case folding or locale mapping is applied",
+        !/\.normalize\(|toLowerCase\(|toUpperCase\(|localeCompare\(/.test(body),
+        "a normalizing or case-mapping call is present in the traversal");
+    }
+  }
+
+  // ITEM 10 -- A NON-UTF-8 DIRECTORY NAME AS AN UNLISTED ENTRY. A manifest
+  // `path` is a JSON string, so no such entry can ever be listed in files[].
+  {
+    const dir = mkBundle("ir13-nonutf8-dir");
+    let made = false;
+    try {
+      fs.mkdirSync(Buffer.concat([Buffer.from(dir + "/"), Buffer.from([0xFF, 0xFE])]));
+      made = true;
+    } catch { made = false; }
+    if (!made) {
+      skip("W1-BLK-IR13 item 10", "this filesystem refuses a non-UTF-8 directory name");
+    } else {
+      const v = expectNonMeasured("item 10: a non-UTF-8 DIRECTORY name", dir, "manifest-invalid");
+      if (v) {
+        check("item 10: it is reported as unrepresentable, not as a missing or unreadable file",
+          /not representable/.test(v.nonmeasurement.detail), v.nonmeasurement.detail);
+      }
+    }
+  }
+
+  // ITEM 11 -- A MANIFEST `path` CONTAINING AN UNPAIRED SURROGATE, at STAGE 4.
+  // Strict JSON admits the escape \ud800 with no pair; it does not encode to
+  // well-formed UTF-8 and so cannot denote any filesystem name. It fails on the
+  // manifest's OWN TERMS, before the disk is consulted.
+  {
+    const dir = mkBundle("ir13-surrogate-path", {
+      renderManifest: (m) => {
+        const j = JSON.stringify(m, null, 1);
+        // The artifact entry's path, replaced with a lone high surrogate escape.
+        return j.replace('"artifacts/a.json"', '"\\ud800.json"');
+      },
+    });
+    const v = expectNonMeasured("item 11: a manifest path with an unpaired surrogate", dir,
+      "manifest-invalid");
+    if (v) {
+      check("item 11: reported at stage 4, so artifacts[] is empty and nothing was read",
+        Array.isArray(v.artifacts) && v.artifacts.length === 0, show(v.artifacts));
+      check("item 11: no U+FFFD replacement reached the output",
+        !/�/.test(JSON.stringify(v)), "a replacement character reached the result");
+    }
+    // The grammar half, so the end-to-end result is attributable.
+    check("item 11: the path grammar rejects an unpaired surrogate outright",
+      checkBundlePath("\ud800.json") !== null);
+  }
+
+  // ITEM 12 -- internal-error STAYS OUTSIDE THE ORDER and never masks an
+  // already-determined failure. It is not a stage: it is raised wherever an
+  // unexpected evaluator fault occurs after identity is established.
+  {
+    // (a) It is not in the order at all: no stage declares it.
+    let declaredAnywhere = false;
+    for (const stage of Object.keys(STAGE_REASON_ORDER)) {
+      if (STAGE_REASON_ORDER[stage].includes("internal-error")) declaredAnywhere = true;
+    }
+    check("item 12: internal-error is declared by NO stage in the order", !declaredAnywhere);
+    let ranked = false;
+    try { reasonRank(STAGE.INVOCATION, "internal-error"); ranked = true; } catch { ranked = false; }
+    check("item 12: and it cannot be given a rank within one", !ranked,
+      "internal-error was ranked inside a stage");
+
+    // (b) An unexpected fault at stage 11 IS reported as internal-error, with a
+    //     result object naming the scenario rather than a crash the harness has
+    //     to infer.
+    const r = runIntercepted(mkBundle("ir13-internal-alone"), [{ throws: true }]);
+    eq("item 12: an unexpected evaluator fault after identity exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir13 internal-error", r.out);
+      eq("item 12: reason", v.nonmeasurement.reason, "internal-error");
+      eq("item 12: and the result object NAMES the scenario", v.scenario_id, "IOP-P-DEC");
+      check("item 12: detail carries enough to locate the fault",
+        /synthetic evaluator-internal fault/.test(v.nonmeasurement.detail),
+        v.nonmeasurement.detail);
+    }
+
+    // (c) THE DISCRIMINATION: with an EARLIER-STAGE failure also present, the
+    //     earlier failure is what is reported. A stage that has produced its
+    //     failure has produced the reported reason, and a later fault does not
+    //     replace it.
+    const r2 = runIntercepted(
+      mkBundle("ir13-internal-masked", { corrupt: "artifacts/a.json" }), [{ throws: true }]);
+    eq("item 12: the earlier-stage failure still exits 3", r2.code, 3);
+    if (r2.code === 3) {
+      const v = parseOne("ir13 internal not masking", r2.out);
+      eq("item 12: internal-error did NOT mask the already-determined failure",
+        v.nonmeasurement.reason, "manifest-digest-mismatch");
+    }
+    eq("item 12: and the fault was never reached, because preflight settled first",
+      r2.spawnCalls, 0);
   }
 
   // The key itself, as a pure function, over the components the fixtures above
@@ -3723,6 +5040,123 @@ beginBlock("W1-BLK-IR16");
         show(v.withheld_reasons));
     }
   }
+
+  // (e) E8-1 -- A FATAL STAGE-11 RESULT DOES NOT ERASE CHANNELS ALREADY
+  //     OBSERVED. withheld_reasons on EVERY result-bearing path is the
+  //     projection of the accepted verdicts ACTUALLY RETAINED in artifacts[]
+  //     before termination.
+  //
+  //     The fixture: artifact 1 exits 0 with an accepted verdict carrying a
+  //     withheld channel; artifact 2 exits 2, which is a fatal run and aborts
+  //     the scenario at stage 11. AD15-IR-10 makes the reported outcome the
+  //     ERROR rather than the withheld tier -- but that orders the REPORTED
+  //     REASON, not what may be discarded. The channel from artifact 1 is
+  //     evidence of a run that genuinely happened.
+  {
+    const plan = [
+      { status: 0, stdout: verdict(["observed-before-the-fatal-run"]) },
+      { status: 2, stdout: "" },
+    ];
+    const r = runIntercepted(four("ir16-e81-fatal"), plan);
+    eq("E8-1: the fatal stage-11 run exits 3", r.code, 3);
+    eq("E8-1: exactly two invocations were attempted -- the scenario aborted", r.spawnCalls, 2);
+    if (r.code === 3) {
+      const v = parseOne("ir16 E8-1", r.out);
+      // AD15-IR-10 still decides the reason.
+      eq("E8-1: the reported reason is the RUN invalidity, not the withheld tier",
+        v.nonmeasurement.reason, "verifier-run-invalid");
+      eq("E8-1: and yet the earlier accepted verdict's channel is RETAINED",
+        v.withheld_reasons.length, 1);
+      eq("E8-1: from the artifact that was actually evaluated",
+        v.withheld_reasons[0].artifact_path, "artifacts/1decision.json");
+      eq("E8-1: verbatim", v.withheld_reasons[0].reason, "observed-before-the-fatal-run");
+      eq("E8-1: on the pinned channel", v.withheld_reasons[0].channel, "authenticated_withheld");
+      // The discriminating control: the same bundle WITHOUT the withheld channel
+      // reports [] for the same fatal run, so the entry above is attributable to
+      // the channel and not to the abort.
+      const r2 = runIntercepted(four("ir16-e81-control"),
+        [{ status: 0, stdout: verdict() }, { status: 2, stdout: "" }]);
+      if (r2.code === 3) {
+        eq("control: the same fatal run with NO withheld channel reports []",
+          JSON.parse(r2.out).withheld_reasons, []);
+      }
+    }
+  }
+
+  // (f) E8-1, second half -- A MALFORMED OR GATE-REJECTED OUTPUT CONTRIBUTES
+  //     NONE, because it is not an ACCEPTED verdict. This is the half that
+  //     separates "a verdict was emitted" from "a verdict was accepted": the
+  //     rejected object below CARRIES a populated authenticated_withheld
+  //     channel, and it must not reach withheld_reasons.
+  {
+    const rejected = JSON.stringify({
+      // E8-3 gate violation: an extra member in the closed artifact_ref object.
+      artifact_ref: { chain_id: "c", record_id: "r", extra: 1 },
+      class: "AIREP-Core", observer_assessment: "not_applicable",
+      authenticated_failures: [], authenticated_withheld: ["must-not-be-reported"],
+      authenticated_caveats: [], witnessed_failures: [], witnessed_withheld: [],
+    });
+    const r = runIntercepted(four("ir16-gate-rejected"), [{ status: 0, stdout: rejected }]);
+    eq("E8-1: a gate-rejected exit-0 output exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir16 gate-rejected", r.out);
+      eq("E8-1: its reason is verifier-run-invalid", v.nonmeasurement.reason,
+        "verifier-run-invalid");
+      eq("E8-1: a GATE-REJECTED output contributes NO withheld reason",
+        v.withheld_reasons, []);
+      check("E8-1: and its channel text does not appear anywhere in the result",
+        !/must-not-be-reported/.test(r.out), r.out.slice(0, 400));
+      // Control: the SAME channel on a verdict the gate ACCEPTS is reported, so
+      // the [] above is attributable to the rejection and not to the channel.
+      const accepted = JSON.stringify({
+        artifact_ref: { chain_id: "c", record_id: "r" },
+        class: "AIREP-Core", observer_assessment: "not_applicable",
+        authenticated_failures: [], authenticated_withheld: ["must-not-be-reported"],
+        authenticated_caveats: [], witnessed_failures: [], witnessed_withheld: [],
+      });
+      const r2 = runIntercepted(four("ir16-gate-accepted"), [{ status: 0, stdout: accepted }]);
+      if (r2.code === 3) {
+        const v2 = JSON.parse(r2.out);
+        eq("control: the same channel on an ACCEPTED verdict IS reported",
+          v2.withheld_reasons.length, 4);
+        eq("control: and the scenario is MEASUREMENT_INVALID, not a run failure",
+          v2.measurement_status, "MEASUREMENT_INVALID");
+      }
+    }
+  }
+
+  // (g) A MALFORMED output -- stdout that is not a verdict at all -- likewise
+  //     contributes none. The gate-rejection case above is the subtler half;
+  //     this is the one an implementation reading channels off raw stdout would
+  //     fail.
+  {
+    const r = runIntercepted(four("ir16-malformed"),
+      [{ status: 0, stdout: '{"authenticated_withheld":["scraped-from-stdout"]}' }]);
+    eq("E8-1: a malformed exit-0 output exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir16 malformed", r.out);
+      eq("E8-1: a MALFORMED output contributes NO withheld reason", v.withheld_reasons, []);
+      check("E8-1: nothing was scraped out of the rejected stdout",
+        !/scraped-from-stdout/.test(r.out), r.out.slice(0, 400));
+    }
+  }
+
+  // (h) "[] means no withheld reason was OBSERVED AMONG THE ACCEPTED VERDICTS
+  //     ACTUALLY OBTAINED -- it says nothing about invocations never reached."
+  //     A spawn failure on artifact 1 reaches no verdict at all, so [] here is
+  //     the absence of an observation, and the block says so explicitly rather
+  //     than letting [] be read as "nothing is withheld in this bundle".
+  {
+    const r = runIntercepted(four("ir16-never-reached"), [{ spawnFails: true }]);
+    eq("E8-1: a spawn failure on the first artifact exits 3", r.code, 3);
+    if (r.code === 3) {
+      const v = parseOne("ir16 never reached", r.out);
+      eq("E8-1: no accepted verdict was obtained, so withheld_reasons is []",
+        v.withheld_reasons, []);
+      eq("E8-1: and artifacts[] is empty, so [] is not a claim about the bundle",
+        v.artifacts, []);
+    }
+  }
 }
 endBlock("W1-BLK-IR16");
 
@@ -3827,6 +5261,93 @@ beginBlock("W1-BLK-ARTIFACT-REF");
       verdictShapeViolation(JSON.parse(bad)) !== null, show(verdictShapeViolation(JSON.parse(bad))));
     check("control: the same verdict WITHOUT the extra member is accepted",
       verdictShapeViolation(JSON.parse(verdict())) === null);
+  }
+
+  // E8-3 -- THE SOURCE-A GATE IN FULL. A BEHAVIOURAL CHANGE IN THIS LANE: the
+  // superseded gate was CLOSED but neither REQUIRED nor TYPED, so an ABSENT
+  // artifact_ref, a NULL one, and one with no record_id were all accepted and
+  // silently converted to null on the emitted entry. This lane read it that
+  // way; the peer lane did not; artifact_ref is Class-1.
+  //
+  // EVERY one of the six rejections the ruling names is exercised, on the pure
+  // gate AND end to end, because a gate that is correct but never consulted
+  // would pass a pure-function-only test.
+  {
+    const withRef = (ref, omit = false) => {
+      const v = {
+        artifact_ref: ref,
+        class: "AIREP-Core", observer_assessment: "not_applicable",
+        authenticated_failures: [], authenticated_withheld: [], authenticated_caveats: [],
+        witnessed_failures: [], witnessed_withheld: [],
+      };
+      if (omit) delete v.artifact_ref;
+      return v;
+    };
+    const rejections = [
+      ["absent", withRef(undefined, true)],
+      ["null", withRef(null)],
+      ["a non-object (string)", withRef("r")],
+      ["a non-object (array)", withRef([])],
+      ["a missing record_id", withRef({ chain_id: "c" })],
+      ["a non-string record_id", withRef({ record_id: 12, chain_id: "c" })],
+      ["a null record_id", withRef({ record_id: null, chain_id: "c" })],
+      ["a non-string chain_id", withRef({ record_id: "r", chain_id: 12 })],
+      ["a null chain_id", withRef({ record_id: "r", chain_id: null })],
+      ["an extra member", withRef({ record_id: "r", chain_id: "c", extra: "smuggled" })],
+    ];
+    for (const [name, v] of rejections) {
+      check(`E8-3: the gate rejects an artifact_ref that is ${name}`,
+        verdictShapeViolation(v) !== null, `${name} was accepted`);
+      // End to end: verifier-run-invalid, and NOT a repair.
+      const dir = mkBundle(`aref-e83-${name.replace(/[^a-z0-9]+/gi, "-")}`, {
+        scenarioId: "IOP-P-DEC",
+        artifacts: { "artifacts/a.json":
+          '{"airep_version":"0.2","artifact_type":"decision","record_id":"prelim","chain_id":"pc"}' },
+      });
+      const r = runIntercepted(dir, [{ status: 0, stdout: JSON.stringify(v) }]);
+      eq(`E8-3 (${name}): exits 3`, r.code, 3);
+      if (r.code === 3) {
+        const out = parseOne(`E8-3 ${name}`, r.out);
+        eq(`E8-3 (${name}): the reason is verifier-run-invalid`,
+          out.nonmeasurement.reason, "verifier-run-invalid");
+        // E8-4, on the same fixture and for every rejection route: the entry
+        // stands, the exit code is 0 verbatim, the result is null, and the ref
+        // is the Source-B preliminary projection.
+        eq(`E8-3/E8-4 (${name}): verifier_exit_code is 0, verbatim`,
+          out.artifacts[0].verifier_exit_code, 0);
+        eq(`E8-3/E8-4 (${name}): verifier_result is null -- the object is NOT a verdict`,
+          out.artifacts[0].verifier_result, null);
+        eq(`E8-3/E8-4 (${name}): artifact_ref is the Source-B preliminary projection`,
+          out.artifacts[0].artifact_ref, { chain_id: "pc", record_id: "prelim" });
+        check(`E8-3 (${name}): nothing was repaired or coerced into acceptance`,
+          !/smuggled/.test(r.out), r.out.slice(0, 400));
+      }
+    }
+    // ACCEPTANCE CONTROLS. Without them the block would pass on a gate that
+    // rejected every verdict, and the two legal shapes -- with and without
+    // chain_id -- are separately reachable.
+    check("control: { record_id } alone is ACCEPTED -- chain_id is optional",
+      verdictShapeViolation(withRef({ record_id: "r" })) === null);
+    check("control: { record_id, chain_id } is ACCEPTED",
+      verdictShapeViolation(withRef({ record_id: "r", chain_id: "c" })) === null);
+    check("control: an EMPTY-STRING record_id is a string and is ACCEPTED -- no minLength "
+      + "rule is added that the frozen schema does not have",
+      verdictShapeViolation(withRef({ record_id: "" })) === null);
+    {
+      const dir = mkBundle("aref-e83-accepted", {
+        scenarioId: "IOP-P-DEC",
+        artifacts: { "artifacts/a.json":
+          '{"airep_version":"0.2","artifact_type":"decision","record_id":"prelim","chain_id":"pc"}' },
+      });
+      const r = runIntercepted(dir,
+        [{ status: 0, stdout: JSON.stringify(withRef({ record_id: "VR" })) }]);
+      eq("control: an accepted verdict with a legal artifact_ref is MEASURED", r.code, 0);
+      if (r.code === 0) {
+        const out = JSON.parse(r.out);
+        eq("control: and its artifact_ref is the VERDICT's, copied verbatim -- with chain_id "
+          + "OMITTED rather than nulled", out.artifacts[0].artifact_ref, { record_id: "VR" });
+      }
+    }
   }
 
   // (3) SOURCE B -- every OTHER emitted entry. Defined by EXCLUSION, not by an
@@ -4202,6 +5723,115 @@ beginBlock("W1-BLK-PARITY");
     eq("and forcing them all equal does not move the projection either",
       proj(same), proj(measured));
   }
+
+  // (f) THE RECORDED CLASSIFICATION. Section 8.7 requires this block to mutate
+  //     EACH TOP-LEVEL AND NESTED RESULT FIELD INDIVIDUALLY and RECORD, for
+  //     each, which of four things the mutation causes:
+  //
+  //       - cross-lane projection failure   (Class 1)
+  //       - lane-local pin failure          (Class 2)
+  //       - audit-evidence failure          (Class 3)
+  //       - legitimately diagnostic-only    (Class 4)
+  //
+  //     The checks above prove the first and the negatives; what was missing was
+  //     the ENUMERATION -- a field with no row is a field nobody classified.
+  //     Class 2, 3 and 4 are asserted NOT to move the projection, which is the
+  //     half of the model a passing cross-lane comparison never exercises.
+  {
+    const CLASSIFY = [
+      // Class 1 -- cross-lane equality fields.
+      ["scenario_id", 1, (v) => { v.scenario_id = "IOP-R-XREF"; }],
+      ["measurement_status", 1, (v) => {
+        v.measurement_status = v.measurement_status === "MEASURED" ? "ERROR" : "MEASURED"; }],
+      ["level1", 1, (v) => { v.level1 = v.level1 === null ? "REJECT" : null; }],
+      ["predicates", 1, (v) => {
+        v.predicates = v.predicates === null
+          ? { R_A: "PASS", R_B: "PASS", R_C: "PASS" }
+          : { ...v.predicates, R_A: v.predicates.R_A === "PASS" ? "FAIL" : "PASS" }; }],
+      ["nonmeasurement.reason", 1, (v) => {
+        if (v.nonmeasurement !== null) v.nonmeasurement.reason = "internal-error"; }],
+      ["nonmeasurement.json_pointer", 1, (v) => {
+        if (v.nonmeasurement !== null && "json_pointer" in v.nonmeasurement) {
+          v.nonmeasurement.json_pointer = "/elsewhere"; } }],
+      ["artifacts[] membership", 1, (v) => { v.artifacts = v.artifacts.slice(1); }],
+      ["artifacts[] order", 1, (v) => { v.artifacts = [...v.artifacts].reverse(); }],
+      ["artifacts[].artifact_path", 1, (v) => {
+        if (v.artifacts.length > 0) v.artifacts[0].artifact_path = "artifacts/zzz.json"; }],
+      ["artifacts[].artifact_ref", 1, (v) => {
+        if (v.artifacts.length > 0) {
+          v.artifacts[0].artifact_ref = v.artifacts[0].artifact_ref === null
+            ? { record_id: "invented" } : null; } }],
+      ["artifacts[].request_envelope_digest", 1, (v) => {
+        if (v.artifacts.length > 0) {
+          v.artifacts[0].request_envelope_digest = "sha256:" + "3".repeat(64); } }],
+      ["artifacts[].verifier_exit_code", 1, (v) => {
+        if (v.artifacts.length > 0) {
+          v.artifacts[0].verifier_exit_code =
+            v.artifacts[0].verifier_exit_code === 0 ? 1 : 0; } }],
+      ["artifacts[].verifier_result", 1, (v) => {
+        if (v.artifacts.length > 0) {
+          v.artifacts[0].verifier_result = v.artifacts[0].verifier_result === null
+            ? JSON.parse(verdict()) : null; } }],
+      ["withheld_reasons", 1, (v) => {
+        v.withheld_reasons = [{ artifact_path: "artifacts/a.json",
+          channel: "authenticated_withheld", reason: "invented" }]; }],
+      ["verifier_digests.class_verifier_contract", 1, (v) => {
+        if (v.verifier_digests !== null) {
+          v.verifier_digests.class_verifier_contract = "sha256:" + "2".repeat(64); } }],
+      // Class 2 -- lane-local normative assertions, never compared across lanes.
+      ["evaluator_version", 2, (v) => { v.evaluator_version = "other_lane/9.9.9"; }],
+      ["verifier_digests.class_verifier", 2, (v) => {
+        if (v.verifier_digests !== null) {
+          v.verifier_digests.class_verifier = "sha256:" + "4".repeat(64); } }],
+      // Class 3 -- audit-only result evidence.
+      ["artifacts[].verifier_stderr_digest", 3, (v) => {
+        if (v.artifacts.length > 0) {
+          v.artifacts[0].verifier_stderr_digest = "sha256:" + "5".repeat(64); } }],
+      // Class 4 -- diagnostic-only.
+      ["nonmeasurement.detail", 4, (v) => {
+        if (v.nonmeasurement !== null) v.nonmeasurement.detail = "a different wording"; }],
+    ];
+    const classified = new Set();
+    for (const base of [measured, errored]) {
+      const label = base === measured ? "MEASURED" : "ERROR";
+      for (const [name, cls, mutate] of CLASSIFY) {
+        const m = clone(base);
+        mutate(m);
+        if (JSON.stringify(m) === JSON.stringify(base)) continue;  // not present on this shape
+        classified.add(name);
+        const moved = proj(m) !== proj(base);
+        if (cls === 1) {
+          check(`${label}: ${name} is Class 1 -- the mutation MOVES the projection`, moved,
+            `${name} was not detected`);
+        } else {
+          check(`${label}: ${name} is Class ${cls} -- the mutation does NOT move the projection`,
+            !moved, `${name} moved the projection`);
+        }
+      }
+    }
+    // Every field in the closed result shape has a row. Without this the table
+    // could silently omit the one field that mattered -- which is exactly how
+    // scenario_id went uncompared in the first place.
+    for (const top of EVAL_RESULT_MEMBERS) {
+      check(`the classification table has a row reaching ${top}`,
+        [...classified].some((n) => n === top || n.startsWith(`${top}.`)
+          || n.startsWith(`${top}[]`)),
+        `${top} is unclassified`);
+    }
+
+    // Class 2 and Class 3 are NOT "unchecked": they fail LANE-LOCALLY and as
+    // AUDIT EVIDENCE respectively, which is what makes them a different class
+    // rather than a licence.
+    eq("Class 2 lane-local pin: evaluator_version is THIS lane's",
+      /^interop_eval_node\//.test(measured.evaluator_version), true);
+    eq("Class 2 lane-local pin: class_verifier is THIS lane's own frozen digest",
+      measured.verifier_digests.class_verifier,
+      "sha256:" + sha(fs.readFileSync(VERIFIER)));
+    check("Class 3 audit evidence: verifier_stderr_digest is REQUIRED on every entry",
+      measured.artifacts.every((e) => /^sha256:[0-9a-f]{64}$/.test(e.verifier_stderr_digest)),
+      show(measured.artifacts.map((e) => e.verifier_stderr_digest)));
+  }
+
   // This lane invokes ITS OWN frozen verifier, and the assertion is on the pin
   // it recomputed -- a positive statement about this tree that names no other.
   eq("this lane asserted its own frozen verifier digest",
@@ -4248,6 +5878,11 @@ for (const id of MANDATORY_BLOCKS) {
 for (const v of registryViolations) console.log(`  REGISTRY VIOLATION: ${v}`);
 console.log("");
 
+if (notMeasuredBranches.length > 0) {
+  console.log(`NOT MEASURED branches (${notMeasuredBranches.length}), inside blocks that ran:`);
+  for (const b of notMeasuredBranches) console.log(`  ${b}`);
+  console.log("");
+}
 console.log(`${checks - failures} passed / ${failures} failed / ${skips} skipped`);
 if (skips > 0) {
   console.log(`NOT MEASURED (${skips}): ${skippedBlocks.join("; ")}`);

@@ -34,7 +34,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 // 0. Constants
 // ---------------------------------------------------------------------------
 
-const EVALUATOR_VERSION = "interop_eval_node/0.2.5";
+const EVALUATOR_VERSION = "interop_eval_node/0.2.6";
 
 // The registered twelve (section 8.1). A manifest whose scenario_id is not one
 // of these carries "no usable scenario_id" and therefore establishes no bundle
@@ -284,7 +284,7 @@ class NonMeasurement extends Error {
 // path key. A composition rule is violated by a SET of files, not by one, so
 // the "sorted-first offending path" rule does not reach it; no real path is
 // empty, so the empty key never collides. The internal key is not emitted.
-const STAGE = Object.freeze({
+export const STAGE = Object.freeze({
   CLI: 1,
   IDENTITY: 2,
   FROZEN_IDENTITY: 3,
@@ -304,14 +304,21 @@ const STAGE = Object.freeze({
 // failure of an earlier-listed reason is reported over a later-listed one
 // regardless of paths, so the rank is read from this table and never chosen at
 // a raise site.
-const STAGE_REASON_ORDER = Object.freeze({
+export const STAGE_REASON_ORDER = Object.freeze({
   [STAGE.FROZEN_IDENTITY]: ["frozen-identity-unreadable", "verifier-digest-mismatch"],
   [STAGE.MANIFEST_STRUCTURE]: ["manifest-invalid"],
   [STAGE.TRAVERSAL]: [
     "bundle-entry-uninspectable", "bundle-directory-unreadable",
     "manifest-invalid", "bundle-file-missing",
   ],
-  [STAGE.FILE_READS]: ["bundle-file-unreadable"],
+  // E8-2. The stage-6 row carries TWO reasons, in this order. Section 8.2.2's
+  // listed-file boundary has always routed "a definite ENOENT on read" to
+  // bundle-file-missing; the stage-6 row named only bundle-file-unreadable, and
+  // the two collide when a file is present at stage 5 and gone before stage 6.
+  // The two isolated lanes were MEASURED resolving that differently on a
+  // Class-1 field. bundle-file-missing keeps the rank its stage-5 mechanism
+  // gives it, so it OUTRANKS bundle-file-unreadable here too.
+  [STAGE.FILE_READS]: ["bundle-file-missing", "bundle-file-unreadable"],
   [STAGE.DIGESTS]: ["manifest-digest-mismatch"],
   [STAGE.JSON_PARSE]: ["bundle-json-invalid"],
   [STAGE.SHAPE]: ["bundle-shape-invalid", "operator-input-assertion-mismatch"],
@@ -320,7 +327,7 @@ const STAGE_REASON_ORDER = Object.freeze({
   [STAGE.WITHHELD]: ["authenticated-withheld"],
 });
 
-function reasonRank(stage, reason) {
+export function reasonRank(stage, reason) {
   const order = STAGE_REASON_ORDER[stage];
   if (order === undefined) throw new Error(`stage ${stage} declares no reason order`);
   const idx = order.indexOf(reason);
@@ -1410,21 +1417,42 @@ export function verdictShapeViolation(verdict) {
   // rejection is verifier-run-invalid, which section 8.2.2 defines as a shape
   // rejected by EITHER contract precisely so this case has a registry entry;
   // narrowing it to the frozen contract alone would have left it with none.
+  //
+  // E8-3 -- A BEHAVIOURAL CHANGE IN THIS LANE. The gate was previously CLOSED
+  // but not REQUIRED or TYPED: an ABSENT artifact_ref, a NULL one, and one with
+  // no record_id at all were all accepted and then silently converted to null on
+  // the emitted entry. This lane read it that way and the peer lane did not --
+  // on a Class-1 field.
+  //
+  // Whether an omitted artifact_ref is FROZEN-conforming is not settled by the
+  // frozen text: frozen section 6's verdict-envelope shape gates do not include
+  // artifact_ref presence, and common.schema.json constrains an artifact_ref
+  // VALUE rather than making the member required. W1 requires it ON ITS OWN
+  // AUTHORITY, because artifact_ref is a Class-1 cross-lane equality field and a
+  // field two implementations must agree on cannot be optional. section 8.2.2
+  // already defines verifier-run-invalid as a shape rejected by EITHER contract,
+  // so a frozen-conforming verdict that W1 rejects has both a reason and a
+  // defined outcome. There is no repair and no coercion.
+  if (!("artifact_ref" in verdict)) {
+    return "artifact_ref is absent; W1 requires it on every accepted verdict, because it is a "
+      + "Class-1 cross-lane equality field and cannot be optional";
+  }
   const ref = verdict.artifact_ref;
-  if (ref !== undefined && ref !== null) {
-    if (!isPlainObject(ref)) return "artifact_ref is present but is not a JSON object";
-    for (const k of Object.keys(ref)) {
-      if (k !== "record_id" && k !== "chain_id") {
-        return `artifact_ref carries the member ${JSON.stringify(k)}; W1 closes that object `
-          + "to record_id and chain_id";
-      }
+  if (ref === null || !isPlainObject(ref)) {
+    return "artifact_ref is present but is not a JSON object";
+  }
+  for (const k of Object.keys(ref)) {
+    if (k !== "record_id" && k !== "chain_id") {
+      return `artifact_ref carries the member ${JSON.stringify(k)}; W1 closes that object `
+        + "to record_id and chain_id";
     }
-    if (ref.record_id !== undefined && typeof ref.record_id !== "string") {
-      return "artifact_ref.record_id is present but is not a string";
-    }
-    if (ref.chain_id !== undefined && typeof ref.chain_id !== "string") {
-      return "artifact_ref.chain_id is present but is not a string";
-    }
+  }
+  if (!("record_id" in ref)) return "artifact_ref.record_id is absent";
+  if (typeof ref.record_id !== "string") {
+    return "artifact_ref.record_id is present but is not a string";
+  }
+  if ("chain_id" in ref && typeof ref.chain_id !== "string") {
+    return "artifact_ref.chain_id is present but is not a string";
   }
   return null;
 }
@@ -1840,7 +1868,7 @@ function preflight(flags, ctx) {
       } catch (e) {
         // Stage 5 already established presence and kind, so reaching here means
         // the path was present and a regular file a moment ago. The two
-        // outcomes are still kept apart on the EVIDENCE rather than on that
+        // outcomes are kept apart on the EVIDENCE rather than on that
         // assumption: a definite ENOENT is a file removed between the stages and
         // is genuinely missing; anything else (EACCES, EIO, EISDIR, ELOOP,
         // EMFILE, a short read on a faulty medium) is a file that is there and
@@ -1848,12 +1876,22 @@ function preflight(flags, ctx) {
         // the bundle is incomplete when the medium or the permissions are at
         // fault.
         //
-        // bundle-file-missing belongs to stage 5, which has already settled, so
-        // a late ENOENT is reported through the stage it is detected in rather
-        // than reaching backwards into a closed stage.
-        f.add("bundle-file-unreadable", entry.path,
+        // E8-2 -- A BEHAVIOURAL CHANGE IN THIS LANE. The superseded code
+        // reported the ENOENT case as bundle-file-unreadable, reasoning that
+        // bundle-file-missing belonged to stage 5 and a closed stage must not be
+        // reached backwards into. Section 8.2.2 had always said "path absent, OR
+        // A DEFINITE ENOENT ON READ" is bundle-file-missing; the stage-6 row
+        // failed to restate it, this lane followed the row, and the peer lane
+        // followed the boundary -- a measured cross-lane divergence on a Class-1
+        // field. The row is now correct: the reason is reported IN STAGE 6, at
+        // stage 6's rank, but it is bundle-file-missing, which OUTRANKS
+        // bundle-file-unreadable within that stage.
+        f.add(
+          e && e.code === "ENOENT" ? "bundle-file-missing" : "bundle-file-unreadable",
+          entry.path,
           e && e.code === "ENOENT"
-            ? `${entry.path} was present at traversal and is no longer readable: ${e.message}`
+            ? `${entry.path} was present at traversal and gave a definite ENOENT on read, `
+              + `so it is missing rather than unreadable: ${e.message}`
             : `${entry.path} is present but its bytes could not be read: ${e.message}`);
       }
     }
@@ -2214,8 +2252,20 @@ function evaluateBundle(flags, ctx) {
         const band = classifyVerdictStdout(run.stdout.toString("utf8"));
         if (band.reason !== undefined) {
           // A shape rejected by EITHER contract -- the frozen one, or this
-          // contract's own artifact_ref closure gate. The entry stands; the
+          // contract's own E8-3 artifact_ref gate. The entry stands; the
           // scenario aborts.
+          //
+          // E8-4, and it holds HERE BY CONSTRUCTION rather than by a decision
+          // taken at this line: the entry was pushed above with
+          // verifier_exit_code 0 (the process exited normally), verifier_result
+          // null (nothing is written into it until a verdict is ACCEPTED), and
+          // artifact_ref still the AD15-IR-18 Source-B preliminary projection
+          // (the Source-A replacement is below this branch). The rejected bytes
+          // are kept as diagnostic evidence only -- stdout that parses is not a
+          // verdict until it has passed both contracts' shape rules, so it may
+          // not enter the normative verifier_result. verifier_result is
+          // Class-1, so the shape is pinned rather than left to two
+          // implementations happening to agree.
           fatal = new NonMeasurement(band.reason, `${band.detail} (for ${primary.bundlePath})`);
           break;
         }
@@ -2224,11 +2274,11 @@ function evaluateBundle(flags, ctx) {
         // AD15-IR-18, SOURCE A: the accepted exit-0 verdict. Copied VERBATIM
         // from verifier_result.artifact_ref, after the result-shape gate has
         // accepted it -- so the copy is over a value already known to be
-        // closed. An absent member is represented as null, not synthesized from
-        // the artifact: the verdict is the source on this path.
-        entry.artifact_ref = band.verdict.artifact_ref === undefined
-          ? null
-          : band.verdict.artifact_ref;
+        // PRESENT, an object, carrying a string record_id, and closed (E8-3).
+        // There is no absent-member branch here any more: an absent, null or
+        // untyped artifact_ref is verifier-run-invalid at the gate above, and
+        // never reaches this line.
+        entry.artifact_ref = band.verdict.artifact_ref;
         continue;
       }
 
@@ -2257,7 +2307,17 @@ function evaluateBundle(flags, ctx) {
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
-  // ---- withheld reasons, verbatim (AD15-IR-16) ----------------------------
+  // ---- withheld reasons, verbatim (AD15-IR-16 / E8-1) ---------------------
+  // E8-1: on EVERY result-bearing path, withheld_reasons is the projection of
+  // every accepted frozen-verifier verdict ACTUALLY RETAINED in artifacts[]
+  // before termination. A fatal stage-11 result does not erase withheld
+  // channels already observed. A malformed or GATE-REJECTED verifier output
+  // contributes none, because it is not an accepted verdict -- which holds here
+  // by construction: record.verifierResult is assigned ONLY on the accepted
+  // exit-0 path, so a rejected shape leaves it null and the loop below skips it.
+  // "[]" therefore means no withheld reason was observed among the accepted
+  // verdicts actually obtained; it says nothing about invocations never reached.
+  //
   // Collected BEFORE the fatal run is raised, deliberately. AD15-IR-10 orders
   // the reported measurement_status and reason -- the ERROR outcome wins over
   // the withheld tier -- but it says nothing about discarding a channel that

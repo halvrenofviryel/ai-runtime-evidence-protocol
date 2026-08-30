@@ -241,14 +241,28 @@ node selftest.mjs
 
 ### The mandatory block registry (§8.7)
 
-Before the totals, the runner prints **all fifteen** pinned block IDs and what happened to each:
+Before the totals, the runner prints **all twenty** pinned block IDs and what happened to each:
 
 ```
 MANDATORY BLOCK REGISTRY (pinned by the contract, not by this file):
-  passed      W1-BLK-IR9 -- 41 assertion(s), 0 failed
+  passed      W1-BLK-IR4 -- 26 assertion(s), 0 failed
   ...
-  passed      W1-BLK-PATH -- 71 assertion(s), 0 failed
+  passed      W1-BLK-PATH -- 96 assertion(s), 0 failed
 ```
+
+The set is `W1-BLK-IR4` … `IR17`, `JCS`, `LIVE`, `PARITY`, `ARTIFACT-REF`, `JSON-BYTES`, `PATH`.
+`IR4` … `IR8` were **backfilled by Erratum 8**: the registry had been built during Erratum 7 and
+only ever covered the rulings that erratum touched, so `AD15-IR-4` through `AD15-IR-8` had no block
+at all and each could be violated while every mandatory block reported green.
+
+The six-ID **aggregate** registry (`W1-AGG-D1` … `D6`) belongs to the official harness, not to this
+lane. By §4 a lane-local runner can never exercise anything requiring peer material, so it is
+deliberately absent from this file and is not attempted.
+
+**The registry is a minimum discrimination suite, not a completeness proof** (E8-12). Absence of a
+block for a normative branch does not make that branch non-normative and does not grant this lane
+freedom there. A block may not demand an impossible fixture, an unprovable universal proposition,
+peer material, or narrow a freedom the contract leaves open.
 
 **The IDs are transcribed from the contract, not declared by this file.** That distinction is the
 whole control. A registry a lane writes for itself is not one: an implementer can delete the block
@@ -272,7 +286,7 @@ separately authored — and the totals below are diagnostic, not a parity surfac
 ### The summary is three numbers (contract §13 step 5)
 
 ```
-1683 passed / 0 failed / 0 skipped
+2329 passed / 0 failed / 0 skipped
 ```
 
 A block whose precondition this machine cannot produce is **not measured**. It is neither a pass
@@ -291,6 +305,23 @@ NOT MEASURED (2): live frozen-verifier checks (section 13 / AD15-IR-6 fixture); 
 | `2` | everything that ran passed, but some block was **not measured** (default mode), or the arguments were not understood |
 
 A registry violation — an unknown or duplicate block ID — exits `1` regardless of `--allow-skips`.
+
+**A fourth line, and what it is not.** The runner also prints `NOT MEASURED branches`, which is a
+different thing from a skipped block:
+
+```
+NOT MEASURED branches (1), inside blocks that ran:
+  W1-BLK-IR13 item 9, Unicode-native name-key branch -- ...
+```
+
+`W1-BLK-IR13` item 9 requires **the name-key branch this platform supplies**, and records the other
+one `NOT_MEASURED` "rather than skipped silently or counted as covered". §8.6 defines that key over
+two *mutually exclusive* platform APIs: Node's `readdirSync({ encoding: "buffer" })` always yields
+lossless raw name bytes, so the Unicode-native branch cannot be constructed by this lane at all —
+not for an environmental reason a re-run could change. Routing it through the skip counter would
+assert that the pinned **block** did not execute, which is false, and would make the official
+evidence command permanently non-zero. The three states §8.7 pins are per-**block**; this is a
+per-**branch** record inside a block that ran, and it is printed so the gap is visible.
 
 `--allow-skips` makes an unmeasured block non-fatal. It is **developer-only**: an official count is
 a claim about every block, and that flag is exactly the licence to make the claim while some of
@@ -674,7 +705,38 @@ nothing about discarding a channel that was actually observed, and `AD15-IR-15` 
 that an abnormally terminated process still contributes its entry for exactly that reason — the
 evidence of a run that genuinely happened is not thrown away. §8.2 makes the member unconditional.
 `withheld_reasons` is a Class-1 field, so if the peer lane read this differently it is a genuine
-divergence and is listed in `open_questions` rather than assumed away.
+divergence and was listed in `open_questions` rather than assumed away.
+
+> **CLOSED by `E8-1`.** The maintainer pinned this lane's reading: on every result-bearing path
+> `withheld_reasons` is the projection of the accepted verdicts *actually retained* before
+> termination, and a fatal stage-11 result does not erase a channel already observed. Both lanes had
+> converged here; it is pinned anyway, because two implementations happening to agree is not a rule.
+> Erratum 8 also records the lesson this question is the example of: **a lane's declared ambiguity is
+> a divergence candidate, not a footnote** — it was reported onward as a declared position and not
+> cross-checked against the peer, and the divergence that *was* live (`E8-2`) sat unmeasured
+> alongside it.
+
+## Erratum 8 — what changed in this lane
+
+Erratum 8 was raised by **maintainer source review of the two Erratum-7 remediation candidates**,
+and two of its four rulings are **measured cross-lane divergences**: both lanes' self-tests were
+entirely green while the two programs emitted different Class-1 values for the same input.
+
+| Ruling | What this lane did before | Now |
+|---|---|---|
+| **`E8-1`** `withheld_reasons` on a fatal path | Already correct: channels were collected **before** the fatal run was raised, and only accepted verdicts were ever recorded. This lane had listed the question as a declared position rather than a settled rule. | Unchanged behaviour, now **pinned and discriminated**. `withheld_reasons` is the projection of the accepted verdicts *actually retained* before termination; a fatal stage-11 result does not erase a channel already observed; a malformed or **gate-rejected** output contributes none, because it is not an accepted verdict. `[]` means none was observed among the verdicts obtained — it says nothing about invocations never reached. |
+| **`E8-2`** stage 6 carries two reasons | **A definite `ENOENT` on read was reported as `bundle-file-unreadable`**, on the reasoning that `bundle-file-missing` belonged to stage 5 and a settled stage must not be reached backwards into. The peer lane followed §8.2.2's boundary instead and reported `bundle-file-missing`. Both readings were defensible against the text, which is what made it a contract defect. | **Behavioural change.** A definite `ENOENT` obtained while *reading* a listed file is `bundle-file-missing`, reported at stage 6, and it **outranks** `bundle-file-unreadable` within that stage. Any other read error is still `bundle-file-unreadable`. |
+| **`E8-3`** the Source-A `artifact_ref` gate | The gate was **closed but neither required nor typed**: an **absent** `artifact_ref`, a **`null`** one, and one carrying **no `record_id`** were all accepted and then silently converted to `null` on the emitted entry. Only an extra member was rejected. | **Behavioural change.** `artifact_ref` MUST be present, MUST be an object, MUST carry a string `record_id`, MAY carry a string `chain_id`, and MUST carry nothing else. Every failure is `verifier-run-invalid`. W1 requires this **on its own authority** — the frozen envelope shape gates do not enumerate `artifact_ref` presence — because a Class-1 cross-lane equality field cannot be optional and an open nested object cannot be one. |
+| **`E8-4`** a gate-rejected `exit 0` | Already correct **by construction**: the entry is pushed before the verdict is classified, `verifier_result` is written only on the accepted path, and the Source-A replacement happens after the gate. | Unchanged behaviour, now pinned and discriminated: `verifier_exit_code: 0`, `verifier_result: null`, the Source-B preliminary `artifact_ref`, and `verifier-run-invalid`. The rejected bytes stay diagnostic evidence and never enter the normative `verifier_result`. |
+| **§8.7** the block registry | Fifteen IDs, beginning at `W1-BLK-IR9`. | **Twenty.** `W1-BLK-IR4` … `IR8` backfilled, and thirteen existing blocks widened against their rulings in full — `IR12`'s four branches, `IR13`'s twelve-item branch list, `IR14`'s two branches, `IR16`'s `E8-1` half, `ARTIFACT-REF`'s six `E8-3` rejections, `JCS`'s two numeric branches plus acceptance controls, `JSON-BYTES` at all three positions, and `PATH`'s ordinary disallowed ASCII. |
+
+**Every ruling and every backfilled block carries a discrimination test**, and each was verified by
+mutation: the behaviour was broken, the specific test was confirmed to fail, and the source was
+restored to a byte-identical file before the suite was re-run green.
+
+**One recorded `NOT_MEASURED` branch**, described under *Running* above: `W1-BLK-IR13` item 9's
+Unicode-native name-key branch is unreachable on this runtime by construction, and is printed as a
+branch-level `NOT MEASURED` record rather than being counted as covered.
 
 ## Recorded ambiguities — the register is now EMPTY
 
