@@ -4813,6 +4813,379 @@ class BlockIR13(BlockCase):
         self.ck_eq(exc.artifacts, [])
 
 
+
+    # ---- branch 1: EVERY stage barrier at which two faults both apply ------
+
+    def result_of(self, bundle, stub=None, extra=()):
+        """The emitted result object, via the CLI, so the exit band is measured
+        alongside the reason.
+        """
+        code, out, _err = self.run_cli(bundle, extra=extra,
+                                       stub=stub or StubVerifier())
+        return code, (json.loads(out) if out.strip() else None)
+
+    def test_barrier_2_before_3_identity_beats_frozen_identity(self):
+        """Stage 2 is the exit-1 band. A bundle with no root ``manifest.json``
+        AND an unreadable frozen file yields exit 1 with EMPTY STDOUT -- the
+        frozen-identity read never happens, because it is pinned to run
+        IMMEDIATELY AFTER identity, not before it.
+        """
+        empty = os.path.join(self.root, "ir13-b23", "bundle")
+        os.makedirs(empty)
+        _seam(self, "read_frozen_file",
+              lambda path: (_ for _ in ()).throw(
+                  OSError(errno.EACCES, "Permission denied", path)))
+        code, result = self.result_of(empty)
+        self.ck_eq(code, 1)
+        self.ck_none(result, "the exit-1 band emitted a result object")
+
+    def test_barrier_3_before_4_frozen_digest_beats_manifest_structure(self):
+        def unsorted(manifest):
+            manifest["files"] = list(reversed(manifest["files"]))
+            return manifest
+
+        root = os.path.join(self.root, "ir13-b34")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts(),
+                              manifest_overrides=unsorted)
+        real = ev.read_frozen_file
+        _seam(self, "read_frozen_file",
+              lambda path: real(path) + b"\n# drift\n")
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "verifier-digest-mismatch")
+
+    def test_barrier_4_before_5_manifest_closure_beats_a_missing_file(self):
+        def bad_role(manifest):
+            manifest["files"][0]["role"] = "not-a-role"
+            return manifest
+
+        root = os.path.join(self.root, "ir13-b45")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts(),
+                              manifest_overrides=bad_role,
+                              drop_from_disk=("artifacts/effect.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+
+    def test_barrier_8_before_9_bad_json_beats_a_shape_violation(self):
+        """An unparseable OPERATOR input (stage 8) on a bundle whose artifact
+        count is also wrong for its scenario (stage 9).
+        """
+        root = os.path.join(self.root, "ir13-b89")
+        os.makedirs(root)
+        bundle = write_bundle(
+            root, "IOP-R-CLEAN", {"artifacts/a.json": DECISION},
+            raw_files={"operator/bindings.json": (b"{ not json", "bindings")},
+            operator={"operator/independence.json":
+                      ({"policy": "s"}, "independence_policy"),
+                      "operator/revocation.json": ({"revoked": []}, "revocation")})
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-json-invalid")
+
+    def test_barrier_9_before_10_shape_beats_the_numeric_preflight(self):
+        root = os.path.join(self.root, "ir13-b910")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN",
+                              {"artifacts/a.json":
+                               dict(DECISION, profiles={"x": 10 ** 20})})
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-shape-invalid")
+
+    def test_barrier_10_before_11_numeric_preflight_beats_any_invocation(self):
+        """"NO FROZEN VERIFIER IS INVOKED UNTIL EVERY PREFLIGHT STAGE HAS
+        PASSED", so a stage-10 failure is reported even though stage 11 would
+        have failed too -- and the verifier is never called at all.
+        """
+        root = os.path.join(self.root, "ir13-b1011")
+        os.makedirs(root)
+        arts = four_artifacts(decision={"profiles": {"x": 10 ** 20}})
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+
+        def never_starts(request, flags):
+            raise ev.NonMeasurement("verifier-not-invocable", "synthetic")
+
+        exc = self.nonmeasurement(bundle, never_starts)
+        self.ck_eq(exc.reason, "numeric-preflight-violation")
+        self.ck_eq(exc.json_pointer, "/profiles/x")
+        self.ck_eq(exc.artifacts, [])
+
+    def test_barrier_11_before_12_run_validity_beats_tier_withheld(self):
+        """``AD15-IR-10``: where an ERROR-class run invalidity and an
+        ``authenticated_withheld`` channel both apply to one bundle, the ERROR
+        outcome is reported. A verifier that misbehaved AS A PROCESS cannot be
+        trusted to have produced a meaningful withheld channel either.
+        """
+        root = os.path.join(self.root, "ir13-b1112")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        stub = StubVerifier(by_record={
+            "z-decision": (0, verdict("z-decision", klass="AIREP-Core",
+                                      auth_withheld=["producer-binding-missing"])),
+            "y-control": (2, None)})
+        exc = self.nonmeasurement(bundle, stub)
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_ne(exc.reason, "authenticated-withheld")
+
+    # ---- branch 3: MECHANISM BEFORE PATH ----------------------------------
+
+    def test_mechanism_beats_path_across_a_barrier(self):
+        """An earlier-ranked reason on a LATER-SORTING path still wins. The
+        missing file sorts last of the bundle's artifacts; the digest mismatch
+        sorts first.
+        """
+        bundle = self.multi("ir13-mech",
+                            drop=("artifacts/effect.json",),
+                            bad_digest=("artifacts/control.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-missing")
+        self.ck_in("artifacts/effect.json", exc.detail)
+
+    # ---- branch 5: same-reason selection does not move the projection ------
+
+    def test_same_reason_selection_does_not_move_the_projection(self):
+        """"Given two same-stage, same-reason failures, the 8.7 PROJECTION is
+        identical whichever the evaluator selects."
+
+        The block asserts that invariance ON THE PROJECTION ONLY. ``detail`` is
+        Class 4 and MAY legitimately name whichever failure was selected, so
+        requiring the whole emitted result to be identical would narrow the same
+        freedom one level down (E8-14). The block NEVER asserts WHICH failure
+        was chosen: ``AD15-IR-13`` says an evaluator MAY SELECT EITHER (E8-13).
+        """
+        one = self.multi("ir13-sel-1", drop=("artifacts/control.json",))
+        two = self.multi("ir13-sel-2", drop=("artifacts/effect.json",))
+        both = self.multi("ir13-sel-3",
+                          drop=("artifacts/control.json", "artifacts/effect.json"))
+        projections = []
+        for bundle in (one, two, both):
+            _code, result = self.result_of(bundle)
+            projections.append(ev.projection_bytes(ev.normative_projection(result)))
+        self.ck_eq(projections[0], projections[1],
+                   "two same-reason selections moved the parity surface")
+        self.ck_eq(projections[0], projections[2])
+
+    def test_the_diagnostic_detail_may_name_either_selection(self):
+        """The other half of E8-14: ``detail`` is Class 4, so a lane naming the
+        selected path there is NOT a divergence. Asserted as PERMISSION, never
+        as a requirement to pick one.
+        """
+        both = self.multi("ir13-sel-4",
+                          drop=("artifacts/control.json", "artifacts/effect.json"))
+        _code, result = self.result_of(both)
+        detail = result["nonmeasurement"]["detail"]
+        self.ck(any(name in detail for name in
+                    ("artifacts/control.json", "artifacts/effect.json")),
+                "detail named neither candidate")
+        self.ck("detail" not in ev.normative_projection(result)
+                .get("nonmeasurement", {}),
+                "detail reached the parity surface")
+
+    # ---- branch 6: stage 11's SEQUENTIAL exception -------------------------
+
+    def test_stage_11_is_sequential_so_no_tie_break_arises(self):
+        """"Artifact invocation is SEQUENTIAL in AD15-IR-12's order and STOPS AT
+        THE FIRST FATAL RUN, so the reported reason is whichever fatal run is
+        REACHED FIRST. No comparison between reasons arises."
+
+        Both artifacts here are fatal, in DIFFERENT ways. The one that sorts
+        first by ``artifact_path`` decides, and the second is never invoked.
+        """
+        root = os.path.join(self.root, "ir13-s11")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        stub = StubVerifier(by_record={
+            "z-decision": (2, None),                    # artifacts/a.json
+            "y-control": (0, b"not json")})             # artifacts/b.json
+        exc = self.nonmeasurement(bundle, stub)
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_in("artifacts/a.json", exc.detail)
+        self.ck_eq(len(exc.artifacts), 1, "the scenario did not stop at the first")
+        self.ck_eq(len(stub.calls), 1, "a later artifact was invoked anyway")
+
+    # ---- branch 7: stage-4 manifest closure vs stage-5 filesystem closure ---
+
+    def test_stage_4_manifest_closure_is_reported_before_the_disk_is_consulted(self):
+        """"A manifest that is malformed ON ITS OWN TERMS is reported BEFORE THE
+        DISK IS CONSULTED." Discriminated by making the disk unenumerable: a
+        lane consulting the filesystem first would report
+        ``bundle-directory-unreadable``.
+        """
+        def unknown_member(manifest):
+            manifest["iop_unknown"] = True
+            return manifest
+
+        root = os.path.join(self.root, "ir13-s45a")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts(),
+                              manifest_overrides=unknown_member)
+        _seam(self, "scan_directory",
+              lambda path: (_ for _ in ()).throw(
+                  OSError(errno.EACCES, "Permission denied", path)))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+
+    def test_stage_5_filesystem_closure_produces_the_same_reason(self):
+        """The other side of the deliberate split: an UNLISTED entry on disk is
+        also ``manifest-invalid``, but it is a stage-5 finding.
+        """
+        root = os.path.join(self.root, "ir13-s45b")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts(),
+                              extra_disk_files={"artifacts/stray.json": b"{}"})
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+        self.ck_in("stray.json", exc.detail)
+
+    # ---- branch 8: DETERMINISTIC SORTED TRAVERSAL --------------------------
+
+    def test_the_reported_failure_does_not_change_with_enumeration_order(self):
+        """"``readdir`` order is unspecified and varies by filesystem, so a lane
+        reporting the first failure in ENUMERATION ORDER is not deterministic.
+        Every directory's entries are SORTED before that directory is inspected
+        or descended into."
+
+        Two unlisted entries are planted, and the OS enumeration is reversed on
+        the second run. The reported failure must be identical.
+        """
+        seen = []
+        for index, reverse in enumerate((False, True)):
+            root = os.path.join(self.root, "ir13-trav-%d" % index)
+            os.makedirs(root)
+            bundle = write_bundle(
+                root, "IOP-R-CLEAN", four_artifacts(),
+                extra_disk_files={"artifacts/aaa-stray.json": b"{}",
+                                  "artifacts/zzz-stray.json": b"{}"})
+            real = ev.scan_directory
+            _seam(self, "scan_directory",
+                  lambda path, _r=reverse, _real=real:
+                  list(reversed(_real(path))) if _r else _real(path))
+            exc = self.nonmeasurement(bundle)
+            seen.append((exc.reason, exc.detail))
+        self.ck_eq(seen[0], seen[1],
+                   "the reported failure moved with OS enumeration order")
+
+    # ---- branches 9 and 10: the NAME KEY, and a non-UTF-8 directory name ----
+
+    def test_a_non_utf8_directory_name_is_an_unlisted_entry(self):
+        """"A manifest ``path`` is a JSON STRING, so NO SUCH ENTRY CAN EVER BE
+        LISTED in ``files[]``. It is reported by stage 5's layout closure as
+        ``manifest-invalid``, exactly as any other unlisted entry is."
+        """
+        root = os.path.join(self.root, "ir13-nonutf8")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+        raw = os.path.join(bundle.encode("utf-8"),
+                           b"artifacts", b"\xff\xfe-stray.json")
+        try:
+            with open(raw, "wb") as handle:
+                handle.write(b"{}")
+        except (OSError, ValueError) as exc:
+            self.skipTest("this filesystem rejects a non-UTF-8 entry name: %s"
+                          % exc)
+        self.addCleanup(lambda: os.path.exists(raw) and os.remove(raw))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+
+    def test_the_name_key_applies_no_normalization(self):
+        """"NFC or NFD conversion, case folding, locale-dependent mapping and
+        any platform-specific name normalization are FORBIDDEN." Two entry names
+        that are NFC/NFD variants of each other are BYTE-DISTINCT and must both
+        be seen as distinct unlisted entries -- a normalizing key would collide
+        them.
+        """
+        root = os.path.join(self.root, "ir13-nonorm")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+        composed = "é-stray.json"          # NFC
+        decomposed = "é-stray.json"       # NFD
+        target = os.path.join(bundle, "artifacts")
+        try:
+            for name in (composed, decomposed):
+                with open(os.path.join(target, name), "wb") as handle:
+                    handle.write(b"{}")
+        except OSError as exc:
+            self.skipTest("this filesystem cannot hold both NFC and NFD names: %s"
+                          % exc)
+        names = set(os.listdir(target))
+        if not {composed, decomposed} <= names:
+            self.skipTest("this filesystem normalizes entry names, so the two "
+                          "byte-distinct names cannot coexist")
+        self.ck_eq(len({composed, decomposed} & names), 2,
+                   "the platform collapsed two byte-distinct names")
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+
+    def test_the_lossless_raw_bytes_name_key_branch_is_not_reachable_here(self):
+        """Branch 9 is explicitly PER-PLATFORM: "a lane whose API yields only
+        LOSSLESS RAW BYTES cannot construct the Unicode-native branch, AND VICE
+        VERSA; the unreachable branch is recorded NOT_MEASURED on that platform
+        rather than skipped silently or counted as covered."
+
+        Python's ``os.scandir`` yields ``str`` names, decoded with
+        ``surrogateescape`` -- the UNICODE-NATIVE branch, which the two cases
+        above exercise. The raw-bytes branch is therefore NOT REACHABLE from
+        this API, and is recorded as a REPORTED SKIP rather than counted as
+        covered.
+        """
+        sample = os.listdir(self.root)
+        self.ck(all(isinstance(name, str) for name in sample) or not sample,
+                "os.listdir returned a non-str name on this platform")
+        self.skipTest("NOT_MEASURED on this platform: os.scandir yields "
+                      "Unicode-native str names, so the lossless-raw-bytes "
+                      "name-key branch cannot be constructed here")
+
+    # ---- branch 11: a manifest path with an UNPAIRED SURROGATE at stage 4 ---
+
+    def test_a_manifest_path_with_an_unpaired_surrogate_is_stage_4(self):
+        """"Strict JSON admits an escape such as ``\\ud800`` with no pair, which
+        does not encode to well-formed UTF-8 and so cannot denote any filesystem
+        name. It FAILS ON THE MANIFEST'S OWN TERMS, BEFORE THE DISK IS
+        CONSULTED."
+        """
+        root = os.path.join(self.root, "ir13-surrogate")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+        manifest_path = os.path.join(bundle, "manifest.json")
+        with open(manifest_path, encoding="utf-8") as handle:
+            doc = json.load(handle)
+        doc["files"][0]["path"] = "artifacts/PLACEHOLDER-bad.json"
+        raw = json.dumps(doc).replace("PLACEHOLDER", "\\ud800").encode("utf-8")
+        with open(manifest_path, "wb") as handle:
+            handle.write(raw)
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "manifest-invalid")
+
+    # ---- branch 12: internal-error stays OUTSIDE the order -----------------
+
+    def test_internal_error_never_masks_an_already_determined_failure(self):
+        """"A stage that has produced its failure HAS PRODUCED THE REPORTED
+        REASON, and a later fault does not replace it."
+
+        A stage-5 failure is planted, and a LATER stage is made to fault. The
+        stage-5 reason must survive.
+        """
+        bundle = self.multi("ir13-ie", drop=("artifacts/effect.json",))
+        _seam(self, "stage_json",
+              lambda manifest, contents: (_ for _ in ()).throw(
+                  RuntimeError("synthetic later-stage fault")))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-missing")
+        self.ck_ne(exc.reason, "internal-error")
+
+    def test_internal_error_is_still_reported_when_nothing_preceded_it(self):
+        """It is NOT a stage: it is raised wherever an unexpected fault occurs
+        AFTER identity is established, and it still produces a result object
+        naming the scenario rather than a crash the harness has to infer.
+        """
+        bundle = self.multi("ir13-ie2")
+        _seam(self, "stage_json",
+              lambda manifest, contents: (_ for _ in ()).throw(
+                  RuntimeError("synthetic fault with no earlier failure")))
+        code, result = self.result_of(bundle)
+        self.ck_eq(code, 3)
+        self.ck_eq(result["nonmeasurement"]["reason"], "internal-error")
+        self.ck_eq(result["scenario_id"], "IOP-R-CLEAN")
+
 # --------------------------------------------------------------------------
 # W1-BLK-IR14 -- a post-identity operator assertion mismatch is result-bearing
 # at exit 3
