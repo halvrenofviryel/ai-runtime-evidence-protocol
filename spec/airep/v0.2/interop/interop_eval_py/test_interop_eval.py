@@ -166,7 +166,17 @@ class StubVerifier:
         self.calls.append((record_id, envelope, list(flags)))
         code, body = self.by_record.get(record_id, self.default)
         if body is None and code == 0:
-            body = verdict(record_id)
+            # E8-3: the frozen `common.schema.json` makes `record_id` a REQUIRED
+            # STRING in `artifact_core`, so an artifact reaching an accepted
+            # `exit 0` verdict always carried one. A stub synthesizing a null
+            # `record_id` here models a frozen output that CANNOT EXIST, and the
+            # typed Source-A gate now refuses it -- correctly. The stand-in keeps
+            # the double inside the shape the frozen contract can actually
+            # produce. What the no-record_id cases measure is unchanged: that the
+            # artifact REACHED stage 0 (`stub.calls`) and that the Source-B
+            # projection over the ARTIFACT is null, both asserted directly.
+            body = verdict(record_id if isinstance(record_id, str)
+                           else "stub-schema-valid-record-id")
         if isinstance(body, bytes):
             return code, body, self.stderr          # raw stdout, bypassing json
         stdout = b"" if body is None else json.dumps(body).encode("utf-8")
@@ -3241,6 +3251,16 @@ class SpawnFailureContributesNoEntry(BundleCase):
 # ==========================================================================
 
 MANDATORY_BLOCKS = (
+    # E8: `AD15-IR-4` through `AD15-IR-8` had NO BLOCK AT ALL. The registry was
+    # built during Erratum 7 and only ever covered the rulings that erratum
+    # touched; nothing swept backwards. Five normative rulings -- including
+    # `AD15-IR-8`'s `0o111` worked case, a MEASURED convergence in Erratum 5 --
+    # could each be violated while every mandatory block reported green.
+    "W1-BLK-IR4",
+    "W1-BLK-IR5",
+    "W1-BLK-IR6",
+    "W1-BLK-IR7",
+    "W1-BLK-IR8",
     "W1-BLK-IR9",
     "W1-BLK-IR10",
     "W1-BLK-IR11",
@@ -3366,6 +3386,764 @@ def ordered_four():
             execution_ref={"record_id": "x-execution"},
             observer_relationship="independent"),
     }
+
+
+# --------------------------------------------------------------------------
+# An INDEPENDENT RFC 8785 serializer, for W1-BLK-IR4's recomputation branch
+#
+# `W1-BLK-IR4` requires an "INDEPENDENT RECOMPUTATION of SHA-256 over the actual
+# RFC 8785 canonical bytes, equal to the emitted `request_envelope_digest`".
+# Recomputing with `ev.jcs` would recompute with the very code under test and
+# would establish nothing, so the canonical bytes are produced a second time
+# here, from the ruling's own definition.
+#
+# It is deliberately restricted to the value domain these fixtures use --
+# objects, arrays, strings, integers, booleans and null. Anything outside that
+# raises rather than guessing: a serializer that quietly widens its own domain
+# would reintroduce exactly the divergence AD15-IR-20 closes. Floats are
+# excluded on purpose; the fixtures carry none, and RFC 8785's number rule is
+# the one part no two hand-written serializers should be assumed to agree on.
+# --------------------------------------------------------------------------
+
+_JCS_SHORT_ESCAPES = {
+    0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r",
+    0x22: "\\\"", 0x5C: "\\\\",
+}
+
+
+def _independent_jcs_string(text):
+    buf = ["\""]
+    for char in text:
+        code = ord(char)
+        if code in _JCS_SHORT_ESCAPES:
+            buf.append(_JCS_SHORT_ESCAPES[code])
+        elif code < 0x20:
+            buf.append("\\u%04x" % code)
+        else:
+            buf.append(char)
+    buf.append("\"")
+    return "".join(buf)
+
+
+def independent_jcs(value):
+    """RFC 8785 canonical bytes, written independently of the evaluator's JCS."""
+    out = []
+
+    def emit(node):
+        if node is None:
+            out.append("null")
+        elif node is True:
+            out.append("true")
+        elif node is False:
+            out.append("false")
+        elif isinstance(node, str):
+            out.append(_independent_jcs_string(node))
+        elif isinstance(node, int):
+            out.append(str(node))
+        elif isinstance(node, list):
+            out.append("[")
+            for index, item in enumerate(node):
+                if index:
+                    out.append(",")
+                emit(item)
+            out.append("]")
+        elif isinstance(node, dict):
+            out.append("{")
+            # RFC 8785 sorts member names by their UTF-16 code units.
+            for index, key in enumerate(
+                    sorted(node, key=lambda k: k.encode("utf-16-be"))):
+                if index:
+                    out.append(",")
+                out.append(_independent_jcs_string(key))
+                out.append(":")
+                emit(node[key])
+            out.append("}")
+        else:
+            raise AssertionError(
+                "value outside this serializer's declared domain: %r" % (node,))
+
+    emit(value)
+    return "".join(out).encode("utf-8")
+
+
+# --------------------------------------------------------------------------
+# W1-BLK-IR4 -- the LANE-LOCAL HALF of AD15-IR-4, and nothing else
+#
+# "Envelope built exactly per 5.1; REPEAT DETERMINISM on identical input;
+#  INDEPENDENT RECOMPUTATION of SHA-256 over the actual RFC 8785 canonical
+#  bytes, equal to the emitted `request_envelope_digest`; CONTROLLED MUTATIONS
+#  that change the canonical bytes, proving the evaluator RE-HASHES rather than
+#  carrying a digest forward. Asserts NO INJECTIVITY."
+#
+# E8-7 stripped "any envelope change moves it" from this block: that is an
+# UNPROVABLE UNIVERSAL over an infinite input domain, and false as a contract
+# invariant because SHA-256 is not injective. Nothing here quantifies over all
+# inputs; the mutations are named, finite and checked one by one.
+#
+# The AGGREGATE branches -- the pair key, a mismatch making a run
+# non-qualifying, a mismatch never reaching an evaluator exit code -- are
+# `W1-AGG-D2` and are the HARNESS's. Contract 4 forbids a lane-local runner from
+# seeing its peer, so they are NOT ATTEMPTED HERE. A single Python invocation
+# has no access to the Node lane's digest: it cannot observe, let alone enforce,
+# a property of a run it is not part of.
+# --------------------------------------------------------------------------
+
+class BlockIR4(BlockCase):
+    BLOCK = "W1-BLK-IR4"
+
+    def digests(self, bundle, stub=None):
+        """`artifact_path` -> emitted `request_envelope_digest`."""
+        entries = self.evaluate(bundle, stub or StubVerifier())["artifacts"]
+        return {e["artifact_path"]: e["request_envelope_digest"] for e in entries}
+
+    def test_the_envelope_is_built_exactly_per_5_1(self):
+        """Closed: `artifact` as a parsed JSON VALUE, and `related_artifacts`
+        the OTHER artifacts of the same bundle AND NO OTHERS.
+        """
+        root = os.path.join(self.root, "ir4-shape")
+        os.makedirs(root)
+        arts = four_artifacts()
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        stub = StubVerifier()
+        self.evaluate(bundle, stub)
+        self.ck_eq(len(stub.calls), 4)
+        for _record_id, envelope, _flags in stub.calls:
+            self.ck_eq(set(envelope), {"artifact", "related_artifacts"},
+                       "the section-0 envelope is closed")
+            self.ck_eq(len(envelope["related_artifacts"]), 3)
+            self.ck(envelope["artifact"] not in envelope["related_artifacts"],
+                    "the primary must not appear among its own related set")
+            for related in envelope["related_artifacts"]:
+                self.ck_in(related, list(arts.values()),
+                           "related_artifacts carries a value from outside the bundle")
+
+    def test_a_single_artifact_scenario_sends_the_empty_array(self):
+        """"Not absent, not populated with unrelated artifacts."""
+        bundle = single_bundle(self, "ir4-single")
+        stub = StubVerifier()
+        self.evaluate(bundle, stub)
+        _record_id, envelope, _flags = stub.calls[0]
+        self.ck_in("related_artifacts", envelope)
+        self.ck_eq(envelope["related_artifacts"], [])
+
+    def test_repeat_determinism_on_identical_input(self):
+        """Contract 8.4: identical bundle plus identical operator inputs gives
+        byte-identical output across repeat runs. Two SEPARATELY MATERIALIZED
+        bundles of the same content are used, so a cached digest inside one
+        evaluation would not be what makes them agree.
+        """
+        first = write_bundle(os.path.join(self.root, "ir4-r1"), "IOP-R-CLEAN",
+                             four_artifacts())
+        second = write_bundle(os.path.join(self.root, "ir4-r2"), "IOP-R-CLEAN",
+                              four_artifacts())
+        self.ck_eq(self.digests(first), self.digests(second))
+        self.ck_eq(self.digests(first), self.digests(first))
+
+    def test_the_digest_is_sha256_over_the_actual_canonical_bytes(self):
+        """The independent recomputation branch. The canonical bytes are
+        rebuilt by `independent_jcs`, hashed here, and compared with what the
+        evaluator EMITTED.
+        """
+        root = os.path.join(self.root, "ir4-recompute")
+        os.makedirs(root)
+        arts = four_artifacts()
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        emitted = self.digests(bundle)
+        by_path = dict(arts)
+        for path in sorted(by_path, key=lambda s: s.encode("utf-8")):
+            related = [by_path[other]
+                       for other in sorted(by_path, key=lambda s: s.encode("utf-8"))
+                       if other != path]
+            envelope = {"artifact": by_path[path], "related_artifacts": related}
+            expected = "sha256:" + hashlib.sha256(
+                independent_jcs(envelope)).hexdigest()
+            self.ck_eq(emitted[path], expected,
+                       "emitted digest is not SHA-256 over the canonical bytes "
+                       "for %s" % path)
+
+    def test_a_controlled_mutation_moves_the_digest(self):
+        """"Controlled mutations that change the canonical bytes, PROVING THE
+        EVALUATOR RE-HASHES rather than carrying a digest forward."
+
+        Each mutation below is named and checked individually. This asserts
+        nothing about mutations in general and CLAIMS NO INJECTIVITY (E8-7):
+        SHA-256 is not injective, and "any envelope change moves the digest" is
+        not provable and is not a contract invariant.
+        """
+        base = write_bundle(os.path.join(self.root, "ir4-m0"), "IOP-R-CLEAN",
+                            four_artifacts())
+        baseline = self.digests(base)
+        mutations = {
+            "a changed scalar in the primary":
+                four_artifacts(decision={"sequence": 9}),
+            "an added member in the primary":
+                four_artifacts(decision={"iop_extra": "x"}),
+            "a changed scalar in a RELATED artifact":
+                four_artifacts(effect={"sequence": 7}),
+        }
+        for index, (label, arts) in enumerate(sorted(mutations.items())):
+            root = os.path.join(self.root, "ir4-m-%d" % index)
+            os.makedirs(root, exist_ok=True)
+            moved = self.digests(write_bundle(root, "IOP-R-CLEAN", arts))
+            self.ck_ne(moved["artifacts/decision.json"],
+                       baseline["artifacts/decision.json"],
+                       "the digest did not move for: %s" % label)
+
+    def test_each_artifact_in_one_bundle_gets_its_own_digest(self):
+        """The envelope is a function of the PRIMARY as well as the bundle, so a
+        lane carrying one digest forward across the four invocations is caught.
+        """
+        bundle = write_bundle(os.path.join(self.root, "ir4-per"), "IOP-R-CLEAN",
+                              four_artifacts())
+        emitted = self.digests(bundle)
+        self.ck_eq(len(set(emitted.values())), 4)
+
+    def test_the_digest_is_the_pinned_encoding(self):
+        bundle = single_bundle(self, "ir4-enc")
+        digest = self.digests(bundle)["artifacts/a.json"]
+        self.ck(digest.startswith("sha256:"), digest)
+        self.ck_eq(len(digest), len("sha256:") + 64)
+        self.ck_eq(digest[7:], digest[7:].lower())
+
+    def test_the_lane_emits_only_its_own_digest(self):
+        """Contract 8.2.1: "The PEER LANE's verifier digest does not appear in
+        evaluator output at all." The aggregate comparison is the harness's.
+        """
+        bundle = single_bundle(self, "ir4-own")
+        result = self.evaluate(bundle, StubVerifier())
+        self.ck_eq(set(result["verifier_digests"]),
+                   {"class_verifier", "class_verifier_contract"})
+
+
+# --------------------------------------------------------------------------
+# W1-BLK-IR5 -- `artifact_path` is the TOTAL result identity
+#
+# "artifacts[] ordered by it; artifact_ref null where no string record_id
+#  exists; NO record_id EVER SYNTHESIZED; an artifact with a MISSING record_id
+#  STILL REACHES FROZEN STAGE 0 rather than being refused; and semantic
+#  reference resolution (R-A) still keys on record_id, NEVER on artifact_path."
+# --------------------------------------------------------------------------
+
+class BlockIR5(BlockCase):
+    BLOCK = "W1-BLK-IR5"
+
+    def test_artifacts_are_ordered_by_artifact_path_bytes(self):
+        """The fixture makes `record_id` rank the EXACT REVERSE of
+        `artifact_path` rank, so the assertion cannot pass under the wrong key.
+        """
+        root = os.path.join(self.root, "ir5-order")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        entries = self.evaluate(bundle, StubVerifier())["artifacts"]
+        paths = [e["artifact_path"] for e in entries]
+        self.ck_eq(paths, sorted(paths, key=lambda s: s.encode("utf-8")))
+        refs = [e["artifact_ref"]["record_id"] for e in entries]
+        self.ck_ne(refs, sorted(refs, key=lambda s: s.encode("utf-8")),
+                   "the fixture failed to separate the two candidate keys")
+
+    def test_artifact_path_is_present_on_every_entry(self):
+        """It ALWAYS exists -- the manifest lists every file -- which is why it
+        can be the total identity and `record_id` cannot.
+        """
+        root = os.path.join(self.root, "ir5-present")
+        os.makedirs(root)
+        arts = four_artifacts()
+        del arts["artifacts/effect.json"]["record_id"]
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        for entry in self.evaluate(bundle, StubVerifier())["artifacts"]:
+            self.ck(isinstance(entry["artifact_path"], str))
+            self.ck(entry["artifact_path"])
+
+    def test_artifact_ref_is_null_where_no_string_record_id_exists(self):
+        for label, value in (("absent", ABSENT), ("non-string", 17)):
+            doc = dict(DECISION)
+            if value is ABSENT:
+                doc.pop("record_id")
+            else:
+                doc["record_id"] = value
+            bundle = single_bundle(self, "ir5-null-%s" % label,
+                                   scenario="IOP-B-DEC", doc=doc)
+            entry = self.evaluate(
+                bundle, StubVerifier(default=(1, None)))["artifacts"][0]
+            self.ck_none(entry["artifact_ref"], label)
+
+    def test_no_record_id_is_ever_synthesized(self):
+        """AD15-IR-5: never, for any reason. Neither the result object nor the
+        envelope sent to the frozen verifier may gain one.
+        """
+        doc = {k: v for k, v in DECISION.items() if k != "record_id"}
+        bundle = single_bundle(self, "ir5-synth", scenario="IOP-B-DEC", doc=doc)
+        stub = StubVerifier(default=(1, None))
+        result = self.evaluate(bundle, stub)
+        self.ck("record_id" not in stub.calls[0][1]["artifact"],
+                "a record_id was synthesized into the request envelope")
+        self.ck("record_id" not in json.dumps(result["artifacts"][0]),
+                "a record_id was synthesized into the result entry")
+
+    def test_a_missing_record_id_still_reaches_frozen_stage_0(self):
+        """"The consequence that matters": it is NOT converted into the
+        evaluator's own preflight failure.
+        """
+        doc = {k: v for k, v in DECISION.items() if k != "record_id"}
+        bundle = single_bundle(self, "ir5-stage0", scenario="IOP-B-DEC", doc=doc)
+        stub = StubVerifier(default=(1, None))
+        result = self.evaluate(bundle, stub)
+        self.ck_eq(len(stub.calls), 1, "the artifact never reached the verifier")
+        self.ck_eq(result["measurement_status"], "MEASURED")
+        self.ck_eq(result["level1"], "REJECT")
+
+    def test_r_a_still_keys_on_record_id_never_on_artifact_path(self):
+        """AD15-IR-5: "the manifest path is HARNESS AND RESULT IDENTITY ONLY --
+        it is not wire semantics -- and never participates in reference
+        resolution." A reference naming a bundle PATH therefore resolves to
+        nothing.
+        """
+        arts = four_artifacts(
+            control={"decision_ref": {"record_id": "artifacts/decision.json"}})
+        root = os.path.join(self.root, "ir5-ra")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-XREF", arts)
+        result = self.evaluate(bundle, StubVerifier())
+        self.ck_eq(result["predicates"]["R_A"], "FAIL")
+
+    def test_r_a_resolves_a_genuine_record_id_reference(self):
+        """The positive control: without it the test above would also pass on an
+        evaluator whose R-A always failed.
+        """
+        root = os.path.join(self.root, "ir5-ra-ok")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+        result = self.evaluate(bundle, StubVerifier())
+        self.ck_eq(result["predicates"]["R_A"], "PASS")
+
+    def test_the_aggregate_pair_key_is_scenario_id_and_artifact_path(self):
+        """Lane-local half: the two members the harness pairs on are both
+        present and carry the pinned values. The COMPARISON is `W1-AGG-D2`'s.
+        """
+        root = os.path.join(self.root, "ir5-key")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", four_artifacts())
+        result = self.evaluate(bundle, StubVerifier())
+        self.ck_eq(result["scenario_id"], "IOP-R-CLEAN")
+        self.ck_eq(sorted(e["artifact_path"] for e in result["artifacts"]),
+                   ["artifacts/control.json", "artifacts/decision.json",
+                    "artifacts/effect.json", "artifacts/execution.json"])
+
+
+# --------------------------------------------------------------------------
+# W1-BLK-IR6 -- `related_artifacts` ordering is `artifact_path` too
+#
+# "related_artifacts ordered by artifact_path, ON A FIXTURE WHERE `record_id`
+#  ORDER IS THE REVERSE of `artifact_path` order; AND that the envelope stays
+#  WELL-DEFINED when an artifact carries NO USABLE `record_id` at all -- the
+#  case that made `record_id` ordering unusable."
+#
+# Erratum 4's method note applies directly: a prior ordering fixture MEASURED
+# NOTHING because the remaining artifacts ordered identically under both
+# candidate keys. `ordered_four()` makes the two keys maximally hostile.
+# --------------------------------------------------------------------------
+
+class BlockIR6(BlockCase):
+    BLOCK = "W1-BLK-IR6"
+
+    def envelopes(self, bundle, stub=None):
+        stub = stub or StubVerifier()
+        self.evaluate(bundle, stub)
+        return [envelope for _record_id, envelope, _flags in stub.calls]
+
+    def test_related_artifacts_are_ordered_by_artifact_path(self):
+        root = os.path.join(self.root, "ir6-order")
+        os.makedirs(root)
+        arts = ordered_four()
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        by_value = {json.dumps(v, sort_keys=True): p for p, v in arts.items()}
+        for envelope in self.envelopes(bundle):
+            paths = [by_value[json.dumps(v, sort_keys=True)]
+                     for v in envelope["related_artifacts"]]
+            self.ck_eq(paths, sorted(paths, key=lambda s: s.encode("utf-8")))
+
+    def test_the_record_id_order_is_the_reverse_so_the_key_is_discriminated(self):
+        """Without this the fixture could order identically under both keys and
+        the block would measure nothing.
+        """
+        root = os.path.join(self.root, "ir6-rev")
+        os.makedirs(root)
+        arts = ordered_four()
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        by_value = {json.dumps(v, sort_keys=True): p for p, v in arts.items()}
+        checked = 0
+        for envelope in self.envelopes(bundle):
+            related = envelope["related_artifacts"]
+            paths = [by_value[json.dumps(v, sort_keys=True)] for v in related]
+            ids = [v["record_id"] for v in related]
+            self.ck_eq(paths, sorted(paths, key=lambda s: s.encode("utf-8")))
+            self.ck_ne(ids, sorted(ids, key=lambda s: s.encode("utf-8")),
+                       "record_id order coincides here, so nothing is measured")
+            checked += 1
+        self.ck_eq(checked, 4)
+
+    def test_the_envelope_is_well_defined_without_any_usable_record_id(self):
+        """The case that made `record_id` ordering unusable: two isolated
+        remediation contexts resolved it differently -- one sorted such an
+        artifact under an empty key, the other REFUSED TO BUILD THE ENVELOPE.
+        Both are superseded; the envelope is always defined.
+        """
+        root = os.path.join(self.root, "ir6-noid")
+        os.makedirs(root)
+        arts = ordered_four()
+        del arts["artifacts/c.json"]["record_id"]
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)          # no NonMeasurement
+        self.ck_eq(result["measurement_status"], "MEASURED")
+        self.ck_eq(len(stub.calls), 4, "the unidentifiable artifact was skipped")
+        for entry in result["artifacts"]:
+            self.ck(entry["request_envelope_digest"].startswith("sha256:"),
+                    "an envelope digest was not produced for %s"
+                    % entry["artifact_path"])
+
+    def test_the_unidentifiable_artifact_occupies_a_defined_slot(self):
+        """It is ordered by its path like every other member -- so it appears at
+        a FIXED index in every other artifact's related set.
+        """
+        root = os.path.join(self.root, "ir6-slot")
+        os.makedirs(root)
+        arts = ordered_four()
+        del arts["artifacts/c.json"]["record_id"]
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        target = arts["artifacts/c.json"]
+        seen = 0
+        for envelope in self.envelopes(bundle):
+            related = envelope["related_artifacts"]
+            if target in related:
+                # a.json, b.json, d.json are the other primaries; c.json sorts
+                # third of four by path, so it is at index 2 of the remaining
+                # three whenever the primary sorts before it, and index 1 when
+                # the primary is d.json.
+                self.ck_in(related.index(target), (1, 2))
+                seen += 1
+        self.ck_eq(seen, 3)
+
+    def test_envelope_ordering_is_stable_across_repeat_runs(self):
+        root = os.path.join(self.root, "ir6-stable")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        first = [e["related_artifacts"] for e in self.envelopes(bundle)]
+        second = [e["related_artifacts"] for e in self.envelopes(bundle)]
+        self.ck_eq(first, second)
+
+
+# --------------------------------------------------------------------------
+# W1-BLK-IR7 -- duplicate semantic IDs are NOT bundle-preflight invalidity
+#
+# "Discriminate INDEPENDENTLY: A. duplicate `record_id` with DISTINCT
+#  `chain_id`; B. duplicate EXACT `(chain_id, record_id)`. Both MUST reach
+#  frozen stage evaluation and MUST NOT be rejected merely for the duplicate.
+#  AND a fixture with a REAL AMBIGUOUS LOOKUP, proving `R-A` FAILS CLOSED and
+#  the evaluator DOES NOT PICK ONE. The test MUST NOT require the eventual
+#  result to be `ACCEPT` -- the block proves absence of a preflight GATE, not
+#  absence of a later reconciliation finding. Frozen batch `R-10` MUST NOT be
+#  generalized into a bundle-level preflight."
+#
+# E8-9: the earlier block tested only branch A, so an evaluator that allowed the
+# first and rejected the second passed all twenty blocks while violating the
+# ruling. Its "is not rejected by the evaluator" wording was ALSO too broad --
+# an exact duplicate tuple may legitimately fail `R-A` later.
+# --------------------------------------------------------------------------
+
+class BlockIR7(BlockCase):
+    BLOCK = "W1-BLK-IR7"
+
+    def duplicated(self, sub, chain_ids):
+        """A four-artifact bundle whose Control and Execution share a
+        `record_id`, with the two `chain_id` values supplied by the caller.
+        """
+        arts = four_artifacts(
+            control={"record_id": "shared-id", "chain_id": chain_ids[0]},
+            execution={"record_id": "shared-id", "chain_id": chain_ids[1]})
+        root = os.path.join(self.root, sub)
+        os.makedirs(root, exist_ok=True)
+        return write_bundle(root, "IOP-R-CLEAN", arts)
+
+    def test_branch_a_duplicate_record_id_with_distinct_chain_id(self):
+        """Branch A reaches frozen stage evaluation and is NOT rejected merely
+        for the duplicate.
+        """
+        bundle = self.duplicated("ir7-a", ("chain-one", "chain-two"))
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)          # no preflight refusal
+        self.ck_eq(len(stub.calls), 4,
+                   "a preflight gate stopped the bundle before stage evaluation")
+        self.ck_ne(result["measurement_status"], "ERROR")
+
+    def test_branch_b_duplicate_exact_chain_id_and_record_id(self):
+        """Branch B is the one E8-9 found untested. An evaluator that allowed
+        branch A and rejected branch B passed every block while violating the
+        ruling.
+        """
+        bundle = self.duplicated("ir7-b", ("chain-same", "chain-same"))
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)          # no preflight refusal
+        self.ck_eq(len(stub.calls), 4,
+                   "a preflight gate stopped the bundle before stage evaluation")
+        self.ck_ne(result["measurement_status"], "ERROR")
+
+    def test_neither_branch_produces_a_preflight_reason(self):
+        """The ruling forbids a GATE, so the discriminating observation is that
+        no `bundle-shape-invalid` / `manifest-invalid` reason is raised.
+        """
+        for label, chains in (("a", ("chain-one", "chain-two")),
+                              ("b", ("chain-same", "chain-same"))):
+            bundle = self.duplicated("ir7-none-%s" % label, chains)
+            result = self.evaluate(bundle, StubVerifier())
+            self.ck_none(result["nonmeasurement"],
+                         "branch %s raised a preflight reason" % label)
+
+    def test_a_real_ambiguous_lookup_fails_r_a_closed(self):
+        """The evaluator NEVER PICKS ONE. Here the Effect's `execution_ref`
+        matches TWO artifacts, so the lookup is genuinely ambiguous -- which is
+        a RECONCILIATION FINDING, reached because there was no preflight gate.
+        """
+        arts = four_artifacts(
+            control={"record_id": "c-execution"},     # collides with the Execution
+            effect={"execution_ref": {"record_id": "c-execution"}})
+        root = os.path.join(self.root, "ir7-ambig")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)
+        self.ck_eq(len(stub.calls), 4, "the ambiguity was refused at preflight")
+        self.ck_eq(result["predicates"]["R_A"], "FAIL",
+                   "an ambiguous lookup did not fail closed")
+        self.ck_eq(result["level1"], "RECONCILIATION_MISMATCH")
+
+    def test_the_block_does_not_require_the_result_to_be_accept(self):
+        """"The test MUST NOT require the eventual result to be `ACCEPT`." An
+        exact duplicate tuple may perfectly properly fail `R-A` afterwards, so
+        what is asserted is REACHABILITY, never the verdict.
+
+        This case makes the distinction explicit: branch B reaches stage
+        evaluation AND legitimately lands on a non-`ACCEPT` Level-1 value, and
+        both facts are recorded without either being treated as a defect.
+        """
+        arts = four_artifacts(
+            control={"record_id": "shared-id", "chain_id": "chain-same"},
+            execution={"record_id": "shared-id", "chain_id": "chain-same"},
+            effect={"execution_ref": {"record_id": "shared-id",
+                                      "chain_id": "chain-same"}})
+        root = os.path.join(self.root, "ir7-noaccept")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        stub = StubVerifier()
+        result = self.evaluate(bundle, stub)
+        self.ck_eq(len(stub.calls), 4)
+        self.ck_in(result["level1"],
+                   ("ACCEPT", "RECONCILIATION_MISMATCH",
+                    "INDEPENDENCE_NOT_ESTABLISHED", "REJECT"),
+                   "the block must accept any Level-1 outcome here")
+        self.ck_eq(result["measurement_status"], "MEASURED")
+
+    def test_frozen_r_10_is_not_generalized_into_a_bundle_preflight(self):
+        """Frozen `R-10` makes a duplicate `(chain_id, record_id)` in the BATCH
+        VERIFIER'S OWN emitted verdict set run-invalid. This evaluator submits
+        each artifact as a SEPARATE REQUEST, so that batch invariant does not
+        generalize -- and must not be widened into one.
+        """
+        bundle = self.duplicated("ir7-r10", ("chain-same", "chain-same"))
+        stub = StubVerifier()
+        self.evaluate(bundle, stub)
+        primaries = []
+        for _record_id, envelope, _flags in stub.calls:
+            self.ck_eq(set(envelope), {"artifact", "related_artifacts"},
+                       "a request carried something other than one primary")
+            primaries.append(json.dumps(envelope["artifact"], sort_keys=True))
+        self.ck_eq(len(stub.calls), 4,
+                   "a batch-level invariant was applied to separate requests")
+        self.ck_eq(len(set(primaries)), 4,
+                   "the four artifacts were not submitted as four separate "
+                   "single-primary requests")
+
+
+# --------------------------------------------------------------------------
+# W1-BLK-IR8 -- identity establishment is MONOTONIC
+#
+# "Once the manifest is read, parsed and yields a registered `scenario_id`, NO
+#  LATER filesystem, traversal or preflight failure unestablishes it -- with
+#  EACH OF THE THREE CATEGORIES DISCRIMINATED SEPARATELY: a listed-file or
+#  digest failure after identity, a traversal failure, and a NON-FILESYSTEM
+#  preflight failure such as manifest structure, bundle shape, numeric preflight
+#  or frozen-digest mismatch. 'More than one case' is not enough; two traversal
+#  fixtures would leave two categories untested. Includes the `0o111` case as
+#  `bundle-directory-unreadable` at exit 3, NEVER exit 1. A harness unable to
+#  construct permission fixtures MAY skip that case, REPORTED AS A SKIP."
+# --------------------------------------------------------------------------
+
+class BlockIR8(BlockCase):
+    BLOCK = "W1-BLK-IR8"
+
+    def assert_result_bearing(self, bundle, expected_reason, stub=None):
+        """Exit 3, ONE result object, naming the scenario -- never exit 1."""
+        code, out, _err = self.run_cli(bundle, stub=stub or StubVerifier())
+        self.ck_eq(code, 3, "identity was unestablished by a later failure")
+        self.ck(out.strip(), "exit 3 emitted no result object")
+        result = json.loads(out)
+        self.ck_eq(result["scenario_id"], "IOP-R-CLEAN")
+        self.ck_eq(result["nonmeasurement"]["reason"], expected_reason)
+        self.ck_none(result["level1"])
+        self.ck_none(result["predicates"])
+        return result
+
+    def four(self, sub, **kwargs):
+        root = os.path.join(self.root, sub)
+        os.makedirs(root, exist_ok=True)
+        return write_bundle(root, "IOP-R-CLEAN", four_artifacts(), **kwargs)
+
+    # ---- CATEGORY 1: a listed-file or digest failure after identity ---------
+
+    def test_category_1_a_missing_listed_file_is_result_bearing(self):
+        bundle = self.four("ir8-c1a", drop_from_disk=("artifacts/effect.json",))
+        self.assert_result_bearing(bundle, "bundle-file-missing")
+
+    def test_category_1_a_digest_mismatch_is_result_bearing(self):
+        def wrong(manifest):
+            for entry in manifest["files"]:
+                if entry["path"] == "artifacts/control.json":
+                    entry["sha256"] = "0" * 64
+            return manifest
+
+        bundle = self.four("ir8-c1b", manifest_overrides=wrong)
+        self.assert_result_bearing(bundle, "manifest-digest-mismatch")
+
+    def test_category_1_an_unreadable_listed_file_is_result_bearing(self):
+        bundle = self.four("ir8-c1c")
+        real = ev.read_bundle_file
+
+        def refusing(full_path):
+            if full_path.endswith(os.path.join("artifacts", "decision.json")):
+                raise OSError(errno.EACCES, "Permission denied", full_path)
+            return real(full_path)
+
+        _seam(self, "read_bundle_file", refusing)
+        self.assert_result_bearing(bundle, "bundle-file-unreadable")
+
+    # ---- CATEGORY 2: a traversal failure ------------------------------------
+
+    def test_category_2_an_unenumerable_directory_is_result_bearing(self):
+        """`bundle-directory-unreadable` says the layout COULD NOT BE MEASURED,
+        as distinct from being WRONG -- and it is exit 3, not exit 1.
+        """
+        bundle = self.four("ir8-c2")
+        _seam(self, "scan_directory",
+              lambda path: (_ for _ in ()).throw(
+                  OSError(errno.EACCES, "Permission denied", path)))
+        self.assert_result_bearing(bundle, "bundle-directory-unreadable")
+
+    def test_category_2_the_0o111_worked_case(self):
+        """AD15-IR-8's worked case, verbatim: "bundle directory mode `0o111`.
+        Traverse permission lets `open(DIR/manifest.json)` succeed while
+        `readdir(DIR)` fails `EACCES`. The manifest read succeeded and yielded a
+        registered `scenario_id`, so identity WAS established. The result is
+        `bundle-directory-unreadable`, exit `3` -- NOT exit 1."
+
+        A harness unable to construct permission fixtures MAY skip this case,
+        and the skip is REPORTED AS A SKIP -- never counted as a pass.
+        """
+        bundle = self.four("ir8-0o111")
+        if os.geteuid() == 0:
+            self.skipTest("running as root: mode 0o111 does not deny readdir, "
+                          "so the fixture cannot be constructed")
+        try:
+            os.chmod(bundle, 0o111)
+        except OSError as exc:
+            self.skipTest("cannot chmod the bundle directory: %s" % exc)
+        self.addCleanup(os.chmod, bundle, 0o755)
+        try:
+            os.listdir(bundle)
+        except OSError:
+            pass
+        else:
+            self.skipTest("this filesystem still permits readdir at mode 0o111 "
+                          "(no permission enforcement), so the worked case "
+                          "cannot be constructed here")
+        self.assert_result_bearing(bundle, "bundle-directory-unreadable")
+
+    # ---- CATEGORY 3: a NON-FILESYSTEM preflight failure ---------------------
+
+    def test_category_3_a_manifest_structure_violation_is_result_bearing(self):
+        """Stage 4 -- the manifest is wrong on its OWN TERMS, and identity has
+        already been established from it.
+        """
+        def unsorted(manifest):
+            manifest["files"] = list(reversed(manifest["files"]))
+            return manifest
+
+        bundle = self.four("ir8-c3a", manifest_overrides=unsorted)
+        self.assert_result_bearing(bundle, "manifest-invalid")
+
+    def test_category_3_a_bundle_shape_violation_is_result_bearing(self):
+        """Stage 9 -- an `IOP-R-*` scenario with the wrong artifact count."""
+        root = os.path.join(self.root, "ir8-c3b")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN",
+                              {"artifacts/a.json": DECISION})
+        self.assert_result_bearing(bundle, "bundle-shape-invalid")
+
+    def test_category_3_a_numeric_preflight_violation_is_result_bearing(self):
+        """Stage 10 -- and its mandatory `json_pointer` survives too."""
+        root = os.path.join(self.root, "ir8-c3c")
+        os.makedirs(root)
+        arts = four_artifacts(decision={"profiles": {"x": 10 ** 20}})
+        bundle = write_bundle(root, "IOP-R-CLEAN", arts)
+        result = self.assert_result_bearing(bundle, "numeric-preflight-violation")
+        self.ck_eq(result["nonmeasurement"]["json_pointer"], "/profiles/x")
+
+    def test_category_3_a_frozen_digest_mismatch_is_result_bearing(self):
+        """Stage 3 -- no filesystem property of the BUNDLE is involved at all,
+        which is what makes this the third category rather than the first.
+        """
+        bundle = self.four("ir8-c3d")
+        real = ev.read_frozen_file
+
+        def tampered(path):
+            return real(path) + b"\n# synthetic drift\n"
+
+        _seam(self, "read_frozen_file", tampered)
+        result = self.assert_result_bearing(bundle, "verifier-digest-mismatch")
+        self.ck_eq(set(result["verifier_digests"]),
+                   {"class_verifier", "class_verifier_contract"},
+                   "step 5 retains the ACTUAL recomputed two-entry object")
+
+    # ---- the monotonicity statement itself ---------------------------------
+
+    def test_no_later_failure_returns_the_run_to_the_exit_1_band(self):
+        """The exit-1 band is EXACTLY contract 5's direct-read identity
+        boundary. Every category above must therefore be exit 3 -- the single
+        assertion the three categories exist to support.
+        """
+        seen = []
+        bundle = self.four("ir8-mono-a",
+                           drop_from_disk=("artifacts/effect.json",))
+        seen.append(self.run_cli(bundle, stub=StubVerifier())[0])
+
+        bundle = self.four("ir8-mono-b")
+        _seam(self, "scan_directory",
+              lambda path: (_ for _ in ()).throw(
+                  OSError(errno.EACCES, "Permission denied", path)))
+        seen.append(self.run_cli(bundle, stub=StubVerifier())[0])
+
+        root = os.path.join(self.root, "ir8-mono-c")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", {"artifacts/a.json": DECISION})
+        seen.append(self.run_cli(bundle, stub=StubVerifier())[0])
+
+        self.ck_eq(seen, [3, 3, 3], "a later failure unestablished identity")
+
+    def test_identity_survives_into_the_emitted_scenario_id(self):
+        """What monotonicity BUYS: the harness is told WHICH scenario failed."""
+        bundle = self.four("ir8-name", drop_from_disk=("artifacts/effect.json",))
+        code, out, _err = self.run_cli(bundle, stub=StubVerifier())
+        self.ck_eq(code, 3)
+        self.ck_eq(json.loads(out)["scenario_id"], "IOP-R-CLEAN")
 
 
 # --------------------------------------------------------------------------
@@ -3772,17 +4550,26 @@ class BlockIR13(BlockCase):
 
     #: A four-artifact bundle gives four listed artifact files plus three
     #: operator inputs, so several independent faults can be planted at once.
-    def multi(self, sub, drop=(), unreadable=(), bad_digest=(), raw=None):
+    def multi(self, sub, drop=(), unreadable=(), bad_digest=(), raw=None,
+              vanish=()):
+        """``vanish`` names files that are PRESENT ON DISK at stage 5 and give a
+        DEFINITE ``ENOENT`` when stage 6 reads them -- the E8-2 case, which no
+        permission fixture can construct portably.
+        """
         root = os.path.join(self.root, sub)
         os.makedirs(root, exist_ok=True)
         bundle = write_bundle(
             root, "IOP-R-CLEAN", four_artifacts(),
             drop_from_disk=drop, raw_files=raw,
             manifest_overrides=wrong_digest_for(*bad_digest) if bad_digest else None)
-        if unreadable:
+        if unreadable or vanish:
             real = ev.read_bundle_file
 
             def refusing(full_path):
+                for rel in vanish:
+                    if full_path.endswith(os.path.join(*rel.split("/"))):
+                        raise OSError(errno.ENOENT,
+                                      "No such file or directory", full_path)
                 for rel in unreadable:
                     if full_path.endswith(os.path.join(*rel.split("/"))):
                         raise OSError(errno.EACCES, "Permission denied", full_path)
@@ -3790,6 +4577,65 @@ class BlockIR13(BlockCase):
 
             _seam(self, "read_bundle_file", refusing)
         return bundle
+
+    # ---- E8-2: stage 6 carries TWO reasons, in that order -------------------
+
+    def test_e8_2_a_definite_enoent_on_read_is_missing_not_unreadable(self):
+        """E8-2, and the reason Erratum 8 exists. Both lanes' self-tests were
+        entirely green -- 347 and 1683 checks, zero failures, zero skips -- and
+        they still emitted DIFFERENT Class-1 ``nonmeasurement.reason`` values for
+        the same filesystem state: a listed file PRESENT AT STAGE 5 and GONE
+        BEFORE STAGE 6. One lane followed 8.2.2's boundary ("a definite
+        ``ENOENT`` on read" is missing); the other followed 8.6's stage-6 row,
+        which named only ``bundle-file-unreadable``.
+
+        The file is on disk here, so stage 5's presence check passes and the
+        divergence is reached at the read -- which is the whole point.
+        """
+        bundle = self.multi("ir13-e8-2-a", vanish=("artifacts/effect.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-missing",
+                   "a definite ENOENT on READ was reported as unreadable")
+        self.ck_in("artifacts/effect.json", exc.detail)
+
+    def test_e8_2_missing_outranks_unreadable_within_stage_6(self):
+        """"Where both are live within stage 6, ``bundle-file-missing``
+        OUTRANKS ``bundle-file-unreadable``."
+
+        Mechanism must beat path, so the fixture puts the ENOENT on the
+        LATER-SORTING path: ``artifacts/effect.json`` sorts after
+        ``artifacts/control.json``. A lane ordering by path alone reports
+        ``bundle-file-unreadable`` here and fails.
+        """
+        bundle = self.multi("ir13-e8-2-b",
+                            vanish=("artifacts/effect.json",),
+                            unreadable=("artifacts/control.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-missing")
+        self.ck_in("artifacts/effect.json", exc.detail)
+
+    def test_e8_2_an_unreadable_file_alone_is_still_unreadable(self):
+        """The acceptance control. Without it the two cases above would also
+        pass on a lane that reported ``bundle-file-missing`` for EVERY stage-6
+        failure, which says something false about the medium.
+        """
+        bundle = self.multi("ir13-e8-2-c",
+                            unreadable=("artifacts/control.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-unreadable")
+        self.ck_in("artifacts/control.json", exc.detail)
+
+    def test_e8_2_stage_5_absence_still_outranks_a_stage_6_enoent(self):
+        """The two mechanisms share a reason but not a stage. A file absent at
+        stage 5 is reported over one that vanishes at stage 6, because the
+        stage barrier is fixed before any within-stage rank applies.
+        """
+        bundle = self.multi("ir13-e8-2-d",
+                            drop=("operator/revocation.json",),
+                            vanish=("artifacts/decision.json",))
+        exc = self.nonmeasurement(bundle)
+        self.ck_eq(exc.reason, "bundle-file-missing")
+        self.ck_in("operator/revocation.json", exc.detail)
 
     def test_a_missing_file_outranks_an_unreadable_one_and_a_bad_digest(self):
         """Stage 5 before stage 6 before stage 7. The pre-erratum construction
@@ -4203,6 +5049,110 @@ class BlockIR16(BlockCase):
                                    witnessed_withheld=[odd]))})
         result = self.evaluate(bundle, stub)
         self.ck_eq(result["withheld_reasons"][0]["reason"], odd)
+
+    # ---- E8-1: the projection is of the verdicts ACTUALLY RETAINED ----------
+
+    def test_e8_1_a_fatal_stage_11_retains_an_earlier_observed_channel(self):
+        """E8-1. "On EVERY RESULT-BEARING PATH, ``withheld_reasons`` is the
+        canonical projection of every accepted frozen-verifier verdict ACTUALLY
+        RETAINED in ``artifacts[]`` before termination. A FATAL STAGE-11 RESULT
+        DOES NOT ERASE WITHHELD CHANNELS ALREADY OBSERVED."
+
+        ``ordered_four()`` invokes by ascending ``artifact_path``, so
+        ``artifacts/a.json`` completes cleanly with a withheld channel and
+        ``artifacts/b.json`` then exits 2, aborting the scenario. The first
+        artifact's channel MUST survive into the emitted result.
+        """
+        root = os.path.join(self.root, "ir16-e8-1-a")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        stub = StubVerifier(by_record={
+            "z-decision": (0, dict(verdict("z-decision"),
+                                   witnessed_withheld=["no-witness-supplied"])),
+            "y-control": (2, None)})
+        exc = self.nonmeasurement(bundle, stub)
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_eq([(w["artifact_path"], w["channel"], w["reason"])
+                    for w in exc.withheld_reasons],
+                   [("artifacts/a.json", "witnessed_withheld",
+                     "no-witness-supplied")],
+                   "a fatal stage-11 result erased an already-observed channel")
+
+    def test_e8_1_a_gate_rejected_output_contributes_no_withheld_reason(self):
+        """"A MALFORMED OR GATE-REJECTED verifier output contributes NONE,
+        because it is NOT AN ACCEPTED VERDICT."
+
+        The rejected object here carries a populated ``authenticated_withheld``
+        channel AND an ``artifact_ref`` the E8-3 gate refuses. A lane reading
+        the channel off the rejected bytes would report it.
+        """
+        bundle = single_bundle(self, "ir16-e8-1-b")
+        stub = StubVerifier(by_record={
+            "a-decision": (0, dict(
+                verdict("a-decision", klass="AIREP-Core",
+                        auth_withheld=["producer-binding-missing"]),
+                artifact_ref={"record_id": "r", "smuggled": 1}))})
+        exc = self.nonmeasurement(bundle, stub)
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_none(exc.artifacts[0]["verifier_result"])
+        self.ck_eq(exc.withheld_reasons, [],
+                   "a gate-rejected output contributed a withheld reason")
+
+    def test_e8_1_a_malformed_output_contributes_no_withheld_reason(self):
+        """The other half of the same sentence: stdout that does not parse is
+        not an accepted verdict either, so it contributes nothing.
+        """
+        bundle = single_bundle(self, "ir16-e8-1-c")
+        exc = self.nonmeasurement(
+            bundle, StubVerifier(by_record={"a-decision": (0, b"not json")}))
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_eq(exc.withheld_reasons, [])
+
+    def test_e8_1_empty_means_none_observed_not_none_exists(self):
+        """"``[]`` means NO WITHHELD REASON WAS OBSERVED AMONG THE ACCEPTED
+        VERDICTS ACTUALLY OBTAINED -- it says NOTHING about invocations never
+        reached."
+
+        A spawn failure on the FIRST artifact reaches no verdict at all, so the
+        array is `[]` and `artifacts[]` is empty. The two are asserted together
+        because it is their conjunction that makes the emptiness a MEASURED
+        emptiness rather than a claim about the unreached three.
+        """
+        root = os.path.join(self.root, "ir16-e8-1-d")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+
+        def never_starts(request, flags):
+            raise ev.NonMeasurement("verifier-not-invocable", "synthetic")
+
+        exc = self.nonmeasurement(bundle, never_starts)
+        self.ck_eq(exc.reason, "verifier-not-invocable")
+        self.ck_eq(exc.artifacts, [])
+        self.ck_eq(exc.withheld_reasons, [])
+
+    def test_e8_1_a_later_clean_verdicts_channel_is_also_retained(self):
+        """The abort happens at the THIRD artifact here, so two earlier accepted
+        verdicts must both be projected. A lane retaining only the most recent
+        entry, or only the first, fails.
+        """
+        root = os.path.join(self.root, "ir16-e8-1-e")
+        os.makedirs(root)
+        bundle = write_bundle(root, "IOP-R-CLEAN", ordered_four())
+        stub = StubVerifier(by_record={
+            "z-decision": (0, dict(verdict("z-decision"),
+                                   witnessed_withheld=["no-witness-supplied"])),
+            "y-control": (0, dict(verdict("y-control", klass="AIREP-Core",
+                                          auth_withheld=["producer-binding-missing"]))),
+            "x-execution": (2, None)})
+        exc = self.nonmeasurement(bundle, stub)
+        self.ck_eq([(w["artifact_path"], w["channel"], w["reason"])
+                    for w in exc.withheld_reasons],
+                   [("artifacts/a.json", "witnessed_withheld",
+                     "no-witness-supplied"),
+                    ("artifacts/b.json", "authenticated_withheld",
+                     "producer-binding-missing")])
+        self.ck_eq(len(exc.artifacts), 3,
+                   "the aborting artifact must still contribute its entry")
 
 
 # --------------------------------------------------------------------------
@@ -5012,6 +5962,131 @@ class BlockArtifactRef(BlockCase):
         self.ck_none(exc.artifacts[0]["verifier_result"],
                      "a verdict the gate refused was copied anyway")
 
+    # ---- E8-3: the Source-A gate is REQUIRED, TYPED AND CLOSED -------------
+
+    def rejected_by_the_gate(self, sub, artifact_ref, fragment):
+        """Every E8-3 failure is ``verifier-run-invalid``, with NO REPAIR and NO
+        COERCION -- and, the verdict not being an accepted one, Source A does
+        not apply, so ``AD15-IR-18``'s SOURCE B governs the emitted
+        ``artifact_ref`` and ``verifier_result`` is ``null``.
+        """
+        bundle = single_bundle(self, sub)
+        body = dict(verdict("a-decision"))
+        if artifact_ref is ABSENT:
+            body.pop("artifact_ref")
+        else:
+            body["artifact_ref"] = artifact_ref
+        exc = self.nonmeasurement(
+            bundle, StubVerifier(by_record={"a-decision": (0, body)}))
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_in(fragment, exc.detail)
+        self.ck_eq(len(exc.artifacts), 1)
+        entry = exc.artifacts[0]
+        self.ck_none(entry["verifier_result"],
+                     "a verdict the gate refused was copied anyway")
+        self.ck_eq(entry["artifact_ref"],
+                   {"record_id": "a-decision", "chain_id": "chain-synthetic"},
+                   "Source B did not govern a gate-rejected verdict")
+        return entry
+
+    def test_e8_3_an_absent_artifact_ref_is_run_invalid(self):
+        """"An earlier draft rejected only an EXTRA MEMBER, which left an ABSENT
+        or ``null`` ``artifact_ref`` ACCEPTED AND SILENTLY CONVERTED TO ``null``
+        on the emitted entry. One lane read it that way and the other did not,
+        ON A CLASS-1 FIELD."
+
+        W1 requires presence ON ITS OWN AUTHORITY: frozen 6's enumerated shape
+        gates do not include `artifact_ref` presence, so whether an omitted one
+        is frozen-conforming is NOT SETTLED by the frozen text.
+        `verifier-run-invalid` already covers a shape rejected by EITHER
+        contract, so the case has both a reason and a defined outcome.
+        """
+        self.rejected_by_the_gate("ref-e83-absent", ABSENT,
+                                  "required member 'artifact_ref' is absent")
+
+    def test_e8_3_a_null_artifact_ref_is_run_invalid(self):
+        self.rejected_by_the_gate("ref-e83-null", None,
+                                  "artifact_ref is not an object")
+
+    def test_e8_3_a_non_object_artifact_ref_is_run_invalid(self):
+        self.rejected_by_the_gate("ref-e83-scalar", "a-decision",
+                                  "artifact_ref is not an object")
+
+    def test_e8_3_a_missing_record_id_is_run_invalid(self):
+        self.rejected_by_the_gate("ref-e83-norec", {"chain_id": "c"},
+                                  "artifact_ref carries no record_id")
+
+    def test_e8_3_a_non_string_record_id_is_run_invalid(self):
+        for label, value in (("null", None), ("boolean", True),
+                             ("number", 17), ("object", {}), ("array", [])):
+            self.rejected_by_the_gate(
+                "ref-e83-rec-%s" % label, {"record_id": value},
+                "artifact_ref.record_id is a")
+
+    def test_e8_3_a_non_string_chain_id_is_run_invalid(self):
+        for label, value in (("null", None), ("boolean", True),
+                             ("number", 17), ("object", {}), ("array", [])):
+            self.rejected_by_the_gate(
+                "ref-e83-chain-%s" % label,
+                {"record_id": "r", "chain_id": value},
+                "artifact_ref.chain_id is present but is a")
+
+    def test_e8_3_nothing_is_repaired_or_coerced(self):
+        """"THERE IS NO REPAIR AND NO COERCION." A lane that stringified a
+        numeric `record_id`, or dropped a null `chain_id` to satisfy the closed
+        set, would emit an accepted verdict here instead of refusing.
+        """
+        entry = self.rejected_by_the_gate(
+            "ref-e83-norepair", {"record_id": 17, "chain_id": None},
+            "artifact_ref.record_id is a")
+        self.ck_none(entry["verifier_result"])
+        self.ck("17" not in json.dumps(entry["artifact_ref"]),
+                "a numeric record_id was stringified into the emitted ref")
+
+    def test_e8_4_a_gate_rejected_exit_0_has_code_0_and_a_null_result(self):
+        """E8-4, exactly as pinned::
+
+            verifier_exit_code = 0
+            verifier_result    = null
+            artifact_ref       = AD15-IR-18 Source-B preliminary projection
+            reason             = verifier-run-invalid, and the scenario terminates
+
+        "Stdout that parses is NOT A VERDICT until it has passed BOTH the frozen
+        contract's shape rules AND this contract's gate." The rejected bytes may
+        be kept as diagnostic evidence; they may NOT enter the normative
+        ``verifier_result``, which is Class-1.
+        """
+        bundle = single_bundle(self, "ref-e84")
+        exc = self.nonmeasurement(
+            bundle,
+            StubVerifier(by_record={"a-decision": (0, b'{"parses":"but is not a verdict"}')}))
+        self.ck_eq(exc.reason, "verifier-run-invalid")
+        self.ck_eq(len(exc.artifacts), 1, "the scenario must terminate here")
+        entry = exc.artifacts[0]
+        self.ck_eq(entry["verifier_exit_code"], 0,
+                   "the process exited normally, so the code is recorded verbatim")
+        self.ck_none(entry["verifier_result"],
+                     "a rejected exit-0 object entered the normative verdict field")
+        self.ck_eq(entry["artifact_ref"],
+                   {"record_id": "a-decision", "chain_id": "chain-synthetic"})
+        self.ck("parses" not in json.dumps(entry),
+                "the rejected bytes reached a normative field")
+
+    def test_e8_4_the_gate_rejected_path_still_carries_the_full_entry(self):
+        """It is NOT the ``AD15-IR-11`` shape: a concrete process result exists,
+        so every field a process attempt produces is present.
+        """
+        bundle = single_bundle(self, "ref-e84-full")
+        exc = self.nonmeasurement(
+            bundle, StubVerifier(by_record={"a-decision": (0, b"[]")}))
+        entry = exc.artifacts[0]
+        self.ck_eq(set(entry),
+                   {"artifact_path", "artifact_ref", "request_envelope_digest",
+                    "verifier_exit_code", "verifier_result",
+                    "verifier_stderr_digest"})
+        self.ck(entry["request_envelope_digest"].startswith("sha256:"))
+        self.ck(entry["verifier_stderr_digest"].startswith("sha256:"))
+
     def test_source_a_gate_accepts_record_id_only(self):
         """Without this the gate could be a blanket requirement for both
         members, which would reject a conforming frozen verdict.
@@ -5026,13 +6101,15 @@ class BlockArtifactRef(BlockCase):
     # ---- Source B: EVERY OTHER EMITTED ENTRY, on several distinct paths -----
 
     def source_b_paths(self, sub, doc, family="decision"):
-        """Return ``(qualifying_exit_1, non_qualifying_exit_1, abnormal)``
-        entries for the same artifact value.
+        """Return an entry for the SAME artifact value on EVERY Source-B route
+        the ruling names: qualifying ``exit 1``, NON-qualifying ``exit 1``,
+        ``exit 2``, a GATE-REJECTED ``exit 0``, and ABNORMAL TERMINATION.
 
         Source B is defined BY EXCLUSION, not by a list of outcomes -- an
         outcome list is not exhaustive and invites exactly the error of
-        declaring one outcome the only carrier of some value. Three distinct
-        paths are exercised here, which is the minimum the block requires.
+        declaring one outcome the only carrier of some value. All five routes
+        are exercised because "a lane using the WRONG SOURCE ON ``exit 2``
+        alone would otherwise pass": three of them is not enough.
         """
         scenario_ok = {"decision": "IOP-B-DEC", "control": "IOP-B-CTL",
                        "effect": "IOP-B-EFF"}[family]
@@ -5044,18 +6121,26 @@ class BlockArtifactRef(BlockCase):
         non_qualifying = self.nonmeasurement(
             single_bundle(self, sub + "-n", scenario=scenario_bad, doc=doc),
             StubVerifier(default=(1, None))).artifacts[0]
+        exit_2 = self.nonmeasurement(
+            single_bundle(self, sub + "-2", scenario=scenario_bad, doc=doc),
+            StubVerifier(default=(2, None))).artifacts[0]
+        # A gate-rejected `exit 0`: stdout parses, but it is not a verdict
+        # envelope, so the gate refuses it and Source B governs the ref.
+        rejected_exit_0 = self.nonmeasurement(
+            single_bundle(self, sub + "-r", scenario=scenario_bad, doc=doc),
+            StubVerifier(default=(0, b'{"not":"a verdict"}'))).artifacts[0]
         abnormal = self.nonmeasurement(
             single_bundle(self, sub + "-a", scenario=scenario_bad, doc=doc),
             lambda request, flags: (None, b"", b"")).artifacts[0]
-        return qualifying, non_qualifying, abnormal
+        return (qualifying, non_qualifying, exit_2, rejected_exit_0, abnormal)
 
-    def test_source_b_carries_the_preliminary_projection_on_three_paths(self):
+    def test_source_b_carries_the_preliminary_projection_on_every_route(self):
         doc = dict(DECISION, record_id="a-decision")
         for entry in self.source_b_paths("ref-d", doc):
             self.ck_eq(entry["artifact_ref"],
                        {"record_id": "a-decision", "chain_id": "chain-synthetic"})
 
-    def test_source_b_with_a_schema_invalid_record_id_on_three_paths(self):
+    def test_source_b_with_a_schema_invalid_record_id_on_every_route(self):
         """"These cells are reachable: stage-0 schema validity gates only the
         VERDICT, not the ENTRY." An earlier draft claimed the qualifying stage-0
         ``exit 1`` was the ONLY outcome that could carry an invalid ID; that was
@@ -5073,7 +6158,7 @@ class BlockArtifactRef(BlockCase):
                 self.ck_none(entry["artifact_ref"],
                              "record_id=%s" % _label)
 
-    def test_source_b_with_a_schema_invalid_chain_id_on_three_paths(self):
+    def test_source_b_with_a_schema_invalid_chain_id_on_every_route(self):
         for _label, chain_id in REF_VALUES:
             if isinstance(chain_id, str):
                 continue

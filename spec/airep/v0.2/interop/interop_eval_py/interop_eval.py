@@ -347,13 +347,32 @@ RECORDED AMBIGUITIES -- resolved in the direction the contract determines, and
 reported rather than buried. None of them can change the measured result of a
 conforming official W1 bundle.
 
-STATUS AFTER ERRATUM 7: EVERY ENTRY BELOW IS CLOSED OR DECIDED. No entry is
-OPEN, none awaits a maintainer ruling, and none leaves a machine-observable
-behaviour un-pinned. A1, A5 and A8 -- the three this lane still carried as its
-own declared ambiguities -- are closed by ``AD15-IR-14``, ``AD15-IR-16`` and
-``AD15-IR-17`` respectively, each AGAINST this lane's prior construction; A2 is
-closed by E7-19. A12, A16 and A17 are DECIDED positions with their grounds
-stated, not unresolved questions.
+STATUS AFTER ERRATUM 8: EVERY ENTRY BELOW IS CLOSED, WITH ONE DECIDED POSITION
+REMAINING (A12, decided on the frozen contract's own terms). No entry is OPEN,
+none awaits a maintainer ruling, and none leaves a machine-observable behaviour
+un-pinned.
+
+A1, A5 and A8 were closed by ``AD15-IR-14``, ``AD15-IR-16`` and ``AD15-IR-17``,
+each AGAINST this lane's prior construction; A2 by E7-19.
+
+ERRATUM 8 CLOSED THE LAST THREE DECIDED POSITIONS, and the reason it had to is
+the lesson of the round: A18 was this lane's DECLARED position on a Class-1
+field, reported onward as a declared position and NOT CROSS-CHECKED against the
+peer -- which is precisely where a cross-lane comparison should have run. The
+peer had resolved it the other way, and two entirely green self-tests were
+emitting different ``nonmeasurement.reason`` values for the same filesystem
+state. **A lane's declared ambiguity is a divergence candidate, not a
+footnote.**
+
+  A18 -> CLOSED by E8-2, CONFIRMING this lane's rank and construction.
+  A17 -> CLOSED by E8-1, CONFIRMING this lane's construction.
+  A16 -> CLOSED by E8-4, CONFIRMING this lane's construction.
+
+E8-3 required the only BEHAVIOURAL change in this lane's Erratum-8 surface: the
+Source-A ``artifact_ref`` gate was closed but NOT TYPED, so an absent or
+``null`` ``artifact_ref``, and a non-string ``record_id`` or ``chain_id``, were
+accepted where the ruling now makes each ``verifier-run-invalid``. See
+``_wrong_shape``.
 
   A1  CLOSED by Erratum 7 (E7-7, ruling ``AD15-IR-14``), AGAINST this lane's
       construction. Contract 8.1 shows
@@ -602,11 +621,22 @@ stated, not unresolved questions.
       and reported it. That divergence was MEASURED, not argued, and it is why
       ``entry_kind`` now performs an explicit ``os.lstat`` per enumerated entry.
 
-  A18 DECIDED, and DECLARED because the contract does not order it. Contract
-      8.6's stage-6 row lists exactly ONE reason, ``bundle-file-unreadable``,
-      while E3-2 separately routes a definite ``ENOENT`` ON READ to
-      ``bundle-file-missing``. So stage 6 can produce two reasons and no row
-      orders them against each other.
+  A18 CLOSED by Erratum 8 (E8-2), CONFIRMING this lane's rank and construction
+      -- and this entry is why Erratum 8 exists. It was raised here as a DECIDED
+      position on a Class-1 field and reported onward as such; the peer lane had
+      decided it the OTHER WAY, and the divergence sat unmeasured behind two
+      fully green self-tests. Contract 8.6's stage-6 row now carries BOTH
+      reasons in precedence order, and the boundary is normative: "a definite
+      ``ENOENT`` obtained while READING a listed file is
+      ``bundle-file-missing``, INCLUDING when stage 5 established the file's
+      presence and it disappeared before stage 6. Where both are live within
+      stage 6, ``bundle-file-missing`` OUTRANKS ``bundle-file-unreadable``."
+
+      The original entry, retained because its reasoning is what the ruling
+      adopted: contract 8.6's stage-6 row listed exactly ONE reason,
+      ``bundle-file-unreadable``, while E3-2 separately routed a definite
+      ``ENOENT`` ON READ to ``bundle-file-missing`` -- so stage 6 could produce
+      two reasons and no row ordered them against each other.
 
       This lane gives ``bundle-file-missing`` its STAGE-5 mechanism rank, so it
       outranks ``bundle-file-unreadable`` wherever both are live. The ground is
@@ -617,12 +647,24 @@ stated, not unresolved questions.
       peer depending only on which stage noticed it.
 
       A peer tie-breaking stage 6 by PATH alone would select the other failure
-      when the unreadable file sorts first. The cell requires a listed file to
-      DISAPPEAR BETWEEN STAGE 5 AND STAGE 6 -- a filesystem race, reachable by
-      no corpus bundle and by no official scenario. Recorded rather than left to
-      look settled.
+      when the unreadable file sorts first -- WHICH IS WHAT THE PEER DID. The
+      cell requires a listed file to DISAPPEAR BETWEEN STAGE 5 AND STAGE 6, a
+      filesystem race reachable by no corpus bundle and by no official scenario;
+      being unreachable in the official run is exactly what let it go
+      unmeasured. Discriminated by ``W1-BLK-IR13``'s E8-2 cases, which plant the
+      ``ENOENT`` on the LATER-SORTING path so a path-only tie-break fails.
 
-  A16 DECIDED. Contract 8.3 types ``verifier_result`` as "the verdict verbatim
+  A16 CLOSED by Erratum 8 (E8-4), CONFIRMING this lane's construction. "A
+      gate-rejected ``exit 0`` object is NOT a ``verifier_result``": the entry
+      carries ``verifier_exit_code: 0``, ``verifier_result: null``, a Source-B
+      preliminary ``artifact_ref``, and reason ``verifier-run-invalid``, and the
+      scenario terminates. Pinned although BOTH LANES ALREADY AGREED, because
+      ``verifier_result`` is Class-1: "two implementations happening to agree is
+      not a rule, and the next remediation round has no reason to preserve an
+      agreement the contract never stated."
+
+      The grounds this lane recorded, which the ruling adopted. Contract 8.3
+      types ``verifier_result`` as "the verdict verbatim
       WHEN ONE WAS EMITTED", and ``AD15-IR-15``'s normal-exit row adds "the
       verdict, or ``null`` whenever no verdict exists". Neither enumerates an
       ``exit 0`` whose stdout the RESULT-SHAPE GATE REFUSED. This lane emits
@@ -638,7 +680,17 @@ stated, not unresolved questions.
       Unreachable on the mandatory twelve, where every emitted verdict is
       well-formed by construction. Implemented in ``verdict_from_stdout``.
 
-  A17 DECIDED. Contract 8.2 requires ``withheld_reasons`` "emitted
+  A17 CLOSED by Erratum 8 (E8-1), CONFIRMING this lane's construction.
+      ``withheld_reasons`` on every result-bearing path is the projection of the
+      accepted verdicts ACTUALLY RETAINED before termination; "a fatal stage-11
+      result DOES NOT ERASE withheld channels already observed", and "``[]``
+      means no withheld reason was OBSERVED AMONG THE ACCEPTED VERDICTS
+      ACTUALLY OBTAINED -- it says nothing about invocations never reached." A
+      malformed or gate-rejected output contributes NONE, not being an accepted
+      verdict. Pinned although both lanes converged, because the member is
+      Class-1. Discriminated by ``W1-BLK-IR16``'s E8-1 cases.
+
+      The grounds this lane recorded. Contract 8.2 requires ``withheld_reasons`` "emitted
       unconditionally, ``[]`` when nothing is withheld", and ``AD15-IR-10``
       places the 7.1 withheld scan at STAGE 12, after stage 11 completes. On a
       run that ABORTS in stage 11 the scan therefore never runs, and the
@@ -683,7 +735,7 @@ import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-EVALUATOR_VERSION = "0.2.6"   # post-Erratum-7 (AD15-IR-12..20, 8.6, 8.7)
+EVALUATOR_VERSION = "0.2.7"   # post-Erratum-8 (E8-1..E8-4; blocks IR4..IR8)
 
 #: Contract 8.5 / E4-1: the CLI meta-action is this EXACT argv and no other.
 HELP_INVOCATION = ["--help"]
@@ -2397,6 +2449,40 @@ def _wrong_shape(verdict: dict) -> Optional[str]:
     if stray:
         return ("artifact_ref carries member(s) outside the closed set "
                 "{record_id, chain_id}: %s" % ", ".join(stray))
+    # E8-3: the Source-A gate is REQUIRED, TYPED AND CLOSED, not merely closed.
+    # The pre-erratum gate rejected only an EXTRA MEMBER, which left an ABSENT
+    # or `null` `artifact_ref` accepted and silently converted to `null` on the
+    # emitted entry -- and left a non-string `record_id` or `chain_id` copied
+    # verbatim into a Class-1 field. One lane read it that way and the other did
+    # not. The full gate is:
+    #
+    #     artifact_ref MUST be present.
+    #     artifact_ref MUST be a JSON object.
+    #     record_id    MUST be present and MUST be a JSON string.
+    #     chain_id, when present, MUST be a JSON string.
+    #     No member other than record_id and chain_id is permitted.
+    #
+    # Every one of these is `verifier-run-invalid` when it fails. THERE IS NO
+    # REPAIR AND NO COERCION: a verdict that does not satisfy the gate is not an
+    # accepted verdict, so Source A does not apply to it and `AD15-IR-18`'s
+    # Source B governs the emitted `artifact_ref`.
+    #
+    # W1 requires presence ON ITS OWN AUTHORITY. Frozen 2 DEPICTS `artifact_ref`
+    # but frozen 6's enumerated shape gates do not include its presence, so
+    # whether an omitted `artifact_ref` is frozen-conforming is NOT settled by
+    # the frozen text -- and this gate does not claim otherwise.
+    # `verifier-run-invalid` already covers a shape rejected by EITHER contract,
+    # so a frozen-conforming verdict that W1 rejects has both a reason and a
+    # defined outcome.
+    if "record_id" not in verdict["artifact_ref"]:
+        return "artifact_ref carries no record_id"
+    if not isinstance(verdict["artifact_ref"]["record_id"], str):
+        return ("artifact_ref.record_id is a %s, not a JSON string"
+                % type(verdict["artifact_ref"]["record_id"]).__name__)
+    if ("chain_id" in verdict["artifact_ref"]
+            and not isinstance(verdict["artifact_ref"]["chain_id"], str)):
+        return ("artifact_ref.chain_id is present but is a %s, not a JSON string"
+                % type(verdict["artifact_ref"]["chain_id"]).__name__)
     if not isinstance(verdict["evidence"], dict):
         return "evidence is not an object"
     if verdict["class"] not in VERDICT_CLASSES:
