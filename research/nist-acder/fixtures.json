@@ -1,0 +1,207 @@
+{
+  "cases": [
+    {
+      "name": "single-target-confirmed",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-1",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:1111",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        }
+      ],
+      "receiver_observations": [
+        {
+          "instruction_id": "ctrl-1",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:1111",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a",
+          "event": "received",
+          "native_verification": "valid"
+        }
+      ],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 1.0,
+        "complete_delivery_claim_supported": true
+      }
+    },
+    {
+      "name": "missing-receiver-is-unconfirmed-not-failure",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-2",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:2222",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        }
+      ],
+      "receiver_observations": [],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 0.0,
+        "complete_delivery_claim_supported": false
+      }
+    },
+    {
+      "name": "multi-target-partial-confirmation",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-3",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:3333",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        },
+        {
+          "instruction_id": "ctrl-3",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:3333",
+          "target_id": "ep-b",
+          "target_boundary": "runtime/ep-b"
+        }
+      ],
+      "receiver_observations": [
+        {
+          "instruction_id": "ctrl-3",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:3333",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a",
+          "event": "received",
+          "native_verification": "valid"
+        }
+      ],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 0.5,
+        "complete_delivery_claim_supported": false
+      }
+    },
+    {
+      "name": "explicit-failure-is-positive-evidence",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-4",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:4444",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        }
+      ],
+      "receiver_observations": [],
+      "failure_observations": [
+        {
+          "instruction_id": "ctrl-4",
+          "attempt_id": "a1",
+          "target_id": "ep-a",
+          "native_verification": "valid",
+          "event": "transport_rejected"
+        }
+      ],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 0.0,
+        "complete_delivery_claim_supported": false
+      }
+    },
+    {
+      "name": "substitution",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-5",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:5555",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        }
+      ],
+      "receiver_observations": [
+        {
+          "instruction_id": "ctrl-5",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:DEAD",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a",
+          "event": "received",
+          "native_verification": "valid"
+        }
+      ],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 0.0,
+        "complete_delivery_claim_supported": false
+      }
+    },
+    {
+      "name": "unresolved-target-binding",
+      "target_population_closed": true,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-6",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:6666",
+          "target_id": "logical-target-x",
+          "target_boundary": "unresolved",
+          "binding_status": "unresolved"
+        }
+      ],
+      "receiver_observations": [],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": true,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": 0.0,
+        "complete_delivery_claim_supported": false
+      }
+    },
+    {
+      "name": "open-target-population-never-supports-complete-delivery",
+      "target_population_closed": false,
+      "obligations": [
+        {
+          "instruction_id": "ctrl-7",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:7777",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a"
+        }
+      ],
+      "receiver_observations": [
+        {
+          "instruction_id": "ctrl-7",
+          "attempt_id": "a1",
+          "instruction_digest": "sha256:7777",
+          "target_id": "ep-a",
+          "target_boundary": "runtime/ep-a",
+          "event": "received",
+          "native_verification": "valid"
+        }
+      ],
+      "failure_observations": [],
+      "expected": {
+        "population_closed": false,
+        "conservation_ok": true,
+        "measured_delivery_confirmation_fraction": null,
+        "complete_delivery_claim_supported": false
+      }
+    }
+  ]
+}
