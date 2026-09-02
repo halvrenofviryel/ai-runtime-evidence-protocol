@@ -36,6 +36,33 @@ coverage of all Unicode ordering edge cases; or the truth or completeness of any
 AIREP artifact. Agreement between the two implementations is consistent with separate authoring
 but is not proof of it.
 
+## External evaluation and the handoff-corpus projection defect
+
+Kept separate from the official internal parity result above, which is unchanged by any of this.
+
+| | |
+|---|---|
+| Official internal parity | **unchanged** — 60 scored cases, two separately authored verifiers, parity PASS |
+| External evaluation | one independently implemented consumer/verifier, run against the release-pinned handoff corpus |
+| Original external result | **17 AGREE / 1 DISAGREE** — frozen, not regenerated, not restated as 18/18 |
+| The single disagreement | `CLS-XT1`, `cryptographic_result` only: expected `PASS`, observed `NOT_EVALUATED` |
+| Classification | **package-derived projection defect**, independently reproduced maintainer-side |
+| Contract | **not changed.** Ruling R-6 already states stage 4's prerequisite correctly |
+| Correction | emitted as corpus revision `v0.2`; revision `v0.1` and its digest are preserved |
+
+The external run is **not** a third official verifier. It is a separate evaluation with recorded
+exposure qualifications — it is not expected-blind, and it does not establish semantic correctness,
+v0.2 stability, deployment interoperability, or third-party producer interoperability.
+
+On `CLS-XT1` the external implementation reproduced every frozen field — class, all five reason
+channels, observer assessment, process exit, run validity and signing-input reconstruction. Only
+the package-derived projection disagreed, and the projection was the thing that was wrong: a
+definitively revoked producer binding suppresses stage 4, so no signature is verified under any
+key, and `PASS` asserted a cryptographic check that never ran.
+
+Provenance between corpus revisions is recorded in
+[`../../../../interop/independent-verifier-corpus/REVISIONS.md`](../../../../interop/independent-verifier-corpus/REVISIONS.md).
+
 ## Reproduction
 
 The v0.2 validation and class-verification toolchain can be reproduced in an offline/no-index

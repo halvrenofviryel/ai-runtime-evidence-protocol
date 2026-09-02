@@ -1,0 +1,645 @@
+{
+  "cases": [
+    {
+      "artifact_family": "decision",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "878aa9cf3de692d8879331efbb38cfab2a68ee37f39e7b6b1de6db47b8fcc45a"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "c1518c3190e00a7e23eeb40c0a0c0dfe93c37565ee3e814fc71354ed099772b7"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-P1",
+      "source_case_id": "P1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/P1",
+      "why_not_redundant": "clean Decision earns AIREP-Authenticated; witness absent is WITHHELD not FAIL"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "c28ca730933e0d03b3e7faa47f83843d8cd4f68ca9af7b066d58ebce5e03a236"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "25756c95fc1686d5d549ae1922ac546d26fba09f3ea4b00d6452fd6738a799c0"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-P2",
+      "source_case_id": "P2",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/P2",
+      "why_not_redundant": "clean witnessed Decision earns AIREP-Witnessed with all five channels empty"
+    },
+    {
+      "artifact_family": "effect",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "bf94d9edba221447b1f5a02a5e3e49c1a8216fa915f7753ec47553d2e869407b"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9"
+        },
+        {
+          "name": "request.json",
+          "sha256": "d1468e7e4953a321999d4ac5c8339e9d086f5c990cc2529408386052a0a2333f"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+        }
+      ],
+      "package_case_id": "CLS-P3",
+      "source_case_id": "P3",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/P3",
+      "why_not_redundant": "clean Effect with referenced Execution; observer assessment independent"
+    },
+    {
+      "artifact_family": "control",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "878aa9cf3de692d8879331efbb38cfab2a68ee37f39e7b6b1de6db47b8fcc45a"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "0b25adc083ea1657e9319a82c477738f9825522747244b9b126dde6e60e4b397"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-CTL1",
+      "source_case_id": "CTL1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/CTL1",
+      "why_not_redundant": "clean issuer-side Control Evidence artifact"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "c28ca730933e0d03b3e7faa47f83843d8cd4f68ca9af7b066d58ebce5e03a236"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "3292ebe8e880ffa274a111d83a15e197f6696ca34e1c10e03d5dd0333c18fb90"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-NG1",
+      "source_case_id": "NG1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/NG1",
+      "why_not_redundant": "witness over a NON-GENESIS chain head"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "positive",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "c28ca730933e0d03b3e7faa47f83843d8cd4f68ca9af7b066d58ebce5e03a236"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "33dfebea1a06277d2466da147397151d1b3f06fc25b9ed878f43a5b6d7d39c4f"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-FR3",
+      "source_case_id": "FR3",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/FR3",
+      "why_not_redundant": "freshness exactly at the window boundary still earns Witnessed"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "fa094749450b52b1e3074ee60f737a65c30e011bee53a5a57af9115d6a39d8ee"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "fd17464eeba256072f0db0ff901a45d80f2d87c85292097ca822a0188640d384"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-PS1",
+      "source_case_id": "PS1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/PS1",
+      "why_not_redundant": "record signature made with a key other than the bound one"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "caveat",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "c1cfe8ffc5b1cbfc1e35536c1e8a78554fe8d35c7f3500d8362f9ba05cbc95da"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "2c6423e0b0f4aee0d18689f0124a5c3879abcddcafa6690c5314448c2a65a4c2"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-PS2",
+      "source_case_id": "PS2",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/PS2",
+      "why_not_redundant": "valid Ed25519 signature, misleading wire alg: the binding selects the suite, not the wire label"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "6b92e6bad640c944bcdae130f2c48f30cae67307105b23cbaf0326490ffc6d35"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "3da4cb970c31c78056ed7f74db1c2dcccf6cf21fe067ec51a7c73d2d91f5c74a"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "d66e5c4f526ed1e19382efac5b0f3c4b74811774b3645a9976b7bb64aca17047"
+        }
+      ],
+      "package_case_id": "CLS-XT1",
+      "source_case_id": "XT1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/XT1",
+      "why_not_redundant": "producer binding revoked in the snapshot: definitive FAILURE"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "880e1fa7a4006df0a04713cd8ab5dcc5b1bd4b160c8d543f55606b6f79004388"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "2433f2c4b02c93c1389739c85232f058301336a5719c5b537fc48866998f6687"
+        },
+        {
+          "name": "request.json",
+          "sha256": "446f24837b68b4c83a0fd8d0c965b2d028c88b0be4af25b0437e8d5ab1ca50d4"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-IND4",
+      "source_case_id": "IND4",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/IND4",
+      "why_not_redundant": "producer/witness pair listed non-independent: definitive witness FAILURE"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "f1822ec1241d44ab9628f580845608aaf681904ba5bd0a725d7856321eb12242"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "28b1f6ca9c636c95ec8d82a7401c3c2c77c91f183e561023ebf9b6ea44d3b58d"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-FR1",
+      "source_case_id": "FR1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/FR1",
+      "why_not_redundant": "witness outside the freshness window"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "c85730a991c14c13109285bbf266bce824be7e328a35a18948327df36527f94e"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "0c4a77d6dca9a1cef42624d61fc60e46c0d2a5e0bb588519125ac38c3b5471b0"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-WM3",
+      "source_case_id": "WM3",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/WM3",
+      "why_not_redundant": "head_ref names a record_id present in neither artifact nor related_artifacts"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "withheld",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad423d563f6917eac7821067041b63e7b6642cede06fb093b58213e902f06422"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "3817b126a1e40588ef57c5c118e5a56f45715c26034c62211b6a8797237cb4a4"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "e889032e47a079915ef3fb3a66b93f970f8dd5a7e5fad20d5c8c22441ccfdf7d"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-PB2",
+      "source_case_id": "PB2",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/PB2",
+      "why_not_redundant": "no producer binding entry: assurance WITHHELD, not failed"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "withheld",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "b85ce6bec76b6c191513ae2e3d42e8d60b8033abcfc79c44ba8c454298da081b"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "075d04dfdba1ec9600a574b3dcbe2f1cb32e033018c5721366023d0071e25e92"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "f68ee483db1339e91217e3e084585fc43dd17aefc9693b23e36faf12483d8059"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-WB2",
+      "source_case_id": "WB2",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/WB2",
+      "why_not_redundant": "no witness binding entry: witness assurance WITHHELD"
+    },
+    {
+      "artifact_family": "effect",
+      "category": "withheld",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "5e44ec50f367adef9d4786cb7b26306d0ecf786777fa7af1159d6288390f149e"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9"
+        },
+        {
+          "name": "request.json",
+          "sha256": "59359c59204630f834b7690882ad093477f3398bbeb2967904e3aa3e6f6ccfbc"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+        }
+      ],
+      "package_case_id": "CLS-OB4",
+      "source_case_id": "OB4",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/OB4",
+      "why_not_redundant": "Effect declares independent; referenced Execution cannot earn the class, so observer is unknown"
+    },
+    {
+      "artifact_family": "decision",
+      "category": "failure",
+      "expected_provenance_kind": "frozen_release_expected_result",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "clock.json",
+          "sha256": "4a75a66dbe88b7df69c6769ab5d3efb6ecf6178b905f5a8a4b82f289a414c014"
+        },
+        {
+          "name": "expected.json",
+          "sha256": "fcefb21d2f0f6d83f77a42a6879de5787b38222a7f04a7e63c8439d75224f20d"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "27143a4ebed9af53a7706e7b01399c3d29557c559f37cef019d9543628ec5df7"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "CLS-LEX1",
+      "source_case_id": "LEX1",
+      "source_kind": "class",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/cases/LEX1",
+      "why_not_redundant": "witness claim length written 1e0: the semantic JSON value alone is insufficient"
+    },
+    {
+      "artifact_family": "n/a",
+      "category": "indeterminate",
+      "expected_provenance_kind": "none_frozen_release_declares_process_outcome_only",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "f9582875fce5c6446292efeb655fe7b9f0ec884dab3fad8f1322cd99269f8a02"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "PROC-UNP",
+      "source_case_id": "PRB-REQUEST-UNPARSEABLE",
+      "source_kind": "probe",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/probes/PRB-REQUEST-UNPARSEABLE",
+      "why_not_redundant": "request is not parseable: run-invalid, no verdict is emitted"
+    },
+    {
+      "artifact_family": "n/a",
+      "category": "indeterminate",
+      "expected_provenance_kind": "none_frozen_release_declares_process_outcome_only",
+      "files": [
+        {
+          "name": "bindings.json",
+          "sha256": "ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab"
+        },
+        {
+          "name": "independence.json",
+          "sha256": "605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e"
+        },
+        {
+          "name": "request.json",
+          "sha256": "e645dd79766b4b829b119bebd26ea182abc64ca8f4f3c2e81dbc11f206b01328"
+        },
+        {
+          "name": "revocation.json",
+          "sha256": "73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+        }
+      ],
+      "package_case_id": "PROC-NGR",
+      "source_case_id": "PRB-CLI-NOW-NOT-GREGORIAN",
+      "source_kind": "probe",
+      "source_path": "spec/airep/v0.2/class-verification/corpus/probes/PRB-CLI-NOW-NOT-GREGORIAN",
+      "why_not_redundant": "operator clock input is format-valid but not a Gregorian date: usage error"
+    }
+  ],
+  "package": "AIREP v0.2 Independent-Verifier Corpus v0.1",
+  "vectors": [
+    "V1",
+    "V2",
+    "V3",
+    "V4",
+    "W1",
+    "W2"
+  ]
+}
