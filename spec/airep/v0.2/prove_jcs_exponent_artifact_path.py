@@ -19,8 +19,49 @@ spec/airep/v0.1/conformance/jcs.py -- see the JCS_RELPATH loader in the class ve
 conformance/test_jcs.py already asserts 1e-07 -> 1e-7 and 1.5e+30 against that module. What
 was unexercised is the end-to-end artifact path over such a value.
 
-This script closes that path without touching any pinned corpus, so no recorded parity or
-schema-validation measurement changes.
+## What this closes, and what it does NOT
+
+It adds **repository-level regression coverage** for the exponential branch on the artifact path,
+without touching any pinned corpus, so no recorded parity or schema-validation measurement changes.
+
+It does **not** close canonical-corpus coverage. Measured on this branch:
+
+    A. does the canonical 60-case corpus carry such a number?   NO  (0, 1, 2, 3600 only)
+    B. do the fixed vectors carry such a number?                NO  (no number reaches
+                                                                    canonicalisation in V1-V4/W1-W2)
+    C. does only this standalone script exercise the path?      YES
+
+So the correct statement is: **canonical-corpus exponential-serialisation coverage remains OPEN**;
+repository-level regression coverage now exists. Do not restate the second as the first.
+
+## Why a canonical case is not added here
+
+The corpus has a sanctioned additive-tranche mechanism -- C1 added 15 cases to the 45 C0 cases via
+a separate `c1_case_index.json`, documented in `C1_COVERAGE.md`, changing no contract clause, no
+schema, no frozen construction and no existing expected value. A "C2" tranche is the architecturally
+correct route.
+
+`C1_COVERAGE.md` also states the authoring provenance that gives such a tranche its evidential
+value, verbatim:
+
+  "This extension was authored without reading, listing, executing or otherwise inspecting either
+   class verifier's source or output, or any comparator's source or output. Neither is present in
+   the authoring snapshot."
+
+and:
+
+  "No class, reason set, observer value or exit code below was obtained by running a class
+   verifier, a comparator, or any ladder-evaluation code."
+
+The session that produced this file read and executed both class verifiers and the parity
+comparator. A C2 tranche authored from here could not honestly carry that provenance statement,
+and writing one anyway would quietly weaken the discipline that makes the corpus evidence mean
+anything. Adding a 61st scored case would also move `scored_case_count`, the corpus manifest
+aggregate `55f5189e...`, the combined case index and the C0 subset aggregate, all of which the
+official parity basis is pinned to.
+
+A canonical C2 case therefore needs a clean authoring context. It is left open deliberately, not
+overlooked.
 
 Distinguishing note: rejecting the source lexeme `1e0` under E-1 is input lexical-form
 validation and is NOT coverage of canonical numeric serialisation. `1e0` decodes to 1 and
@@ -116,6 +157,12 @@ def main():
     print("    window          3600s, 30 minutes inside -> expected PASS / OK")
     print("  It exercises parsing, epoch arithmetic across a pre-1970 year boundary, and the")
     print("  freshness comparison. The observation is measured and closed, not extended.")
+
+    print("\nE. coverage classification -- do not inflate this")
+    print("  canonical 60-case corpus carries such a number      NO   -> coverage OPEN")
+    print("  fixed vectors carry such a number                   NO   -> coverage OPEN")
+    print("  this regression exercises the path                  YES  -> repository-level only")
+    print("  a canonical C2 tranche needs a clean authoring context; see the module docstring")
 
     print("\n%s" % ("RESULT: all canonicalisation boundary checks PASSED"
                     if not failures else "RESULT: %d check(s) FAILED" % len(failures)))
