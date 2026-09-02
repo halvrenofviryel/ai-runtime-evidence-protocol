@@ -86,8 +86,10 @@ It is an **Experimental** proposed open format with a reference implementation �
 - **Contributing?** Read [`CONTRIBUTING.md`](./CONTRIBUTING.md), browse the
   [`good first issue`](../../labels/good%20first%20issue) and [`help wanted`](../../labels/help%20wanted)
   labels (the open items from [`STATUS.md`](./spec/airep/v0.1/STATUS.md) are filed there), and report
-  verifier / crypto flaws privately via [`SECURITY.md`](./SECURITY.md). The most-wanted contribution is
-  a **genuinely third-party producer**.
+  verifier / crypto flaws privately via [`SECURITY.md`](./SECURITY.md). Independently authored
+  producers, independent consumers/verifiers, and adversarial cross-implementation testing are all
+  wanted — see [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) for what has been measured so far
+  and against which frozen version.
 
 ## Repository map
 
@@ -101,6 +103,7 @@ It is an **Experimental** proposed open format with a reference implementation �
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
 | [`producers/python/`](./producers/python/) | Copy-paste producer — sign your own record with your own key. |
+| [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) | Independently authored implementations measured against frozen releases, with version and role boundaries. |
 
 ## Check it yourself
 
@@ -121,8 +124,14 @@ single-tool artifact.
 
 The first producer of AIREP records is the **Phionyx Reasoned Governance Envelope**, which matures
 by conforming to this format. AIREP itself carries no Phionyx-specific physics, vocabulary, or
-dependency — that is the point of the neutrality test. A second, independent producer is an open
-item (see `STATUS.md`).
+dependency — that is the point of the neutrality test.
+
+An **independently authored v0.1 producer** has since been measured against frozen **v0.1.2**: its
+records were accepted on first invocation by both pinned reference verifiers, and the experiment
+independently exposed a real v0.1 ambiguity in the signature input and value encoding. That is one
+compatibility result, not a general interchange property. **v0.2 still has no producer
+implementation, first-party or third-party.** Identities, commands and boundaries are recorded in
+[`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md).
 
 ## Contributing
 

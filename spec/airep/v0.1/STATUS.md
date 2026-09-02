@@ -11,8 +11,11 @@ kit ships two implementations (Python `verify.py` and Node `verify.mjs`) on diff
 crypto stacks that each, independently, validate a record's structure (the closed top level, the
 required members, the closed `directive.verb` / `evidence[].type` enums), run the strip-`profiles`
 neutrality test, re-derive every `integrity.current` and agree on it byte-for-byte on the example
-vectors, and re-verify the Ed25519 signatures. What remains open is a second independent **producer**
-and broader external review.
+vectors, and re-verify the Ed25519 signatures. A **second, independently authored producer** has
+since been measured against frozen v0.1.2 and was accepted on first invocation by both pinned
+verifiers; that experiment also exposed a v0.1 signature-encoding ambiguity. It is one
+compatibility result, not a general interchange property. Broader external review remains open. See
+[`EXTERNAL_EVIDENCE.md`](../../../EXTERNAL_EVIDENCE.md).
 
 Maturity is a labelled attribute, not prose hedging in the normative text. The honest maturity
 picture — the assurance ladder (AIREP-Core → AIREP-Verified → AIREP-Trusted), what the reference

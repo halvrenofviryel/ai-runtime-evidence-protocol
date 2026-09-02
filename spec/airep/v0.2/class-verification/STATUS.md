@@ -30,11 +30,17 @@ semantics, UTF-8 verdict ordering including a pair that separates UTF-8 byte ord
 code-unit order — and each independently matches the frozen expected values on all 60 cases,
 deterministically across repeat runs.
 
-**Does not establish:** correctness of the underlying semantics; independent external validation
-of the manually derived expected values; third-party implementation or third-party audit;
-coverage of all Unicode ordering edge cases; or the truth or completeness of any real-world
-AIREP artifact. Agreement between the two implementations is consistent with separate authoring
-but is not proof of it.
+**Does not establish:** correctness of the underlying semantics; coverage of all Unicode ordering
+edge cases; or the truth or completeness of any real-world AIREP artifact. Agreement between the
+two implementations is consistent with separate authoring but is not proof of it.
+
+**External evaluation, recorded separately.** One external independently implemented
+consumer/verifier has been measured against a release-pinned handoff corpus, subject to the
+recorded exposure qualifications. This is not expected-blind validation and does not establish
+semantic correctness, v0.2 stability, deployment interoperability, or third-party producer
+interoperability. That external run is **not** a third official verifier: the two official
+verifiers and the official parity result above are unchanged by it. Identities and boundaries are
+in [`EXTERNAL_EVIDENCE.md`](../../../../EXTERNAL_EVIDENCE.md).
 
 ## Reproduction
 
