@@ -1,7 +1,13 @@
 # Contributing to AIREP
 
 AIREP is an **experimental** open format. Contributions, implementations, and critique are
-welcome — especially a second independent producer and adversarial review of the threat model.
+welcome — especially additional independent producers, independent consumers/verifiers, and
+adversarial cross-implementation testing, plus adversarial review of the threat model.
+
+State which frozen version you are targeting. The versions are separate evidence classes: an
+independently authored **v0.1.2 producer** and an independently implemented **v0.2
+consumer/verifier** have each been measured, and results against different versions are not
+additive. See [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md).
 
 ## Ground rules
 
