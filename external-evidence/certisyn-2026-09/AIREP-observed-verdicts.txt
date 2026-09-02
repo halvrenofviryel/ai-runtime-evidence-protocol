@@ -1,0 +1,410 @@
+{
+ "CLS-CTL1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ctl1",
+    "record_id": "cv-rec-ctl1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-FR1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr1",
+    "record_id": "cv-rec-fr1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-freshness-outside-window"
+   ],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-FR3": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-fr3",
+    "record_id": "cv-rec-fr3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Witnessed",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-IND4": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ind4",
+    "record_id": "cv-rec-ind4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:2433f2c4b02c93c1389739c85232f058301336a5719c5b537fc48866998f6687",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "independence-explicitly-denied"
+   ],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-LEX1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-lex1",
+    "record_id": "cv-rec-lex1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-claim-invalid"
+   ],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-NG1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ng1",
+    "record_id": "cv-rec-ng1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Witnessed",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-OB4": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ob4",
+    "record_id": "cv-rec-ob4"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "unknown",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-P1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p1",
+    "record_id": "cv-rec-p1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-P2": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p2",
+    "record_id": "cv-rec-p2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Witnessed",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-P3": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-p3",
+    "record_id": "cv-rec-p3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:07e8ee8a4d07cfab1ceab6293b1414cbe703fcf97d2980b7ffdaa43d8cc43b6a",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:69487b8779d60cc53bb4a0d8703a2abc6bd1f06b8cc334e18f9c8a8fa12705d9",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:acac3c49223bb31996f55048ba9f066eb3dfc939e28ca26475a82501d5d65bb0"
+   },
+   "observer_assessment": "independent",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-PB2": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-pb2",
+    "record_id": "cv-rec-pb2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [
+    "producer-binding-missing"
+   ],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad423d563f6917eac7821067041b63e7b6642cede06fb093b58213e902f06422",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-PS1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ps1",
+    "record_id": "cv-rec-ps1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-signature-invalid"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-PS2": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-ps2",
+    "record_id": "cv-rec-ps2"
+   },
+   "authenticated_caveats": [
+    "wire-alg-mismatch"
+   ],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "no-witness-supplied"
+   ]
+  }
+ },
+ "CLS-WB2": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wb2",
+    "record_id": "cv-rec-wb2"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:b85ce6bec76b6c191513ae2e3d42e8d60b8033abcfc79c44ba8c454298da081b",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": [
+    "witness-binding-missing"
+   ]
+  }
+ },
+ "CLS-WM3": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-wm3",
+    "record_id": "cv-rec-wm3"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [],
+   "authenticated_withheld": [],
+   "class": "AIREP-Authenticated",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:73e3b91ebba056cb2f17d8129800a6482767a913d0b79f299a2a1d1b69b2a88c"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [
+    "witness-head-unresolved"
+   ],
+   "witnessed_withheld": []
+  }
+ },
+ "CLS-XT1": {
+  "exit": 0,
+  "verdict": {
+   "artifact_ref": {
+    "chain_id": "cv-chain-xt1",
+    "record_id": "cv-rec-xt1"
+   },
+   "authenticated_caveats": [],
+   "authenticated_failures": [
+    "producer-binding-revoked"
+   ],
+   "authenticated_withheld": [],
+   "class": "AIREP-Core",
+   "evidence": {
+    "bindings_digest": "sha256:ad4d05a76e868b6b1137f7ba0ad67d0c59f40f538d313a1f1a20e964796561ab",
+    "freshness_window_seconds": 3600,
+    "independence_policy_digest": "sha256:605a37e712ea8afae7c53824f9989a3e9309e846816a9e8ad44acc8a76bda96e",
+    "now": "2026-08-23T12:00:00Z",
+    "revocation_digest": "sha256:d66e5c4f526ed1e19382efac5b0f3c4b74811774b3645a9976b7bb64aca17047"
+   },
+   "observer_assessment": "not_applicable",
+   "witnessed_failures": [],
+   "witnessed_withheld": []
+  }
+ },
+ "PROC-NGR": {
+  "exit": 2,
+  "reason": "CLI usage/config error: --now structurally invalid or not a Gregorian datetime"
+ },
+ "PROC-UNP": {
+  "exit": 1,
+  "reason": "request unparseable: IndexError"
+ }
+}

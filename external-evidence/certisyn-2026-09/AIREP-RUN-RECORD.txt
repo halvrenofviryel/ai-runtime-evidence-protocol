@@ -1,0 +1,132 @@
+# AIREP v0.2 Independent-Verifier Corpus v0.1 — run record
+
+Runner: Joel Hillier, Certisyn, Inc.
+Corpus author and originator: Ali Toygar Abak, Phionyx.
+
+## Package identity
+
+    archive     airep-v0.2-independent-verifier-corpus-v0.1-full.zip
+    sha256      b47f01c81577c9dc95b7d1f1fd1119c839866e182d24c251c386ad2a08b17923
+                (matches the digest supplied out of band, in the 29 August message)
+    integrity   tools/verify_package.py -> OK, 337 files present, digests match,
+                no unexpected files, no prohibited key material, source basis correct
+
+## The five facts the package asks the runner to record
+
+    verifier implementation digest
+        sha256:2aef1212adeaab5a1dc7f07c3f240183db97478b247c008c5fcc0e177fbfeca8
+        (concatenated source of the seven modules, in load order)
+
+    input package digest actually run against
+        sha256:b47f01c81577c9dc95b7d1f1fd1119c839866e182d24c251c386ad2a08b17923
+
+    exact normative text used
+        normative_basis/INTEGRITY.md
+        normative_basis/CLASS_VERIFIER_CONTRACT.md (sections 0-9, rulings R-1..R-11, E-1..E-4)
+        normative_basis/schemas/{common,decision,control,effect,execution}.schema.json
+        CAPABILITY_REQUIREMENTS.md, START_HERE.md, METHOD.md, CASE_SELECTION.md
+
+    public first-party AIREP verifier code inspected
+        no. It was not fetched or read.
+
+    expected results visible before implementation
+        yes, recorded as yes. They ship inside this same archive and the corpus is
+        public, so no expected-blind claim is made. The sequence followed was: the six
+        fixed vectors reproduced first, the class verifier then written from the
+        contract, the observed results written to a file and its digest recorded
+        (sha256:f4a2b23ab1b996ac3daa4b5985fd90f96467bbe84b6ad878832cf09f73d36f92),
+        and only then was any expected value opened. That ordering is the runner's own
+        statement and is not an independently checkable property.
+
+## Implementation
+
+Python 3, standard library only, no third-party dependencies.
+RFC 8785 JCS and RFC 8032 Ed25519 verification written from the RFCs.
+Ed25519 checked against RFC 8032 section 7.1 vectors, JCS against RFC 8785
+Appendix B, before either was used on corpus material.
+
+## Stage E — the six fixed vectors
+
+All six reproduce byte-exact.
+
+    V1 V2 V3 V4   canonical JCS bytes, hash tag, hash preimage, integrity.current,
+                  signature tag, suite id, signature preimage, signature under the
+                  producer key
+    W1 W2         canonical claim bytes, witness tag, witness preimage, witness
+                  signature under the witness key
+
+W2 includes a non-ASCII chain_id and reproduces byte-exact.
+
+## Stage G — all 18 cases
+
+    17 AGREE
+     1 DISAGREE   CLS-XT1, on one package-derived projection field only
+
+Process cases ran through the same pipeline as every other case:
+PROC-UNP exit 1, no verdict. PROC-NGR exit 2, no verdict, on a format-valid
+non-Gregorian --now supplied at invocation since the package ships no clock file
+for that probe.
+
+## CLS-LEX1 — the case predicted to disagree
+
+Agrees. The checker reads the source lexeme of the witness claim's numeric
+members rather than the decoded value, so `"length": 1e0` is caught by the E-1
+rule and the case yields witness-claim-invalid.
+
+Proven in both directions rather than asserted:
+  * spelling that member `1` instead of `1e0` turns the same case into
+    AIREP-Witnessed with all five channels empty, so the lexical form is the only
+    defect present;
+  * injecting `1e0` into the clean CLS-P2 case makes that case fail the same way.
+
+There is therefore no reconstruction-path finding on this row.
+
+## The one disagreement — CLS-XT1
+
+Frozen fields agree exactly: class AIREP-Core, all five reason channels,
+observer assessment, process exit, run validity, and signing input
+reconstruction. The disagreement is confined to `cryptographic_result`, which is
+a package-derived projection rather than a frozen field.
+
+    expected   PASS
+    observed   NOT_EVALUATED
+
+XT1 is a revoked producer binding with a clean witness. Contract section 4 and
+ruling R-6 make stage 4's prerequisite "binding accepted and not definitively
+revoked", so on a revoked binding the signature gate does not run and no
+signature is verified under any key. The projection rule recorded in METHOD.md
+branches on a signature reason (FAIL) and on a withheld binding (NOT_EVALUATED),
+and a revoked binding is neither, so it falls through to PASS.
+
+Reporting PASS on that row states that a cryptographic check succeeded when no
+cryptographic check executed. The frozen fields are not in dispute and were not
+touched. METHOD.md invites disputing the projection rather than the frozen
+fields, and this row does that.
+
+## Coverage observations on the corpus
+
+Two input classes are not exercised by the 18 cases. Both were found by mutation
+testing this implementation rather than by any corpus case, and both are recorded
+here because they are facts about the corpus's reach:
+
+  1. No case carries a JSON number whose shortest representation uses exponential
+     notation with a fractional mantissa (magnitude at or above 1e21, or below
+     1e-6). Every number in the corpus is 0, 1, 2 or 3600. RFC 8785 number
+     serialisation is therefore required by CAPABILITY_REQUIREMENTS.md but only
+     partially exercised.
+  2. No case carries a timestamp before 1970. common.schema.json permits years
+     from 0000, and the freshness predicate is arithmetic on those values, so the
+     pre-epoch path is reachable but unmeasured.
+
+Neither observation changes any result above.
+
+## What this run does and does not establish
+
+Using the corpus author's own wording: a successful run may populate
+author-produced-corpus with an independently implemented consumer. It does not
+establish a third-party AIREP producer, deployment interoperability, AIREP v0.2
+stability, or IETF or SCITT endorsement.
+
+The permitted claim about the implementation is exactly the one METHOD.md states:
+the external verifier implementation was developed separately from the AIREP
+reference verifier code, subject to the exposure disclosures recorded above.
