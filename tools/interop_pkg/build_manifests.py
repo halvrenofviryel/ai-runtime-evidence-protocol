@@ -3,8 +3,7 @@
 import hashlib, json, subprocess, sys, zipfile
 from pathlib import Path
 
-REPO = Path("/mnt/data/claude/ai-runtime-evidence-protocol")
-OUT = REPO / "interop/independent-verifier-corpus/v0.1"
+from revision import REPO, OUT, TOP_LEVEL, ARCHIVE_NAME  # noqa: E402
 DIST = REPO / "dist"
 # Fixed timestamp derived from the source release commit, never wall clock.
 REL_TS = subprocess.run(["git","show","-s","--format=%cI","b5ae87f74b386b11b8882865e50c3ad38120ff97"],
@@ -54,7 +53,7 @@ def build_zip(name, include):
     paths = sorted(p for p in rels()+["manifests/FILES.json","manifests/SHA256SUMS"] if include(p))
     with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for rel in paths:
-            zi = zipfile.ZipInfo(f"airep-v0.2-independent-verifier-corpus-v0.1/{rel}", ZIP_DATE)
+            zi = zipfile.ZipInfo(f"{TOP_LEVEL}/{rel}", ZIP_DATE)
             zi.external_attr = (0o644 & 0xFFFF) << 16
             zi.create_system = 3
             z.writestr(zi, (OUT/rel).read_bytes())
@@ -68,6 +67,6 @@ if __name__ == "__main__":
     # One archive only. The inputs/oracle split was withdrawn: inputs.zip retained every
     # per-case expected.json (so it was not input-only) and shipped the checker with a
     # manifest declaring a file it did not contain (so the checker could only fail).
-    full = build_zip("airep-v0.2-independent-verifier-corpus-v0.1-full.zip", lambda p: True)
+    full = build_zip(ARCHIVE_NAME, lambda p: True)
     print(json.dumps({"release_commit_time": REL_TS, "file_count": n, "aggregate": agg,
                       "full": full}, indent=2))

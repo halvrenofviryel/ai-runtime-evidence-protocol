@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Build the AIREP v0.2 Independent-Verifier Corpus v0.1.
+"""Build a revision of the AIREP v0.2 Independent-Verifier Corpus.
+
+The revision is selected by AIREP_INTEROP_REVISION (see revision.py); a published
+revision is never rewritten in place.
+
+Original header follows.
+
+Build the AIREP v0.2 Independent-Verifier Corpus.
 
 INTERNAL TOOLING. Excluded from every recipient archive: it reads the release
 basis and emits the package, and knows nothing about AIREP semantics beyond
@@ -21,9 +28,8 @@ TAG = "v0.2.0-alpha.1"
 TAG_OBJ = "2c20ff2d6cc990cfc4ceb14a5e22ef823821635f"
 DOI = "10.5281/zenodo.22101986"
 WIRE = "0.2"
-REPO = Path("/mnt/data/claude/ai-runtime-evidence-protocol")
+from revision import REPO, OUT, PACKAGE_NAME, REVISION  # noqa: E402
 SRC = "spec/airep/v0.2"
-OUT = REPO / "interop/independent-verifier-corpus/v0.1"
 
 # Published TEST-ONLY private seeds. Never enter the distribution; they are the
 # denylist the leak scanner enforces (KEYS.md at the pin publishes all three).
@@ -187,7 +193,7 @@ def main() -> int:
                 "frozen_release_expected_result" if expected else "none_frozen_release_declares_process_outcome_only"),
         })
     write_json("CASE_INDEX.json", {
-        "package": "AIREP v0.2 Independent-Verifier Corpus v0.1",
+        "package": PACKAGE_NAME,
         "cases": index,
         "vectors": vector_rows,
     })

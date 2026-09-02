@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: AIREP v0.2 Independent-Verifier Corpus v0.2
+message: >-
+  A release-pinned test target for a verifier implemented from AIREP's published text.
+  Not a new AIREP version, not a producer implementation, not a conformance certification.
+type: dataset
+authors:
+  - family-names: Abak
+    given-names: Ali Toygar
+    email: founder@phionyx.ai
+license: Apache-2.0
+references:
+  - type: software
+    title: AI Runtime Evidence Protocol v0.2.0-alpha.1
+    doi: 10.5281/zenodo.22101986
+    notes: source basis, commit b5ae87f74b386b11b8882865e50c3ad38120ff97

@@ -21,6 +21,7 @@ file, so it cannot change corpus bytes, expected results, prompts or digests.
 from __future__ import annotations
 
 import argparse
+from revision import TOP_LEVEL  # noqa: E402
 import hashlib
 import pathlib
 import zipfile
@@ -52,7 +53,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--package", required=True, type=pathlib.Path)
     ap.add_argument("--out", required=True, type=pathlib.Path)
-    ap.add_argument("--top-level", default="airep-v0.2-independent-verifier-corpus-v0.1")
+    ap.add_argument("--top-level", default=TOP_LEVEL)
     args = ap.parse_args()
     digest = build(args.package, args.out, args.top_level)
     print(f"{digest}  {args.out}")

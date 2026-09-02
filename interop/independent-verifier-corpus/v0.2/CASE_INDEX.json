@@ -633,7 +633,7 @@
       "why_not_redundant": "operator clock input is format-valid but not a Gregorian date: usage error"
     }
   ],
-  "package": "AIREP v0.2 Independent-Verifier Corpus v0.1",
+  "package": "AIREP v0.2 Independent-Verifier Corpus v0.2",
   "vectors": [
     "V1",
     "V2",

@@ -1,0 +1,76 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "decision",
+  "chain_id": "cv-chain-fr3",
+  "claim": {
+   "assertion": "released after gates passed",
+   "basis": [
+    "gate-1"
+   ]
+  },
+  "directive": {
+   "policy_basis": [
+    "policy-1"
+   ],
+   "verb": "release"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "input": {
+   "input_digest": "sha256:abababababababababababababababababababababababababababababababab",
+   "input_ref": "ref:input-1"
+  },
+  "integrity": {
+   "current": "sha256:b23d3ba0884c54fe522446482647a0cdf28c32392f16899517351ed49f342dab",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "515562d30ba42a70fc80a9432fdeec87e24e664375b28f909712762efbabc5357b37a335a5e368b01dd4d42e9f4d1a838c7a80f89d15f2a5bbb8a98c579a2a0d"
+   }
+  },
+  "output": {
+   "result_digest": "sha256:cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "result_ref": "ref:result-1"
+  },
+  "record_id": "cv-rec-fr3",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 0,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "head_witness": {
+  "claim": {
+   "chain_id": "cv-chain-fr3",
+   "current": "sha256:b23d3ba0884c54fe522446482647a0cdf28c32392f16899517351ed49f342dab",
+   "length": 1,
+   "sequence": 0,
+   "witnessed_at": "2026-08-23T11:00:00Z"
+  },
+  "head_ref": {
+   "chain_id": "cv-chain-fr3",
+   "record_id": "cv-rec-fr3"
+  },
+  "signature": {
+   "alg": "Ed25519",
+   "value": "3fe72d4ed0a2bfa22ec0a3a79adf58f6b45b40d7f8fc089bd29206dded9c30055a288baa54396f3ace5fa74b79e25cbac64e0b885e1b5614968f713e7c9da70e"
+  },
+  "witness_id": "NOTARY-WITNESS #1"
+ },
+ "related_artifacts": []
+}

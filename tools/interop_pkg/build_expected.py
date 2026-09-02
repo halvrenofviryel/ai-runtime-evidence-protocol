@@ -4,13 +4,7 @@ import json, os, subprocess, hashlib
 from pathlib import Path
 
 PIN = "b5ae87f74b386b11b8882865e50c3ad38120ff97"
-REPO = Path(__file__).resolve().parents[2]
-# The corpus is versioned. A corrected expectation is emitted as the NEXT revision;
-# a published revision and its digest are never rewritten in place. Override with
-# AIREP_INTEROP_REVISION when regenerating a specific revision.
-REVISION = os.environ.get("AIREP_INTEROP_REVISION", "v0.2")
-CORPUS = REPO / "interop/independent-verifier-corpus"
-OUT = CORPUS / REVISION
+from revision import REPO, OUT, REVISION  # noqa: E402
 SRC = "spec/airep/v0.2"
 
 # Stage 4 -- producer-signature verification -- has a prerequisite. Contract section 4

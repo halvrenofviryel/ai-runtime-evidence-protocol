@@ -1,0 +1,3 @@
+AIREP/0.2/sig/head-witness
+ed25519
+{"chain_id":"chain-alpha-0001","current":"sha256:4d4d9cffb8b74dceedaf48ade5306ad822ad595d5955b489479baa20fc441b58","length":1,"sequence":0,"witnessed_at":"2026-08-22T12:00:00Z"}
