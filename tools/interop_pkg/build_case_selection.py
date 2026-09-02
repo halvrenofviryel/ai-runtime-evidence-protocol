@@ -11,7 +11,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-OUT = Path("/mnt/data/claude/ai-runtime-evidence-protocol/interop/independent-verifier-corpus/v0.1")
+from revision import OUT  # noqa: E402
 
 RULES = {
  "CLS-P1":("INTEGRITY §2,§3; contract §3 stages 0-5","JCS, SHA-256, Ed25519, schema, trust binding, revocation"),

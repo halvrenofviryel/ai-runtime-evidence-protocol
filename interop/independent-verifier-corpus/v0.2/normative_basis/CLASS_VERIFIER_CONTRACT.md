@@ -1,0 +1,661 @@
+# AIREP v0.2 — Class-Verifier Implementation Contract (contract only)
+
+> **Status: CONTRACT for maintainer review — no class-verifier code exists yet.**
+> Spec-before-code, as with every prior stage: the machine output surface and reason vocabulary
+> are frozen here, *then* two verifiers are authored independently. Producer implementation
+> remains unstarted.
+>
+> **Frozen inputs (expressed, never re-decided):** the accepted
+> [`../conformance-design/CONFORMANCE_CLASS_DESIGN.md`](../conformance-design/CONFORMANCE_CLASS_DESIGN.md)
+> (ladder, snapshot revocation, three-condition independence, three-class withheld model,
+> sorted reason sets, Stage-4 freshness predicate, trust-policy digest evidence), the frozen
+> [`../INTEGRITY.md`](../INTEGRITY.md), and the accepted artifact schemas. A defect found in
+> any of those during implementation is a **maintainer finding**, never a silent fix.
+>
+> **Evidence boundary:** class verification produces provenance/integrity/freshness assurance
+> statements only. No class makes a producer honest or any recorded content true.
+
+## 0. Evaluation request envelope (the verifier's evidence input)
+
+The three §1 inputs are **operator policy**; this is the **evidence** the verifier evaluates.
+It is a harness/invocation object, **never an AIREP wire artifact**, and it is closed
+(unknown members rejected):
+
+```jsonc
+{
+  "artifact": { … },                     // the primary AIREP artifact under evaluation
+  "related_artifacts": [ { … }, … ],     // zero or more AIREP artifacts, for reference resolution
+  "head_witness": {                      // optional; absent ⇒ no-witness-supplied (§5)
+    "head_ref":   { "record_id": "…", "chain_id": "…" },       // v0.2 artifact-reference semantics; chain_id optional
+    "witness_id": "…",                                          // binding lookup key ONLY
+    "claim":      { "chain_id": "…", "sequence": N, "current": "sha256:…",
+                    "length": N, "witnessed_at": "…" },         // the frozen exact five-member claim
+    "signature":  { "alg": "…", "value": "<128 lowhex>" }
+  }
+}
+```
+
+Resolution rules (identical in both implementations):
+
+- **Reference resolution** (`head_ref`, an Effect's `execution_ref`, any `decision_ref` a stage
+  needs) searches `artifact` + `related_artifacts` by v0.2 reference semantics: match on
+  `record_id`, additionally on `chain_id` when the reference carries one.
+- **Zero matches ⇒ unresolved** (`witness-head-unresolved`, or the observer path treats the
+  Execution artifact as unavailable ⇒ `unknown`). **More than one match ⇒ ambiguous, fail
+  closed** — the same reason as unresolved; a verifier MUST NOT pick one.
+- `head_witness.claim` is the frozen five-member claim verbatim (INTEGRITY §4); its structural
+  validation is the frozen rule, not a new one.
+- `witness_id` is **only** a `witness_bindings` lookup key. It is never evidence of
+  independence (design §3) and never a substitute for a resolved key.
+- **The witness must witness THIS artifact** (maintainer, 2026-08-23): to earn
+  `AIREP-Witnessed`, `head_witness.head_ref` MUST resolve **uniquely to the primary
+  `artifact`** itself. Resolving to any `related_artifacts` member is `witness-head-mismatch`
+  — a valid witness over some *other* artifact never confers Witnessed on the primary.
+  `related_artifacts` exists for context and reference resolution only; it never transports
+  another artifact's class.
+- The Effect observer path (§3) resolves the Execution artifact through `execution_ref`, then
+  **verifies that Execution artifact to Authenticated in its own right** (its schema, frozen
+  hash recomputation, producer binding, revocation snapshot and signature), and only then
+  compares identities/keys. An unresolved or ambiguous Execution artifact, or one that does not
+  itself reach Authenticated, yields `observer_assessment = "unknown"` — never `independent`;
+  an attacker-supplied unauthenticated Execution artifact therefore cannot manufacture the
+  appearance of independence. The primary Effect artifact's own class is unaffected by this.
+
+## 1. Operator-input JSON formats (network-free, v1)
+
+Three operator inputs. All are local JSON; unknown members are rejected (fail closed).
+
+**Two identifier classes, deliberately different** (maintainer, 2026-08-23): *verifier-side*
+identifiers — `binding_id`, `subject_identity`, `snapshot_id`, and the independence-pair
+endpoints — MUST match the accepted namespaced grammar
+`^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$`. *Wire-carried* ids — `subject.producer` and
+`head_witness.witness_id` — are **opaque, exact JSON strings**, compared byte-for-byte and
+never constrained: the accepted artifact schema types `subject.producer` as a plain `string`
+(verified), and a wire id carries no identity assurance in the first place.
+
+### 1.1 Binding store (`--bindings`)
+
+```jsonc
+{
+  "bindings": {
+    "<binding_id>": {                      // verifier-side binding id (namespaced)
+      "subject_identity": "<namespaced id>",  // the identity this binding attests (NOT a wire-carried id)
+      "role": "producer" | "witness",
+      "public_key_hex": "<64 lowercase hex>", // Ed25519 raw public key
+      "suite": "ed25519",                     // from the closed suite registry
+      "trusted": true                          // MUST be literally true
+    }
+  },
+  "producer_bindings": { "<opaque wire producer id>": "<binding_id>" },
+  "witness_bindings":  { "<opaque wire witness id>":  "<binding_id>" }
+}
+```
+
+- **Two separate maps, exact lookup** (maintainer, 2026-08-23): the artifact's producer is
+  looked up in `producer_bindings` by the exact string `artifact.subject.producer`; the witness
+  is looked up in `witness_bindings` by the exact string `head_witness.witness_id`. A binding
+  referenced from `producer_bindings` MUST have `role: "producer"` and one referenced from
+  `witness_bindings` MUST have `role: "witness"`; otherwise `*-binding-malformed`. A single map
+  is forbidden precisely so that the same wire token appearing in both roles is never coerced
+  by verifier policy into one identity.
+- Binding acceptance outcomes **defer to the registry (§5)**, not to a blanket "withheld":
+  absent entry ⇒ `*-binding-missing` (WITHHELD); `trusted` present but not literally `true` ⇒
+  `*-binding-not-trusted` (**FAILURE** — the operator policy's definitive negative); `trusted`
+  absent, malformed key, wrong `role`, or otherwise ill-formed entry ⇒ `*-binding-malformed`
+  (WITHHELD); unregistered `suite` ⇒ `*-suite-unsupported` (WITHHELD).
+- `subject_identity` is the verifier's own statement of *who* the binding attests; two
+  bindings with different `binding_id` but the same `subject_identity` are **the same
+  identity** for independence purposes (§1.2, §3).
+
+### 1.2 Independence policy (`--independence-policy`)
+
+```jsonc
+{
+  "independent_pairs": [
+    { "a": "<binding_id>", "b": "<binding_id>" }   // unordered; explicitly accepted as independent
+  ],
+  "non_independent_pairs": [
+    { "a": "<binding_id>", "b": "<binding_id>" }   // explicitly declared NOT independent
+  ]
+}
+```
+
+- A pair is independent **only** when listed in `independent_pairs`. Absence is *unproven*,
+  never independent. Presence in `non_independent_pairs` is a definitive failure, and a pair
+  listed in both is a **malformed policy** (fail closed).
+
+### 1.3 Revocation snapshot (`--revocation`)
+
+```jsonc
+{
+  "snapshot_id": "<namespaced id>",        // names this policy snapshot
+  "bindings": { "<binding_id>": { "state": "active" | "revoked" } }
+}
+```
+
+- State is per **binding_id**, never per wire-carried key id, and carries **no timestamps**:
+  the snapshot model deliberately admits no time comparison (design §4).
+- A binding required by an evaluation with no entry, or an entry whose `state` is neither
+  value, is **missing/malformed** ⇒ that tier is withheld (§4), never passed.
+
+### 1.4 Clock inputs
+
+`--now` (`YYYY-MM-DDTHH:MM:SS(.1-9)?Z`) and `--freshness-window` (integer seconds ≥ 0) are
+required for Witnessed evaluation. `--now` makes verdicts deterministic and is echoed in the
+evidence (§2). Two distinct outcomes, pinned so the runtimes cannot diverge on parsing
+(maintainer, 2026-08-23):
+
+- **Absent** ⇒ Witnessed withheld with `freshness-inputs-missing` (a normal verdict is still
+  produced).
+- **Present but malformed** — `--now` structurally invalid or not a valid Gregorian datetime,
+  or `--freshness-window` non-integer or negative ⇒ **CLI usage/config error: exit 2, no
+  verdict emitted**. No new reason code is introduced, and no engine's lenient date parsing
+  can leak into a class result.
+
+## 2. Normalized verdict envelope
+
+One object per evaluated artifact:
+
+```jsonc
+{
+  "artifact_ref": { "chain_id": "…", "record_id": "…" },   // structured, never a concatenated string
+  "class": "AIREP-Core" | "AIREP-Authenticated" | "AIREP-Witnessed",
+  "authenticated_failures":  ["<reason>", ...],
+  "authenticated_withheld":  ["<reason>", ...],
+  "authenticated_caveats":   ["<reason>", ...],
+  "witnessed_failures":      ["<reason>", ...],
+  "witnessed_withheld":      ["<reason>", ...],
+  "observer_assessment": "same_executor" | "independent" | "unknown" | "not_applicable",
+  "evidence": {
+    "now": "<timestamp or null>",
+    "freshness_window_seconds": <integer or null>,
+    "bindings_digest":    "sha256:<64 lowhex> | null",
+    "independence_policy_digest": "sha256:<64 lowhex> | null",
+    "revocation_digest":  "sha256:<64 lowhex> | null"
+  }
+}
+```
+
+Rules:
+
+- All five reason arrays are **present always** (empty when nothing applies), each
+  deduplicated and ASCII-ascending — sorted sets, not first-decisive (design §6).
+- `class` carries exactly one of the three values; no pseudo-class, ever.
+- Consistency invariants (verifier MUST satisfy; comparator MUST check): a non-empty
+  `authenticated_failures` or `authenticated_withheld` ⇒ `class == AIREP-Core`; a non-empty
+  `witnessed_failures` or `witnessed_withheld` ⇒ `class != AIREP-Witnessed`;
+  `authenticated_caveats` non-empty ⇒ `class != AIREP-Core`; `class == AIREP-Witnessed` ⇒ all
+  four failure/withheld arrays empty.
+- `observer_assessment` is `not_applicable` for non-Effect artifacts; for Effect artifacts it
+  is the *effective* assessment after §3 (never the raw wire value when that value is
+  `independent` and independence is not verified).
+- Input digests are the SHA-256 of the exact input file bytes (`null` when that input was not
+  supplied), so a verdict names the trust-policy snapshot it came from.
+- **Identity is structured, not concatenated:** `chain_id`/`record_id` are free-form core
+  strings that may contain `/`, so a `"<chain_id>/<record_id>"` key would be ambiguous. The
+  verdict carries the pair as an object.
+- Results file: `{"verdicts": [ {…}, … ]}` — a **deterministically ordered array** sorted by
+  `(chain_id, record_id)` under **unsigned lexicographic order over each string's UTF-8 byte
+  sequence, with no Unicode normalization** (maintainer, 2026-08-23: these are free-form core
+  strings that may be non-ASCII, and Python code-point order vs JavaScript UTF-16 order
+  diverge on some characters — byte order is the one both runtimes can implement identically).
+  A **duplicate `(chain_id, record_id)` tuple makes the run invalid** — the **verifier
+  MUST reject; the comparator MUST independently gate** (see §9 R-10).
+  Trailing newline, no metadata, byte-deterministic across runs. Reason arrays remain
+  ASCII-ascending: the registry is ASCII by construction, so the two rules never conflict.
+
+## 3. Evaluation order and dependencies
+
+The **frozen constructions are used, never redesigned**: the class layer invokes the frozen
+hash/domain-tag recomputation, the frozen record-signature preimage, and the frozen
+head-witness claim/preimage/reconciliation/freshness rules — each **at the tier where the
+accepted class design places it**. It does NOT call the Stage-4 artifact verifier program as
+one indivisible Core prerequisite: that program's artifact path includes producer binding and
+signature verification, and folding it into Core would deny Core to a hash-consistent artifact
+that merely lacks a binding, contradicting the accepted design (Core = schema + internal hash
+consistency; Authenticated = the signature/binding layer).
+
+**Class-earning path vs diagnostic path (maintainer clarification):** Authenticated not
+earned ⇒ **Witnessed can never be earned**. But when the witness-side inputs are locally
+present, stages 6–10 still run **diagnostically** and populate `witnessed_failures` /
+`witnessed_withheld` — the cross-tier case (revoked producer + a perfect witness) reports
+`class = AIREP-Core` **with the witness channels evaluated and reported**, never silently
+skipped.
+
+| # | Stage | Outcome |
+|---|---|---|
+| 0 | Artifact validity: accepted family **schema** validation | Rejection ⇒ **no class at all** (not a well-formed v0.2 artifact); reported as invalid, never as Core |
+| 1 | **Core** — frozen hash/domain-tag recomputation over the declared `(airep_version, artifact_type)` pair | Mismatch ⇒ **no class at all** (invalid); success ⇒ `class = AIREP-Core` |
+| 2 | Producer binding resolution (§1.1) | not accepted / missing ⇒ `authenticated_withheld` |
+| 3 | Producer revocation snapshot (§1.3) | `revoked` ⇒ `authenticated_failures`; missing/malformed ⇒ `authenticated_withheld` |
+| 4 | Signature verification over the **frozen record-signature preimage** under the binding-derived suite | invalid ⇒ `authenticated_failures` |
+| 5 | **Authenticated** iff 2–4 all clean | `class = AIREP-Authenticated`; self-declared revocation and wire-`alg` mismatch land in `authenticated_caveats` |
+| 6 | Witness head resolution + claim reconciliation (frozen §4.3) | unresolved/mismatch ⇒ `witnessed_failures`; no witness present ⇒ `witnessed_withheld` (`no-witness-supplied`) |
+| 7 | Witness binding resolution + revocation snapshot | as 2–3, into the `witnessed_*` channels |
+| 8 | Independence (§1.2 + design §3, three conditions) | explicit non-independent / same identity / same key ⇒ `witnessed_failures`; policy relation absent ⇒ `witnessed_withheld` |
+| 9 | Witness signature verification | invalid ⇒ `witnessed_failures` |
+| 10 | Freshness: `abs(now − witnessed_at) <= window` | outside ⇒ `witnessed_failures`; `now`/window absent ⇒ `witnessed_withheld` |
+| 11 | **Witnessed** iff 6–10 all clean **and** Authenticated was earned | `class = AIREP-Witnessed` |
+
+Observer assessment (Effect artifacts, evaluated at stage 5 and above): `independent` on the
+wire is accepted only when the Effect and Execution producer bindings satisfy the same three
+conditions as §1.2/§3; otherwise the effective assessment is `unknown` — and the artifact's
+class does not drop for it.
+
+## 4. Withheld vs failure (binding distinction)
+
+- **FAILURE** = a gate ran and produced a definitive negative.
+- **WITHHELD** = a gate could not run (missing/malformed operator input, absent witness).
+- **CAVEAT** = a gate ran, the tier is earned, and something must nevertheless be surfaced.
+
+A withheld tier never reads as failed and never as passed. Partial operator input never
+silently falls back; each unrunnable gate is named.
+
+**Reason dependency rule (maintainer, 2026-08-23 — binding on both implementations).** A gate
+whose own required prerequisite is absent or failed **emits no derivative reason at all**
+(neither FAILURE nor WITHHELD): the prerequisite's own reason is the complete account. Gates
+that do *not* depend on that prerequisite continue to run diagnostically. The dependency graph
+is closed and exhaustive:
+
+| Gate (stage) | Required prerequisites |
+|---|---|
+| producer binding (2) | — |
+| producer revocation (3) | producer binding accepted |
+| producer signature (4) | producer binding accepted **and** not revoked |
+| witness head resolution + reconciliation (6) | `head_witness` present |
+| witness binding + revocation (7) | stage 6 clean |
+| independence (8) | producer binding accepted **and** witness binding accepted (stage 7 clean) **and** independence policy present |
+| witness signature (9) | stage 7 clean |
+| freshness (10) | stage 6 clean **and** clock inputs present |
+
+Worked consequences (the exact questions two authors would otherwise answer differently):
+producer binding missing ⇒ **no** revocation or signature reason; producer binding revoked ⇒
+**no** signature reason; witness binding missing ⇒ **no** independence or witness-signature
+reason, while freshness still runs if the claim is valid and the clock is supplied; a
+malformed witness claim (stage 6) ⇒ **no** stages 7–10 reasons at all.
+
+## 5. Closed reason registry
+
+Every reason is exactly one `(tier, channel)` pair. No aliases, no free-form strings, no
+reason finer than the verifier can actually distinguish (Stage-4 coarseness rule).
+
+| Reason | Tier | Kind |
+|---|---|---|
+| `producer-binding-missing` | authenticated | WITHHELD |
+| `producer-binding-not-trusted` | authenticated | FAILURE |
+| `producer-binding-malformed` | authenticated | WITHHELD |
+| `producer-suite-unsupported` | authenticated | WITHHELD |
+| `producer-revocation-state-missing` | authenticated | WITHHELD |
+| `producer-revocation-state-malformed` | authenticated | WITHHELD |
+| `producer-binding-revoked` | authenticated | FAILURE |
+| `producer-signature-invalid` | authenticated | FAILURE |
+| `producer-key-self-revoked` | authenticated | CAVEAT |
+| `wire-alg-mismatch` | authenticated | CAVEAT |
+| `no-witness-supplied` | witnessed | WITHHELD |
+| `witness-binding-missing` | witnessed | WITHHELD |
+| `witness-binding-not-trusted` | witnessed | FAILURE |
+| `witness-binding-malformed` | witnessed | WITHHELD |
+| `witness-suite-unsupported` | witnessed | WITHHELD |
+| `witness-revocation-state-missing` | witnessed | WITHHELD |
+| `witness-revocation-state-malformed` | witnessed | WITHHELD |
+| `independence-policy-missing` | witnessed | WITHHELD |
+| `independence-policy-malformed` | witnessed | WITHHELD |
+| `independence-relation-absent` | witnessed | WITHHELD |
+| `freshness-inputs-missing` | witnessed | WITHHELD |
+| `witness-binding-revoked` | witnessed | FAILURE |
+| `witness-head-unresolved` | witnessed | FAILURE |
+| `witness-head-mismatch` | witnessed | FAILURE |
+| `witness-claim-invalid` | witnessed | FAILURE |
+| `witness-identity-not-distinct` | witnessed | FAILURE |
+| `witness-key-not-distinct` | witnessed | FAILURE |
+| `independence-explicitly-denied` | witnessed | FAILURE |
+| `witness-signature-invalid` | witnessed | FAILURE |
+| `witness-time-invalid` | witnessed | FAILURE |
+| `witness-freshness-outside-window` | witnessed | FAILURE |
+
+Adding a reason is a contract change (this table + the adversarial matrix updated together).
+
+Notes fixing three things implementers would otherwise decide:
+
+- **`*-binding-not-trusted` is a FAILURE, not WITHHELD** (maintainer): an entry present with
+  `trusted` not literally `true` is the operator policy's explicit, definitive negative — the
+  gate ran. A *missing* `trusted` member, or a malformed/absent entry, remains
+  `*-binding-malformed` / `*-binding-missing` (WITHHELD): the gate could not run.
+- **`witness-freshness-outside-window`** replaces the earlier `witness-stale` name: the pinned
+  predicate is symmetric (`abs(now − witnessed_at) <= window`), so past-stale and
+  future-beyond-window are one coarse reason — correct under the Stage-4 coarseness rule, and
+  the old name mis-described the future case.
+- **Caveat sources are pinned, not inferred.** `producer-key-self-revoked` is emitted iff
+  `profiles["airep.key-trust"].revocation.revoked === true` on the artifact — profile
+  semantics only, which **never** substitute for the external operator revocation snapshot and
+  never change the class. `wire-alg-mismatch` is emitted iff the wire
+  `integrity.signature.alg`, compared **ASCII case-insensitively**, differs from the
+  binding-derived suite id (so wire `"Ed25519"` against binding suite `ed25519` is **not** a
+  mismatch); the wire field never selects cryptographic behaviour.
+
+## 6. Parity contract (two independent implementations)
+
+Python and Node class verifiers, authored in **separate fresh contexts** under mandates that
+forbid reading each other's source/output, the corpus builder, and any fixture's expected
+values. Hard gates, checked by a third comparator independent of both:
+
+1. identical `class` per artifact;
+2. identical **sorted reason sets** in all five channels;
+3. identical `observer_assessment`;
+4. identical exit-code semantics, **pinned exactly** (exit encodes run validity only — never a
+   class):
+   - `0` — evaluation completed; the presence of FAILURE / WITHHELD / CAVEAT reasons does
+     **not** change the exit code;
+   - `1` — the evaluation request, an artifact, or an operator file could not be parsed,
+     stage-0/1 artifact validity failed, or a **batch-level run-identity invariant**
+     failed (a duplicate `(chain_id, record_id)` tuple in the produced verdict set,
+     §9 R-10), so no results file is emitted;
+   - `2` — CLI usage error;
+   - `--help` — `0`, with nothing evaluated and no verdict emitted.
+   A parseable-but-malformed **tier-relevant** binding / policy / revocation entry becomes a
+   registry WITHHELD or FAILURE reason (§5) — never a process failure;
+5. identical evidence block (`now`, window, three input digests);
+6. verdict-envelope shape gates (all five arrays present, sorted, deduplicated, registry-only
+   reasons, class value legal, §2 consistency invariants);
+7. each verdict equals the fixture's expected verdict (expected read by the comparator only).
+
+Committed negative proofs MUST show the comparator failing on: a flipped expected class; a
+mutated reason set; a §2 invariant violation (e.g. `class=AIREP-Witnessed` with a non-empty
+withheld array).
+
+## 7. Minimum adversarial matrix
+
+**Expected outcomes are pinned per case, before implementation.** Every fixture in the corpus
+carries an explicit expected `class`, expected contents of **all five** reason channels, and
+the expected `observer_assessment`. Case names alone are not a specification.
+
+**Authoring isolation (maintainer rule):** the expected sets are produced in a **third
+context** directly from this contract; the two verifier authors never see them. Expected
+semantics are therefore never derived backwards from verifier output.
+
+**Complete expected-outcome appendix.** Every case below is pinned here — `class`, the
+contents of **all five** channels, and `observer_assessment`. The third-context corpus author
+**copies** these; it does not interpret them. Channel contents assume the case's own tamper and
+nothing else (all other inputs clean and supplied); reason arrays are shown in their required
+ASCII-ascending order, and `—` means the empty array `[]`. `observer` is `not_applicable`
+except on Effect artifacts, where it is stated.
+
+Positives are part of the minimum, not an afterthought — an all-negative corpus is
+insufficient: **P1–P3** are the clean Authenticated, clean Witnessed, and
+verified-independent-observer cases, and **FR3** is the boundary-equal pass.
+
+Legend for the channel columns: `A-fail / A-withheld / A-caveats` and `W-fail / W-withheld`.
+
+| # | Case | class | A-fail / A-withheld / A-caveats | W-fail / W-withheld | observer |
+|---|---|---|---|---|---|
+| P1 | Clean artifact, no witness supplied | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `not_applicable` |
+| P2 | Clean artifact + clean witness over this artifact | `AIREP-Witnessed` | — / — / — | — / — | `not_applicable` |
+| P3 | Clean Effect, verified-independent observer, no witness | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `independent` |
+| PB1 | Producer binding revoked | `AIREP-Core` | `producer-binding-revoked` / — / — | — / `no-witness-supplied` | — |
+| PB2 | Producer binding missing | `AIREP-Core` | — / `producer-binding-missing` / — | — / `no-witness-supplied` | — |
+| PB3 | Producer binding `trusted` not literally `true` | `AIREP-Core` | `producer-binding-not-trusted` / — / — | — / `no-witness-supplied` | — |
+| PB4 | Producer binding malformed (bad key / wrong `role` / no `trusted`) | `AIREP-Core` | — / `producer-binding-malformed` / — | — / `no-witness-supplied` | — |
+| PB5 | Producer binding names an unregistered suite | `AIREP-Core` | — / `producer-suite-unsupported` / — | — / `no-witness-supplied` | — |
+| PB6 | Producer revocation state absent from the snapshot | `AIREP-Core` | — / `producer-revocation-state-missing` / — | — / `no-witness-supplied` | — |
+| PB7 | Producer revocation state malformed | `AIREP-Core` | — / `producer-revocation-state-malformed` / — | — / `no-witness-supplied` | — |
+| PS1 | Producer signature invalid | `AIREP-Core` | `producer-signature-invalid` / — / — | — / `no-witness-supplied` | — |
+| PS2 | Valid signature, wire `alg` names another suite | `AIREP-Authenticated` | — / — / `wire-alg-mismatch` | — / `no-witness-supplied` | — |
+| PS3 | Valid signature, `airep.key-trust` self-declared revocation | `AIREP-Authenticated` | — / — / `producer-key-self-revoked` | — / `no-witness-supplied` | — |
+| WB1 | Witness binding revoked | `AIREP-Authenticated` | — / — / — | `witness-binding-revoked` / — | — |
+| WB2 | Witness binding missing | `AIREP-Authenticated` | — / — / — | — / `witness-binding-missing` | — |
+| WB3 | Witness binding `trusted` not literally `true` | `AIREP-Authenticated` | — / — / — | `witness-binding-not-trusted` / — | — |
+| WB4 | Witness binding malformed (bad key / wrong `role` / no `trusted`) | `AIREP-Authenticated` | — / — / — | — / `witness-binding-malformed` | — |
+| WB5 | Witness binding names an unregistered suite | `AIREP-Authenticated` | — / — / — | — / `witness-suite-unsupported` | — |
+| WB6 | Witness revocation state absent | `AIREP-Authenticated` | — / — / — | — / `witness-revocation-state-missing` | — |
+| WB7 | Witness revocation state malformed | `AIREP-Authenticated` | — / — / — | — / `witness-revocation-state-malformed` | — |
+| IND1 | Witness and producer resolve to the same public key (different `binding_id`s) | `AIREP-Authenticated` | — / — / — | `witness-key-not-distinct` / — | — |
+| IND2 | Different keys, same `subject_identity` | `AIREP-Authenticated` | — / — / — | `witness-identity-not-distinct` / — | — |
+| IND3 | Distinct keys and identities, pair absent from the policy | `AIREP-Authenticated` | — / — / — | — / `independence-relation-absent` | — |
+| IND4 | Pair listed in `non_independent_pairs` | `AIREP-Authenticated` | — / — / — | `independence-explicitly-denied` / — | — |
+| IND5 | Pair listed in **both** lists (malformed policy) | `AIREP-Authenticated` | — / — / — | — / `independence-policy-malformed` | — |
+| IND6 | No independence-policy input supplied | `AIREP-Authenticated` | — / — / — | — / `independence-policy-missing` | — |
+| WM1 | Witness claim structurally invalid | `AIREP-Authenticated` | — / — / — | `witness-claim-invalid` / — | — |
+| WM2 | Witness signature forged/invalid | `AIREP-Authenticated` | — / — / — | `witness-signature-invalid` / — | — |
+| WM3 | `head_ref` resolves to nothing | `AIREP-Authenticated` | — / — / — | `witness-head-unresolved` / — | — |
+| WM4 | `head_ref` resolves, claim does not reconcile with the head | `AIREP-Authenticated` | — / — / — | `witness-head-mismatch` / — | — |
+| WM5 | `head_ref` resolves to a **related** artifact, not the primary | `AIREP-Authenticated` | — / — / — | `witness-head-mismatch` / — | — |
+| WM6 | `head_ref` matches two artifacts (ambiguous) | `AIREP-Authenticated` | — / — / — | `witness-head-unresolved` / — | — |
+| FR1 | Signed `witnessed_at` older than the window | `AIREP-Authenticated` | — / — / — | `witness-freshness-outside-window` / — | — |
+| FR2 | Signed `witnessed_at` beyond the window in the future | `AIREP-Authenticated` | — / — / — | `witness-freshness-outside-window` / — | — |
+| FR3 | Distance exactly equal to the window | `AIREP-Witnessed` | — / — / — | — / — | `not_applicable` |
+| FR4 | Clock inputs absent | `AIREP-Authenticated` | — / — / — | — / `freshness-inputs-missing` | — |
+| PI1 | Only the binding store supplied (no revocation, no policy, no clock) | `AIREP-Core` | — / `producer-revocation-state-missing` / — | — / `freshness-inputs-missing`, `witness-revocation-state-missing` | — |
+| PI2 | Bindings + revocation, no independence policy | `AIREP-Authenticated` | — / — / — | — / `independence-policy-missing` | — |
+| PI3 | Everything except `--now` | `AIREP-Authenticated` | — / — / — | — / `freshness-inputs-missing` | — |
+| OB1 | Effect; Execution Authenticated, identities/keys distinct, policy relation present | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `independent` |
+| OB2 | Effect; distinct keys but no policy relation | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `unknown` |
+| OB3 | Effect declaring `same_executor` | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `same_executor` |
+| OB4 | Effect claiming `independent`; referenced Execution does **not** reach Authenticated | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `unknown` |
+| OB5 | Effect claiming `independent`; `execution_ref` unresolved or ambiguous | `AIREP-Authenticated` | — / — / — | — / `no-witness-supplied` | `unknown` |
+| XT1 | Producer binding revoked **and** a clean witness over this artifact | `AIREP-Core` | `producer-binding-revoked` / — / — | — / — | — |
+
+PI1 shows the dependency rule at work: the witness binding stage is withheld for its own
+missing revocation state, so independence and witness-signature emit nothing, while freshness
+still reports its own missing clock. XT1 shows the diagnostic path: the ceiling is Core, and
+the witness channels are nevertheless evaluated and reported clean.
+
+## 8. Out of scope
+
+Producers; reconciliation (TOCTOU equality, reference resolution, lifecycle completeness —
+outside the ladder by design §7); SCITT anchoring (design ODQ-7); N-of-M witness quorum;
+online revocation, transparency-log proofs, nonce/challenge freshness; any change to the
+frozen integrity construction or the accepted schemas.
+
+## 9. Source-review rulings — normative (maintainer, 2026-08-24)
+
+> Raised by the maintainer's **source-level** review of the two independently authored class
+> verifiers, before any comparator run, and closed by maintainer ruling after both authors
+> reported a conflict in the first draft of this section. These rulings are **normative** and
+> bind every implementation. They change no expected value in §7.
+>
+> **Process note, stated at its correct strength:** independent review of two separately
+> authored implementations surfaced the same specification conflict (R-1 below). That is
+> evidence the independent-authoring process works; it is **not** a proof of implementation
+> independence, and must not be described as one.
+
+**R-1 — `claim` is NOT harness-level closure. (The first draft of E-4 named `claim`; that
+clause is WITHDRAWN.)** The content of `head_witness.claim` in the §0 evaluation request is
+**not** part of the envelope's harness closure. The claim is the evidence object of frozen
+INTEGRITY §4.2 and is evaluated on its own semantic-verifier path. Extra, missing or
+wrong-typed claim members are **never run-invalid**: they produce **`witness-claim-invalid`**.
+Corpus case WM1 therefore remains the 45th verdict, not an aborted run.
+
+**R-2 — Stage 6 uses a single dependent failure precedence; shape and time never both
+report.** These are not independent gates but dependent sub-steps of one witness-head gate, so
+reporting one reason is consistent with §2's sorted-reason-set rule. The exact order is:
+
+1. **6a — claim structural + lexical validity** (closed five-member set, member types, and the
+   E-1 source-token rule) ⇒ on failure, **`witness-claim-invalid`** alone; 6b and 6c do not run.
+2. **6b — head resolution, must-be-primary, reconciliation** ⇒ on failure,
+   **`witness-head-unresolved`** or **`witness-head-mismatch`** alone; 6c does not run.
+3. **6c — `witnessed_at` format + Gregorian validity** ⇒ on failure, **`witness-time-invalid`**.
+   **Clock inputs play no part in this check.**
+
+Stage 6 is clean only when all three pass. Stage 10 is **recency only**:
+`abs(now − witnessed_at) <= window`. This order matches the frozen Stage-4 sequence — claim
+structure → reconcile → timestamp validity.
+
+**R-3 — Binding precedence: structural malformation precedes the semantic trust decision.** If
+a referenced binding entry, or a required container, is structurally malformed, the result is
+**`*-binding-malformed`** (WITHHELD) and a `trusted: false` on the same entry does **not**
+additionally produce `*-binding-not-trusted`. **`*-binding-not-trusted`** (FAILURE) applies
+only when the input is structurally valid and `trusted` is present but not literally `true`.
+So: unknown member + `trusted: false` ⇒ **malformed only**; clean entry + `trusted: false` ⇒
+**not-trusted only**.
+
+**R-4 — §0 nested envelope closure is limited to `head_ref` and `signature`.** An unknown
+member in either of those two harness objects remains run-invalid. **No new requiredness is
+created:** a missing or unusable `head_ref.record_id` ⇒ `witness-head-unresolved`; a missing,
+wrong-typed or cryptographically invalid `signature.value` ⇒ `witness-signature-invalid`;
+`signature.alg` is informative-only, so its absence affects neither the cryptography nor the
+class, and its presence still selects nothing (frozen INTEGRITY §3.2). E-4 therefore adds
+closure only — it creates no new semantic reason surface.
+
+**R-5 — Reconciliation failure is `witness-head-mismatch`.** A structurally valid claim whose
+uniquely resolved primary head disagrees on `chain_id`, `sequence` or `current` fails with
+**`witness-head-mismatch`** — the same reason as resolving to a non-primary artifact.
+`witness-claim-invalid` stays reserved for intrinsic claim defects. This matches §7's WM4
+expectation.
+
+**R-6 — Producer signature dependency unchanged (confirmation).** Stage 4's prerequisite is
+"binding accepted **and** not definitively revoked". A missing or malformed revocation state is
+not "revoked": the signature gate still runs diagnostically while Authenticated remains
+withheld for the unresolvable revocation state. Recorded so it is not "fixed" later by mistake.
+
+**R-7 — Missing known `head_witness` evidence members are semantic evidence
+failures/withholding, not harness run-invalidity.** Raised independently by both
+implementations after the R-1..R-6 round: each treated all four `head_witness` members as
+harness-required and exited 1 when any was absent, while §0 declares only the `head_witness`
+object itself optional and R-1/R-4 do not close sub-member requiredness. The governing
+distinction is: **absence of a KNOWN evidence field fails or withholds the tier evaluation;
+structure FOREIGN to the harness invalidates the run.** Exact behaviour:
+
+| Input | Result |
+|---|---|
+| `head_witness` entirely absent | `no-witness-supplied` (WITHHELD) — unchanged, already measured by 17 corpus cases |
+| `head_witness` present but `null` / non-object | **run-invalid, exit 1** |
+| unknown member inside `head_witness` | **run-invalid, exit 1** — envelope closure preserved |
+| `claim` absent / non-object / structurally invalid | `witness-claim-invalid` (FAILURE) |
+| `head_ref` absent / non-object / no usable `record_id` | `witness-head-unresolved` (FAILURE), **if 6a is clean** |
+| `witness_id` absent / non-string | `witness-binding-missing` (**WITHHELD**), **if stage 6 is clean** |
+| `signature` absent / non-object, or `signature.value` absent / wrong-typed | `witness-signature-invalid` (FAILURE), **if stage 7 is clean** |
+| `head_ref` or `signature` present as an object carrying an unknown member | **run-invalid** — R-4 is unchanged |
+
+Two consequences implementations MUST NOT diverge on:
+
+1. **Channel assignment follows §5, not intuition.** `no-witness-supplied` and
+   `witness-binding-missing` are WITHHELD and go to `witnessed_withheld`;
+   `witness-claim-invalid`, `witness-head-unresolved` and `witness-signature-invalid` are
+   FAILURE and go to `witnessed_failures`. No new reason code is introduced — all five are
+   already in the closed §5 registry.
+2. **R-2's dependency precedence applies unchanged.** The reason emitted is the first one
+   *reachable* under the stage order, not every one that would independently apply. If both
+   `claim` and `signature` are absent, the result is `witness-claim-invalid` alone.
+
+R-7 changes no §7 expected value: no corpus case supplies a `head_witness` with a missing
+sub-member, and the entirely-absent path is unchanged.
+
+**R-8 — `witness_id` usability precedes binding-store resolution at Stage 7.** Both
+implementations independently reported that an absent `witness_id` combined with a malformed
+binding store yields `witness-binding-malformed`. Their agreement surfaced the specification
+gap; it does **not** make the behaviour normative. Stage 7 is pinned as three dependent
+sub-steps, in this order:
+
+1. **7a — witness identifier usability.** When stage 6 is clean, an absent or non-string
+   `witness_id` emits **`witness-binding-missing`** (WITHHELD) and stage 7 stops there.
+2. **7b — witness binding-store resolution.** Runs only when 7a is clean. The store, the
+   `witness_bindings` map and the referenced entry are evaluated here, under R-3: a malformed
+   store or entry ⇒ `witness-binding-malformed`; a well-formed store with no map entry for the
+   id ⇒ `witness-binding-missing`; the trusted and suite rules follow.
+3. **7c — witness revocation.** Runs only after an accepted witness binding.
+
+The governing combination is therefore: **absent `witness_id` + malformed binding store ⇒
+`witness-binding-missing` alone.**
+
+The reason is not that the store's malformation is excused. With no `witness_id`, the verifier
+has not yet determined *which* witness binding it would evaluate, so the store-resolution gate
+is never reached. The same malformed store may still independently produce
+`producer-binding-malformed` on the producer path — that path resolves its own wire id and does
+reach the gate.
+
+This inverts the current order in both implementations, which resolve the store before checking
+the wire id. R-8 changes no §7 expected value: no corpus case combines an absent `witness_id`
+with a malformed store.
+
+**R-9 — Single-request mode emits to stdout; `--out` belongs to batch mode only.** Official
+parity run 1 measured a divergence on an unpinned CLI shape: given `--request FILE --out PATH`,
+one implementation refused with exit 2 while the other exited 0, **silently ignored `--out`**,
+wrote the verdict to stdout and created no file. Silently discarding a destination the operator
+explicitly supplied is bad fail-closed behaviour and contrary to the parity contract's intent,
+so the refusing behaviour becomes normative. Pinned exactly:
+
+| Invocation | Result |
+|---|---|
+| `--request FILE` | valid; the verdict goes to **stdout** |
+| `--request FILE --out PATH` | **CLI usage error, exit 2** — no verdict is emitted, and `PATH` is neither created nor modified |
+| `--corpus DIR --out PATH` | valid batch mode |
+| `--corpus DIR` without `--out` | exit 2 (unchanged) |
+| `--request` together with `--corpus` | exit 2 (unchanged) |
+
+**R-10 — A duplicate `(chain_id, record_id)` tuple is verifier run-invalidity, not only a
+comparator gate.** §2's "(comparator gate)" parenthetical could reasonably be read as assigning
+the check exclusively to the comparator, and official parity run 1 measured exactly that
+divergence: one implementation rejected a duplicate batch with exit 1, the other emitted a
+results file containing two verdicts carrying the same tuple. The ambiguity was real; this
+closes it in favour of the stricter reading.
+
+**A batch verifier that detects a duplicate `(chain_id, record_id)` tuple in the verdict set it
+produced MUST reject the run. The comparator MUST independently enforce the same property.**
+Exactly:
+
+- duplicate tuple ⇒ **exit 1**;
+- **no results file is emitted** — uniqueness must be established before any write;
+- this is **not** a class FAILURE or WITHHELD reason, and **no new reason code** enters the
+  closed §5 registry;
+- it is **not** exit 2: there is no CLI usage error. A parsed batch failed a **run-level
+  identity invariant**.
+
+§2 and §6.4 are amended accordingly. R-9 and R-10 are **run-validity / CLI closure rulings**;
+they touch neither implementation's semantic evaluation algorithm, and they change no §7
+expected value — the frozen corpus contains no duplicate tuple and its runs use batch mode.
+
+**R-11 — Binding-store structural validity is document-global once store resolution is
+reached.** Raised by the C1 corpus author, who stopped on the ambiguity rather than inventing
+around it: R-3 speaks of a *referenced binding entry*, E-4 forbids unknown members *anywhere in an
+operator document*, and R-8 uses store-level and path-level checks in the same passage. Two
+readings survived. This closes it.
+
+**A structural closure or shape defect in ANY concrete binding entry makes the binding-store
+operator document structurally malformed as a whole** — including an entry neither tier
+references. So a store whose unrelated third entry carries an unknown member is malformed, not
+partially valid.
+
+The **tier** consequence is then decided by **path reachability**, not by which entry held the
+defect:
+
+- the producer path reaching stage 2 ⇒ `producer-binding-malformed`;
+- the witness path reaching stage **7b** ⇒ `witness-binding-malformed`;
+- which binding id owned the malformed entry changes neither;
+- a path that never reaches its store-resolution gate emits **no derivative reason** (§4).
+
+**R-8 is unchanged and this is the worked case:** an absent or non-string `witness_id` *together
+with* a malformed binding store still yields **`witness-binding-missing` alone** — evaluation
+stopped at 7a and never reached 7b, where store validation lives.
+
+**What is NOT global.** Once document-level structural validation has passed, semantic and lookup
+outcomes stay **path-local**:
+
+| Condition | Result |
+|---|---|
+| wire id absent from the map | that path's `*-binding-missing` |
+| structurally clean entry with `trusted` not literally `true` | that path's `*-binding-not-trusted` |
+| unsupported suite | that path's `*-suite-unsupported` |
+| map→entry relationship defect (e.g. a producer map entry pointing at a witness-role binding) | that path's `*-binding-malformed` |
+
+R-11 therefore does **not** say "every problem poisons both tiers". **Document-level structural
+malformation is global; semantic lookup and its results are path-local.** The choice preserves
+E-4's fail-closed "anywhere in an operator document" language and prevents one operator-policy
+snapshot being read as partially valid by one implementation and globally invalid by another.
+
+R-11 changes no §7 expected value and requires no C1 fixture change: no existing fixture pins
+localized-entry cross-path behaviour. The C1 author's defensive placement — MC1/MC3 putting the
+defect at document top level where both readings agreed, and MC4 carrying no witness so the
+question never arose — was correct.
+
+**Retained from the first draft, unchanged:** the E-1 lexical rule on the witness claim's
+`sequence`/`length` (the source spelling must match `^(0|[1-9][0-9]*)$`; a post-parse integer
+check is insufficient, and a violation is `witness-claim-invalid`), the E-2 principle that
+`witnessed_at` validity is independent of clock inputs (now sequenced by R-2), the E-3 rule
+that a wire `independent` is never the effective assessment unless the **primary** artifact
+earned Authenticated, and the E-4 requirement that operator-document container members are
+required and unknown members anywhere in an operator document are fail-closed to
+`*-binding-malformed` / `independence-policy-malformed` / `*-revocation-state-malformed`.
+
+**Portability note (non-normative):** a verifier's schema directory must resolve in its
+committed repository location, not only in an authoring snapshot — via a CLI override or a
+correct relative default. A packaging obligation, not a semantic rule.

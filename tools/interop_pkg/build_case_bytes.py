@@ -16,8 +16,7 @@ from __future__ import annotations
 import hashlib, importlib.util, json, sys
 from pathlib import Path
 
-REPO = Path("/mnt/data/claude/ai-runtime-evidence-protocol")
-OUT = REPO / "interop/independent-verifier-corpus/v0.1"
+from revision import REPO, OUT  # noqa: E402
 PIN = "b5ae87f74b386b11b8882865e50c3ad38120ff97"
 
 # RFC 8785 from the release's own v0.1 conformance module (not re-implemented here).

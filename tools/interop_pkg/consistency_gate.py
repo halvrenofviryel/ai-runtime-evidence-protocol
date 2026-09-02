@@ -11,8 +11,8 @@ from pathlib import Path
 
 # Accept a target so the gate's own negative controls can run against throwaway copies
 # rather than mutating the real package.
-OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(
-    "/mnt/data/claude/ai-runtime-evidence-protocol/interop/independent-verifier-corpus/v0.1")
+from revision import OUT as _DEFAULT_OUT  # noqa: E402
+OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else _DEFAULT_OUT
 errs: list[str] = []
 symmetric_ok: list[str] = []
 

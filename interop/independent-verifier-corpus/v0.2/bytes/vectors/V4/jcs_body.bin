@@ -1,0 +1,1 @@
+{"airep_version":"0.2","artifact_type":"effect","chain_id":"chain-alpha-0002","integrity":{"previous":"sha256:2222222222222222222222222222222222222222222222222222222222222222"},"observed_state":{"state":"closed","target":"valve-7"},"observer_relationship":"independent","record_id":"rec-aa11bb22cc33dd44","sequence":5}

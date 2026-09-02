@@ -1,0 +1,72 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.2/schemas/control.schema.json",
+ "title": "AIREP v0.2 Control Evidence",
+ "$comment": "Mechanical expression of the accepted ARTIFACT_SCHEMA_DESIGN contract; no implementation-invented constraints. Top-level closure via unevaluatedProperties (2020-12): common core properties are evaluated through the allOf, family members here; anything else is rejected.",
+ "type": "object",
+ "allOf": [
+  {
+   "$ref": "common.schema.json#/$defs/artifact_core"
+  }
+ ],
+ "properties": {
+  "artifact_type": {
+   "const": "control"
+  },
+  "decision_ref": {
+   "$ref": "common.schema.json#/$defs/artifact_ref"
+  },
+  "instruction_id": {
+   "type": "string",
+   "minLength": 1
+  },
+  "instruction_digest": {
+   "$ref": "common.schema.json#/$defs/sha256_digest"
+  },
+  "authorized_action_digest": {
+   "$ref": "common.schema.json#/$defs/sha256_digest",
+   "description": "The CONTROL side's statement of what was authorized; TOCTOU reconciliation against Execution's executed_action_digest is cross-artifact semantic-verifier work."
+  },
+  "control_event": {
+   "enum": [
+    "dispatched",
+    "received",
+    "delivery_failed"
+   ]
+  },
+  "boundary_side": {
+   "enum": [
+    "issuer",
+    "receiver"
+   ]
+  },
+  "authority": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "writable_by_controlled_system"
+   ],
+   "properties": {
+    "issuer_id": {
+     "type": "string"
+    },
+    "writable_by_controlled_system": {
+     "type": "boolean"
+    }
+   }
+  },
+  "evidence": {
+   "$ref": "common.schema.json#/$defs/evidence_array"
+  }
+ },
+ "required": [
+  "decision_ref",
+  "instruction_id",
+  "instruction_digest",
+  "authorized_action_digest",
+  "control_event",
+  "boundary_side",
+  "authority"
+ ],
+ "unevaluatedProperties": false
+}

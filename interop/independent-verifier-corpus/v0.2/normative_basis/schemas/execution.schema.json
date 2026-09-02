@@ -1,0 +1,49 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.2/schemas/execution.schema.json",
+ "title": "AIREP v0.2 Execution Evidence",
+ "$comment": "Mechanical expression of the accepted ARTIFACT_SCHEMA_DESIGN contract; no implementation-invented constraints. Top-level closure via unevaluatedProperties (2020-12): common core properties are evaluated through the allOf, family members here; anything else is rejected.",
+ "type": "object",
+ "allOf": [
+  {
+   "$ref": "common.schema.json#/$defs/artifact_core"
+  }
+ ],
+ "properties": {
+  "artifact_type": {
+   "const": "execution"
+  },
+  "decision_ref": {
+   "$ref": "common.schema.json#/$defs/artifact_ref"
+  },
+  "instruction_id": {
+   "type": "string",
+   "minLength": 1
+  },
+  "instruction_digest": {
+   "$ref": "common.schema.json#/$defs/sha256_digest"
+  },
+  "executed_action_digest": {
+   "$ref": "common.schema.json#/$defs/sha256_digest",
+   "description": "The EXECUTOR's statement of what actually ran (TOCTOU pair member)."
+  },
+  "execution_event": {
+   "enum": [
+    "executed",
+    "failed",
+    "suppressed"
+   ]
+  },
+  "evidence": {
+   "$ref": "common.schema.json#/$defs/evidence_array"
+  }
+ },
+ "required": [
+  "decision_ref",
+  "instruction_id",
+  "instruction_digest",
+  "executed_action_digest",
+  "execution_event"
+ ],
+ "unevaluatedProperties": false
+}

@@ -1,0 +1,2 @@
+AIREP/0.2/hash/control
+{"airep_version":"0.2","artifact_type":"control","chain_id":"chain-alpha-0001","instruction_id":"instr-42","integrity":{"previous":"sha256:1111111111111111111111111111111111111111111111111111111111111111"},"profiles":{"test.jcs-numbers":{"n1":1e-7,"n2":1.5,"n3":10,"n4":1e+21,"n5":0.1}},"record_id":"rec-1a2b3c4d5e6f7a8b","sequence":1}

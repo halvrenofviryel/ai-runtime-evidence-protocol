@@ -1,0 +1,2 @@
+AIREP/0.2/hash/decision
+{"airep_version":"0.2","artifact_type":"decision","chain_id":"chain-alpha-0001","claim":{"assertion":"release","basis":"policy-7"},"integrity":{"previous":"sha256:0000000000000000000000000000000000000000000000000000000000000000"},"record_id":"rec-9f2c4d6e8a0b4c1d","sequence":0,"subject":{"producer":"vector-producer/1.0","timestamp_utc":"2026-08-22T10:00:00Z"}}
