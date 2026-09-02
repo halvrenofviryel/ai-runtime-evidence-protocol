@@ -47,7 +47,8 @@ assessment, process exit, run validity and signing-input reconstruction were cor
 and are unchanged.
 
 **How it was found.** Independently, by the external run, and reproduced maintainer-side before any
-correction was made. See [`../../EXTERNAL_EVIDENCE.md`](../../EXTERNAL_EVIDENCE.md).
+correction was made. Recorded in `EXTERNAL_EVIDENCE.md` at the repository root, which reaches
+`main` on a separate branch lineage, so it is named here rather than linked.
 
 **The fix is semantic, not a case-ID patch.** `tools/interop_pkg/build_expected.py` now derives
 `cryptographic_result` from the frozen reason channels against the stage-4 prerequisite, so any
