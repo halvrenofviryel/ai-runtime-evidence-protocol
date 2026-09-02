@@ -1,0 +1,1100 @@
+"""RFC 8785 JSON Canonicalization Scheme. Standard library only.
+
+Written from RFC 8785 and AIREP v0.2 normative_basis/INTEGRITY.md.
+No third-party dependencies, no reference-implementation code consulted.
+"""
+import json, math, re
+
+# --- ES6 / ECMA-262 Number::toString, per RFC 8785 s3.2.2.3 -------------------
+def _es6_number(n):
+    if isinstance(n, bool):
+        raise TypeError("bool is not a number")
+    if isinstance(n, int):
+        # JSON integers exactly representable as doubles serialise without a
+        # fraction; anything larger goes through the double, per ES6.
+        if -(2**53) <= n <= 2**53:
+            return str(n)
+        return _es6_number(float(n))
+    if not isinstance(n, float):
+        raise TypeError("not a number")
+    if math.isnan(n) or math.isinf(n):
+        raise ValueError("NaN and Infinity are not permitted in JSON")
+    if n == 0:
+        # -0 serialises as 0
+        return "0"
+    # repr() gives the shortest round-tripping decimal, which is what ES6 uses.
+    r = repr(float(n))
+    if r.endswith(".0"):
+        r = r[:-2]
+    # Normalise Python exponent spelling to ES6.
+    m = re.fullmatch(r"(-?)(\d+)(?:\.(\d+))?e([+-])(\d+)", r)
+    if m:
+        sign, intpart, frac, esign, exp = m.groups()
+        frac = frac or ""
+        exp_i = int(exp)
+        digits = intpart + frac
+        # ES6 switches to exponential outside 1e21 / 1e-7
+        mant = digits[0] + ("." + digits[1:] if len(digits) > 1 else "")
+        if esign == "+":
+            if exp_i < 21:
+                return sign + digits + "0" * (exp_i - len(frac))
+            return sign + mant + "e+" + str(exp_i)
+        else:
+            if exp_i <= 6:
+                return sign + "0." + "0" * (exp_i - 1) + digits
+            return sign + mant + "e-" + str(exp_i)
+    return r
+
+# --- String escaping, RFC 8785 s3.2.2.2 --------------------------------------
+_ESC = {0x08: "\\b", 0x09: "\\t", 0x0A: "\\n", 0x0C: "\\f", 0x0D: "\\r",
+        0x22: '\\"', 0x5C: "\\\\"}
+
+def _es6_string(s):
+    out = ['"']
+    for ch in s:
+        cp = ord(ch)
+        if cp in _ESC:
+            out.append(_ESC[cp])
+        elif cp < 0x20:
+            out.append("\\u%04x" % cp)
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out)
+
+# --- Member ordering: UTF-16 code units, RFC 8785 s3.2.3 ---------------------
+def _utf16_key(s):
+    return s.encode("utf-16-be", "surrogatepass")
+
+def canonicalize(value):
+    """Return the RFC 8785 canonical form of `value` as a str."""
+    if value is None:
+        return "null"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, str):
+        return _es6_string(value)
+    if isinstance(value, (int, float)):
+        return _es6_number(value)
+    if isinstance(value, list):
+        return "[" + ",".join(canonicalize(v) for v in value) + "]"
+    if isinstance(value, dict):
+        items = sorted(value.items(), key=lambda kv: _utf16_key(kv[0]))
+        return "{" + ",".join(_es6_string(k) + ":" + canonicalize(v)
+                              for k, v in items) + "}"
+    raise TypeError("unserialisable type: %r" % type(value))
+
+def canonical_bytes(value):
+    return canonicalize(value).encode("utf-8")
+"""RFC 8032 Ed25519 verification, pure (no pre-hash). Standard library only.
+
+Written from RFC 8032 section 5.1. Verification only; no signing.
+"""
+import hashlib
+
+p = 2**255 - 19
+q = 2**252 + 27742317777372353535851937790883648493
+d = -121665 * pow(121666, p - 2, p) % p
+I = pow(2, (p - 1) // 4, p)          # sqrt(-1)
+
+def _recover_x(y, sign):
+    if y >= p:
+        return None
+    xx = (y * y - 1) * pow(d * y * y + 1, p - 2, p) % p
+    if xx == 0:
+        return None if sign else 0
+    x = pow(xx, (p + 3) // 8, p)
+    if (x * x - xx) % p != 0:
+        x = x * I % p
+    if (x * x - xx) % p != 0:
+        return None
+    if x % 2 != sign:
+        x = p - x
+    return x
+
+# Extended homogeneous coordinates (X, Y, Z, T), X/Z, Y/Z, XY = TZ
+def _point_add(P, Q):
+    A = (P[1] - P[0]) * (Q[1] - Q[0]) % p
+    B = (P[1] + P[0]) * (Q[1] + Q[0]) % p
+    C = 2 * P[3] * Q[3] * d % p
+    D = 2 * P[2] * Q[2] % p
+    E, F, G, H = B - A, D - C, D + C, B + A
+    return (E * F % p, G * H % p, F * G % p, E * H % p)
+
+def _point_mul(s, P):
+    Q = (0, 1, 1, 0)          # neutral element
+    while s > 0:
+        if s & 1:
+            Q = _point_add(Q, P)
+        P = _point_add(P, P)
+        s >>= 1
+    return Q
+
+def _point_equal(P, Q):
+    if (P[0] * Q[2] - Q[0] * P[2]) % p != 0:
+        return False
+    if (P[1] * Q[2] - Q[1] * P[2]) % p != 0:
+        return False
+    return True
+
+g_y = 4 * pow(5, p - 2, p) % p
+g_x = _recover_x(g_y, 0)
+G = (g_x, g_y, 1, g_x * g_y % p)
+
+def _point_decompress(b):
+    if len(b) != 32:
+        return None
+    y = int.from_bytes(b, "little")
+    sign = y >> 255
+    y &= (1 << 255) - 1
+    x = _recover_x(y, sign)
+    if x is None:
+        return None
+    return (x, y, 1, x * y % p)
+
+def verify(public_key: bytes, message: bytes, signature: bytes) -> bool:
+    """Return True iff `signature` is a valid Ed25519 signature."""
+    if len(public_key) != 32 or len(signature) != 64:
+        return False
+    A = _point_decompress(public_key)
+    if A is None:
+        return False
+    Rs = signature[:32]
+    R = _point_decompress(Rs)
+    if R is None:
+        return False
+    s = int.from_bytes(signature[32:], "little")
+    if s >= q:
+        return False
+    k = int.from_bytes(
+        hashlib.sha512(Rs + public_key + message).digest(), "little") % q
+    sB = _point_mul(s, G)
+    kA = _point_mul(k, A)
+    return _point_equal(sB, _point_add(R, kA))
+"""AIREP v0.2 byte construction, from normative_basis/INTEGRITY.md.
+
+Standard library only. No AIREP reference verifier code consulted.
+"""
+import copy, hashlib, re
+from jcs import canonical_bytes
+
+LF = b"\x0a"
+VERSION = "0.2"
+HASH_CONTEXTS = {"decision", "control", "execution", "effect"}
+SIG_CONTEXTS = {"decision", "control", "execution", "effect"}
+WITNESS_TAG_CONTEXT = "head-witness"
+SUITE_REGISTRY = {"ed25519"}
+
+TAG_GRAMMAR = re.compile(r"^AIREP/\d{1,3}\.\d{1,3}/(hash|sig)/[a-z0-9-]{1,32}$")
+
+def hash_tag(airep_version, artifact_type):
+    return "AIREP/%s/hash/%s" % (airep_version, artifact_type)
+
+def sig_tag(airep_version, artifact_type):
+    return "AIREP/%s/sig/%s" % (airep_version, artifact_type)
+
+def witness_tag(airep_version):
+    return "AIREP/%s/sig/%s" % (airep_version, WITNESS_TAG_CONTEXT)
+
+def hash_body(artifact):
+    """INTEGRITY s2: logical copy with integrity.current and
+    integrity.signature deleted; every other member retained."""
+    body = copy.deepcopy(artifact)
+    integ = body.get("integrity")
+    if isinstance(integ, dict):
+        integ.pop("current", None)
+        integ.pop("signature", None)
+    return body
+
+def hash_preimage(artifact):
+    av = artifact.get("airep_version")
+    at = artifact.get("artifact_type")
+    tag = hash_tag(av, at)
+    return tag.encode("ascii") + LF + canonical_bytes(hash_body(artifact)), tag
+
+def compute_current(artifact):
+    pre, _ = hash_preimage(artifact)
+    return "sha256:" + hashlib.sha256(pre).hexdigest()
+
+def sig_preimage(artifact, suite_id):
+    av = artifact.get("airep_version")
+    at = artifact.get("artifact_type")
+    tag = sig_tag(av, at)
+    current = artifact["integrity"]["current"]
+    return (tag.encode("ascii") + LF + suite_id.encode("ascii") + LF
+            + current.encode("ascii"))
+
+def witness_preimage(head_airep_version, suite_id, claim):
+    """INTEGRITY s4. Tag version equals the referenced head's airep_version."""
+    tag = witness_tag(head_airep_version)
+    return (tag.encode("ascii") + LF + suite_id.encode("ascii") + LF
+            + canonical_bytes(claim))
+"""Minimal JSON reader that preserves the source lexeme of every number.
+
+Needed for the AIREP class contract's E-1 rule: the witness claim's
+`sequence` and `length` must have a source spelling matching ^(0|[1-9][0-9]*)$.
+A post-parse integer check is explicitly insufficient, so the received bytes
+have to be inspected rather than the decoded value.
+
+Standard library only.
+"""
+import json
+
+class Lexed:
+    """Parse result carrying decoded value plus number lexemes by path."""
+    def __init__(self, value, number_lexemes):
+        self.value = value
+        self.number_lexemes = number_lexemes   # tuple-path -> source text
+
+WS = " \t\n\r"
+
+def _skip(s, i):
+    while i < len(s) and s[i] in WS:
+        i += 1
+    return i
+
+def _parse(s, i, path, out):
+    i = _skip(s, i)
+    c = s[i]
+    if c == "{":
+        i += 1
+        obj = {}
+        i = _skip(s, i)
+        if s[i] == "}":
+            return obj, i + 1
+        while True:
+            i = _skip(s, i)
+            key, i = _parse_string(s, i)
+            i = _skip(s, i)
+            assert s[i] == ":", "expected ':'"
+            i += 1
+            val, i = _parse(s, i, path + (key,), out)
+            obj[key] = val
+            i = _skip(s, i)
+            if s[i] == ",":
+                i += 1
+                continue
+            if s[i] == "}":
+                return obj, i + 1
+            raise ValueError("bad object at %d" % i)
+    if c == "[":
+        i += 1
+        arr = []
+        i = _skip(s, i)
+        if s[i] == "]":
+            return arr, i + 1
+        n = 0
+        while True:
+            val, i = _parse(s, i, path + (n,), out)
+            arr.append(val)
+            n += 1
+            i = _skip(s, i)
+            if s[i] == ",":
+                i += 1
+                continue
+            if s[i] == "]":
+                return arr, i + 1
+            raise ValueError("bad array at %d" % i)
+    if c == '"':
+        return _parse_string(s, i)
+    if s.startswith("true", i):
+        return True, i + 4
+    if s.startswith("false", i):
+        return False, i + 5
+    if s.startswith("null", i):
+        return None, i + 4
+    # number: capture the source lexeme
+    j = i
+    if s[j] in "-+":
+        j += 1
+    while j < len(s) and (s[j].isdigit() or s[j] in ".eE+-"):
+        j += 1
+    lex = s[i:j]
+    out[path] = lex
+    return json.loads(lex), j
+
+def _parse_string(s, i):
+    assert s[i] == '"'
+    j = i + 1
+    buf = []
+    while True:
+        ch = s[j]
+        if ch == "\\":
+            esc = s[j + 1]
+            if esc == "u":
+                buf.append(chr(int(s[j + 2:j + 6], 16)))
+                j += 6
+            else:
+                buf.append({'"': '"', "\\": "\\", "/": "/", "b": "\b",
+                            "f": "\f", "n": "\n", "r": "\r", "t": "\t"}[esc])
+                j += 2
+            continue
+        if ch == '"':
+            return "".join(buf), j + 1
+        buf.append(ch)
+        j += 1
+
+def load(text):
+    out = {}
+    val, i = _parse(text, 0, (), out)
+    i = _skip(text, i)
+    if i != len(text):
+        raise ValueError("trailing data")
+    return Lexed(val, out)
+"""Minimal JSON Schema 2020-12 subset validator, standard library only.
+
+Supports exactly the keywords used by the AIREP v0.2 artifact schemas:
+type, const, enum, required, properties, additionalProperties,
+unevaluatedProperties, allOf, $ref (local and cross-file #/$defs/...),
+items, minItems, minLength, pattern, minimum, maximum, propertyNames.
+"""
+import json, os, re
+
+class SchemaStore:
+    def __init__(self, directory):
+        self.dir = directory
+        self.docs = {}
+        for fn in os.listdir(directory):
+            if fn.endswith(".json"):
+                self.docs[fn] = json.load(open(os.path.join(directory, fn)))
+
+    def resolve(self, ref, current_doc):
+        if ref.startswith("#/"):
+            doc, ptr = current_doc, ref[2:]
+        else:
+            fn, _, frag = ref.partition("#")
+            doc = self.docs[fn]
+            ptr = frag.lstrip("/")
+        node = doc
+        if ptr:
+            for part in ptr.split("/"):
+                node = node[part.replace("~1", "/").replace("~0", "~")]
+        return node, doc
+
+_TYPES = {"object": dict, "array": list, "string": str,
+          "boolean": bool, "null": type(None)}
+
+def _is_type(v, t):
+    if t == "integer":
+        return isinstance(v, int) and not isinstance(v, bool)
+    if t == "number":
+        return isinstance(v, (int, float)) and not isinstance(v, bool)
+    if t == "boolean":
+        return isinstance(v, bool)
+    if t in ("object", "array", "string", "null"):
+        if t == "object":
+            return isinstance(v, dict)
+        return isinstance(v, _TYPES[t]) and not isinstance(v, bool)
+    return True
+
+def validate(instance, schema, store, doc=None, path="$", evaluated=None):
+    """Return a list of error strings. Empty list means valid."""
+    errs = []
+    if doc is None:
+        doc = schema
+    local_eval = set() if evaluated is None else evaluated
+
+    if "$ref" in schema:
+        sub, subdoc = store.resolve(schema["$ref"], doc)
+        errs += validate(instance, sub, store, subdoc, path, local_eval)
+
+    if "allOf" in schema:
+        for s in schema["allOf"]:
+            errs += validate(instance, s, store, doc, path, local_eval)
+
+    t = schema.get("type")
+    if t is not None:
+        types = t if isinstance(t, list) else [t]
+        if not any(_is_type(instance, x) for x in types):
+            return errs + ["%s: type %s expected, got %s"
+                           % (path, t, type(instance).__name__)]
+
+    if "const" in schema and instance != schema["const"]:
+        errs.append("%s: const %r expected, got %r" % (path, schema["const"], instance))
+    if "enum" in schema and instance not in schema["enum"]:
+        errs.append("%s: value %r not in enum" % (path, instance))
+
+    if isinstance(instance, str):
+        if "pattern" in schema and not re.fullmatch(
+                schema["pattern"].lstrip("^").rstrip("$"), instance):
+            errs.append("%s: does not match pattern %s" % (path, schema["pattern"]))
+        if "minLength" in schema and len(instance) < schema["minLength"]:
+            errs.append("%s: shorter than minLength" % path)
+
+    if isinstance(instance, (int, float)) and not isinstance(instance, bool):
+        if "minimum" in schema and instance < schema["minimum"]:
+            errs.append("%s: below minimum" % path)
+        if "maximum" in schema and instance > schema["maximum"]:
+            errs.append("%s: above maximum" % path)
+
+    if isinstance(instance, list):
+        if "minItems" in schema and len(instance) < schema["minItems"]:
+            errs.append("%s: fewer than minItems" % path)
+        if "items" in schema:
+            for n, item in enumerate(instance):
+                errs += validate(item, schema["items"], store, doc,
+                                 "%s[%d]" % (path, n))
+
+    if isinstance(instance, dict):
+        for req in schema.get("required", []):
+            if req not in instance:
+                errs.append("%s: required member %r missing" % (path, req))
+        props = schema.get("properties", {})
+        for k, sub in props.items():
+            if k in instance:
+                local_eval.add(k)
+                errs += validate(instance[k], sub, store, doc,
+                                 "%s.%s" % (path, k))
+        if "propertyNames" in schema:
+            for k in instance:
+                errs += validate(k, schema["propertyNames"], store, doc,
+                                 "%s.<key %s>" % (path, k))
+        ap = schema.get("additionalProperties")
+        if ap is False:
+            for k in instance:
+                if k not in props:
+                    errs.append("%s: additional member %r not permitted" % (path, k))
+        elif isinstance(ap, dict):
+            for k, v in instance.items():
+                if k not in props:
+                    local_eval.add(k)
+                    errs += validate(v, ap, store, doc, "%s.%s" % (path, k))
+        if schema.get("unevaluatedProperties") is False and evaluated is None:
+            for k in instance:
+                if k not in local_eval:
+                    errs.append("%s: unevaluated member %r not permitted" % (path, k))
+    return errs
+"""AIREP v0.2 independent class verifier.
+
+Written from:
+  normative_basis/INTEGRITY.md
+  normative_basis/CLASS_VERIFIER_CONTRACT.md
+  normative_basis/schemas/*.json
+  CAPABILITY_REQUIREMENTS.md, START_HERE.md, METHOD.md
+No AIREP reference verifier source consulted. Standard library only.
+"""
+import hashlib, json, os, re, sys
+import airep, jsonlex
+from ed25519 import verify as ed_verify
+from jcs import canonical_bytes
+from jsonschema_min import SchemaStore, validate
+
+NAMESPACED = re.compile(r"^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)+$")
+LEXICAL_INT = re.compile(r"^(0|[1-9][0-9]*)$")
+TS = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$")
+NOW_TS = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{1,9})?Z$")
+SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+HEXKEY = re.compile(r"^[0-9a-f]{64}$")
+SUITES = {"ed25519"}
+FAMILY_SCHEMA = {"decision": "decision.schema.json", "control": "control.schema.json",
+                 "execution": "execution.schema.json", "effect": "effect.schema.json"}
+
+class RunInvalid(Exception):
+    pass
+
+class CliUsageError(Exception):
+    pass
+
+def validate_clock(clock):
+    """Contract s1.4. Absent is a normal verdict path (freshness withheld).
+    Present but malformed is a CLI usage/config error: exit 2, no verdict."""
+    if clock is None:
+        return
+    if not isinstance(clock, dict):
+        raise CliUsageError("clock input is not an object")
+    now = clock.get("now")
+    if now is not None:
+        if not isinstance(now, str) or _parse_ts(now, NOW_TS) is None:
+            raise CliUsageError("--now structurally invalid or not a Gregorian datetime")
+    win = clock.get("freshness_window_seconds")
+    if win is not None:
+        if isinstance(win, bool) or not isinstance(win, int) or win < 0:
+            raise CliUsageError("--freshness-window non-integer or negative")
+
+def _days_in_month(y, m):
+    if m in (1,3,5,7,8,10,12): return 31
+    if m in (4,6,9,11): return 30
+    leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0
+    return 29 if leap else 28
+
+def _parse_ts(s, rx=TS):
+    m = rx.match(s) if isinstance(s, str) else None
+    if not m:
+        return None
+    y, mo, d, h, mi, sec = (int(m.group(i)) for i in range(1, 7))
+    if not (1 <= mo <= 12): return None
+    if not (1 <= d <= _days_in_month(y, mo)): return None
+    if h > 23 or mi > 59 or sec > 59:  # leap second 60 not permitted in v0.2
+        return None
+    days = 0
+    if y >= 1970:
+        for yy in range(1970, y):
+            days += 366 if ((yy % 4 == 0 and yy % 100 != 0) or yy % 400 == 0) else 365
+    else:
+        for yy in range(y, 1970):
+            days -= 366 if ((yy % 4 == 0 and yy % 100 != 0) or yy % 400 == 0) else 365
+    for mm in range(1, mo):
+        days += _days_in_month(y, mm)
+    days += d - 1
+    frac = m.group(7) if rx is NOW_TS and m.lastindex and m.lastindex >= 7 else None
+    base = days * 86400 + h * 3600 + mi * 60 + sec
+    return base + (float(frac) if frac else 0)
+
+def _digest_file(path):
+    if path is None or not os.path.exists(path):
+        return None
+    return "sha256:" + hashlib.sha256(open(path, "rb").read()).hexdigest()
+
+# ---------------------------------------------------------------- envelope
+ENVELOPE_KEYS = {"artifact", "related_artifacts", "head_witness"}
+HW_KEYS = {"head_ref", "witness_id", "claim", "signature"}
+HEAD_REF_KEYS = {"record_id", "chain_id"}
+SIG_KEYS = {"alg", "value"}
+CLAIM_KEYS = {"chain_id", "sequence", "current", "length", "witnessed_at"}
+
+def check_envelope(req):
+    if not isinstance(req, dict):
+        raise RunInvalid("request is not an object")
+    for k in req:
+        if k not in ENVELOPE_KEYS:
+            raise RunInvalid("unknown envelope member %r" % k)
+    if "artifact" not in req or not isinstance(req["artifact"], dict):
+        raise RunInvalid("artifact missing or not an object")
+    ra = req.get("related_artifacts", [])
+    if not isinstance(ra, list):
+        raise RunInvalid("related_artifacts not an array")
+    if "head_witness" in req:
+        hw = req["head_witness"]
+        if not isinstance(hw, dict):
+            raise RunInvalid("head_witness present but not an object")   # R-7
+        for k in hw:
+            if k not in HW_KEYS:
+                raise RunInvalid("unknown head_witness member %r" % k)   # R-7
+        hr = hw.get("head_ref")
+        if isinstance(hr, dict):
+            for k in hr:
+                if k not in HEAD_REF_KEYS:
+                    raise RunInvalid("unknown head_ref member %r" % k)   # R-4
+        sg = hw.get("signature")
+        if isinstance(sg, dict):
+            for k in sg:
+                if k not in SIG_KEYS:
+                    raise RunInvalid("unknown signature member %r" % k)  # R-4
+
+# ------------------------------------------------------- operator documents
+def _store_structurally_valid(b):
+    """R-11: any structural defect in ANY entry makes the document malformed."""
+    if not isinstance(b, dict):
+        return False
+    if set(b) - {"bindings", "producer_bindings", "witness_bindings"}:
+        return False
+    for k in ("bindings", "producer_bindings", "witness_bindings"):
+        if k not in b or not isinstance(b[k], dict):
+            return False
+    for bid, e in b["bindings"].items():
+        if not isinstance(e, dict):
+            return False
+        if set(e) - {"subject_identity", "role", "public_key_hex", "suite", "trusted"}:
+            return False
+        for req in ("subject_identity", "role", "public_key_hex", "suite", "trusted"):
+            if req not in e:
+                return False
+        if not isinstance(e["subject_identity"], str) or not NAMESPACED.match(e["subject_identity"]):
+            return False
+        if e["role"] not in ("producer", "witness"):
+            return False
+        if not isinstance(e["public_key_hex"], str) or not HEXKEY.match(e["public_key_hex"]):
+            return False
+        if not isinstance(e["suite"], str):
+            return False
+        if not NAMESPACED.match(bid):
+            return False
+    for m in ("producer_bindings", "witness_bindings"):
+        for k, v in b[m].items():
+            if not isinstance(v, str):
+                return False
+    return True
+
+def _policy_structurally_valid(p):
+    if not isinstance(p, dict):
+        return False
+    if set(p) - {"independent_pairs", "non_independent_pairs"}:
+        return False
+    for k in ("independent_pairs", "non_independent_pairs"):
+        if k not in p or not isinstance(p[k], list):
+            return False
+        for pr in p[k]:
+            if not isinstance(pr, dict) or set(pr) != {"a", "b"}:
+                return False
+            if not all(isinstance(pr[x], str) for x in ("a", "b")):
+                return False
+    return True
+
+def _revocation_structurally_valid(r):
+    if not isinstance(r, dict):
+        return False
+    if set(r) - {"snapshot_id", "bindings"}:
+        return False
+    if "snapshot_id" not in r or "bindings" not in r:
+        return False
+    if not isinstance(r["snapshot_id"], str) or not NAMESPACED.match(r["snapshot_id"]):
+        return False
+    if not isinstance(r["bindings"], dict):
+        return False
+    for k, v in r["bindings"].items():
+        if not isinstance(v, dict) or set(v) - {"state"}:
+            return False
+    return True
+
+def _resolve_binding(store, mapname, wire_id, role):
+    """Return (binding_id, entry, reason) with reason in
+    {None, 'missing', 'malformed', 'not-trusted', 'suite-unsupported'}."""
+    if not _store_structurally_valid(store):
+        return None, None, "malformed"
+    m = store[mapname]
+    if not isinstance(wire_id, str) or wire_id not in m:
+        return None, None, "missing"
+    bid = m[wire_id]
+    e = store["bindings"].get(bid)
+    if e is None:
+        return None, None, "missing"
+    if e["role"] != role:
+        return bid, e, "malformed"
+    if e["trusted"] is not True:
+        return bid, e, "not-trusted"
+    if e["suite"] not in SUITES:
+        return bid, e, "suite-unsupported"
+    return bid, e, None
+
+def _revocation_state(rev, bid):
+    """Return None (active) or 'revoked'/'missing'/'malformed'."""
+    if rev is None or not _revocation_structurally_valid(rev):
+        return "malformed" if rev is not None else "missing"
+    e = rev["bindings"].get(bid)
+    if e is None or "state" not in e:
+        return "missing"
+    st = e["state"]
+    if st == "active":
+        return None
+    if st == "revoked":
+        return "revoked"
+    return "malformed"
+
+def _refs_match(ref, art):
+    if not isinstance(ref, dict):
+        return False
+    rid = ref.get("record_id")
+    if not isinstance(rid, str) or art.get("record_id") != rid:
+        return False
+    if "chain_id" in ref and ref["chain_id"] is not None:
+        if art.get("chain_id") != ref["chain_id"]:
+            return False
+    return True
+
+# ------------------------------------------------------------------ core
+def evaluate(req, lexemes, bindings, policy, revocation, clock,
+             store_schemas, digests):
+    A = {"fail": set(), "withheld": set(), "caveat": set()}
+    W = {"fail": set(), "withheld": set()}
+    art = req["artifact"]
+    related = req.get("related_artifacts", [])
+
+    # Stage 0: family schema validation
+    at = art.get("artifact_type")
+    if at not in FAMILY_SCHEMA:
+        raise RunInvalid("unknown or missing artifact_type")
+    sch = store_schemas.docs[FAMILY_SCHEMA[at]]
+    errs = validate(art, sch, store_schemas, sch)
+    if errs:
+        raise RunInvalid("schema: " + errs[0])
+
+    # Stage 1: Core - frozen hash recomputation under the declared pair
+    try:
+        recomputed = airep.compute_current(art)
+    except Exception as e:
+        raise RunInvalid("hash recomputation failed: %s" % e)
+    if recomputed != art["integrity"].get("current"):
+        raise RunInvalid("integrity.current mismatch")
+    cls = "AIREP-Core"
+
+    # Stage 2: producer binding
+    wire_producer = art.get("subject", {}).get("producer")
+    pbid, pentry, preason = _resolve_binding(bindings, "producer_bindings",
+                                             wire_producer, "producer") \
+        if bindings is not None else (None, None, "missing")
+    if preason == "missing":
+        A["withheld"].add("producer-binding-missing")
+    elif preason == "malformed":
+        A["withheld"].add("producer-binding-malformed")
+    elif preason == "not-trusted":
+        A["fail"].add("producer-binding-not-trusted")
+    elif preason == "suite-unsupported":
+        A["withheld"].add("producer-suite-unsupported")
+    producer_ok = preason is None
+
+    # Stage 3: producer revocation (prereq: binding accepted)
+    prev_state = None
+    if producer_ok:
+        prev_state = _revocation_state(revocation, pbid)
+        if prev_state == "revoked":
+            A["fail"].add("producer-binding-revoked")
+        elif prev_state == "missing":
+            A["withheld"].add("producer-revocation-state-missing")
+        elif prev_state == "malformed":
+            A["withheld"].add("producer-revocation-state-malformed")
+
+    # Stage 4: producer signature (prereq: binding accepted AND not revoked; R-6)
+    if producer_ok and prev_state != "revoked":
+        suite = pentry["suite"]
+        pre = airep.sig_preimage(art, suite)
+        sigobj = art["integrity"].get("signature") or {}
+        val = sigobj.get("value")
+        good = False
+        if isinstance(val, str) and re.fullmatch(r"[0-9a-f]{128}", val):
+            good = ed_verify(bytes.fromhex(pentry["public_key_hex"]),
+                             pre, bytes.fromhex(val))
+        if not good:
+            A["fail"].add("producer-signature-invalid")
+        else:
+            alg = sigobj.get("alg")
+            if isinstance(alg, str) and alg.lower() != suite.lower():
+                A["caveat"].add("wire-alg-mismatch")
+            prof = art.get("profiles") or {}
+            kt = prof.get("airep.key-trust") or {}
+            if isinstance(kt, dict) and (kt.get("revocation") or {}).get("revoked") is True:
+                A["caveat"].add("producer-key-self-revoked")
+
+    authenticated = not A["fail"] and not A["withheld"]
+    if authenticated:
+        cls = "AIREP-Authenticated"
+
+    # ------------------------------------------------ witness path (stages 6-10)
+    hw = req.get("head_witness")
+    if hw is None:
+        W["withheld"].add("no-witness-supplied")
+    else:
+        stage6_clean = True
+        # 6a: claim structural + lexical validity (R-2, E-1)
+        claim = hw.get("claim")
+        claim_ok = isinstance(claim, dict) and set(claim) == CLAIM_KEYS
+        if claim_ok:
+            if not isinstance(claim["chain_id"], str):
+                claim_ok = False
+            if not isinstance(claim["current"], str) or not SHA256.match(claim["current"]):
+                claim_ok = False
+            for member in ("sequence", "length"):
+                v = claim.get(member)
+                if isinstance(v, bool) or not isinstance(v, (int, float)):
+                    claim_ok = False
+                    continue
+                lex = lexemes.get(("head_witness", "claim", member))
+                if lex is None or not LEXICAL_INT.match(lex):
+                    claim_ok = False            # E-1 source-token rule
+                    continue
+                iv = int(lex)
+                if iv > 2**53 - 1:
+                    claim_ok = False
+                if member == "length" and iv < 1:
+                    claim_ok = False
+            if not isinstance(claim.get("witnessed_at"), str):
+                claim_ok = False
+        if not claim_ok:
+            W["fail"].add("witness-claim-invalid")
+            stage6_clean = False
+        else:
+            # 6b: head resolution, must-be-primary, reconciliation
+            hr = hw.get("head_ref")
+            pool = [art] + [a for a in related if isinstance(a, dict)]
+            matches = [a for a in pool if _refs_match(hr, a)] if isinstance(hr, dict) else []
+            if len(matches) != 1:
+                W["fail"].add("witness-head-unresolved")
+                stage6_clean = False
+            elif matches[0] is not art:
+                W["fail"].add("witness-head-mismatch")
+                stage6_clean = False
+            else:
+                head = matches[0]
+                if (claim["chain_id"] != head.get("chain_id")
+                        or claim["sequence"] != head.get("sequence")
+                        or claim["current"] != head.get("integrity", {}).get("current")):
+                    W["fail"].add("witness-head-mismatch")     # R-5
+                    stage6_clean = False
+                else:
+                    # 6c: witnessed_at format + Gregorian validity
+                    if _parse_ts(claim["witnessed_at"]) is None:
+                        W["fail"].add("witness-time-invalid")
+                        stage6_clean = False
+
+        wbid = wentry = None
+        stage7_clean = False
+        if stage6_clean:
+            # 7a: witness identifier usability (R-8)
+            wid = hw.get("witness_id")
+            if not isinstance(wid, str):
+                W["withheld"].add("witness-binding-missing")
+            else:
+                # 7b: binding-store resolution
+                wbid, wentry, wreason = _resolve_binding(
+                    bindings, "witness_bindings", wid, "witness") \
+                    if bindings is not None else (None, None, "missing")
+                if wreason == "missing":
+                    W["withheld"].add("witness-binding-missing")
+                elif wreason == "malformed":
+                    W["withheld"].add("witness-binding-malformed")
+                elif wreason == "not-trusted":
+                    W["fail"].add("witness-binding-not-trusted")
+                elif wreason == "suite-unsupported":
+                    W["withheld"].add("witness-suite-unsupported")
+                else:
+                    # 7c: witness revocation
+                    st = _revocation_state(revocation, wbid)
+                    if st == "revoked":
+                        W["fail"].add("witness-binding-revoked")
+                    elif st == "missing":
+                        W["withheld"].add("witness-revocation-state-missing")
+                    elif st == "malformed":
+                        W["withheld"].add("witness-revocation-state-malformed")
+                    else:
+                        stage7_clean = True
+
+        # Stage 8: independence
+        if producer_ok and stage7_clean:
+            if policy is None:
+                W["withheld"].add("independence-policy-missing")
+            elif not _policy_structurally_valid(policy):
+                W["withheld"].add("independence-policy-malformed")
+            else:
+                if pentry["public_key_hex"] == wentry["public_key_hex"]:
+                    W["fail"].add("witness-key-not-distinct")
+                elif pentry["subject_identity"] == wentry["subject_identity"]:
+                    W["fail"].add("witness-identity-not-distinct")
+                else:
+                    pair = {pbid, wbid}
+                    ind = any({q["a"], q["b"]} == pair for q in policy["independent_pairs"])
+                    non = any({q["a"], q["b"]} == pair for q in policy["non_independent_pairs"])
+                    if ind and non:
+                        W["withheld"].add("independence-policy-malformed")
+                    elif non:
+                        W["fail"].add("independence-explicitly-denied")
+                    elif not ind:
+                        W["withheld"].add("independence-relation-absent")
+
+        # Stage 9: witness signature
+        if stage7_clean:
+            sg = hw.get("signature")
+            val = sg.get("value") if isinstance(sg, dict) else None
+            good = False
+            if isinstance(val, str) and re.fullmatch(r"[0-9a-f]{128}", val):
+                pre = airep.witness_preimage(art.get("airep_version"),
+                                             wentry["suite"], claim)
+                good = ed_verify(bytes.fromhex(wentry["public_key_hex"]),
+                                 pre, bytes.fromhex(val))
+            if not good:
+                W["fail"].add("witness-signature-invalid")
+
+        # Stage 10: freshness (prereq: stage 6 clean AND clock inputs present)
+        if stage6_clean:
+            if clock is None or "now" not in clock or "freshness_window_seconds" not in clock:
+                W["withheld"].add("freshness-inputs-missing")
+            else:
+                now = _parse_ts(clock["now"], NOW_TS)
+                win = clock["freshness_window_seconds"]
+                wat = _parse_ts(claim["witnessed_at"])
+                if abs(now - wat) > win:
+                    W["fail"].add("witness-freshness-outside-window")
+
+    if W["fail"] or W["withheld"]:
+        witnessed = False
+    else:
+        witnessed = True
+    if authenticated and witnessed:
+        cls = "AIREP-Witnessed"
+
+    # ------------------------------------------------ observer assessment
+    if at != "effect":
+        observer = "not_applicable"
+    else:
+        declared = (art.get("observer_relationship") or {}).get("established_by") \
+            if isinstance(art.get("observer_relationship"), dict) else None
+        declared = art.get("observer_relationship") if isinstance(art.get("observer_relationship"), str) else declared
+        obs_field = art.get("observer_relationship")
+        if isinstance(obs_field, dict):
+            declared = obs_field.get("relationship") or obs_field.get("observer_assessment") or obs_field.get("established_by")
+        observer = _observer(art, related, declared, bindings, revocation,
+                             policy, pentry, producer_ok, authenticated,
+                             store_schemas)
+
+    return {
+        "artifact_ref": {"chain_id": art.get("chain_id"),
+                         "record_id": art.get("record_id")},
+        "class": cls,
+        "authenticated_failures": sorted(A["fail"]),
+        "authenticated_withheld": sorted(A["withheld"]),
+        "authenticated_caveats": sorted(A["caveat"]),
+        "witnessed_failures": sorted(W["fail"]),
+        "witnessed_withheld": sorted(W["withheld"]),
+        "observer_assessment": observer,
+        "evidence": {
+            "now": (clock or {}).get("now"),
+            "freshness_window_seconds": (clock or {}).get("freshness_window_seconds"),
+            "bindings_digest": digests.get("bindings"),
+            "independence_policy_digest": digests.get("independence"),
+            "revocation_digest": digests.get("revocation"),
+        },
+    }
+
+def _observer(art, related, declared, bindings, revocation, policy,
+              pentry, producer_ok, authenticated, store_schemas):
+    """Effect observer path, contract s3 + E-3."""
+    if declared == "same_executor":
+        return "same_executor"
+    if declared != "independent":
+        return "unknown" if declared is None else declared
+    if not authenticated:
+        return "unknown"                                   # E-3
+    ref = art.get("execution_ref")
+    pool = [a for a in related if isinstance(a, dict)]
+    matches = [a for a in pool if _refs_match(ref, a)]
+    if len(matches) != 1:
+        return "unknown"
+    ex = matches[0]
+    # the Execution artifact must reach Authenticated in its own right
+    try:
+        sch = store_schemas.docs[FAMILY_SCHEMA.get(ex.get("artifact_type"), "")]
+    except KeyError:
+        return "unknown"
+    if validate(ex, sch, store_schemas, sch):
+        return "unknown"
+    try:
+        if airep.compute_current(ex) != ex["integrity"].get("current"):
+            return "unknown"
+    except Exception:
+        return "unknown"
+    ebid, eentry, ereason = _resolve_binding(
+        bindings, "producer_bindings", ex.get("subject", {}).get("producer"),
+        "producer") if bindings is not None else (None, None, "missing")
+    if ereason is not None:
+        return "unknown"
+    if _revocation_state(revocation, ebid) is not None:
+        return "unknown"
+    pre = airep.sig_preimage(ex, eentry["suite"])
+    val = (ex["integrity"].get("signature") or {}).get("value")
+    if not (isinstance(val, str) and re.fullmatch(r"[0-9a-f]{128}", val)
+            and ed_verify(bytes.fromhex(eentry["public_key_hex"]), pre,
+                          bytes.fromhex(val))):
+        return "unknown"
+    # then the same three independence conditions
+    if not producer_ok:
+        return "unknown"
+    if pentry["public_key_hex"] == eentry["public_key_hex"]:
+        return "unknown"
+    if pentry["subject_identity"] == eentry["subject_identity"]:
+        return "unknown"
+    if policy is None or not _policy_structurally_valid(policy):
+        return "unknown"
+    pbid = None
+    for bid, e in bindings["bindings"].items():
+        if e is pentry:
+            pbid = bid
+    pair = {pbid, ebid}
+    if any({q["a"], q["b"]} == pair for q in policy["non_independent_pairs"]):
+        return "unknown"
+    if any({q["a"], q["b"]} == pair for q in policy["independent_pairs"]):
+        return "independent"
+    return "unknown"
+"""Batch runner over the AIREP v0.2 independent-verifier corpus.
+
+Every case, including the two process probes, goes through the same pipeline:
+  clock validation (contract s1.4) -> envelope closure -> evaluate.
+Batch output honours contract s2 and ruling R-10.
+"""
+import json, os, sys
+import classverify, jsonlex
+from jsonschema_min import SchemaStore
+
+PKG = "/root/airep/pkg/airep-v0.2-independent-verifier-corpus-v0.1"
+SCHEMAS = os.path.join(PKG, "normative_basis", "schemas")
+
+# PROC-NGR is the CLI probe for a format-valid, non-Gregorian --now. The package
+# ships no clock file for it, so the operator supplies the value at invocation.
+PROBE_CLOCKS = {"PROC-NGR": {"now": "2026-02-30T00:00:00Z",
+                             "freshness_window_seconds": 3600}}
+
+def load_opt(path):
+    return json.load(open(path)) if os.path.exists(path) else None
+
+def run_case(cid, d, store):
+    """Return (exit_code, verdict_or_None, reason)."""
+    clock = load_opt(os.path.join(d, "clock.json"))
+    if clock is None and cid in PROBE_CLOCKS:
+        clock = PROBE_CLOCKS[cid]
+    digests = {k: classverify._digest_file(os.path.join(d, f))
+               for f, k in (("bindings.json", "bindings"),
+                            ("independence.json", "independence"),
+                            ("revocation.json", "revocation"))}
+    try:
+        classverify.validate_clock(clock)
+    except classverify.CliUsageError as e:
+        return 2, None, "CLI usage/config error: %s" % e
+    try:
+        text = open(os.path.join(d, "request.json"), encoding="utf-8").read()
+    except OSError as e:
+        return 1, None, "request.json unreadable: %s" % e
+    try:
+        lex = jsonlex.load(text)
+    except Exception as e:
+        return 1, None, "request unparseable: %s" % type(e).__name__
+    try:
+        classverify.check_envelope(lex.value)
+        v = classverify.evaluate(lex.value, lex.number_lexemes,
+                                 load_opt(os.path.join(d, "bindings.json")),
+                                 load_opt(os.path.join(d, "independence.json")),
+                                 load_opt(os.path.join(d, "revocation.json")),
+                                 clock, store, digests)
+        return 0, v, None
+    except classverify.RunInvalid as e:
+        return 1, None, str(e)
+
+def main():
+    store = SchemaStore(SCHEMAS)
+    index = json.load(open(os.path.join(PKG, "CASE_INDEX.json")))
+    out, verdicts = {}, []
+    for c in index["cases"]:
+        cid = c["package_case_id"]
+        code, v, reason = run_case(cid, os.path.join(PKG, "cases", cid), store)
+        out[cid] = {"exit": code}
+        if v is not None:
+            out[cid]["verdict"] = v
+            verdicts.append(v)
+        if reason:
+            out[cid]["reason"] = reason
+
+    # R-10: uniqueness must be established before any results file is written.
+    keys = [(v["artifact_ref"]["chain_id"], v["artifact_ref"]["record_id"])
+            for v in verdicts]
+    if len(keys) != len(set(keys)):
+        sys.stderr.write("duplicate (chain_id, record_id) in verdict set\n")
+        return 1
+    # s2: deterministically ordered by UTF-8 byte sequence, trailing newline.
+    verdicts.sort(key=lambda v: (v["artifact_ref"]["chain_id"].encode("utf-8"),
+                                 v["artifact_ref"]["record_id"].encode("utf-8")))
+    with open("/root/airep/verdicts.json", "w") as f:
+        json.dump({"verdicts": verdicts}, f, indent=1, sort_keys=True)
+        f.write("\n")
+    json.dump(out, open("/root/airep/observed.json", "w"), indent=1, sort_keys=True)
+
+    for cid in sorted(out):
+        r = out[cid]
+        if r["exit"] == 0:
+            v = r["verdict"]
+            print(f"{cid:10} exit=0 {v['class']:20} "
+                  f"Af={v['authenticated_failures']} Aw={v['authenticated_withheld']} "
+                  f"Ac={v['authenticated_caveats']} Wf={v['witnessed_failures']} "
+                  f"Ww={v['witnessed_withheld']} obs={v['observer_assessment']}")
+        else:
+            print(f"{cid:10} exit={r['exit']} ({r.get('reason','')})")
+    return 0
+
+sys.exit(main())
