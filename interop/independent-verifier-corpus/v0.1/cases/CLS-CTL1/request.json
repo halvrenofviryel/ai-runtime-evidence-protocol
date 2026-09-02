@@ -1,0 +1,51 @@
+{
+ "artifact": {
+  "airep_version": "0.2",
+  "artifact_type": "control",
+  "authority": {
+   "issuer_id": "acme-control-plane",
+   "writable_by_controlled_system": false
+  },
+  "authorized_action_digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "boundary_side": "issuer",
+  "chain_id": "cv-chain-ctl1",
+  "control_event": "dispatched",
+  "decision_ref": {
+   "chain_id": "cv-chain-ctl1",
+   "record_id": "cv-rec-decision-1"
+  },
+  "evidence": [
+   {
+    "content_hash": "sha256:efefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef",
+    "ref": "ref:policy-1",
+    "resolvable": false,
+    "type": "policy"
+   }
+  ],
+  "instruction_digest": "sha256:abababababababababababababababababababababababababababababababab",
+  "instruction_id": "instr-1",
+  "integrity": {
+   "current": "sha256:f5b07943dc72961f5d58de8e245f2d7396b761dbdacac15cef5d1ac6861b363c",
+   "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "signature": {
+    "alg": "Ed25519",
+    "value": "114931130c94dcb3e7ee6784cb796d46ee99f966b317b0f6f9af9e9ce051ac2211e50b4fea3cec05059c30507168a36c90948bf7b48739742b8ebfd90a01de07"
+   }
+  },
+  "record_id": "cv-rec-ctl1",
+  "scope": {
+   "covers": [
+    "this record's own contents"
+   ],
+   "does_not_cover": [
+    "truth of the recorded content"
+   ]
+  },
+  "sequence": 0,
+  "subject": {
+   "producer": "acme-runtime/1.4",
+   "timestamp_utc": "2026-08-23T09:00:00Z"
+  }
+ },
+ "related_artifacts": []
+}

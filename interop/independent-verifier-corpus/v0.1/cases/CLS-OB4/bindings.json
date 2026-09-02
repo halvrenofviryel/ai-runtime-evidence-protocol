@@ -1,0 +1,32 @@
+{
+ "bindings": {
+  "airep.executor-a": {
+   "public_key_hex": "0a3e66f14cea422caf45300e0c3bf42669e87839627750491f1f1e962d7a11cd",
+   "role": "producer",
+   "subject_identity": "orbit.executor-a",
+   "suite": "ed25519",
+   "trusted": true
+  },
+  "airep.producer-a": {
+   "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+   "role": "producer",
+   "subject_identity": "acme.runtime-a",
+   "suite": "ed25519",
+   "trusted": true
+  },
+  "airep.witness-a": {
+   "public_key_hex": "2e4e83fdb2d88f88c5f03e663c39ea3f9c7536312b62a2b09a95712dccf11a40",
+   "role": "witness",
+   "subject_identity": "notary.witness-a",
+   "suite": "ed25519",
+   "trusted": true
+  }
+ },
+ "producer_bindings": {
+  "acme-runtime/1.4": "airep.producer-a",
+  "orbit-executor/2.0": "airep.executor-a"
+ },
+ "witness_bindings": {
+  "NOTARY-WITNESS #1": "airep.witness-a"
+ }
+}

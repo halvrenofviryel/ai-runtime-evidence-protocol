@@ -1,0 +1,27 @@
+{
+  "derivation": {
+    "canonicalizer": "spec/airep/v0.1/conformance/jcs.py at b5ae87f74b386b11b8882865e50c3ad38120ff97 (released module, loaded unmodified; not re-implemented for this package)",
+    "hash_preimage_rule": "INTEGRITY.md \u00a72: tag || LF || JCS(artifact minus integrity.current and integrity.signature)",
+    "signature_preimage_rule": "INTEGRITY.md \u00a73",
+    "source_bytes": "cases/CLS-OB4/request.json (artifact object, verbatim)"
+  },
+  "files": [
+    "hash_preimage.bin",
+    "jcs_body.bin",
+    "sig_preimage.bin",
+    "hash_preimage.hex",
+    "jcs_body.hex",
+    "sig_preimage.hex"
+  ],
+  "package_case_id": "CLS-OB4",
+  "provenance_kind": "package_derived",
+  "self_validation": {
+    "artifact_recorded_integrity_current": "sha256:e29deb53b19d29b847ca8e3111936d16b949b6b8bbfdd6b7722cd245c332eaba",
+    "derived_integrity_current": "sha256:e29deb53b19d29b847ca8e3111936d16b949b6b8bbfdd6b7722cd245c332eaba",
+    "hash_agreement": "MATCH \u2014 the derived preimage hashes to the value the frozen corpus recorded in the artifact, which this script did not produce",
+    "public_key_hex": "3ccd241cffc9b3618044b97d036d8614593d8b017c340f1dee8773385517654b",
+    "signature_note": "verified",
+    "signature_verifies_under_bound_key": true,
+    "suite": "ed25519"
+  }
+}
