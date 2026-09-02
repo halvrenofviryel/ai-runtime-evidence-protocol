@@ -26,9 +26,8 @@ reproduced by the maintainer side from the external artifact itself.
 
 ### What was reproduced
 
-The producer was written from `SPEC.md` and `core.schema.json` at the pinned commit, not from a
-reference producer. Running it and then running both pinned v0.1.2 verifiers over its output
-reproduced the reported result exactly:
+Running the producer and then running both pinned v0.1.2 verifiers over its output reproduced the
+reported result exactly:
 
 - both `integrity.current` values reproduce byte-for-byte —
   `sha256:f6689ea3d183f7ef83e6061ab8e5f26273c924edfec177a9d35d1effb9af3e93` and
@@ -41,6 +40,21 @@ reproduced the reported result exactly:
   `integrity.current` values and different signature values.
 
 No first-party producer was substituted, and no compatibility workaround was introduced.
+
+**What the reproduction does not cover.** It measures the producer's *behaviour*, not how it was
+authored. That the producer was written from `SPEC.md` and `core.schema.json` rather than from a
+reference producer is recorded in the bundle's `METHOD.md` as methodology plus the author's
+attestation, and `METHOD.md` states the limit itself:
+
+> The claim that the reference producers were never read cannot be proven from the artifacts. What
+> can be stated is this: the reference producers, the example-regeneration script, and the git
+> directory were removed from the working copy before the producer was written, so they were not
+> present to be read, and the author attests to the order of work.
+
+`METHOD.md` lists those removed paths with the SHA-256 of each, taken before removal. Nothing in the
+maintainer-side reproduction confirms or could confirm the ordering — an artifact cannot testify to
+what its author did not read. The independence claim therefore sits at methodology and attestation
+level, and is recorded here at exactly that strength.
 
 ### The normative ambiguity this exposed
 
@@ -129,8 +143,9 @@ class-verifier contract.
 
 ### What this establishes
 
-One external, independently implemented consumer/verifier reproduced the frozen results of a
-release-pinned handoff corpus, subject to the exposure qualifications recorded above.
+One external, independently implemented consumer/verifier, run against a release-pinned handoff
+corpus, matched every frozen field across all 18 cases; the sole disagreement was the
+package-derived projection described above. Subject to the exposure qualifications recorded above.
 
 ### Deposit
 

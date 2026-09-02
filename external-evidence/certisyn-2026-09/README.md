@@ -21,8 +21,8 @@ Verify with `sha256sum -c SHA256SUMS`.
 `AIREP-verifier-source.txt` is the concatenated source of the seven implementation modules in load
 order. Its digest **is** the implementation identity recorded on all 18 report rows, so any change
 to those bytes — including adding a licence header — would break the identity that ties the report
-That is why the licence is carried beside the source, in `LICENSE.AIREP-verifier-source.txt`
-and `LICENSE-SCOPE.txt`, and never inside it.
+to the code that produced it. That is why the licence is carried beside the source, in
+`LICENSE.AIREP-verifier-source.txt` and `LICENSE-SCOPE.txt`, and never inside it.
 
 ## Subject of the run
 
@@ -91,6 +91,5 @@ correctness of the protocol, AIREP v0.2 stability, IETF endorsement, or SCITT en
 run record says so. The runner's work-order sequence is his own recorded account and is not an
 independently checkable property.
 
-Scope, boundaries and the maintainer-side reproduction are recorded in `EXTERNAL_EVIDENCE.md` at
-the repository root. That document is added by a separate pull request, so on this branch the path
-does not yet exist and is deliberately named rather than linked.
+Scope, boundaries and the maintainer-side reproduction are recorded in
+[`EXTERNAL_EVIDENCE.md`](../../EXTERNAL_EVIDENCE.md) at the repository root.
