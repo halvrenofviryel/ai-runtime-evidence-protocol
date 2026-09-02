@@ -36,31 +36,37 @@ and never inside the source.
 The disagreement was independently reproduced and the projection was corrected in corpus revision
 `v0.2`. **This deposit is not updated to match.** The run stands as recorded.
 
-## Licence — scope is one file
+## Licence
 
-**The licence covers `AIREP-verifier-source.txt` and nothing else.**
+> **Licence scope: `AIREP-verifier-source.txt` only.**
+>
+> BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc., applies to
+> `AIREP-verifier-source.txt` and nothing else in this deposit. No licence is inferred or asserted
+> by this deposit for `AIREP-RUN-RECORD.txt`, `AIREP-report-18-rows.txt`, or
+> `AIREP-observed-verdicts.txt`.
 
-| File | Licence |
+Full licence text: [`LICENSE.AIREP-verifier-source.txt`](./LICENSE.AIREP-verifier-source.txt).
+Scope notice: [`LICENSE-SCOPE.txt`](./LICENSE-SCOPE.txt).
+
+| File | Licence status |
 |---|---|
-| `AIREP-verifier-source.txt` | **BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc.** Full text in `LICENSE.AIREP-verifier-source.txt`. |
-| `AIREP-RUN-RECORD.txt` | **No licence declared.** Supplied as the record of the run. |
-| `AIREP-report-18-rows.txt` | **No licence declared.** Supplied as the record of the run. |
-| `AIREP-observed-verdicts.txt` | **No licence declared.** Supplied as the record of the run. |
+| `AIREP-verifier-source.txt` | **BSD-3-Clause**, copyright 2026 Certisyn, Inc. |
+| `AIREP-RUN-RECORD.txt` | **No licence asserted by this deposit.** |
+| `AIREP-report-18-rows.txt` | **No licence asserted by this deposit.** |
+| `AIREP-observed-verdicts.txt` | **No licence asserted by this deposit.** |
 
-**Do not infer that BSD-3-Clause applies to the run record, the report rows or the observed
-verdicts.** It does not. They are deposited byte-exact as evidence of what was run and what came
-out; no licence grant was made over them and none is implied by their presence here. The licence
-file is named after the single file it covers so the scope cannot be read off by proximity.
+No licence terms are invented for those three files. They are deposited byte-exact as the record of
+the run; this deposit makes no grant over them and none is implied by their presence in the same
+directory.
 
-Stated explicitly, at the licensor's instruction, about that one licensed file:
+Joel Hillier's qualifications on the licensed source, preserved:
 
-- it is a **copyright licence on `AIREP-verifier-source.txt` only**;
 - it grants **no patent rights, expressly or by implication**;
 - it **neither anticipates nor alters the BCP 79 disclosures Certisyn has filed against its own
-  Internet-Drafts**, for which the licensing declaration is still to come;
-- redistribution, modification and archiving of the licensed source are permitted on the
-  BSD-3-Clause licence's own terms;
-- the copyright notice and the disclaimer must be retained;
+  Internet-Drafts**, where the licensing declaration is still to come;
+- redistribution, modification and archiving of the licensed source are permitted on
+  **BSD-3-Clause's own terms**;
+- the **copyright notice and disclaimer must be retained**;
 - the **Certisyn name may not be used to endorse** a derived work.
 
 ### Why no header was inserted
