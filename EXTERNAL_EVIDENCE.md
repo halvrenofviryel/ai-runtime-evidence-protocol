@@ -89,17 +89,11 @@ AIREP v0.2. Emek Can Doğru did **not** implement a v0.2 producer.
 | Evidence class | independently implemented **consumer/verifier** |
 | Frozen package | AIREP v0.2 Independent-Verifier Corpus v0.1, `sha256:b47f01c81577c9dc95b7d1f1fd1119c839866e182d24c251c386ad2a08b17923` |
 | Implementation digest | `sha256:2aef1212adeaab5a1dc7f07c3f240183db97478b247c008c5fcc0e177fbfeca8` |
-| Licence on `AIREP-verifier-source.txt` | BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc. — that file only |
+| Implementation source licence | BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc. — on `AIREP-verifier-source.txt` only; no licence asserted for the other three artefacts |
 | Maintainer-side reproduction | **reproduced** |
 | Public deposit of the frozen artefacts | [`external-evidence/certisyn-2026-09/`](./external-evidence/certisyn-2026-09/) — byte-exact, with `SHA256SUMS` and a separate `LICENSE.AIREP-verifier-source.txt` |
 
-Joel Hillier (Certisyn, Inc.) independently implemented an AIREP v0.2 consumer from the frozen
-normative contract. The run record states that first-party AIREP verifier code was not fetched or
-read; expected outcomes were present in the package, so no expected-blind claim is made. Against
-the release-pinned corpus, the implementation reproduced all six fixed vectors byte-exact and
-matched every frozen field across all 18 cases. The sole disagreement was the package-derived
-`cryptographic_result` projection for `CLS-XT1`, which the external report classifies as an
-expected-result defect.
+Joel Hillier (Certisyn, Inc.) independently implemented an AIREP v0.2 consumer from the frozen normative contract. The run record states that first-party AIREP verifier code was not fetched or read; expected outcomes were present in the package, so no expected-blind claim is made. Against the release-pinned corpus, the implementation reproduced all six fixed vectors byte-exact and matched every frozen field across all 18 cases. The sole disagreement was the package-derived `cryptographic_result` projection for `CLS-XT1`, which the external report classifies as an expected-result defect.
 
 ### Maintainer-side reproduction
 
@@ -144,22 +138,29 @@ The four frozen artefacts are deposited byte-exact at
 [`external-evidence/certisyn-2026-09/`](./external-evidence/certisyn-2026-09/), verifiable with
 `sha256sum -c SHA256SUMS`.
 
-**The licence covers `AIREP-verifier-source.txt` and nothing else:** BSD-3-Clause as published by
-OSI, copyright 2026 Certisyn, Inc., carried in a separate `LICENSE.AIREP-verifier-source.txt` and
-never as a header inside the frozen source — that file's digest
+**Licence scope: `AIREP-verifier-source.txt` only.** BSD-3-Clause as published by OSI, copyright
+2026 Certisyn, Inc., is an **implementation/source licence** on that one file. It is not a licence
+for the external evidence set. No licence is inferred or asserted for `AIREP-RUN-RECORD.txt`,
+`AIREP-report-18-rows.txt`, or `AIREP-observed-verdicts.txt`, and no terms are invented for them.
+
+| Artefact | Licence status |
+|---|---|
+| `AIREP-verifier-source.txt` | **BSD-3-Clause**, copyright 2026 Certisyn, Inc. |
+| `AIREP-RUN-RECORD.txt` | No licence asserted |
+| `AIREP-report-18-rows.txt` | No licence asserted |
+| `AIREP-observed-verdicts.txt` | No licence asserted |
+
+The licence is carried in [`LICENSE.AIREP-verifier-source.txt`](./external-evidence/certisyn-2026-09/LICENSE.AIREP-verifier-source.txt)
+and [`LICENSE-SCOPE.txt`](./external-evidence/certisyn-2026-09/LICENSE-SCOPE.txt), never as a header
+inside the frozen source: that file's digest
 (`sha256:2aef1212adeaab5a1dc7f07c3f240183db97478b247c008c5fcc0e177fbfeca8`) is the implementation
 identity recorded on all 18 report rows, so a header would break that tie.
 
-**Do not infer that BSD-3-Clause applies to `AIREP-RUN-RECORD.txt`, `AIREP-report-18-rows.txt` or
-`AIREP-observed-verdicts.txt`.** Those carry no declared licence; they are deposited as the record
-of the run.
-
-On the one licensed file: it is a copyright licence only, granting **no patent rights, expressly or
-by implication**; it **neither anticipates nor alters the BCP 79 disclosures Certisyn has filed
-against its own Internet-Drafts**, for which the licensing declaration is still to come;
-redistribution, modification and archiving are permitted on the BSD-3-Clause licence's own terms;
-the copyright notice and disclaimer must be retained; and the Certisyn name may not be used to
-endorse a derived work.
+On the licensed source: **no patent rights, expressly or by implication**; it **neither anticipates
+nor alters the BCP 79 disclosures Certisyn has filed against its own Internet-Drafts**, where the
+licensing declaration is still to come; redistribution, modification and archiving are permitted on
+BSD-3-Clause's own terms; the copyright notice and disclaimer must be retained; and the Certisyn
+name may not be used to endorse a derived work.
 
 **No DOI is claimed for this deposit.**
 
