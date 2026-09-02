@@ -78,6 +78,33 @@ the migration/projection report instead.
 - Security fixes in the conformance tooling.
 - Nothing else. Feature work, schema change, and semantics change happen only on the v0.2 line.
 
+## Signature input and value encoding — a v0.1 ambiguity v0.2 closes
+
+v0.1 §6 requires signing `integrity.current` without stating which bytes that means or how
+`signature.value` is encoded. Both points are pinned in v0.2:
+
+- **Signed bytes.** [`INTEGRITY.md`](../v0.2/INTEGRITY.md) §3 fixes the record-signature preimage
+  as `sig-tag-bytes LF suite-id-bytes LF current-bytes`, and defines `current-bytes` as the ASCII
+  bytes of the **full** `integrity.current` string — `"sha256:"` followed by 64 lowercase
+  hexadecimal characters — not the 32 bytes it denotes.
+- **Value encoding.** `common.schema.json#/$defs/signature_value` pins Ed25519
+  `integrity.signature.value` to exactly `^[0-9a-f]{128}$`: 128 lowercase hexadecimal characters.
+
+This v0.2 construction **closes a v0.1 ambiguity that was independently shown to be real** by the
+Emek Can Doğru producer experiment against frozen v0.1.2, recorded in
+[`EXTERNAL_EVIDENCE.md`](../../../EXTERNAL_EVIDENCE.md) and as a known limitation in
+[`v0.1/STATUS.md`](../v0.1/STATUS.md).
+
+The ordering matters and is not being restated: v0.2 was **not** designed in response to that
+experiment, which happened afterwards. The experiment is evidence that the ambiguity was real and
+reachable by an independent implementer, and that the v0.2 construction removes it.
+
+`prove_signature_input_pinning.py` asserts the closure against the frozen v0.2 vectors: for V1–V4
+the pinned preimage reproduces the frozen bytes and the frozen signature verifies over it, while
+the digest-bytes reading yields different preimage bytes over which the same signature does not
+verify. The encoding gate already carries two generated schema-corpus negatives,
+`decision-neg-sig-short` and `decision-neg-sig-uppercase`; no duplicate fixture was added.
+
 ## Dual-verification window
 
 From v0.2-alpha until v0.2 reaches its independence gate (AD-15), consumers holding v0.1 chains

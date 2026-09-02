@@ -124,6 +124,51 @@ exists to remove.
 `not_established` is an honest and useful answer, and omitting the block entirely is better than
 implying a verification that did not happen.
 
+## Known interoperability limitation — signature input and value encoding
+
+**Status: preserved, not fixed. Released v0.1.2 is unchanged.**
+
+**What v0.1 states.** `SPEC.md` §6, the signature bullet, requires that a producer MUST sign
+`integrity.current` and record the result in `integrity.signature` as `{alg, value}`, and that
+`alg` names the algorithm "so that any conformant signer is interchangeable". `integrity.current`
+is defined as the string `sha256:` followed by 64 lowercase hexadecimal characters.
+
+**What remained under-specified.** Two things the frozen text does not state:
+
+1. **The exact bytes signed.** "Sign `integrity.current`" does not say whether the signed bytes
+   are the ASCII bytes of that string or the 32 bytes the string denotes.
+2. **The exact encoding of `signature.value`.** The frozen text never constrains it. The strings
+   `signature.value`, `base64`, `UTF-8`, `signed bytes` and `preimage` each occur **zero** times
+   in `SPEC.md`.
+
+**How it was exposed.** Independently, by an external producer experiment against frozen v0.1.2
+rather than by internal review. An independently authored producer chose the ASCII bytes of the
+string and lowercase hex, and both pinned reference verifiers accepted its records on first
+invocation. Re-signing the same records under each of the other two readings — same key, nothing
+else changed, `integrity.current` untouched because it is computed with `integrity.signature`
+removed — was rejected by both verifiers with a signature-only failure. Identities, commands and
+the reproduction are in [`EXTERNAL_EVIDENCE.md`](../../../EXTERNAL_EVIDENCE.md).
+
+**The honest reading.** The two reference verifiers implement one interpretation consistently,
+and that interpretation is what an interoperating producer must match. But the normative text did
+not pin it, so a conformant-looking producer could reasonably choose either reading. The sentence
+that says naming `alg` makes any conformant signer interchangeable therefore rests on two
+conventions v0.1 does not state. This is recorded as a limitation of the released text; it is not
+a claim that v0.1 intended one reading and failed to write it down.
+
+**Disposition.** v0.1.2 is frozen and is preserved unchanged — see the immutability rule in
+**Change control** below. v0.2 pins both points explicitly; see
+[`v0.2-design/MIGRATION.md`](../v0.2-design/MIGRATION.md). Whether the v0.1 line should receive an
+editorial clarification is deliberately left open, because adding algorithm-specific encoding to a
+released line may be more than editorial.
+
+**Not part of this limitation.** Two adjacent observations from the same experiment are
+**interface conventions, not normative-core defects**, and are recorded as such: `SPEC.md` does
+not state how a chain is serialised as a file (the string `jsonl` occurs zero times in it;
+one record per line comes from the usage line in
+[`conformance/README.md`](./conformance/README.md)), and the CLI public-key encoding is convention
+rather than specification.
+
 ## Prior art, and what AIREP does not claim to have invented
 
 Recorded here because a format that overstates its novelty is not one you should trust with an
