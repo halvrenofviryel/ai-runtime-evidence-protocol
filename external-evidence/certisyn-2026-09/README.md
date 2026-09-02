@@ -5,7 +5,7 @@ independently implemented AIREP v0.2 consumer/verifier run against a release-pin
 
 **These bytes are frozen.** They are not edited, regenerated, reformatted, line-ending-normalised,
 re-scored or annotated. No licence header was added to any of them — see *Licence* below for why
-that matters.
+that matters, and for the fact that the licence covers **one** of these four files.
 
 ## Artefacts
 
@@ -38,16 +38,47 @@ The disagreement was independently reproduced and the projection was corrected i
 
 ## Licence
 
-**BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc.** Full text in `LICENSE`.
+> **Licence scope: `AIREP-verifier-source.txt` only.**
+>
+> BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc., applies to
+> `AIREP-verifier-source.txt` and nothing else in this deposit. No licence is inferred or asserted
+> by this deposit for `AIREP-RUN-RECORD.txt`, `AIREP-report-18-rows.txt`, or
+> `AIREP-observed-verdicts.txt`.
 
-Stated explicitly, at the licensor's instruction:
+Full licence text: [`LICENSE.AIREP-verifier-source.txt`](./LICENSE.AIREP-verifier-source.txt).
+Scope notice: [`LICENSE-SCOPE.txt`](./LICENSE-SCOPE.txt).
 
-- it is a **copyright licence only**;
+| File | Licence status |
+|---|---|
+| `AIREP-verifier-source.txt` | **BSD-3-Clause**, copyright 2026 Certisyn, Inc. |
+| `AIREP-RUN-RECORD.txt` | **No licence asserted by this deposit.** |
+| `AIREP-report-18-rows.txt` | **No licence asserted by this deposit.** |
+| `AIREP-observed-verdicts.txt` | **No licence asserted by this deposit.** |
+
+No licence terms are invented for those three files. They are deposited byte-exact as the record of
+the run; this deposit makes no grant over them and none is implied by their presence in the same
+directory.
+
+Joel Hillier's qualifications on the licensed source, preserved:
+
 - it grants **no patent rights, expressly or by implication**;
-- it does **not anticipate or alter Certisyn's BCP 79 disclosures**;
-- it permits redistribution, modification and archiving under BSD-3-Clause terms;
-- it requires retaining the copyright notice and the disclaimer;
+- it **neither anticipates nor alters the BCP 79 disclosures Certisyn has filed against its own
+  Internet-Drafts**, where the licensing declaration is still to come;
+- redistribution, modification and archiving of the licensed source are permitted on
+  **BSD-3-Clause's own terms**;
+- the **copyright notice and disclaimer must be retained**;
 - the **Certisyn name may not be used to endorse** a derived work.
+
+### Why no header was inserted
+
+`AIREP-verifier-source.txt` is identified by
+
+    sha256:2aef1212adeaab5a1dc7f07c3f240183db97478b247c008c5fcc0e177fbfeca8
+
+and that digest is the implementation identity recorded on all 18 report rows. Inserting a licence
+header would change those bytes and break the tie between the report and the code that produced it.
+The licence is therefore carried **beside** the source, in
+`LICENSE.AIREP-verifier-source.txt` and in this metadata, with the frozen bytes preserved exactly.
 
 ## What this deposit does and does not establish
 
