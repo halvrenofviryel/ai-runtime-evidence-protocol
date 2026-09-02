@@ -1,0 +1,34 @@
+LICENCE SCOPE NOTICE
+====================
+
+This directory contains four frozen evidence artefacts. They are NOT uniformly licensed.
+
+  LICENSED
+    AIREP-verifier-source.txt
+      BSD-3-Clause as published by OSI, copyright 2026 Certisyn, Inc.
+      Full text: LICENSE.AIREP-verifier-source.txt
+
+  NOT LICENSED BY THIS DEPOSIT
+    AIREP-RUN-RECORD.txt
+    AIREP-report-18-rows.txt
+    AIREP-observed-verdicts.txt
+      No licence is inferred or asserted by this deposit for these files. They are
+      deposited byte-exact as the record of the run. No terms are invented for them.
+
+The licence file is named after the single file it covers so that its scope cannot be
+read off by proximity. A reader must not infer that the three files above are
+BSD-3-Clause licensed.
+
+On the one licensed file, as stated by the licensor:
+  - no patent rights are granted, expressly or by implication;
+  - the licence neither anticipates nor alters the BCP 79 disclosures Certisyn has
+    filed against its own Internet-Drafts, where the licensing declaration is still
+    to come;
+  - redistribution, modification and archiving are permitted on BSD-3-Clause's own terms;
+  - the copyright notice and disclaimer must be retained;
+  - the Certisyn name may not be used to endorse a derived work.
+
+AIREP-verifier-source.txt is identified by
+  sha256:2aef1212adeaab5a1dc7f07c3f240183db97478b247c008c5fcc0e177fbfeca8
+No licence header has been inserted into it; doing so would change those bytes and
+break the implementation identity recorded on all 18 report rows.
