@@ -47,6 +47,9 @@ cross-implementation corpus, external-standard mappings exercised) → **indepen
 (genuinely third-party production or reproduction) → `stable`. No stage is skipped, and the
 "stable" label is not used before both gates pass.
 
+> **Narrowly superseded for Core v0.2 stable gating by [AD-16](#ad-16--core-release-boundary-and-companion-profile-policy) (2026-09-03).**
+> AD-16 removes **only** the requirement that *specific external-standard mappings be exercised* before Core stable. The staged release model, the **≥2-producer interoperability gate**, and the **independence gate** are all preserved unchanged. The technical content of this decision is otherwise unchanged and remains adopted.
+
 **Consequence:** breaking design work happens here instead of as incremental v0.1 patches, so
 published v0.1 chains and citations stay stable.
 
@@ -273,6 +276,10 @@ unevaluated prerequisite is never a satisfied one.
 
 **Status: Adopted (architecture) — 2026-08-22.**
 
+> **Narrowly superseded for Core v0.2 stable gating by [AD-16](#ad-16--core-release-boundary-and-companion-profile-policy) (2026-09-03).**
+> AD-16 supersedes **only** the reading that the SCITT binding profile or its PoC must ship as a prerequisite of **AIREP Core v0.2.0 stable**. Everything below continues to define the intended semantics of the SCITT companion profile, including the normative seal → register → receipt → subsequent-anchor order. The technical content of this decision is otherwise unchanged and remains adopted.
+
+
 v0.1's `chain_witness` profile is a local, offline head-witness mechanism. It stays — it serves
 the network-free case. But AIREP does not grow it toward a transparency service: RFC 9943 defines
 that layer. v0.2 adds a **SCITT binding profile**: an AIREP artifact (or chain head) is projected
@@ -297,6 +304,10 @@ effect. Registration composes with, and does not replace, AD-03's evidence famil
 ## AD-11 — Authorization is referenced, never defined
 
 **Status: Adopted (architecture) — 2026-08-22.**
+
+> **Narrowly superseded for Core v0.2 stable gating by [AD-16](#ad-16--core-release-boundary-and-companion-profile-policy) (2026-09-03).**
+> AD-16 supersedes **only** the reading that a concrete authorization/AuthZEN profile must ship as a prerequisite of **AIREP Core v0.2.0 stable**. Everything below — including the 2026-08-26 erratum — continues to define the intended semantics of the authorization-reference companion profile. The technical content of this decision is otherwise unchanged and remains adopted.
+
 
 AIREP v0.2 defines an **authorization reference profile**: a Decision Receipt can carry a
 reference to (and digest of) an external authorization decision — an AuthZEN Authorization API 1.0
@@ -361,12 +372,186 @@ verifier and not the other is a release blocker, not a footnote.
 
 **Status: Adopted (process).**
 
+> **Narrowly superseded for Core v0.2 stable gating by [AD-16](#ad-16--core-release-boundary-and-companion-profile-policy) (2026-09-03).**
+> AD-16 supersedes **only clause (3)** — the mandatory SCITT PoC and AuthZEN reference case as Core stable gates. **Clause (1)** (a producer not written by these maintainers) and **clause (2)** (the cross-implementation corpus including AD-03 reconciliation cases and at least one deliberately broken case per artifact type, passing under both reference verifiers and the independent implementation) are preserved in full and remain Core stable gates. The technical content of this decision is otherwise unchanged and remains adopted.
+
+
 v0.2 is not called stable until: (1) at least one producer implementation exists that was not
 written by this repository's maintainers; (2) the cross-implementation corpus — including AD-03
 reconciliation cases and at least one deliberately broken case per artifact type — passes under
 both reference verifiers and the independent implementation; (3) the SCITT PoC (AD-10) and the
 AuthZEN reference case (AD-11) have been exercised end-to-end at least once. Absence of prior
 failure is not capability evidence; the gate demands observed results.
+
+## AD-16 — Core release boundary and companion-profile policy
+
+**Status: Adopted (architecture + process) — 2026-09-03. Maintainer scope decision.**
+
+This decision separates two lifecycles that had become entangled:
+
+- the **AIREP Core protocol release lifecycle**, and
+- the **companion-profile lifecycle** for specific external-standard and foreign-system work.
+
+**This is not a removal of SCITT or AuthZEN support, and not a reduction of ambition.** Both remain
+intended, their semantics remain adopted in AD-10 and AD-11, and the work remains valuable. What
+changes is only *which release they gate*.
+
+### Why this follows from AD-02 rather than departing from it
+
+AD-02 adopted composition, not reinvention: authorization semantics belong to authorization
+systems, transparency semantics to transparency services, telemetry to telemetry systems, agent
+transport to MCP/A2A. AIREP binds, references, correlates and composes with those systems. AD-02
+also states that growth of the profile catalogue is not a goal and precision of the core is.
+
+Making a specific adjacent standard's profile a prerequisite of the Core release inverted that: it
+made AIREP Core's own release contingent on ecosystems AIREP deliberately does not own, and whose
+availability, versioning and participation AIREP does not control. Separating the lifecycles restores
+AD-02's intent.
+
+The repository's own inventory already supports this reading: `BREAKING_CHANGES.md` rows 10 and 11
+classify both the SCITT binding profile and the authorization reference profile as **ADDITIVE**, and
+the decision index marks AD-10, AD-11 and AD-12 wire-breaking status as *Additive*. Neither has ever
+touched the wire format, the schemas, the integrity construction, the fixed vectors, the verifiers,
+or any corpus case.
+
+### What is AIREP Core v0.2
+
+The Decision / Control / Execution / Effect artifact family and explicit correlation across it;
+reconciliation; decision-to-effect stage separation; JCS canonicalization; cryptographic domain
+separation; chain and record identity; mandatory content digests; closed core objects; the
+**namespaced profile extension mechanism**; the asymmetric portable authentication baseline;
+Core / Authenticated / Witnessed assurance semantics; observer-relationship handling; verifier
+parity; producer/verifier interoperability; independent external implementation evidence;
+adversarial and deliberately broken cases; and reproducible frozen release evidence.
+
+**The profile-extension *mechanism* is Core. Specific external profiles are not.**
+
+### What becomes companion work
+
+The SCITT binding profile and its PoC; the authorization-reference/AuthZEN profile and its reference
+case; the AD-12 MCP / A2A / OpenTelemetry profiles; and any foreign-system adapter or external
+mapping. Each has its own independently versionable lifecycle and may be developed before or after
+`v0.2.0`.
+
+**Companion profiles MAY themselves become normative specifications within their own versioned
+profile lifecycle; their normative status does not make them prerequisites of AIREP Core stable
+unless a later explicit Core architecture decision says so.**
+
+### Narrowly scoped supersession
+
+AD-16 supersedes the following **only for AIREP Core v0.2 stable-release gating**. The underlying
+technical meaning of each decision is untouched, and all original reasoning is preserved in place.
+
+| Decision | Superseded for Core stable gating | Explicitly preserved |
+|---|---|---|
+| AD-01 | the requirement that *specific external-standard mappings be exercised* before Core stable | the staged release model; the **≥2-producer interoperability gate**; the **independence gate** |
+| AD-10 | the reading that the SCITT binding profile or PoC must ship as part of Core v0.2 | the full intended semantics of the SCITT companion profile, incl. seal → register → receipt → subsequent anchor |
+| AD-11 | the reading that a concrete authorization/AuthZEN profile must ship as part of Core v0.2 | the full intended semantics of the authorization-reference companion profile, incl. the 2026-08-26 erratum |
+| AD-12 | — (nothing; already informative) | unchanged: external/informative composition work |
+| AD-14 | — (**nothing**) | **fully preserved.** See the clarification below |
+| AD-15 | **clause (3) only** — mandatory SCITT PoC + AuthZEN reference case as stable gates | **clause (1)** non-maintainer producer; **clause (2)** cross-implementation corpus incl. AD-03 reconciliation and ≥1 deliberately broken case per artifact type, under both reference verifiers and the independent implementation |
+
+### AD-14 is fully preserved, and clarified
+
+Verifier parity remains a real release blocker. AD-14 requires parity over **the normative validation
+surface that actually ships with AIREP Core** — including the Core profile-extension mechanism. It
+does **not** imply that any SCITT or AuthZEN schema must exist. The false inference
+`AD-14 → SCITT/AuthZEN profile required` is removed; the true dependency is
+`AD-14 → parity across the shipped Core normative validation surface`, and
+`Core profile-extension mechanism → its parity capability must be tested`. Companion profiles are
+separately versioned consumers of that mechanism.
+
+Where the extension mechanism's parity capability needs a fixture, it is tested with a
+**repository-controlled, unmistakably test-only profile**. Such a fixture never carries the name of
+SCITT, AuthZEN, or any real external system, and is never presented as an external integration.
+
+### The resulting Core v0.2.0 stable gate, stated in full
+
+Stated here in full so no future reader must reconstruct it from superseded clauses:
+
+1. **Normative Core completeness** — the Decision / Control / Execution / Effect family and its
+   normative conformance semantics are complete.
+2. **Producer diversity, exercised — not merely enumerated.** At least **two producer
+   implementations** operate against the same applicable frozen v0.2 candidate, at least **one is
+   genuinely non-maintainer**, and **each qualifying producer actually emits artifacts under that
+   candidate**. Existence is not evidence: "two producers exist" is inventory, not interoperability. A first-party
+   producer is the planned local route but is **not itself a normative requirement** if two
+   genuinely independent producers otherwise satisfy the gate. **Historical v0.1 producer evidence
+   does not count toward the v0.2 producer count.**
+3. **Independent consumer/verifier evidence** — at least one non-maintainer consumer/verifier
+   exercised against the **same frozen v0.2 candidate**, recorded at the exact evidentiary strength
+   actually observed. A historical handoff against an earlier candidate does not automatically
+   satisfy this for a later, changed candidate.
+4. **Cross-implementation corpus constructed** on that same frozen candidate, spanning three
+   categories:
+   - **(i) normative / adversarial cases maintained by the project** — Decision, Control, Execution and
+     Effect cases; **at least one deliberately broken case per artifact type** (AD-15 clause (2)'s own
+     term; the four artifact *types* are Decision Receipt, Control Evidence, Execution Evidence and
+     Effect Evidence, so "per artifact type" and "per artifact family" denote the same four here and
+     neither reduces coverage);
+   - **(ii) producer-output interoperability cases emitted by *each* qualifying producer** under that
+     candidate;
+   - **(iii) AD-03 reconciliation cases** evaluated over the common frozen semantics, plus multi-target
+     / partial-observation cases where appropriate.
+
+   Category (ii) is what makes producer diversity load-bearing. **A corpus generated only by
+   first-party/reference tooling MUST NOT satisfy producer interoperability**, however many producers
+   exist. Not every case need be emitted independently by every producer — only enough that both
+   qualifying producers **materially participate** in the same-version interoperability evidence, and
+   that **producer-specific disagreement or rejection cannot be hidden by reference-only cases
+   passing**.
+5. **Cross-implementation corpus passes, by role — including the producer-output cases.** The
+   required corpus, **including category (ii)**, passes under **(a)** official reference verifier A,
+   **(b)** official reference verifier B, and **(c)** at least one qualifying **non-maintainer
+   consumer/verifier** implementation — all against the **same frozen candidate**. Each qualifying
+   producer's outputs are evaluated by all three; a pass recorded only over category (i) does not
+   satisfy this gate.
+
+   > **Role ambiguity resolved here.** AD-15 clause (2) reads "passes under both reference verifiers
+   > and the independent implementation". Read in isolation, "the independent implementation" does not
+   > say which *role* that implementation occupies. **AD-16 resolves that ambiguity for the corrected
+   > Core stable gate**; this is an explicit resolution going forward, **not** a claim about what
+   > AD-15 always meant. The resolution: the third pass must come from an implementation that
+   > independently implements the **consumer/verifier evaluation surface**. **A producer does not
+   > satisfy this gate merely by existing**, and never satisfies it by being counted twice. Producer
+   > diversity (item 2) and verifier diversity (items 3 and 5c) are **separate evidence dimensions**
+   > and are never traded against each other.
+6. **Official verifier parity (AD-14, preserved in full)** — both official verifiers return the same
+   project-defined observable result surface for every record over the shipped Core normative
+   validation surface. **AD-14's asymmetry rule is retained without weakening: a check implemented
+   in one official verifier and not the other is itself a release blocker, not a footnote.** Parity
+   is not scoped to "checks both already implement" — that reading would let a one-sided check
+   escape the gate, which is precisely what AD-14 forbids.
+7. **Profile-extension parity capability** — both verifiers behave consistently for the Core-defined
+   profile-validation mechanism.
+8. **Reproducibility and frozen identity** — deterministic artifact identities, reproducible
+   manifests, immutable evidence packages, and no unresolved release-blocking disagreement.
+
+### A non-requirement, stated so it is not invented later
+
+**Producer-role independence and verifier-role independence are separate dimensions.** AD-16 does
+**not** require the non-maintainer producer and the non-maintainer consumer/verifier to be controlled
+by **different organizations**. Cross-organization independence between those two roles would be
+*stronger* evidence and may be recorded as such where it happens to hold, but it is **not** required
+unless a later explicit architecture decision adopts it. Each role's non-maintainer requirement is
+assessed on its own.
+
+### What must no longer block Core stable
+
+Concrete SCITT profile delivery; concrete AuthZEN profile delivery; the SCITT PoC; the AuthZEN
+reference case; MCP / A2A / OTel mappings; generic "external-standard mappings exercised"; any
+foreign-system composition experiment; and any specific adjacent-ecosystem adoption. These may carry
+statuses such as `COMPANION`, `PROGRAMME`, `RESEARCH`, `NOT_RUN` or `EXTERNAL_REQUIRED`, but
+**`Blocks Core stable? = NO`** unless a future explicit Core architecture decision intentionally
+changes that.
+
+### Provenance of this decision
+
+A maintainer scope decision, taken before stable release, on the maintainers' own analysis. It was
+**not** requested, prompted, endorsed or reviewed by IETF, the SCITT working group, the AuthZEN
+working group, or any external party or project. No external participation is claimed. It changes no
+wire format, schema, integrity construction, fixed vector, assurance class, corpus, frozen evidence
+artefact, or released tag — `v0.2.0-alpha.1` is untouched.
 
 ---
 
@@ -388,4 +573,5 @@ failure is not capability evidence; the gate demands observed results.
 | 12 | MCP/A2A/OTel informative profiles | Adopted (architecture) | Additive |
 | 13 | Crosswalk discipline | Adopted (architecture) | — |
 | 14 | Verifier parity gate | Adopted (architecture) | — |
-| 15 | Independence gate | Adopted (process) | — |
+| 15 | Independence gate | Adopted (process) — **§3 superseded for Core gating by AD-16** | — |
+| 16 | Core release boundary and companion-profile policy | Adopted (architecture + process) | — |
