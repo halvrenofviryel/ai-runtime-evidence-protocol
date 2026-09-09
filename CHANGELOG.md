@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.0-beta.1 — prepared, unpublished
+## v0.2.0-beta.1 — 2026-09-09
 
 * First-party Python reference producer/library and four emit commands with
   frozen v0.2 integrity, pure Ed25519 signatures and chain continuation.

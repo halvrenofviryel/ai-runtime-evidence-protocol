@@ -1,6 +1,7 @@
 # AIREP v0.2.0-beta.1 — usable Decision→Control→Execution→Effect implementation target
 
-**Prepared release notes; no beta tag or release has been published by this work.**
+**Beta prerelease — 2026-09-09.** Publication status, exact tag and downloadable
+archives are recorded on the [GitHub release](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/releases/tag/v0.2.0-beta.1).
 Artifact wire version remains `0.2`. v0.1 remains frozen and supported.
 
 This beta adds a first-party reference producer, complete runnable local

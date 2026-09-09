@@ -1,6 +1,6 @@
 # v0.2.0-beta.1 beta readiness
 
-**Current implementation target, not a published release.** This matrix measures
+**Current v0.2 implementation target: `v0.2.0-beta.1`.** This matrix measures
 implementation readiness separately from [RC/stable independence](RELEASE_STAGES.md).
 A criterion becomes PASS only from its linked runnable test or concrete artifact
 inspection, never from absence of a known failure. The final measurement run is
@@ -50,15 +50,18 @@ identifies the implementation bytes actually tested.
 * Real local lifecycle and every documented emission/verification/reconciliation
   step passed. Reading-path audit: 12 documents; **1,919 historical files unchanged**.
 
-This establishes local CI-equivalent readiness. **Hosted CI on the final commit
-is NOT_RUN here**; the workflow is prepared and publication instructions require
-that check. Earlier sandbox-blocked and initial regression failures remain in the
+This establishes local CI-equivalent readiness. Hosted CI was **NOT_RUN during
+the implementation measurement**. The [release review](../../../reports/release-v0.2.0-beta.1/RELEASE_REPORT_TR.md)
+describes the subsequent publication process; hosted run evidence is attached to
+the [GitHub release](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/releases/tag/v0.2.0-beta.1).
+Earlier sandbox-blocked and initial regression failures remain in the
 [work report's evidence directory](../../../reports/beta-2026-09-08/).
 No historical external result is promoted to a beta/r3 pass.
 
 **Technical beta assessment: READY TO TAG after normal review/commit/publication
 checks. No remaining beta implementation blocker is identified by the completed
-suite.** No tag, push, release or DOI deposit was performed by this preparation.
+suite.** Publication is a separate measured step; the historical implementation
+report remains unchanged.
 
 ## Known limitations retained
 

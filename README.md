@@ -147,8 +147,9 @@ dependency — that is the point of the neutrality test.
 An **independently authored v0.1 producer** has since been measured against frozen **v0.1.2**: its
 records were accepted on first invocation by both pinned reference verifiers, and the experiment
 independently exposed a real v0.1 ambiguity in the signature input and value encoding. That is one
-compatibility result, not a general interchange property. **v0.2 still has no producer
-implementation, first-party or third-party.** Identities, commands and boundaries are recorded in
+compatibility result, not a general interchange property. **v0.2.0-beta.1 provides a first-party
+reference producer for all four artifact families. No same-version third-party
+v0.2 producer→consumer interoperability result exists.** Historical identities, commands and boundaries are recorded in
 [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md).
 
 ## Contributing
@@ -180,7 +181,7 @@ See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 Paper: *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance*, [arXiv:2608.21363](https://arxiv.org/abs/2608.21363) (preprint, not peer reviewed).
 
-Archived on Zenodo, in three layers:
+Existing Zenodo archives:
 
 | Cite | DOI |
 |---|---|
@@ -188,6 +189,8 @@ Archived on Zenodo, in three layers:
 | **v0.1** — the stable, recommended target | [10.5281/zenodo.20475137](https://doi.org/10.5281/zenodo.20475137) |
 | **v0.2.0-alpha.1** — experimental prerelease | [10.5281/zenodo.22101986](https://doi.org/10.5281/zenodo.22101986) |
 
-Cite the paper for the protocol, and a version DOI for the exact artifact you used. If you are
-building against AIREP today, that is the v0.1 DOI.
+Cite the paper for the protocol, and the version DOI for the exact artifact you used.
+For beta, use the [v0.2.0-beta.1 release](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/releases/tag/v0.2.0-beta.1)
+and its exact tag until a new beta version DOI is recorded there. The alpha DOI
+does not identify beta artifacts.
 Machine-readable metadata is in [`CITATION.cff`](./CITATION.cff).
