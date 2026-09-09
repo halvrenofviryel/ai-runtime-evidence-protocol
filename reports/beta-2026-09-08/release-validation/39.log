@@ -1,0 +1,24 @@
+AIREP-Trusted gate battery  (node present)
+  PASS  shared corpus matches its generator (9 cases in fixtures/trusted_gates/)
+  case                           | py                      | mjs                     | ok
+  -------------------------------|-------------------------|-------------------------|----
+  forged_witness_signature       | TRUSTED_NOT_IMPLEMENTED | TRUSTED_NOT_IMPLEMENTED | PASS
+  witness_is_the_producer        | Verified                | Verified                | PASS
+  no_freshness_anchor            | Verified                | Verified                | PASS
+  stale_freshness_anchor         | TRUSTED_NOT_IMPLEMENTED | TRUSTED_NOT_IMPLEMENTED | PASS
+  revoked_producer_key           | Verified                | Verified                | PASS
+  no_revocation_state            | Verified                | Verified                | PASS
+  structurally_perfect_witness   | TRUSTED_NOT_IMPLEMENTED | TRUSTED_NOT_IMPLEMENTED | PASS
+  empty_witness_object           | Verified                | Verified                | PASS
+  chain_verified_then_withheld   | Verified                | Verified                | PASS
+  PASS  withheld class is NAMED (structurally_perfect_witness -> TRUSTED_NOT_IMPLEMENTED + all 4 gates named, got TRUSTED_NOT_IMPLEMENTED ['freshness-recency-not-evaluated', 'revocation-not-honored', 'witness-key-distinctness-unproven', 'witness-signature-not-verified'])
+  PASS  empty input rejected (empty.jsonl, py) -> class=INVALID exit=1, expected class=INVALID exit!=0
+  PASS  empty input rejected (empty.jsonl, mjs) -> class=INVALID exit=1, expected class=INVALID exit!=0
+  PASS  empty input rejected (empty.json, py) -> class=INVALID exit=1, expected class=INVALID exit!=0
+  PASS  empty input rejected (empty.json, mjs) -> class=INVALID exit=1, expected class=INVALID exit!=0
+  -- WP-09: a witness-less revoked key is NAMED, not a silent Verified --
+  PASS  revoked                (py) -> class=Verified verified_withheld=present exit=0 (want Verified, caveat=present)
+  PASS  revoked                (mjs) -> class=Verified verified_withheld=present exit=0 (want Verified, caveat=present)
+  PASS  control(revoked=false) (py) -> class=Verified verified_withheld=absent exit=0 (want Verified, caveat=absent)
+  PASS  control(revoked=false) (mjs) -> class=Verified verified_withheld=absent exit=0 (want Verified, caveat=absent)
+RESULT: no record reached Trusted on presence alone

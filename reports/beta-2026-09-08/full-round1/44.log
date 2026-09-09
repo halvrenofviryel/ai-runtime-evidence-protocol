@@ -1,0 +1,97 @@
+
+PYTHON INTEROP EVALUATOR SELFTEST -- MANDATORY BLOCK ACCOUNTING
+contract: INTEROP_REFERENCE_EVALUATOR_CONTRACT.md 8.7
+evaluator_version: 0.2.7
+
+  W1-BLK-IR4           passed        assertions=41  completions=1
+  W1-BLK-IR5           passed        assertions=21  completions=1
+  W1-BLK-IR6           passed        assertions=24  completions=1
+  W1-BLK-IR7           passed        assertions=18  completions=1
+  W1-BLK-IR8           passed        assertions=59  completions=1
+  W1-BLK-IR9           passed        assertions=14  completions=1
+  W1-BLK-IR10          passed        assertions=19  completions=1
+  W1-BLK-IR11          passed        assertions=12  completions=1
+  W1-BLK-IR12          passed        assertions=12  completions=1
+  W1-BLK-IR13          passed        assertions=65  completions=1  skipped_tests=1
+  W1-BLK-IR14          passed        assertions=12  completions=1
+  W1-BLK-IR15          passed        assertions=27  completions=1
+  W1-BLK-IR16          passed        assertions=22  completions=1
+  W1-BLK-IR17          passed        assertions=20  completions=1
+  W1-BLK-JCS           passed        assertions=33  completions=1
+  W1-BLK-LIVE          passed        assertions=21  completions=1
+  W1-BLK-PARITY        passed        assertions=60  completions=1
+  W1-BLK-ARTIFACT-REF  passed        assertions=201  completions=1
+  W1-BLK-JSON-BYTES    passed        assertions=54  completions=1
+  W1-BLK-PATH          passed        assertions=50  completions=1
+
+  blocks: 20 passed / 0 failed / 0 not measured (of 20 pinned)
+  tests (diagnostic): 423 run / 0 failed / 0 errored / 1 skipped
+  SKIP  W1-BLK-IR13: NOT_MEASURED on this platform: os.scandir yields Unicode-native str names, so the lossless-raw-bytes name-key branch cannot be constructed here
+  run: QUALIFYING
+/tmp/airep-beta-check-yudskxga/repo/spec/airep/v0.2/interop/interop_eval_py/test_interop_eval.py:5688: SyntaxWarning: invalid escape sequence '\u'
+  raw = self.ARTIFACT_HEAD + b'"profiles":{"\udfff":1}}'
+....................IOP-R-XREF R-A: artifacts/control.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /execution_ref unresolved
+IOP-R-XREF R-A: artifacts/execution.json /decision_ref ambiguous
+.IOP-R-XREF R-A: artifacts/control.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /execution_ref unresolved
+IOP-R-XREF R-A: artifacts/execution.json /decision_ref ambiguous
+....IOP-R-XREF R-A: artifacts/control.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /execution_ref unresolved
+IOP-R-XREF R-A: artifacts/execution.json /decision_ref ambiguous
+....IOP-R-XREF R-A: artifacts/control.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /decision_ref ambiguous
+IOP-R-XREF R-A: artifacts/effect.json /execution_ref unresolved
+IOP-R-XREF R-A: artifacts/execution.json /decision_ref ambiguous
+..IOP-R-XREF R-A: artifacts/control.json /decision_ref unresolved
+............................................................................s.......................................................IOP-R-XREF R-A: artifacts/control.json /decision_ref unresolved
+....IOP-R-CLEAN R-A: artifacts/d.json /execution_ref unresolved
+..IOP-R-CLEAN R-A: artifacts/d.json /execution_ref unresolved
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref ambiguous
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref unresolved
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref unresolved
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref unresolved
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref unresolved
+IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref unresolved
+.IOP-R-CLEAN R-A: artifacts/effect.json /execution_ref ambiguous
+...................................................W1-BLK-PARITY classification: {"artifacts[] membership": "cross-lane projection failure", "artifacts[].artifact_path": "cross-lane projection failure", "artifacts[].artifact_ref": "cross-lane projection failure", "artifacts[].request_envelope_digest": "cross-lane projection failure", "artifacts[].verifier_exit_code": "cross-lane projection failure", "artifacts[].verifier_result": "cross-lane projection failure", "level1": "cross-lane projection failure", "measurement_status": "cross-lane projection failure", "nonmeasurement.json_pointer": "cross-lane projection failure", "nonmeasurement.reason": "cross-lane projection failure", "predicates": "cross-lane projection failure", "verifier_digests.class_verifier_contract": "cross-lane projection failure", "withheld_reasons": "cross-lane projection failure"}
+.W1-BLK-PARITY four-class field record: {
+ "artifacts (membership)": "cross-lane projection failure",
+ "artifacts[].artifact_path": "cross-lane projection failure",
+ "artifacts[].artifact_ref": "cross-lane projection failure",
+ "artifacts[].request_envelope_digest": "cross-lane projection failure",
+ "artifacts[].verifier_exit_code": "cross-lane projection failure",
+ "artifacts[].verifier_result": "cross-lane projection failure",
+ "artifacts[].verifier_stderr_digest": "audit-evidence failure",
+ "evaluator_version": "lane-local pin failure",
+ "level1": "cross-lane projection failure",
+ "measurement_status": "cross-lane projection failure",
+ "nonmeasurement.detail": "diagnostic-only",
+ "nonmeasurement.json_pointer": "cross-lane projection failure",
+ "nonmeasurement.reason": "cross-lane projection failure",
+ "predicates.R_A": "cross-lane projection failure",
+ "predicates.R_B": "cross-lane projection failure",
+ "predicates.R_C": "cross-lane projection failure",
+ "scenario_id": "cross-lane projection failure",
+ "verifier_digests.class_verifier": "lane-local pin failure",
+ "verifier_digests.class_verifier_contract": "cross-lane projection failure",
+ "withheld_reasons": "cross-lane projection failure"
+}
+..................................................................................................IOP-R-INDEP R-B: authorized 'sha256:1111111111111111111111111111111111111111111111111111111111111111' != executed 'sha256:2222222222222222222222222222222222222222222222222222222222222222'
+IOP-R-INDEP R-C: wire observer_relationship 'independent', effective 'unknown'
+.IOP-R-INDEP R-C: wire observer_relationship 'independent', effective 'unknown'
+..........................................................IOP-R-TOCTOU R-A: artifacts/effect.json /decision_ref unresolved
+IOP-R-TOCTOU R-B: authorized 'sha256:1111111111111111111111111111111111111111111111111111111111111111' != executed 'sha256:2222222222222222222222222222222222222222222222222222222222222222'
+.IOP-R-CLEAN R-A: artifacts/effect.json /decision_ref unresolved
+..IOP-R-INDEP R-C: wire observer_relationship 'independent', effective 'unknown'
+..IOP-R-CLEAN R-B: authorized 'SHA256:1111111111111111111111111111111111111111111111111111111111111111' != executed 'sha256:1111111111111111111111111111111111111111111111111111111111111111'
+...IOP-R-TOCTOU R-B: authorized 'sha256:1111111111111111111111111111111111111111111111111111111111111111' != executed 'sha256:2222222222222222222222222222222222222222222222222222222222222222'
+.IOP-R-XREF R-A: artifacts/effect.json /decision_ref unresolved
+..............................
+----------------------------------------------------------------------
+Ran 423 tests in 1.332s
+
+OK (skipped=1)

@@ -1,0 +1,816 @@
+{
+  "reconciliation_version": "0.2-beta.1",
+  "scope": "Supplied evidence reports only; no truth or total-history assurance.",
+  "summary": {
+    "status": "FAILURE",
+    "counts": {
+      "SATISFIED": 36,
+      "FAILURE": 1,
+      "MISSING": 0,
+      "NOT_EVALUATED": 1,
+      "INDETERMINATE": 0
+    }
+  },
+  "records": [
+    {
+      "input_index": 0,
+      "artifact_ref": {
+        "record_id": "demo.decision",
+        "chain_id": "demo.governance-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "demo.governance-chain",
+          "record_id": "demo.decision"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "not_applicable",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+          "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+          "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    },
+    {
+      "input_index": 1,
+      "artifact_ref": {
+        "record_id": "demo.dispatch",
+        "chain_id": "demo.governance-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "demo.governance-chain",
+          "record_id": "demo.dispatch"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "not_applicable",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+          "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+          "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    },
+    {
+      "input_index": 2,
+      "artifact_ref": {
+        "record_id": "demo.receipt",
+        "chain_id": "demo.execution-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "demo.execution-chain",
+          "record_id": "demo.receipt"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "not_applicable",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+          "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+          "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    },
+    {
+      "input_index": 3,
+      "artifact_ref": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "demo.execution-chain",
+          "record_id": "demo.execution"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "not_applicable",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+          "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+          "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    },
+    {
+      "input_index": 4,
+      "artifact_ref": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "demo.observation-chain",
+          "record_id": "demo.effect"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "independent",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+          "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+          "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "demo.decision",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "demo.dispatch",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "demo.receipt",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "demo.decision"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "demo.dispatch"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "demo.effect"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "demo.execution"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "demo.receipt"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "demo.decision",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "demo.dispatch",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "demo.receipt",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "demo.execution-chain",
+        "sequence": 0
+      },
+      "state": "SATISFIED",
+      "detail": "Genesis cannot restart a chain after an earlier supplied record.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "demo.execution-chain",
+        "sequence": 1
+      },
+      "state": "SATISFIED",
+      "detail": "Resolved hash link must increase sequence without skipping a supplied record.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "demo.governance-chain",
+        "sequence": 0
+      },
+      "state": "SATISFIED",
+      "detail": "Genesis cannot restart a chain after an earlier supplied record.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "demo.governance-chain",
+        "sequence": 1
+      },
+      "state": "SATISFIED",
+      "detail": "Resolved hash link must increase sequence without skipping a supplied record.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "demo.observation-chain",
+        "sequence": 0
+      },
+      "state": "SATISFIED",
+      "detail": "Genesis cannot restart a chain after an earlier supplied record.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "decision_reference",
+      "subject": {
+        "record_id": "demo.dispatch",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Exact reference resolved to decision.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "decision_reference",
+      "subject": {
+        "record_id": "demo.receipt",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Exact reference resolved to decision.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "decision_reference",
+      "subject": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Exact reference resolved to decision.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "decision_reference",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Exact reference resolved to decision.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "instruction_evidence",
+      "subject": {
+        "record_id": "demo.decision",
+        "chain_id": "demo.governance-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "At least one instruction is reported.",
+      "evidence": [
+        {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "instruction_digest_agreement",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "All evidence for this decision/instruction must bind the same instruction bytes.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "issuer_dispatch",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "Matching evidence reports this stage.",
+      "evidence": [
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "receiver_receipt",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "Matching evidence reports this stage.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "execution_evidence",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "Matching evidence reports this stage.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "execution_outcome",
+      "subject": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Reported execution_event: executed",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        }
+      ]
+    },
+    {
+      "check": "authorization_agreement",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "All Control authorization digests compared.",
+      "evidence": [
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "execution_instruction_binding",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "SATISFIED",
+      "detail": "Decision and instruction IDs resolve; instruction digests compared.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "toctou",
+      "subject": {
+        "decision_ref": {
+          "record_id": "demo.decision",
+          "chain_id": "demo.governance-chain"
+        },
+        "instruction_id": "demo.pause-1"
+      },
+      "state": "FAILURE",
+      "detail": "Compared authorized_action_digest with executed_action_digest for every applicable pair.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.receipt",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.dispatch",
+          "chain_id": "demo.governance-chain"
+        }
+      ]
+    },
+    {
+      "check": "execution_reference",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Exact reference resolved to execution.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "effect_binding",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Effect binds this Execution and the same Decision.",
+      "evidence": [
+        {
+          "record_id": "demo.execution",
+          "chain_id": "demo.execution-chain"
+        },
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "observer_relationship",
+      "subject": {
+        "record_id": "demo.effect",
+        "chain_id": "demo.observation-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Declared: independent; effective: independent.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "effect_evidence",
+      "subject": {
+        "record_id": "demo.execution",
+        "chain_id": "demo.execution-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Bound Effect report supplied.",
+      "evidence": [
+        {
+          "record_id": "demo.effect",
+          "chain_id": "demo.observation-chain"
+        }
+      ]
+    },
+    {
+      "check": "intended_target_coverage",
+      "subject": {},
+      "state": "NOT_EVALUATED",
+      "detail": "No intended-target inventory supplied; total lifecycle completeness is not established.",
+      "evidence": []
+    }
+  ]
+}

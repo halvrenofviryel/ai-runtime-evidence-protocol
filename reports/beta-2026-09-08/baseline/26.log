@@ -1,0 +1,5 @@
+FAIL: unmodified exitcode_check.mjs exited 1, expected 0
+FAIL: unmodified exitcode_check.mjs did not print its clean marker
+FAIL: falsified copy did not report any failure -- the mutation was not effective, so the exit-code result below proves nothing
+  ok    falsified copy exits 1 -- failure DOES reach the process exit status
+3 exit-code propagation problems

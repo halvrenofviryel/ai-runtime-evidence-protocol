@@ -47,3 +47,13 @@ all normative protocol decisions, acceptance criteria, specification rulings, in
 findings, and publication claims were made and reviewed by the human author; and that generated
 implementations were evaluated against independently authored fixtures, frozen expected
 outcomes, negative controls, and cross-runtime parity checks.
+
+## v0.2 beta release sequencing
+
+The current implementation target is `v0.2.0-beta.1`; publication is a separate
+maintainer action. [RELEASE_STAGES.md](spec/airep/v0.2/RELEASE_STAGES.md) explicitly
+corrects AD-01's earlier alpha/migration-tooling contradiction, retains the
+migration model, and defers the tool beyond beta. Implementation readiness is
+measured separately from independent interoperability readiness. No stable
+independence requirement is weakened. Beta adapter tests are first-party
+regression evidence; they do not retroactively change historical measurements.

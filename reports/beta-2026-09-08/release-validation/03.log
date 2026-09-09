@@ -1,0 +1,7 @@
+  ajv                    8.20.0   sha256-ok sri-ok identity-ok
+  fast-deep-equal        3.1.3    sha256-ok sri-ok identity-ok
+  fast-uri               3.1.6    sha256-ok sri-ok identity-ok
+  json-schema-traverse   1.0.0    sha256-ok sri-ok identity-ok
+  require-from-string    2.0.2    sha256-ok sri-ok identity-ok
+
+node_modules materialized offline from 5 vendored tarballs: /tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules

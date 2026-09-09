@@ -1,0 +1,2837 @@
+{
+  "baseline": "1400aa2451d0b94d07a5672a0baf404bac8448c8",
+  "files": [
+    {
+      "path": ".github/workflows/v0.2-beta.yml",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8beccd258ccf922b0c6cd6eab936468515c9d5ce0cc1cc0b67306790f482b663"
+    },
+    {
+      "path": ".gitignore",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "316a6a67d410bde913b625f02d25a2d8a1f89174f2260cb57b62d73ad4fb6df4"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "30e7cd1b45f53878debc1d13da15cd933d7a68276f31e65842237d4981dd2944"
+    },
+    {
+      "path": "CITATION.cff",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "218badb79f97a5d8221153d4fb5e21f4acddf7b3ccc12a76bbe33026c1c5efe3"
+    },
+    {
+      "path": "DEVELOPMENT_PROCESS.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "09a6554477c170bbc11e2c5634a4ed7dc65b55057dc681cf86d0f1ae51fa3884"
+    },
+    {
+      "path": "README.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b640541abcb9a07974be9c8698581ecaf5c776a6c61411c9d1ee7a9743f929c1"
+    },
+    {
+      "path": "examples/v02/README.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4632b208ac87824ac8532f4649871c5aab8b56fc9eafd4a8f25e8d7894da887f"
+    },
+    {
+      "path": "examples/v02/fixtures/broken-control.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a719698af40c14acd447120a1c71da0c1ca4bc69e69fb88e1e7f36a383ee8f9e"
+    },
+    {
+      "path": "examples/v02/fixtures/broken-decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ba0a80af21311e8e7808d04ef4450f6aaab69ee85e7823c7f8d9edef9ea97f90"
+    },
+    {
+      "path": "examples/v02/fixtures/broken-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f37307741d6ae90a723e815e5cc19e5d060da1b3bbe016aed72f79e2ab841302"
+    },
+    {
+      "path": "examples/v02/fixtures/broken-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "52ebed936d1e5e5b2cf386ae2bcd18ddf946507e47921f586599d31d086bdcd1"
+    },
+    {
+      "path": "examples/v02/fixtures/complete.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "examples/v02/fixtures/no-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5d1cf787ff70f08547e9801b16cde42f888f82633f44d0b77e2e5407e9fe82c9"
+    },
+    {
+      "path": "examples/v02/fixtures/no-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ad82963d8a499bd176bf6ce13a4a18c8ae87bf11e8be91503c87ca8fbf34e480"
+    },
+    {
+      "path": "examples/v02/fixtures/no-receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e41bae0269aeb2475bdf9506afe271305034aace555198149c9b1fbccac73723"
+    },
+    {
+      "path": "examples/v02/fixtures/same-executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62812598a8b691247a73926a319923ae0b75bd494e8d98324dd590ccf95b9399"
+    },
+    {
+      "path": "examples/v02/fixtures/toctou-mismatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2a98586bd95b0033bd51e7442910929ce39f2bff1fe45caa0bb18c3de00dba79"
+    },
+    {
+      "path": "examples/v02/fixtures/unproven-independent.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "examples/v02/profile-basis/registry.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4a46af2330f7bd537d15a6c431bce06449032bf653ca1808a9115464e059c856"
+    },
+    {
+      "path": "examples/v02/profile-basis/test-profile.schema.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "372fd5e0454e8b11454eb61a6befbf9c235c61abb18ee27739745ab52be830db"
+    },
+    {
+      "path": "examples/v02/run_lifecycle.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "48a17d1aafe17a99220a11488c493af4205f7fb5da38bfd1494ffd3440703b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/CHANGED_FILES.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": null
+    },
+    {
+      "path": "reports/beta-2026-09-08/TEST_COMMANDS.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8ef005ffb283ec277736f4f1ef666f1b37445cbe4b1bc41f829219b3f8ebaed6"
+    },
+    {
+      "path": "reports/beta-2026-09-08/WORK_REPORT_TR.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0e9813fdbdf3d34df4385f1826992037ca730b81437a676cdb2f27b36a7b4db8"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/01.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/02.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/03.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ebe68d1dee7c389bbb35411acc9f91e91a351a550c4e22367bd1bbf75fe19fe3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/04.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "23844f39e156f8f5efee9c6fe1df2b989faa4c478989291c3378788178ba3718"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/05.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0b31d8e795b943add8dd38e1291a626b177976433bd8dcc9b705a5532e5c60b3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/06.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/07.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b42208660bae75f33cd185a2ae73d6cb907a6d0868a3d314bd9fdd1589245328"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/08.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "64be414fd9382f58257b7e86651765c1c498b4368e95c4d2fdce0dc0aee0254e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/09.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/10.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8533eedc15bc6637847b73ff6aa4b24aa464da5623848bcaba98ade1218c0924"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/11.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/12.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/13.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/14.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/15.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/16.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/17.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5d70a5a3777b5e6891752a261fec14782dd43bcb92a4dfb0bfce55ce56182d34"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/18.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/19.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/20.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/21.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/22.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/23.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cdba12581eb256d0919722897c8e5fbfa47036381ab385b4a030292cd9a2515e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/24.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b3d8785e45754a02cc0fb31846266d8f5826a85d6ee4f490c5140c558fd868c7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/25.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "00edcb369e4ee827ef7e32073b675f0bdcca9f8a335f7286d5974c2986603d42"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/26.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc1c9fad171498375c1b225260d2b308acd84a551b601785bb7231029640e7c2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/27.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62c75954a0ece24272576e30f695b26e423bc10d9c8f9e1da4638c767ef07185"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/28.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/29.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/30.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/31.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/32.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/33.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/34.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/35.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/36.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/37.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/38.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/39.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/40.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/41.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/42.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ee76e1e81fa6ba15227e6d7ee540fbfdb7fc3f1a909823a916de5a88fe8ac87c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/43.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/44.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7f1bb4aecd6080b013b441812c8a414ea4541e37c99524189bdab8098c49f747"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/parity.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "54e0a15cb67cf66ed5ea38200deff0b9c2ad8dcd046a034979a64fe9f06b53d7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/parity.txt",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline-unsandboxed/results.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a0030e79dab5201999cfff6a095754024a79d11cf9e6a389d2dc30a8499bceba"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/01.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/02.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/03.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "646bab4ecd407f90ead777bbb2d28ebf40ae4d828296134e01c632591d4a76b5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/04.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cf65bc3890fa7ad9e1f3083a0ff6a64aaacbb41fca8b04316a3df2ff965b0f4c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/05.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b6bd3c806280919516e5b6e4609a3627be0f18c1471badbe0712c71e423ec95e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/06.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/07.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a507c2dccf0ee74416087147797157fc54397f68644b51433eb10abb12f381f9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/08.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b5c47f8aa58fef018010b0d9096d3330c6482935d76a907585014da08b67e4c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/09.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/10.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "566c39b2700a6cce3002ac7661521b038769ad84e07600afaad79fe49bbe4913"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/11.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/12.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/13.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/14.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/15.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/16.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/17.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c9f6c071f6fd60ba20574090283bd08d88a594a78c79d05f22844318d68b059"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/18.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/19.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/20.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/21.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/22.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "159c3c00a3ba1eae38974f5da3c1f1b0d0baeff51ebdbd4545e5cdf75e081628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/23.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "04f6332a7d0289b43c8d42f45bea7a6ab74c43a3b7e500010ab107af0edfbfb3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/24.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8b51688973673d35de345624c8fa0cc93b9c425d2cbc261705a4b0ae926fcce5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/25.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3fba7da4f3cba7bdd1a0e82e4f39a83b51aa0306264724efdcba81325db3d31b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/26.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "92a1a1d640a7c3a3763d6df9753cebda1f740fd944a7cb68c3fe806e5d7fd632"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/27.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/28.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/29.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/30.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/31.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/32.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/33.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/34.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/35.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/36.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/37.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/38.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/39.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/40.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/41.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ee8736eff2d0b4100301d01f62806623e356621426a05b4b73f8cc6f42992a21"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/42.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/43.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f88cb9a262ed2b7fade89e612567a43ef46c74e388a2754c0be69172897d1419"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/parity.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d06de1ebe203b71add37c869c945befd56638dda947d8940b1bb0d9c7c20d642"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/parity.txt",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/baseline/results.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b9d87bbcef45d9702df73a35260cd54aad581a573c63d0b94af33f5b61420d4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/changed-files.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": null
+    },
+    {
+      "path": "reports/beta-2026-09-08/consolidated-imports.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7569c841750e926323b682afaf8a40b0caf7c3c0b5d23e15fa24ec46eb4a10b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final-doc-audit.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/01.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/02.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/03.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6532f525e0ddfff5851d64a947e9b695cd9c3fc302a41f5cca9b72fa9224b976"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/04.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "15d7cfe365e2c7e0651afed1dcf332eef9ff0caba763bee8687b7276985ea9e5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/05.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "09b1cdf221b41924510ad64ab52a53f4db500bcb3779d0cb027016649ea2414c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/06.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/07.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "950ba0cd914994ba2c9735a134cd60f42ebbc58b58ee02f035e04f1c0ee2b584"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/08.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "99932ac8c4d91dec5a59805083d8078ffebfef65f347e8270602ce0b3288be44"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/09.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/10.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "1db0ee913d279bd3dd1256a5a3b1ef0ff41ce9c1f54bc72387393f2cf14a2586"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/11.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/12.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/13.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/14.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/15.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/16.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/17.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "344ad3266fcfc184602e8eff10412f520baf326e9c24041e82f3981c86c6de69"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/18.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/19.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/20.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/21.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/22.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cdba12581eb256d0919722897c8e5fbfa47036381ab385b4a030292cd9a2515e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/23.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b3d8785e45754a02cc0fb31846266d8f5826a85d6ee4f490c5140c558fd868c7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/24.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "00edcb369e4ee827ef7e32073b675f0bdcca9f8a335f7286d5974c2986603d42"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/25.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc1c9fad171498375c1b225260d2b308acd84a551b601785bb7231029640e7c2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/26.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62c75954a0ece24272576e30f695b26e423bc10d9c8f9e1da4638c767ef07185"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/27.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/28.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/29.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/30.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/31.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/32.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/33.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/34.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/35.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/36.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/37.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/38.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/39.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/40.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/41.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ee76e1e81fa6ba15227e6d7ee540fbfdb7fc3f1a909823a916de5a88fe8ac87c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/42.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/43.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bcecba02aa0ad8b4c7e09935ed81d65f1f597fd983c685c83f9ebf72a7e58690"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/44.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/45.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c59541a7d8bfc9987c0aa47adf2cdd2858be8b66de5abc0331d5a6484ae63ab6"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/46.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "968319892c2bf7c7915780295e964d903f737c09d9b141d3eb8356715779e6ab"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/47.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b19cb9e7c5f69f2b4395780938e80fc6053201c23e9d8ddb9b59449b002b25f3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/48.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7f1bb4aecd6080b013b441812c8a414ea4541e37c99524189bdab8098c49f747"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/49.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f18b167938a21739bff6cf6cf16ecef1df1a54da96e6d8baf6796af64e107c2b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/50.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "08543a733b09b09a58c53fb72a6aa5eb418d42f952ccc0f72468358a79dcf5cc"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/51.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "25f0fa853aaaf065d948425a6bf30f21de47a9d562d78055b5d64802fb5c64e6"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/52.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f8f0511bd0b2831ae57c62806b4423205654850d8e6884f49f2aec1c53a6ee1d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/53.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3221b0b1fa4ee5055e90ca221a19a84b48618d05539d83b80b1283468f805b29"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/54.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/bindings.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/independence.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/keys/executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b735fd6eace0804e398cf82e838cd766e46c62d6b7d97839a759866d03385bc2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/keys/governor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9b5f92a7576f10e5988ef11d9a5a16c588f58d103e07dcd9dbc6c27c106e3c15"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/keys/observer.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "373abb018ebf2da253879be4ee1facce706ddba73c2e2510a2b768aa8f7038d4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/lifecycle.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/payloads/decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62e19500547fda6298c0db1c2604656ad69e5c54c770b3a927a1797c353cb390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/payloads/dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6c292204ea0181a91e7b0759ab7a827b782752b0f17486fffe38ec0a3f7130d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/payloads/effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bf2906284b21c93802aa7982b687ed2ceed091daa4e1c46f0a310ae0cff60d0b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/payloads/execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e02ed03c0aec1182ff84dd3ac2600f05eb88ced7b08af325d5822673103b39e0"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/payloads/receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "823f73c47dc418c6398b4a5039b645b2db3df73fcb07548667dec8a8ec492471"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/reconciliation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c1dff47fb1e71a203cf28aa54446769b976bf0ecf9b2963130d292e157840eb8"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/requests/demo.decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "94cf32b9a0a7efd649437658adf33974e303afb0cd878509a53bea64e2d0e27f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/requests/demo.dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ff9f4d5558c97b23fd65715819d79ceb3674209878a710ac82f60ca9c440adda"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/requests/demo.effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5aafcf6826b65d6017253215719b926e333faa361e2c0574b9d85567d5f47139"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/requests/demo.execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0589cf366a599d6ee4d2f3f34815fde7cc3d73b07dc3351bb0f02d98bbfef19a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/requests/demo.receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "137cb6d7acb9b3658eb600db8a0777d00ddc95aee1631e08eb27e458b8162a51"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/revocation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/runtime/decision-result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/runtime/governed-input.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/runtime/instruction.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/runtime/state.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f5674c6d72e4a822c9529d2e3b6b8591960bb98b918f6733e394f6c8e792923f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-control.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a719698af40c14acd447120a1c71da0c1ca4bc69e69fb88e1e7f36a383ee8f9e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-control.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b580a2fd4f5f1516353f8d51192ba2ec14ced8c301da19584e10fa7944bdf9c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ba0a80af21311e8e7808d04ef4450f6aaab69ee85e7823c7f8d9edef9ea97f90"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-decision.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4e59eb845a03647631970d6e75298d1c958b7f3c886bef29405d82c2780a8c0c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f37307741d6ae90a723e815e5cc19e5d060da1b3bbe016aed72f79e2ab841302"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6dacd690b87d40577c6e0d939e02ba428edc3cd98e959f463b132e1ab681074"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "52ebed936d1e5e5b2cf386ae2bcd18ddf946507e47921f586599d31d086bdcd1"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/broken-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "503639611dde24a2ffb144ca3804db76c672fdab216bd8a60f62ac3a55edb80c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5d1cf787ff70f08547e9801b16cde42f888f82633f44d0b77e2e5407e9fe82c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4678d4be5ab2da33ca729ebf4ec3b0813a170e476d22d61bb50236f3c6006924"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ad82963d8a499bd176bf6ce13a4a18c8ae87bf11e8be91503c87ca8fbf34e480"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4f4feb5fd5addd26c364682e27c0cbb7fb8edc06801c3d333986f9a081498a7a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e41bae0269aeb2475bdf9506afe271305034aace555198149c9b1fbccac73723"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/no-receipt.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b711e6eb1c19aa6f1c90248c6776c3a7dec0ecc0ff91e7eb10117830b627859c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/same-executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62812598a8b691247a73926a319923ae0b75bd494e8d98324dd590ccf95b9399"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/same-executor.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d9bef0608e0eb0087c7428ae682c8c9eef3635f4cfe5bdc923108c90e0a940b2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/toctou-mismatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2a98586bd95b0033bd51e7442910929ce39f2bff1fe45caa0bb18c3de00dba79"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/toctou-mismatch.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "05c9ea526b189a20fc2f822181c8f55e82e5d22375502066c094d3acf25b2bbb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/unproven-independent.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/variants/unproven-independent.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b22657a06a2d81dd364100352425dada54c303ed38bda1dff71f0e210c527e3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/lifecycle/verification.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "90e213a366c98c53baefe75d88e3772d144db998ad0eef4470cde27b1b3c3cc5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/parity.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "063d37bde57dc65d2cc04044a8ac42c0fe27fb487e3176c393b451e108f1d171"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/parity.txt",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/results.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "87a3db8ce1c4ac89430c7078793cd2828bf957705875d7d997df550a14846d95"
+    },
+    {
+      "path": "reports/beta-2026-09-08/final/source-basis.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "066e9a3ce3570d365f7a232583992c33b600770c518c2f4a37d82e31f3a53530"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/01.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/02.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/03.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7c732149d3b7a63dc561fc4afe1849b589669721d0acfc4bd94d555b0abde9bf"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/04.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b642a736abb9e7bafc0b358fe0b2bf45e81fcc2e6f36ac924d78881b3088255d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/05.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7f8cc4a7df52f75292e4be97d5692179b66247c9e221e4a2dbf8ed8cca0b7333"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/06.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/07.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "59bdab906ede8c75c5f5725bada8eaa6e3838296b5e8fd053a7626c567847138"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/08.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6472d3e138e4faab40683156c6c3a139d7797c8ce52e9845c1435db016e929e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/09.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/10.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "aced1e0c16a6ca055e9ee194669f00f1b6a4d84b98647368bbf6805ec8df1564"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/11.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/12.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/13.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/14.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/15.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/16.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/17.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a0a71e95a18d34847c21463ecdc917532923d0ea2398a8897265423502bcc749"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/18.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/19.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/20.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/21.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/22.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cdba12581eb256d0919722897c8e5fbfa47036381ab385b4a030292cd9a2515e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/23.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b3d8785e45754a02cc0fb31846266d8f5826a85d6ee4f490c5140c558fd868c7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/24.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "00edcb369e4ee827ef7e32073b675f0bdcca9f8a335f7286d5974c2986603d42"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/25.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc1c9fad171498375c1b225260d2b308acd84a551b601785bb7231029640e7c2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/26.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62c75954a0ece24272576e30f695b26e423bc10d9c8f9e1da4638c767ef07185"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/27.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/28.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/29.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/30.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/31.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/32.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/33.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/34.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/35.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/36.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/37.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/38.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/39.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/40.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/41.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ba6562e2406cc060ad91ed780aca91343b5b2119b192f272e3115b1230c5d0ff"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/42.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/43.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7f1bb4aecd6080b013b441812c8a414ea4541e37c99524189bdab8098c49f747"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/44.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ef88c0d347e81e32784989fa08c52d092b9d4ee7be847df302a50d6d58507e0e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/45.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "08543a733b09b09a58c53fb72a6aa5eb418d42f952ccc0f72468358a79dcf5cc"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/46.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "05211655cf8ef47d7e5c8ab8ca2000ea10c12a0d73b795457e1fb70ee7f80653"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/47.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d697be3f44cd1f1f2bee46ba2d8f3dec7cbbbcca9cd50fa6de72d56c23b1d52d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/48.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/bindings.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/independence.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/keys/executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b735fd6eace0804e398cf82e838cd766e46c62d6b7d97839a759866d03385bc2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/keys/governor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9b5f92a7576f10e5988ef11d9a5a16c588f58d103e07dcd9dbc6c27c106e3c15"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/keys/observer.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "373abb018ebf2da253879be4ee1facce706ddba73c2e2510a2b768aa8f7038d4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/lifecycle.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/payloads/decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62e19500547fda6298c0db1c2604656ad69e5c54c770b3a927a1797c353cb390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/payloads/dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6c292204ea0181a91e7b0759ab7a827b782752b0f17486fffe38ec0a3f7130d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/payloads/effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bf2906284b21c93802aa7982b687ed2ceed091daa4e1c46f0a310ae0cff60d0b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/payloads/execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e02ed03c0aec1182ff84dd3ac2600f05eb88ced7b08af325d5822673103b39e0"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/payloads/receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "823f73c47dc418c6398b4a5039b645b2db3df73fcb07548667dec8a8ec492471"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/reconciliation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c1dff47fb1e71a203cf28aa54446769b976bf0ecf9b2963130d292e157840eb8"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/requests/demo.decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "94cf32b9a0a7efd649437658adf33974e303afb0cd878509a53bea64e2d0e27f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/requests/demo.dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ff9f4d5558c97b23fd65715819d79ceb3674209878a710ac82f60ca9c440adda"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/requests/demo.effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5aafcf6826b65d6017253215719b926e333faa361e2c0574b9d85567d5f47139"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/requests/demo.execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0589cf366a599d6ee4d2f3f34815fde7cc3d73b07dc3351bb0f02d98bbfef19a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/requests/demo.receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "137cb6d7acb9b3658eb600db8a0777d00ddc95aee1631e08eb27e458b8162a51"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/revocation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/runtime/decision-result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/runtime/governed-input.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/runtime/instruction.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/runtime/state.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f5674c6d72e4a822c9529d2e3b6b8591960bb98b918f6733e394f6c8e792923f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-control.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a719698af40c14acd447120a1c71da0c1ca4bc69e69fb88e1e7f36a383ee8f9e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-control.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b580a2fd4f5f1516353f8d51192ba2ec14ced8c301da19584e10fa7944bdf9c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ba0a80af21311e8e7808d04ef4450f6aaab69ee85e7823c7f8d9edef9ea97f90"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-decision.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4e59eb845a03647631970d6e75298d1c958b7f3c886bef29405d82c2780a8c0c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f37307741d6ae90a723e815e5cc19e5d060da1b3bbe016aed72f79e2ab841302"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6dacd690b87d40577c6e0d939e02ba428edc3cd98e959f463b132e1ab681074"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "52ebed936d1e5e5b2cf386ae2bcd18ddf946507e47921f586599d31d086bdcd1"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/broken-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "503639611dde24a2ffb144ca3804db76c672fdab216bd8a60f62ac3a55edb80c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5d1cf787ff70f08547e9801b16cde42f888f82633f44d0b77e2e5407e9fe82c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4678d4be5ab2da33ca729ebf4ec3b0813a170e476d22d61bb50236f3c6006924"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ad82963d8a499bd176bf6ce13a4a18c8ae87bf11e8be91503c87ca8fbf34e480"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4f4feb5fd5addd26c364682e27c0cbb7fb8edc06801c3d333986f9a081498a7a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e41bae0269aeb2475bdf9506afe271305034aace555198149c9b1fbccac73723"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/no-receipt.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b711e6eb1c19aa6f1c90248c6776c3a7dec0ecc0ff91e7eb10117830b627859c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/same-executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62812598a8b691247a73926a319923ae0b75bd494e8d98324dd590ccf95b9399"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/same-executor.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d9bef0608e0eb0087c7428ae682c8c9eef3635f4cfe5bdc923108c90e0a940b2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/toctou-mismatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2a98586bd95b0033bd51e7442910929ce39f2bff1fe45caa0bb18c3de00dba79"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/toctou-mismatch.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "05c9ea526b189a20fc2f822181c8f55e82e5d22375502066c094d3acf25b2bbb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/unproven-independent.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/variants/unproven-independent.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b22657a06a2d81dd364100352425dada54c303ed38bda1dff71f0e210c527e3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/lifecycle/verification.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "90e213a366c98c53baefe75d88e3772d144db998ad0eef4470cde27b1b3c3cc5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/parity.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "79d3d691512a38fe15fff48a1d4ad6891330d0229759b55a7cdf1ff38de6cd09"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/parity.txt",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/full-round1/results.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8628b58b99e24d047347e6e1b15a1320b137e2a8d3de8d6147eb3894be29422e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/historical-snapshots.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8b8684072c5c8bf4e84bea22d7ec324512412f366cc3fe79704de59671cb2e6d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/initial-CLASS_VERIFIER_CONTRACT_R3.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9848c17fc0e2f6a38a27e517811470a6143ff4531f7d40ac2110f1f2d18b588f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/initial-JSON_INPUT_ADMISSIBILITY.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cf6af7f50a3f02a82335fc39741e9260e34c424f7c23edf361e6d54f8b874981"
+    },
+    {
+      "path": "reports/beta-2026-09-08/initial-SOURCE_BASIS.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d5acc0458ed93871907cea2f72957a73d85519e72f2dde39a3af1c19c11d0167"
+    },
+    {
+      "path": "reports/beta-2026-09-08/initial-files.sha256",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "37e875b3dfb92a9f11147ffa2f0db649870095fcc82d6336e2dae38912cc298b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/initial-worktree.patch",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "af2b56c8dac1c9be55e60eca79ff1d9f7196849a1a0f303441ee6e77da31f318"
+    },
+    {
+      "path": "reports/beta-2026-09-08/inventory.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3321fc12bf6b415fa97a93da2f78386a4998fe7b0d29d2800b1d0a10230dae11"
+    },
+    {
+      "path": "reports/beta-2026-09-08/new-tests-initial.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bc961d5ba23ea8fc288a06a64286f37c779cc0f5992bd27146264ec6d2013c01"
+    },
+    {
+      "path": "reports/beta-2026-09-08/new-tests-round2.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "82228c203ed73a095a8dd83b753f170992bbc568833302bf59001c555ba1c941"
+    },
+    {
+      "path": "reports/beta-2026-09-08/new-tests-round3.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "47960fba577a9dc522ebd0b744954864bddc0dd9a2eafbfda461c89f31e88a2a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/post-handoff-doc-audit.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/post-measurement-doc-basis.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "895ee2101a7e69f9b72ee0488e26dc354e88a2c0e2fbc08310dd8ae01203fa89"
+    },
+    {
+      "path": "reports/beta-2026-09-08/pre-fix-doc-links.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6f1cd203e42947e44950646ada70bb5f6863fa4543f306761f5cc355da34fdd9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/pre-fix-json.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "21805a76342c609d36be4579828899a58c69c07b865d801fcb7adfa035927f20"
+    },
+    {
+      "path": "reports/beta-2026-09-08/pre-fix-observer.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cfb89642136b3f691548f9fc8b092fec2faf4adcce857d930297cd45a225c415"
+    },
+    {
+      "path": "reports/beta-2026-09-08/pre-fix-sequence-bounds.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f94a87aac88cda83a732a56e24e7400d647fd3d18f6a425df5f703541557dbe"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/01.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/02.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/03.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0387be7f61e3dfeda86c51eee376f00ef829349d7b4e2d3b5b9816872363906c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/04.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "234b84e99ae877f72b6fddeae12c24401f3aa972d5487c52f7e4d2610eb31c50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/05.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e664eff5061e6f4275ddf4e32ebdcd86c2b58b704d289d34d739555e2e06e140"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/06.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/07.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3735779fdc898cd0cb33773c4129f481ca3c12ab8c2c3ecc08a1b2f5ab777e30"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/08.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6d507a5ff8ea136faeec8890777d8a666e906dc33d9898314ccfb6c90659040e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/09.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/10.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4fb3df2330f3c202bb030242a91e9a9bdd1f20a2cf99f6eef3a1f6c97be12776"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/11.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/12.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/13.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/14.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/15.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/16.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/17.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "872d11ca8802e90719fbe2cea3480724c3fa512944e29d386a772a3ef283615f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/18.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/19.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/20.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/21.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/22.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cdba12581eb256d0919722897c8e5fbfa47036381ab385b4a030292cd9a2515e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/23.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b3d8785e45754a02cc0fb31846266d8f5826a85d6ee4f490c5140c558fd868c7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/24.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "00edcb369e4ee827ef7e32073b675f0bdcca9f8a335f7286d5974c2986603d42"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/25.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dc1c9fad171498375c1b225260d2b308acd84a551b601785bb7231029640e7c2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/26.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62c75954a0ece24272576e30f695b26e423bc10d9c8f9e1da4638c767ef07185"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/27.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/28.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/29.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/30.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/31.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/32.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/33.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/34.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/35.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/36.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/37.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/38.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/39.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/40.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/41.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ee76e1e81fa6ba15227e6d7ee540fbfdb7fc3f1a909823a916de5a88fe8ac87c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/42.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/43.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bcecba02aa0ad8b4c7e09935ed81d65f1f597fd983c685c83f9ebf72a7e58690"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/44.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/45.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f9ad4f2993c8acab1f54b352b6bd5a4a9ef08f85c585cc105e1bfd94af66e729"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/46.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "968319892c2bf7c7915780295e964d903f737c09d9b141d3eb8356715779e6ab"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/47.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2c557cdbd8181ed24e2ed5e1130db0cd68e50cd4b71b9372e46b06692b10c072"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/48.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7f1bb4aecd6080b013b441812c8a414ea4541e37c99524189bdab8098c49f747"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/49.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f0811700ac553a7bbd6bfe841c38650f7fee90f2b1f54f70de676d3e857f20ca"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/50.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "08543a733b09b09a58c53fb72a6aa5eb418d42f952ccc0f72468358a79dcf5cc"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/51.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6a291b2cf3cf27dc054a5a214ab46d0cf40599528c7276c861ee22ee2f38b65c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/52.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "23ff8da666b81197d82356097976fe0e0928ffda689267daf91845bed12d9e44"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/53.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3f37210c21dbf10f17c330cf22b33d3eb488435367d24ef5e38c32f10affbba5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/54.log",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/bindings.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/independence.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/keys/executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b735fd6eace0804e398cf82e838cd766e46c62d6b7d97839a759866d03385bc2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/keys/governor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9b5f92a7576f10e5988ef11d9a5a16c588f58d103e07dcd9dbc6c27c106e3c15"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/keys/observer.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "373abb018ebf2da253879be4ee1facce706ddba73c2e2510a2b768aa8f7038d4"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/lifecycle.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/payloads/decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62e19500547fda6298c0db1c2604656ad69e5c54c770b3a927a1797c353cb390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/payloads/dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6c292204ea0181a91e7b0759ab7a827b782752b0f17486fffe38ec0a3f7130d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/payloads/effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bf2906284b21c93802aa7982b687ed2ceed091daa4e1c46f0a310ae0cff60d0b"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/payloads/execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e02ed03c0aec1182ff84dd3ac2600f05eb88ced7b08af325d5822673103b39e0"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/payloads/receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "823f73c47dc418c6398b4a5039b645b2db3df73fcb07548667dec8a8ec492471"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/reconciliation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c1dff47fb1e71a203cf28aa54446769b976bf0ecf9b2963130d292e157840eb8"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/requests/demo.decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "94cf32b9a0a7efd649437658adf33974e303afb0cd878509a53bea64e2d0e27f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/requests/demo.dispatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ff9f4d5558c97b23fd65715819d79ceb3674209878a710ac82f60ca9c440adda"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/requests/demo.effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5aafcf6826b65d6017253215719b926e333faa361e2c0574b9d85567d5f47139"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/requests/demo.execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "0589cf366a599d6ee4d2f3f34815fde7cc3d73b07dc3351bb0f02d98bbfef19a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/requests/demo.receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "137cb6d7acb9b3658eb600db8a0777d00ddc95aee1631e08eb27e458b8162a51"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/revocation.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/runtime/decision-result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/runtime/governed-input.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/runtime/instruction.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/runtime/state.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f5674c6d72e4a822c9529d2e3b6b8591960bb98b918f6733e394f6c8e792923f"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-control.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a719698af40c14acd447120a1c71da0c1ca4bc69e69fb88e1e7f36a383ee8f9e"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-control.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b580a2fd4f5f1516353f8d51192ba2ec14ced8c301da19584e10fa7944bdf9c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-decision.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ba0a80af21311e8e7808d04ef4450f6aaab69ee85e7823c7f8d9edef9ea97f90"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-decision.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4e59eb845a03647631970d6e75298d1c958b7f3c886bef29405d82c2780a8c0c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f37307741d6ae90a723e815e5cc19e5d060da1b3bbe016aed72f79e2ab841302"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f6dacd690b87d40577c6e0d939e02ba428edc3cd98e959f463b132e1ab681074"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "52ebed936d1e5e5b2cf386ae2bcd18ddf946507e47921f586599d31d086bdcd1"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/broken-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "503639611dde24a2ffb144ca3804db76c672fdab216bd8a60f62ac3a55edb80c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-effect.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5d1cf787ff70f08547e9801b16cde42f888f82633f44d0b77e2e5407e9fe82c9"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-effect.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4678d4be5ab2da33ca729ebf4ec3b0813a170e476d22d61bb50236f3c6006924"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-execution.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ad82963d8a499bd176bf6ce13a4a18c8ae87bf11e8be91503c87ca8fbf34e480"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-execution.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4f4feb5fd5addd26c364682e27c0cbb7fb8edc06801c3d333986f9a081498a7a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-receipt.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e41bae0269aeb2475bdf9506afe271305034aace555198149c9b1fbccac73723"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/no-receipt.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b711e6eb1c19aa6f1c90248c6776c3a7dec0ecc0ff91e7eb10117830b627859c"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/same-executor.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "62812598a8b691247a73926a319923ae0b75bd494e8d98324dd590ccf95b9399"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/same-executor.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d9bef0608e0eb0087c7428ae682c8c9eef3635f4cfe5bdc923108c90e0a940b2"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/toctou-mismatch.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2a98586bd95b0033bd51e7442910929ce39f2bff1fe45caa0bb18c3de00dba79"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/toctou-mismatch.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "05c9ea526b189a20fc2f822181c8f55e82e5d22375502066c094d3acf25b2bbb"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/unproven-independent.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "2352daee8cd47547919b2b624915f10b656457b0cffc2bc860e4e5f3d144bb8a"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/variants/unproven-independent.result.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "6b22657a06a2d81dd364100352425dada54c303ed38bda1dff71f0e210c527e3"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/lifecycle/verification.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "90e213a366c98c53baefe75d88e3772d144db998ad0eef4470cde27b1b3c3cc5"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/parity.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "262c9a5a5da34414db75e17f8aeda5b065f7890191301318c4233d2b14ecaac7"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/parity.txt",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/results.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7cdf5bf4ea414fa00f3473fb65f86c007fa52714cd1383c13d2a14f39eea3b9d"
+    },
+    {
+      "path": "reports/beta-2026-09-08/release-validation/source-basis.json",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "87d2563f60ef53e61c2db7be513f4cc9601c7f882029370b0a4a0edcc23f3c52"
+    },
+    {
+      "path": "scripts/check_beta.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "02bc1b1beb86e6e83d35df646ccc56dce187687d015fd18b8af1df11a8a40c56"
+    },
+    {
+      "path": "scripts/check_beta_docs.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "1b06e29bc4d40a85fe442bc7fad08f64fb2c4cb837a0d5d5d9eec9023ca71144"
+    },
+    {
+      "path": "scripts/check_quickstart.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "521b3648be63a76260a142774287d954174da8ad81052e22dbd786a649fc0677"
+    },
+    {
+      "path": "scripts/check_v01_typescript.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "8d60f2c81193b9061d0af1d115d3452a0dec72a79ef7434115cabaf7ce30a473"
+    },
+    {
+      "path": "spec/airep/v0.2-design/ARCHITECTURE_DECISIONS.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f79475574b8b9bcf972847678be88d7bfab4caa93c68c18e9688712fcbc44d9c"
+    },
+    {
+      "path": "spec/airep/v0.2/BETA_READINESS.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "4228341c4fb751f05dab87097215bc49e5d86628aa847590da725b77f34736ee"
+    },
+    {
+      "path": "spec/airep/v0.2/JSON_INPUT_ADMISSIBILITY.md",
+      "change": "A",
+      "origin": "pre-existing draft preserved",
+      "sha256": "cf6af7f50a3f02a82335fc39741e9260e34c424f7c23edf361e6d54f8b874981"
+    },
+    {
+      "path": "spec/airep/v0.2/QUICKSTART.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "eb00032c123ec442b45d494718ebb1a8ce28509ac13fcbfe77bd0346596afa2f"
+    },
+    {
+      "path": "spec/airep/v0.2/README.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bdeb96709ba4a8f6f0c9d36931f88c7a21ee88a45c976a8961bb1500e0ecabae"
+    },
+    {
+      "path": "spec/airep/v0.2/RECONCILIATION.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "d720ff4139676b913e9d9f9a3a38d57fea586c9a76b1816bdcbf57e1ea39d023"
+    },
+    {
+      "path": "spec/airep/v0.2/RELEASE_NOTES_BETA_1.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "b53d94b7a71ea47f2947a22a884e99e8e5821fe78114b5df70ce3455617aa848"
+    },
+    {
+      "path": "spec/airep/v0.2/RELEASE_READINESS.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "e84129e2c08c943a775b1865372a50b99ba642ce5144fd9f15e71a0a1a1f9212"
+    },
+    {
+      "path": "spec/airep/v0.2/RELEASE_STAGES.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3856d484b0ecdd231c5fbe1f857dbbe352938a4a0f5aec2e762fe9e1135ad8c5"
+    },
+    {
+      "path": "spec/airep/v0.2/SPEC.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "28b5741059e704fe62869e78027f1bd8346277822c11d03f7e9c563ddf6f30c4"
+    },
+    {
+      "path": "spec/airep/v0.2/VERIFICATION.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "3bb35cd0122899bbbe384a34f167e95d54e78af47c6739dc34b7261bde1d8b0d"
+    },
+    {
+      "path": "spec/airep/v0.2/class-verification/REVISIONS.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "a440919df0e0ea27bd427cd1c487f14e5a05a15ef77b97e7857391f1fceb193e"
+    },
+    {
+      "path": "spec/airep/v0.2/class-verification/STATUS.md",
+      "change": "M",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "9293a575e871fb2514065c8e0d4b4ae0984bb1ded23056d873494ae715fd4498"
+    },
+    {
+      "path": "spec/airep/v0.2/class-verification/contract-r3/CLASS_VERIFIER_CONTRACT_R3.md",
+      "change": "A",
+      "origin": "pre-existing draft preserved",
+      "sha256": "9848c17fc0e2f6a38a27e517811470a6143ff4531f7d40ac2110f1f2d18b588f"
+    },
+    {
+      "path": "spec/airep/v0.2/class-verification/contract-r3/SOURCE_BASIS.json",
+      "change": "A",
+      "origin": "pre-existing draft preserved",
+      "sha256": "d5acc0458ed93871907cea2f72957a73d85519e72f2dde39a3af1c19c11d0167"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/INTEROP_CORPUS_CONTRACT.md",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/INTEROP_REFERENCE_EVALUATOR_CONTRACT.md",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "d8edbbe93dbe7184518d1053644636c1e5de62583b6b929b6e8cbba1ea82d18c"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/PARTICIPATION_CONTRACT.md",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "e3355ab21c6110b7adb97871f14fbac0a4c5c7706e7f343e3337db65de1faa0f"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_node/.gitignore",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "e3b9568509740c9f9376a711ed9acefd194a42ced74d3144eb85e5681342490e"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_node/README.md",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "27b49f80a8a2c1dabd32cb47629ba57defa192f75dba9806200bb9d1a6408561"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_node/interop_eval.mjs",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "664a52fc430bd2c9691d0654507965bbb6862517a4c0c9a6df4032429ff75e1c"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_node/selftest.mjs",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "a33baedb358c4344f24eec4ee734d60578b433520eaed81c8f63dec8e2ef0346"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_py/interop_eval.py",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "b53c1c7c2438b3206272818c09b70a047220e8ddf37622dc38c0cbe33b8e19ee"
+    },
+    {
+      "path": "spec/airep/v0.2/interop/interop_eval_py/test_interop_eval.py",
+      "change": "A",
+      "origin": "prior W1 commit consolidated",
+      "sha256": "744b233e99022e1481ce7998b4528b5b9025163c91ab575e3afd79133dd44496"
+    },
+    {
+      "path": "spec/airep/v0.2/release-history/PRE_BETA_READINESS_2026-09-03.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "f8be28b8624fb1fbc0893ed2b9ab0a8b42f34c3e1d07727dfff76b596a9919d8"
+    },
+    {
+      "path": "tests/v02/test_beta.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "7159a76b91e6c60cc378caa708f80f662dd6071eb521c3f6a9b80f1cdec1f1a7"
+    },
+    {
+      "path": "tools/airep_v02/README.md",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cb54e44022ec202bff7aeb80c96d584bb83443aa6270a3fd7d961a390ddc5d97"
+    },
+    {
+      "path": "tools/airep_v02/__init__.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "bfb7a78b37490532e38bed547414e4c43398c6fb36f41603574884067074945f"
+    },
+    {
+      "path": "tools/airep_v02/__main__.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "dd55becf24a1d164433b65852892a5a29baa9bb2f421749da10d2dec5a377624"
+    },
+    {
+      "path": "tools/airep_v02/basis.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "18b1f535da202ec4665ae2dcdd5acbfc6efb021dc66425791eaa6264330ed835"
+    },
+    {
+      "path": "tools/airep_v02/json_input.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "53879153a18054639843c32aa54aa19a1e7c87be3e89405769b157571670e890"
+    },
+    {
+      "path": "tools/airep_v02/producer.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ccdec93ccb49b09bae8542a8f2b037319e1d00cda2144fc72f219690eda6090a"
+    },
+    {
+      "path": "tools/airep_v02/profiles.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "c87ccd501d78f865e647357c79728918336d4dfdf4d31201a34d173e76953da3"
+    },
+    {
+      "path": "tools/airep_v02/reconcile.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "ea94f18a8cf95e10be7435a820debc84d72465e080683fc04399f418d1f6d715"
+    },
+    {
+      "path": "tools/airep_v02/verify.py",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "cc70f0f1bb2c97dede1c99fe64f6984a221fe715722403ec6a8269ad626a33dd"
+    },
+    {
+      "path": "tools/airep_v02/verify_node.mjs",
+      "change": "A",
+      "origin": "this task (includes report/evidence)",
+      "sha256": "5ebbd088667862305f24ec735666c7978af942fa9b483a043956ca56078c0c30"
+    }
+  ]
+}

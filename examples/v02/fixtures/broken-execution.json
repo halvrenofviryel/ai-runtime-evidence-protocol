@@ -1,0 +1,216 @@
+[
+  {
+    "input": {
+      "input_ref": "runtime/governed-input.json",
+      "input_digest": "sha256:84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+    },
+    "claim": {
+      "assertion": "Local owner permits pausing the worker",
+      "basis": [
+        "demo.local-owner"
+      ]
+    },
+    "directive": {
+      "verb": "release",
+      "policy_basis": [
+        "demo.local-owner"
+      ]
+    },
+    "output": {
+      "result_ref": "runtime/decision-result.json",
+      "result_digest": "sha256:72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+    },
+    "evidence": [],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "demo.governance-chain",
+    "record_id": "demo.decision",
+    "sequence": 0,
+    "subject": {
+      "producer": "demo.governor",
+      "timestamp_utc": "2026-09-08T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Authored report of the decision stage"
+      ],
+      "does_not_cover": [
+        "Truth of the report",
+        "Complete lifecycle history",
+        "Independent observation unless verified"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:7927d175438aebd4408400bce9d91973bfb08bd60feb515965c7e1fdaf565a2d",
+      "signature": {
+        "alg": "ed25519",
+        "value": "0031e0e474256aa59ad5ef410cf1c937eae4c47361d1723045056660728c9bff823d6f91c97cbc5517a86aaeb0ded43e849640b8fcfe78120ed27e6ab1083603"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "demo.decision",
+      "chain_id": "demo.governance-chain"
+    },
+    "instruction_id": "demo.pause-1",
+    "instruction_digest": "sha256:8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390",
+    "authorized_action_digest": "sha256:963e2b30267e0af1d67f031b60c158e97b16d681feacb1fdba0a00e9985810ec",
+    "control_event": "dispatched",
+    "boundary_side": "issuer",
+    "authority": {
+      "issuer_id": "demo.governor",
+      "writable_by_controlled_system": false
+    },
+    "airep_version": "0.2",
+    "artifact_type": "control",
+    "chain_id": "demo.governance-chain",
+    "record_id": "demo.dispatch",
+    "sequence": 1,
+    "subject": {
+      "producer": "demo.governor",
+      "timestamp_utc": "2026-09-08T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Authored report of the control stage"
+      ],
+      "does_not_cover": [
+        "Truth of the report",
+        "Complete lifecycle history",
+        "Independent observation unless verified"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:7927d175438aebd4408400bce9d91973bfb08bd60feb515965c7e1fdaf565a2d",
+      "current": "sha256:ba3068b12bf5bde5cc04198a4a6754459f29872d45089417f84c91192869ed80",
+      "signature": {
+        "alg": "ed25519",
+        "value": "bb6831829ef5266cfbba3ebba3a78087a489a792408a22a1a502c68ce858e6f5f6de75eca72b8fc840c5b02a861e242aa3afd114f8b198fd876fe6f102d75b0b"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "demo.decision",
+      "chain_id": "demo.governance-chain"
+    },
+    "instruction_id": "demo.pause-1",
+    "instruction_digest": "sha256:8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390",
+    "authorized_action_digest": "sha256:963e2b30267e0af1d67f031b60c158e97b16d681feacb1fdba0a00e9985810ec",
+    "control_event": "received",
+    "boundary_side": "receiver",
+    "authority": {
+      "issuer_id": "demo.governor",
+      "writable_by_controlled_system": false
+    },
+    "airep_version": "0.2",
+    "artifact_type": "control",
+    "chain_id": "demo.execution-chain",
+    "record_id": "demo.receipt",
+    "sequence": 0,
+    "subject": {
+      "producer": "demo.executor",
+      "timestamp_utc": "2026-09-08T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Authored report of the control stage"
+      ],
+      "does_not_cover": [
+        "Truth of the report",
+        "Complete lifecycle history",
+        "Independent observation unless verified"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:380bc0c061f30d055f1dd850b3701bf35b6afc1520d768b8738bd88de57ad568",
+      "signature": {
+        "alg": "ed25519",
+        "value": "28b3263957abd82b3f93f440cfecd7a4101c23d0866c7f5a16fa222ed5e2e763716060c3d9b99e835a9811e4129bf69741b5f95dcc5c04c4fdfe2d04d67ab204"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "demo.decision",
+      "chain_id": "demo.governance-chain"
+    },
+    "instruction_id": "demo.pause-1",
+    "instruction_digest": "sha256:8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390",
+    "executed_action_digest": "sha256:963e2b30267e0af1d67f031b60c158e97b16d681feacb1fdba0a00e9985810ec",
+    "execution_event": "executed",
+    "airep_version": "0.2",
+    "artifact_type": "execution",
+    "chain_id": "demo.execution-chain",
+    "record_id": "demo.execution",
+    "sequence": 1,
+    "subject": {
+      "producer": "demo.executor",
+      "timestamp_utc": "2026-09-08T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Authored report of the execution stage",
+        "tampered after signing"
+      ],
+      "does_not_cover": [
+        "Truth of the report",
+        "Complete lifecycle history",
+        "Independent observation unless verified"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:380bc0c061f30d055f1dd850b3701bf35b6afc1520d768b8738bd88de57ad568",
+      "current": "sha256:f134869e2369d2f0da73f67d187ee8f342ca1523727d2af53743e9c38106cefa",
+      "signature": {
+        "alg": "ed25519",
+        "value": "06aeee8f2e62fcfd528c9e79ff639018fd914896dc427324dcd5a1a9924e4caecf23370e8ba8fd5833d16655eaece4ec2c005270f855cfe291362056b9866c09"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "demo.decision",
+      "chain_id": "demo.governance-chain"
+    },
+    "execution_ref": {
+      "record_id": "demo.execution",
+      "chain_id": "demo.execution-chain"
+    },
+    "observer_relationship": "independent",
+    "observed_state": {
+      "description": "Observer read worker state: paused",
+      "state_digest": "sha256:4821cc5060dde1f788aab1561014f18975782e7095fd276a44fca984d146fcff"
+    },
+    "airep_version": "0.2",
+    "artifact_type": "effect",
+    "chain_id": "demo.observation-chain",
+    "record_id": "demo.effect",
+    "sequence": 0,
+    "subject": {
+      "producer": "demo.observer",
+      "timestamp_utc": "2026-09-08T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Authored report of the effect stage"
+      ],
+      "does_not_cover": [
+        "Truth of the report",
+        "Complete lifecycle history",
+        "Independent observation unless verified"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:fe14d2bbfe7c5f39cdf707eb9bd4941446ea2f90445a04dfe8a48d3e0c9f2829",
+      "signature": {
+        "alg": "ed25519",
+        "value": "721f12ce13a0f1e723250a34311d274bd5f0c64fca751bbfbebe1b609d09532dfdb829c0c43296706bbdc021ae8b16314b716ad7f4ae8a94f1b8c95dd158260b"
+      }
+    }
+  }
+]

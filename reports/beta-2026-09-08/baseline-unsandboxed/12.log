@@ -1,0 +1,39 @@
+A. signed-input pinning -- INTEGRITY.md s3 current-bytes
+  V1 pinned preimage reproduces the frozen bytes             OK
+  V1 digest-bytes reading is a different preimage            OK
+  V1 frozen signature verifies over the pinned preimage      OK
+  V1 frozen signature does NOT verify over digest bytes      OK
+  V2 pinned preimage reproduces the frozen bytes             OK
+  V2 digest-bytes reading is a different preimage            OK
+  V2 frozen signature verifies over the pinned preimage      OK
+  V2 frozen signature does NOT verify over digest bytes      OK
+  V3 pinned preimage reproduces the frozen bytes             OK
+  V3 digest-bytes reading is a different preimage            OK
+  V3 frozen signature verifies over the pinned preimage      OK
+  V3 frozen signature does NOT verify over digest bytes      OK
+  V4 pinned preimage reproduces the frozen bytes             OK
+  V4 digest-bytes reading is a different preimage            OK
+  V4 frozen signature verifies over the pinned preimage      OK
+  V4 frozen signature does NOT verify over digest bytes      OK
+
+B. head-witness preimage uses canonical claim bytes -- INTEGRITY.md s4
+  W1 pinned witness preimage reproduces the frozen bytes     OK
+  W1 frozen witness signature verifies over it               OK
+  W2 pinned witness preimage reproduces the frozen bytes     OK
+  W2 frozen witness signature verifies over it               OK
+
+C. signature.value encoding pinning -- common.schema.json signature_value
+  pattern: ^[0-9a-f]{128}$
+  V1 frozen hex value satisfies the pattern                  OK
+  V1 base64 of the same signature does not                   OK
+  V2 frozen hex value satisfies the pattern                  OK
+  V2 base64 of the same signature does not                   OK
+  V3 frozen hex value satisfies the pattern                  OK
+  V3 base64 of the same signature does not                   OK
+  V4 frozen hex value satisfies the pattern                  OK
+  V4 base64 of the same signature does not                   OK
+  the same gate already carries two generated schema-corpus negatives:
+    decision-neg-sig-short      value 64 hex chars   -> INVALID /integrity/signature/value
+    decision-neg-sig-uppercase  value 128 upper hex  -> INVALID /integrity/signature/value
+
+RESULT: all signature-input and encoding pinning checks PASSED

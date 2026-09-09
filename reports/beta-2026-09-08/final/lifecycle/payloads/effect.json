@@ -1,0 +1,15 @@
+{
+  "decision_ref": {
+    "record_id": "demo.decision",
+    "chain_id": "demo.governance-chain"
+  },
+  "execution_ref": {
+    "record_id": "demo.execution",
+    "chain_id": "demo.execution-chain"
+  },
+  "observer_relationship": "independent",
+  "observed_state": {
+    "description": "Observer read worker state: paused",
+    "state_digest": "sha256:4821cc5060dde1f788aab1561014f18975782e7095fd276a44fca984d146fcff"
+  }
+}

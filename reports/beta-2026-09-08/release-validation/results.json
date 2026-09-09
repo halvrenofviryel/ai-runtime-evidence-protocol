@@ -1,0 +1,631 @@
+{
+  "scratch": "/tmp/airep-beta-check-bj6ma7_l/repo",
+  "checks": [
+    {
+      "cwd": ".",
+      "command": [
+        "python3",
+        "-VV"
+      ],
+      "exit": 0,
+      "seconds": 0.003,
+      "log": "01.log",
+      "log_sha256": "2e68a04ce911f21ed2dfba51575202b5e56425c20b8db84cac0f47119254975b"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.005,
+      "log": "02.log",
+      "log_sha256": "89abdb6ecfed00022752dc543087c9a6d28dd27f75417dfe1f17ac06065cc968"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification",
+      "command": [
+        "python3",
+        "offline-node-deps/materialize_node_modules.py"
+      ],
+      "exit": 0,
+      "seconds": 0.1,
+      "log": "03.log",
+      "log_sha256": "0387be7f61e3dfeda86c51eee376f00ef829349d7b4e2d3b5b9816872363906c"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification",
+      "command": [
+        "python3",
+        "offline-python-deps/prepare_offline_venv.py"
+      ],
+      "exit": 0,
+      "seconds": 2.813,
+      "log": "04.log",
+      "log_sha256": "234b84e99ae877f72b6fddeae12c24401f3aa972d5487c52f7e4d2610eb31c50"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification",
+      "command": [
+        "python3",
+        "preflight_offline_basis.py"
+      ],
+      "exit": 0,
+      "seconds": 3.763,
+      "log": "05.log",
+      "log_sha256": "e664eff5061e6f4275ddf4e32ebdcd86c2b58b704d289d34d739555e2e06e140"
+    },
+    {
+      "cwd": "spec/airep/v0.2/vectors",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "generator_py/generate_vectors.py"
+      ],
+      "exit": 0,
+      "seconds": 0.046,
+      "log": "06.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "cwd": "spec/airep/v0.2/vectors",
+      "command": [
+        "node",
+        "generator_node/generate_vectors.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.031,
+      "log": "07.log",
+      "log_sha256": "3735779fdc898cd0cb33773c4129f481ca3c12ab8c2c3ecc08a1b2f5ab777e30"
+    },
+    {
+      "cwd": "spec/airep/v0.2/vectors",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "compare_vectors.py"
+      ],
+      "exit": 0,
+      "seconds": 0.019,
+      "log": "08.log",
+      "log_sha256": "6d507a5ff8ea136faeec8890777d8a666e906dc33d9898314ccfb6c90659040e"
+    },
+    {
+      "cwd": "spec/airep/v0.2/vectors",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "prove_extra_field_gate.py"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "log": "09.log",
+      "log_sha256": "4822d01dbbe060e012f6f0a0aecafa2216a7692952766a6345ac7bc3c8dcbffb"
+    },
+    {
+      "cwd": "spec/airep/v0.2/stage4",
+      "command": [
+        "bash",
+        "reproduce.sh"
+      ],
+      "exit": 0,
+      "seconds": 0.459,
+      "log": "10.log",
+      "log_sha256": "4fb3df2330f3c202bb030242a91e9a9bdd1f20a2cf99f6eef3a1f6c97be12776"
+    },
+    {
+      "cwd": "spec/airep/v0.2/stage4",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "prove_envelope_gate.py"
+      ],
+      "exit": 0,
+      "seconds": 0.073,
+      "log": "11.log",
+      "log_sha256": "5ee48090f6f072cbee4363fe2b3da2e222c2bcaa550e36f5c3c662bfa6ab2e50"
+    },
+    {
+      "cwd": "spec/airep/v0.2",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "prove_signature_input_pinning.py"
+      ],
+      "exit": 0,
+      "seconds": 0.026,
+      "log": "12.log",
+      "log_sha256": "9f1a397f3102d3bd75ca4c97e94de448cefc2c9dbb79f4409920f9e1aeb10731"
+    },
+    {
+      "cwd": "spec/airep/v0.2",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "prove_jcs_exponent_artifact_path.py"
+      ],
+      "exit": 0,
+      "seconds": 0.024,
+      "log": "13.log",
+      "log_sha256": "3f1c0fd5bece3e47d2e4f20c0396833d233a54e2cbe6551bdb4364a8b891d181"
+    },
+    {
+      "cwd": "spec/airep/v0.2/schema-validation",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "run_python.py"
+      ],
+      "exit": 0,
+      "seconds": 0.161,
+      "log": "14.log",
+      "log_sha256": "a27b22dc447f914758e5a7feabcaed188508fa4d48f5a13571d94b12f2a41e35"
+    },
+    {
+      "cwd": "spec/airep/v0.2/schema-validation",
+      "command": [
+        "ln",
+        "-s",
+        "../class-verification/verifier_node_r2/node_modules",
+        "node_modules"
+      ],
+      "exit": 0,
+      "seconds": 0.003,
+      "log": "15.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "cwd": "spec/airep/v0.2/schema-validation",
+      "command": [
+        "node",
+        "run_node.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.12,
+      "log": "16.log",
+      "log_sha256": "dc44c22f5e7a23d29326dc95495fd473a5970f59a3ebc05be4721a6e4713625c"
+    },
+    {
+      "cwd": "spec/airep/v0.2/schema-validation",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "compare_schema_results.py"
+      ],
+      "exit": 0,
+      "seconds": 0.033,
+      "log": "17.log",
+      "log_sha256": "872d11ca8802e90719fbe2cea3480724c3fa512944e29d386a772a3ef283615f"
+    },
+    {
+      "cwd": "spec/airep/v0.2/schema-validation",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "prove_schema_gates.py"
+      ],
+      "exit": 0,
+      "seconds": 0.164,
+      "log": "18.log",
+      "log_sha256": "e29cce7e37e26061205abea9c7da55aacf06d70308f5ffd97c6de8f86f894f8b"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "class_verifier.mjs",
+        "--corpus",
+        "../corpus",
+        "--out",
+        "out_run1.json"
+      ],
+      "exit": 0,
+      "seconds": 0.153,
+      "log": "19.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "cp",
+        "out_run1.json",
+        "out_run2.json"
+      ],
+      "exit": 0,
+      "seconds": 0.003,
+      "log": "20.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "selfcheck.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.025,
+      "log": "21.log",
+      "log_sha256": "4834d2807f732738b460da9530f107ea86419a77bb74848e98eb576ea0100e47"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "corpus_compare.mjs"
+      ],
+      "exit": 0,
+      "seconds": 5.491,
+      "log": "22.log",
+      "log_sha256": "cdba12581eb256d0919722897c8e5fbfa47036381ab385b4a030292cd9a2515e"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "rulings_check.mjs"
+      ],
+      "exit": 0,
+      "seconds": 9.075,
+      "log": "23.log",
+      "log_sha256": "b3d8785e45754a02cc0fb31846266d8f5826a85d6ee4f490c5140c558fd868c7"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "errata_check.mjs"
+      ],
+      "exit": 0,
+      "seconds": 2.455,
+      "log": "24.log",
+      "log_sha256": "00edcb369e4ee827ef7e32073b675f0bdcca9f8a335f7286d5974c2986603d42"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "exitcode_check.mjs"
+      ],
+      "exit": 0,
+      "seconds": 1.95,
+      "log": "25.log",
+      "log_sha256": "dc1c9fad171498375c1b225260d2b308acd84a551b601785bb7231029640e7c2"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "exitcode_check_selftest.mjs"
+      ],
+      "exit": 0,
+      "seconds": 3.881,
+      "log": "26.log",
+      "log_sha256": "62c75954a0ece24272576e30f695b26e423bc10d9c8f9e1da4638c767ef07185"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_node_r2",
+      "command": [
+        "node",
+        "preimage_check.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.028,
+      "log": "27.log",
+      "log_sha256": "e7c1f3257803fabc0d3f29bd69a8ed4aed08f590fadaf0c99c9fcab31315853b"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_py",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "selfcheck_errata.py"
+      ],
+      "exit": 0,
+      "seconds": 3.929,
+      "log": "28.log",
+      "log_sha256": "65d127bb1b3b8acdce19edff6019cae45ade3160f04cbf1774d07cca2d0e54ce"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_py",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "selfcheck_s9_round2.py"
+      ],
+      "exit": 0,
+      "seconds": 5.102,
+      "log": "29.log",
+      "log_sha256": "56c33f0ca245e0301b4b358ebb32a708227ab3bc591e9e3e304f0d754cfb111a"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_py",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "selfcheck_s9_round3.py"
+      ],
+      "exit": 0,
+      "seconds": 5.507,
+      "log": "30.log",
+      "log_sha256": "9c002274034369a501322eafb0b19c140e78b8619b4434f740e372df65e6d98e"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/verifier_py",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "selfcheck_s9_round4.py"
+      ],
+      "exit": 0,
+      "seconds": 1.91,
+      "log": "31.log",
+      "log_sha256": "d82496f636420d8b7da37a40bc03a49ac04637d5b25a081db1c77f5495f4aa83"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification",
+      "command": [
+        "python3",
+        "comparator/compare.py",
+        "--root",
+        ".",
+        "--out-dir",
+        "/tmp/airep-beta-check-bj6ma7_l/comparison-work",
+        "--result",
+        "/mnt/data/claude/airep-v02-beta-prep/reports/beta-2026-09-08/release-validation/parity.json",
+        "--summary",
+        "/mnt/data/claude/airep-v02-beta-prep/reports/beta-2026-09-08/release-validation/parity.txt"
+      ],
+      "exit": 0,
+      "seconds": 5.257,
+      "log": "32.log",
+      "log_sha256": "390c64e26b37d2109400909eb0b81d67efaf2c0682c1e735a91e48df2fe3bd71"
+    },
+    {
+      "cwd": "spec/airep/v0.2/class-verification/comparator",
+      "command": [
+        "python3",
+        "negative_proofs/run_all.py"
+      ],
+      "exit": 0,
+      "seconds": 6.127,
+      "log": "33.log",
+      "log_sha256": "b4ea0a54eaf52beb1778eae73a0a3ae6c53ecf1f91311f4abc93f09f9550df58"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/validate.py"
+      ],
+      "exit": 0,
+      "seconds": 0.101,
+      "log": "34.log",
+      "log_sha256": "870d8197c3ac9950bdf5cf8a4ed719aafabdbd5799ba62d70d8083ae2a84cc9b"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/enas_profiles.py"
+      ],
+      "exit": 0,
+      "seconds": 0.119,
+      "log": "35.log",
+      "log_sha256": "c619e24cce0095c259603d58c9a0257a819f953339c0277c1a9a05e6efa5ac59"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/enas_obligation_reconciler.py"
+      ],
+      "exit": 0,
+      "seconds": 0.099,
+      "log": "36.log",
+      "log_sha256": "9833e1d5a1fee2cafe3af5bcb23ca0e07512c65f05247f8f65bdbd8f3b8a3628"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/test_jcs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.47,
+      "log": "37.log",
+      "log_sha256": "e6d92c43a6e2984a7374973e4309514f315d90b3684b856e674f6115c6414b55"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/test_verifier_parity.py"
+      ],
+      "exit": 0,
+      "seconds": 1.357,
+      "log": "38.log",
+      "log_sha256": "93243a2afc91d77879af8d5432ef4aed6b247064dd1042f8b375b8512aaa92be"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/test_trusted_gates.py"
+      ],
+      "exit": 0,
+      "seconds": 1.785,
+      "log": "39.log",
+      "log_sha256": "6a1b2e0a24718830ec89d6eb554c32bc0f6570cb609fe481089c6abf50aa8ae4"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "conformance/test_strict_trusted.py"
+      ],
+      "exit": 0,
+      "seconds": 1.326,
+      "log": "40.log",
+      "log_sha256": "da2028110e49652471d4656045a116dd2c8948aa6a3cf024e24155d47a938ef3"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "conformance",
+        "-q"
+      ],
+      "exit": 0,
+      "seconds": 0.914,
+      "log": "41.log",
+      "log_sha256": "ee76e1e81fa6ba15227e6d7ee540fbfdb7fc3f1a909823a916de5a88fe8ac87c"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "node",
+        "conformance/verify.mjs",
+        "examples/chain.jsonl",
+        "--pubkey",
+        "examples/test_public_key.txt"
+      ],
+      "exit": 0,
+      "seconds": 0.028,
+      "log": "42.log",
+      "log_sha256": "29bab08d6494201b0ebcb65b9702ee5599059e986ac6adc2f5d40d9cc6db3235"
+    },
+    {
+      "cwd": "spec/airep/v0.1",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "examples/regenerate.py"
+      ],
+      "exit": 0,
+      "seconds": 0.051,
+      "log": "43.log",
+      "log_sha256": "bcecba02aa0ad8b4c7e09935ed81d65f1f597fd983c685c83f9ebf72a7e58690"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "scripts/check_beta_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "log": "44.log",
+      "log_sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    },
+    {
+      "cwd": "producers/typescript",
+      "command": [
+        "npm",
+        "install",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exit": 0,
+      "seconds": 1.466,
+      "log": "45.log",
+      "log_sha256": "f9ad4f2993c8acab1f54b352b6bd5a4a9ef08f85c585cc105e1bfd94af66e729"
+    },
+    {
+      "cwd": "producers/typescript",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exit": 0,
+      "seconds": 0.605,
+      "log": "46.log",
+      "log_sha256": "968319892c2bf7c7915780295e964d903f737c09d9b141d3eb8356715779e6ab"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "scripts/check_v01_typescript.py"
+      ],
+      "exit": 0,
+      "seconds": 0.167,
+      "log": "47.log",
+      "log_sha256": "2c557cdbd8181ed24e2ed5e1130db0cd68e50cd4b71b9372e46b06692b10c072"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "python3",
+        "tools/interop_pkg/test_crypto_projection.py"
+      ],
+      "exit": 0,
+      "seconds": 0.029,
+      "log": "48.log",
+      "log_sha256": "7f1bb4aecd6080b013b441812c8a414ea4541e37c99524189bdab8098c49f747"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "spec/airep/v0.2/interop/interop_eval_py/test_interop_eval.py"
+      ],
+      "exit": 0,
+      "seconds": 1.398,
+      "log": "49.log",
+      "log_sha256": "f0811700ac553a7bbd6bfe841c38650f7fee90f2b1f54f70de676d3e857f20ca"
+    },
+    {
+      "cwd": "spec/airep/v0.2/interop/interop_eval_node",
+      "command": [
+        "node",
+        "selftest.mjs"
+      ],
+      "exit": 0,
+      "seconds": 12.781,
+      "log": "50.log",
+      "log_sha256": "08543a733b09b09a58c53fb72a6aa5eb418d42f952ccc0f72468358a79dcf5cc"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/v02",
+        "-v"
+      ],
+      "exit": 0,
+      "seconds": 24.696,
+      "log": "51.log",
+      "log_sha256": "6a291b2cf3cf27dc054a5a214ab46d0cf40599528c7276c861ee22ee2f38b65c"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "examples/v02/run_lifecycle.py",
+        "--out",
+        "/mnt/data/claude/airep-v02-beta-prep/reports/beta-2026-09-08/release-validation/lifecycle"
+      ],
+      "exit": 0,
+      "seconds": 0.369,
+      "log": "52.log",
+      "log_sha256": "23ff8da666b81197d82356097976fe0e0928ffda689267daf91845bed12d9e44"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "scripts/check_quickstart.py"
+      ],
+      "exit": 0,
+      "seconds": 1.605,
+      "log": "53.log",
+      "log_sha256": "3f37210c21dbf10f17c330cf22b33d3eb488435367d24ef5e38c32f10affbba5"
+    },
+    {
+      "cwd": ".",
+      "command": [
+        "/tmp/airep-beta-check-bj6ma7_l/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python",
+        "scripts/check_beta_docs.py"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "log": "54.log",
+      "log_sha256": "70f985a133f9e4f4bbe0ff533a321a50c87ff5a616f7882c53ceb194873c1647"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+== 1. corpus build (twice; determinism) ==
+corpus: 39 fixtures; aggregate 52cc00a752df169029e00db5363cc62e1527ab12c6905f0e7ba5a6d8feb2c2c0
+corpus: 39 fixtures; aggregate 52cc00a752df169029e00db5363cc62e1527ab12c6905f0e7ba5a6d8feb2c2c0
+== 2. integrity verifiers (twice each; determinism) ==
+== 3. parity/evidence comparator ==
+FULL PARITY + EXPECTATION EQUALITY; manifest: /tmp/airep-beta-check-kw80yen6/repo/spec/airep/v0.2/stage4/PARITY_MANIFEST.md
+== 4. A5 auxiliary: the genuine v0.1 record VALUE embedded in A5-1 must still be accepted by the v0.1 verifier (freeze intact) ==
+== REPRODUCTION OK ==
+corpus_manifest sha256: 01c2854bf1f74f4be921b7480c20c89f755adb860fa15a808d293abfc982ce98
+results_python  sha256: 1a53720e4cc2ae8caf29c114dd8d9b0ca9f2608749fa5428499a143bd8b8e9c0
+results_node    sha256: 0065a2127e09dce327242a96e700d24b2787ae033f5488d844b187ddf5e633aa

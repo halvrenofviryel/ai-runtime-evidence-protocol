@@ -1,0 +1,47 @@
+[
+  {
+    "path": "spec/airep/v0.2/interop/INTEROP_CORPUS_CONTRACT.md",
+    "source_commit": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4",
+    "sha256": "ac15ec39dd738d5c4ab6cba03aad92682a0f1b3af1d613ff88b26f2f4587d8bd"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/INTEROP_REFERENCE_EVALUATOR_CONTRACT.md",
+    "source_commit": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4",
+    "sha256": "d8edbbe93dbe7184518d1053644636c1e5de62583b6b929b6e8cbba1ea82d18c"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/PARTICIPATION_CONTRACT.md",
+    "source_commit": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4",
+    "sha256": "e3355ab21c6110b7adb97871f14fbac0a4c5c7706e7f343e3337db65de1faa0f"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_py/interop_eval.py",
+    "source_commit": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4",
+    "sha256": "b53c1c7c2438b3206272818c09b70a047220e8ddf37622dc38c0cbe33b8e19ee"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_py/test_interop_eval.py",
+    "source_commit": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4",
+    "sha256": "744b233e99022e1481ce7998b4528b5b9025163c91ab575e3afd79133dd44496"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_node/.gitignore",
+    "source_commit": "c247a25dda62f80a50a627c4a522833d093818e3",
+    "sha256": "e3b9568509740c9f9376a711ed9acefd194a42ced74d3144eb85e5681342490e"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_node/README.md",
+    "source_commit": "c247a25dda62f80a50a627c4a522833d093818e3",
+    "sha256": "27b49f80a8a2c1dabd32cb47629ba57defa192f75dba9806200bb9d1a6408561"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_node/interop_eval.mjs",
+    "source_commit": "c247a25dda62f80a50a627c4a522833d093818e3",
+    "sha256": "664a52fc430bd2c9691d0654507965bbb6862517a4c0c9a6df4032429ff75e1c"
+  },
+  {
+    "path": "spec/airep/v0.2/interop/interop_eval_node/selftest.mjs",
+    "source_commit": "c247a25dda62f80a50a627c4a522833d093818e3",
+    "sha256": "a33baedb358c4344f24eec4ee734d60578b433520eaed81c8f63dec8e2ef0346"
+  }
+]

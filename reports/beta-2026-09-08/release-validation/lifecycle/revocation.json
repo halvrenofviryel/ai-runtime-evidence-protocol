@@ -1,0 +1,14 @@
+{
+  "snapshot_id": "demo.snapshot",
+  "bindings": {
+    "demo.governor": {
+      "state": "active"
+    },
+    "demo.executor": {
+      "state": "active"
+    },
+    "demo.observer": {
+      "state": "active"
+    }
+  }
+}

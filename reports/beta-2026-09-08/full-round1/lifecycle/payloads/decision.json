@@ -1,0 +1,23 @@
+{
+  "input": {
+    "input_ref": "runtime/governed-input.json",
+    "input_digest": "sha256:84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+  },
+  "claim": {
+    "assertion": "Local owner permits pausing the worker",
+    "basis": [
+      "demo.local-owner"
+    ]
+  },
+  "directive": {
+    "verb": "release",
+    "policy_basis": [
+      "demo.local-owner"
+    ]
+  },
+  "output": {
+    "result_ref": "runtime/decision-result.json",
+    "result_digest": "sha256:72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+  },
+  "evidence": []
+}

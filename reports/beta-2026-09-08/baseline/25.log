@@ -1,0 +1,27 @@
+  ok  exit 2  unresolvable --schema-dir
+  ok  exit 0  --help
+  ok  exit 0  clean single case
+  ok  exit 0  no operator inputs at all
+  ok  exit 1  unparseable request
+  ok  exit 1  unparseable operator file
+  ok  exit 1  stage-1 hash mismatch
+  ok  exit 1  stage-0 schema invalid
+  ok  exit 2  missing --request
+  ok  exit 2  unknown option
+  ok  exit 2  option without value
+  ok  exit 2  malformed --now (not a datetime)
+  ok  exit 2  malformed --now (Feb 30)
+  ok  exit 2  malformed --now (no Z)
+  ok  exit 2  malformed --freshness-window (non-integer)
+  ok  exit 2  malformed --freshness-window (negative)
+  ok  exit 2  --corpus without --out
+  ok  exit 2  --request together with --corpus
+  ok  exit 1  unknown member in head_witness.head_ref
+  ok  exit 1  unknown member in head_witness.signature
+  ok  exit 2  R-9 --request + --out: no verdict on stdout, no file created
+  ok  exit 2  R-9 --request + existing --out: file left byte-identical
+FAIL: R-9 discrimination: --request alone expected exit 0 with a verdict, got exit 0, 0 stdout bytes
+  ok  exit 1  R-10 duplicate (chain_id, record_id) tuple: no results file
+  ok  exit 1  R-10 write ordering: pre-existing results file left byte-identical
+  ok  exit 0  R-10 discrimination: distinct-tuple two-case batch still writes its results file
+1 exit-code problems

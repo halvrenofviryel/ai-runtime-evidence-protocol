@@ -1,0 +1,5 @@
+  ok    unmodified exitcode_check.mjs exits 0
+  ok    unmodified exitcode_check.mjs prints clean
+  ok    falsified copy reports a failure in its output
+  ok    falsified copy exits 1 -- failure DOES reach the process exit status
+EXIT-CODE PROPAGATION SELF-TEST: clean (positive and negative control both measured)

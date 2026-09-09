@@ -1,0 +1,21 @@
+verifier parity  (node present)
+  case                                 | py  | mjs | expect | ok
+  -------------------------------------|-----|-----|--------|----
+  good (control)                       |  P  | P |   P    | ✓
+  vendor key in core top-level         |  F  | F |   F    | ✓
+  directive.verb out of enum           |  F  | F |   F    | ✓
+  missing nested subject.runtime       |  F  | F |   F    | ✓
+  scope.covers wrong type (string)     |  F  | F |   F    | ✓
+  claim.basis empty (minItems)         |  F  | F |   F    | ✓
+  integrity.canonical_json not true    |  F  | F |   F    | ✓
+  evidence[].resolvable wrong type     |  F  | F |   F    | ✓
+  tampered field (hash mismatch)       |  F  | F |   F    | ✓
+
+WP-08 profile-dimension divergence (invalid key_trust block):
+  verify.py : rejects on profile schema (INVALID, exit!=0) -> ✓
+  verify.mjs: exit 0 BUT names profile_not_measured=key_trust (not a bare Core) -> ✓
+
+WP-02 empty-input fail-closed (zero-record .jsonl):
+  verify.py : rejects empty input (no-records, exit!=0) -> ✓
+  verify.mjs: rejects empty input (no-records, exit!=0) -> ✓
+RESULT: all verifiers agree with the expected verdict

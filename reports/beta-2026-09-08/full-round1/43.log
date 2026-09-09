@@ -1,0 +1,14 @@
+  definitively revoked producer binding (the XT1 shape)      NOT_EVALUATED  OK
+  revoked binding alongside a clean witness                  NOT_EVALUATED  OK
+  producer binding missing (the PB2 shape)                   NOT_EVALUATED  OK
+  producer binding malformed                                 NOT_EVALUATED  OK
+  producer binding not trusted                               NOT_EVALUATED  OK
+  producer suite unsupported                                 NOT_EVALUATED  OK
+  signature verified under the bound key and failed (the PS1 shape) FAIL           OK
+  revocation state missing -- gate still runs (R-6)          PASS           OK
+  revocation state malformed -- gate still runs (R-6)        PASS           OK
+  clean authenticated path                                   PASS           OK
+  clean path carrying only a caveat                          PASS           OK
+  clean producer path with a witnessed-tier failure only     PASS           OK
+
+RESULT: all 12 cryptographic_result projection cases PASSED

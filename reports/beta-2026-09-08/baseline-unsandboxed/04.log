@@ -1,0 +1,28 @@
+verifying wheelhouse against MANIFEST.json:
+  attrs                        23.2.0     sha256-ok
+  cffi                         2.0.0      sha256-ok
+  cryptography                 48.0.0     sha256-ok
+  jsonschema                   4.25.1     sha256-ok
+  jsonschema-specifications    2025.9.1   sha256-ok
+  pycparser                    3.0        sha256-ok
+  referencing                  0.37.0     sha256-ok
+  rpds-py                      0.30.0     sha256-ok
+  typing-extensions            4.15.0     sha256-ok
+  aggregate_sha256 ok: 39bad2faaf9bc126b25279b781aa7414b4211ccb292cbe99288b4197995e966f
+
+building isolated venv (no --system-site-packages, --no-index, --require-hashes):
+
+asserting isolation:
+  python in venv: 3.12.3
+  cryptography loads from: /tmp/airep-beta-check-kw80yen6/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/lib/python3.12/site-packages/cryptography/__init__.py
+  modules leaking from outside the venv: none
+    attrs                        23.2.0
+    cryptography                 48.0.0
+    jsonschema                   4.25.1
+    jsonschema-specifications    2025.9.1
+    referencing                  0.37.0
+    rpds-py                      0.30.0
+    typing-extensions            4.15.0
+
+offline venv ready: /tmp/airep-beta-check-kw80yen6/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv
+run the verifier with: /tmp/airep-beta-check-kw80yen6/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python ../verifier_py/class_verifier.py ...

@@ -1,0 +1,14 @@
+AIREP strict-Trusted battery  (node present)
+  case                                         | py                       | mjs                      | ok
+  ---------------------------------------------|--------------------------|--------------------------|----
+  happy -> Trusted                             | Trusted                  | Trusted                  | PASS
+  forged witness sig                           | Verified                 | Verified                 | PASS
+  witness key == producer key (distinct ids)   | Verified                 | Verified                 | PASS
+  freshness stale (tiny window, now far ahead) | Verified                 | Verified                 | PASS
+  freshness in the future (now before witness ts) | Verified                 | Verified                 | PASS
+  producer key revoked (external source)       | Verified                 | Verified                 | PASS
+  witness key revoked (external source)        | Verified                 | Verified                 | PASS
+  witness unknown (not in trust store)         | Verified                 | Verified                 | PASS
+  witness untrusted (trusted:false)            | Verified                 | Verified                 | PASS
+  no strict inputs -> TRUSTED_NOT_IMPLEMENTED  | TRUSTED_NOT_IMPLEMENTED  | TRUSTED_NOT_IMPLEMENTED  | PASS
+RESULT: strict-Trusted grants Trusted only when all four gates pass

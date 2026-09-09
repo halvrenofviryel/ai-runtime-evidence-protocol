@@ -1,0 +1,12 @@
+[
+  {
+    "raw_sequence": "9007199254740991.1",
+    "pre_fix_class": "AIREP-Core",
+    "expected": "reject per AD-17 6.4: rounding must not admit an out-of-range Core integer"
+  },
+  {
+    "raw_sequence": "-1e-400",
+    "pre_fix_class": "AIREP-Core",
+    "expected": "reject per AD-17 6.4: rounding must not admit an out-of-range Core integer"
+  }
+]

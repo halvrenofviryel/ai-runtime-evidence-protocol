@@ -1,0 +1,58 @@
+A. canonical numeric serialisation at the ES6 / RFC 8785 boundaries
+  1e21         -> 1e+21                  (at the upper switch point) OK
+  1e21         exponential form is True as required                OK
+  1e20         -> 100000000000000000000  (just below the upper switch) OK
+  1e20         exponential form is False as required               OK
+  1.5e+30      -> 1.5e+30                (well above, fractional mantissa) OK
+  1.5e+30      exponential form is True as required                OK
+  1e-6         -> 0.000001               (at the lower switch point, still plain) OK
+  1e-6         exponential form is False as required               OK
+  1e-7         -> 1e-7                   (just past the lower switch) OK
+  1e-7         exponential form is True as required                OK
+  1.2345e-11   -> 1.2345e-11             (fractional mantissa, negative exponent) OK
+  1.2345e-11   exponential form is True as required                OK
+  -1e21        -> -1e+21                 (sign is preserved)       OK
+  -1e21        exponential form is True as required                OK
+
+B. the same values through the artifact path: JCS -> preimage -> integrity.current
+  1e21         canonical body carries 1e+21                        OK
+  1e21         canonical body contains no raw LF (separator stays unambiguous) OK
+  1e21         integrity.current well-formed                       OK
+  1e20         canonical body carries 100000000000000000000        OK
+  1e20         canonical body contains no raw LF (separator stays unambiguous) OK
+  1e20         integrity.current well-formed                       OK
+  1.5e+30      canonical body carries 1.5e+30                      OK
+  1.5e+30      canonical body contains no raw LF (separator stays unambiguous) OK
+  1.5e+30      integrity.current well-formed                       OK
+  1e-6         canonical body carries 0.000001                     OK
+  1e-6         canonical body contains no raw LF (separator stays unambiguous) OK
+  1e-6         integrity.current well-formed                       OK
+  1e-7         canonical body carries 1e-7                         OK
+  1e-7         canonical body contains no raw LF (separator stays unambiguous) OK
+  1e-7         integrity.current well-formed                       OK
+  1.2345e-11   canonical body carries 1.2345e-11                   OK
+  1.2345e-11   canonical body contains no raw LF (separator stays unambiguous) OK
+  1.2345e-11   integrity.current well-formed                       OK
+  -1e21        canonical body carries -1e+21                       OK
+  -1e21        canonical body contains no raw LF (separator stays unambiguous) OK
+  -1e21        integrity.current well-formed                       OK
+  each boundary value yields a distinct integrity.current          OK
+
+C. lexical rejection is not serialisation coverage
+  1e0 decodes to 1 and canonicalises to 1, never reaching the exponential branch OK
+
+D. pre-1970 freshness -- already covered, no case added
+  spec/airep/v0.2/stage4/corpus/S9-1.json
+    now             0100-01-01T00:00:00Z
+    witnessed_at    0099-12-31T23:30:00Z
+    window          3600s, 30 minutes inside -> expected PASS / OK
+  It exercises parsing, epoch arithmetic across a pre-1970 year boundary, and the
+  freshness comparison. The observation is measured and closed, not extended.
+
+E. coverage classification -- do not inflate this
+  canonical 60-case corpus carries such a number      NO   -> coverage OPEN
+  fixed vectors carry such a number                   NO   -> coverage OPEN
+  this regression exercises the path                  YES  -> repository-level only
+  a canonical C2 tranche needs a clean authoring context; see the module docstring
+
+RESULT: all canonicalisation boundary checks PASSED

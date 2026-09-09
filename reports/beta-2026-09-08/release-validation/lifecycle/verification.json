@@ -1,0 +1,124 @@
+{
+  "verdicts": [
+    {
+      "artifact_ref": {
+        "chain_id": "demo.governance-chain",
+        "record_id": "demo.decision"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+        "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+        "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "demo.governance-chain",
+        "record_id": "demo.dispatch"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+        "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+        "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "demo.execution-chain",
+        "record_id": "demo.receipt"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+        "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+        "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "demo.execution-chain",
+        "record_id": "demo.execution"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+        "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+        "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "demo.observation-chain",
+        "record_id": "demo.effect"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "independent",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+        "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+        "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    }
+  ]
+}

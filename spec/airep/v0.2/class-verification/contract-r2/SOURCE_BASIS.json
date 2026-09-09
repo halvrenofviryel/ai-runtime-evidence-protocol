@@ -1,0 +1,56 @@
+{
+  "measurement_contract_revision": "r2",
+  "airep_wire_version": "0.2",
+  "note": "The revision axis is not the protocol version. r1/r2 identify measurement-contract revisions only; no artifact carries one.",
+  "contract": {
+    "path": "spec/airep/v0.2/class-verification/contract-r2/CLASS_VERIFIER_CONTRACT_R2.md",
+    "sha256": "<self; recorded in REVISIONS.md and the P2-B evidence manifest>"
+  },
+  "semantic_basis": {
+    "normative_class_semantics": {
+      "path": "spec/airep/v0.2/CONFORMANCE_CLASSES.md",
+      "sha256": "sha256:331f7cabb99cb12aa55f2395f0f073caf58282e0a43756680b9d86bf59e9a9a6"
+    },
+    "profile_validation_decision": {
+      "path": "spec/airep/v0.2/profile-validation/N-01_PROFILE_VALIDATION_DECISION.md",
+      "sha256": "sha256:5b00cb833a8cca126c524ea4a51c98e2e1dce6fc1a65a7b11a93e764a1a7c7aa"
+    },
+    "predecessor_contract_r1": {
+      "path": "spec/airep/v0.2/class-verification/CLASS_VERIFIER_CONTRACT.md",
+      "sha256": "sha256:7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+      "status": "historical - frozen; basis of all measurements recorded to date; never edited"
+    },
+    "integrity_construction": {
+      "path": "spec/airep/v0.2/INTEGRITY.md",
+      "sha256": "sha256:2fca9a02ebd8b22807f51742278d7ddfc101e25ca6fd4fa844d6c6a537e98c11"
+    },
+    "artifact_schemas": [
+      {
+        "path": "spec/airep/v0.2/schemas/common.schema.json",
+        "sha256": "sha256:b46a02988ba3260444cd92153562346ca633e79f64eaf12c684d5069830e714a"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/control.schema.json",
+        "sha256": "sha256:f986225eac62c8df2091fc1f2af917c717025a88b6b0fe9157fdb07732f00b90"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/decision.schema.json",
+        "sha256": "sha256:04b53d4a5a1f1e3c7ba4d5ad32072a09b9e2b58702304a7845d327bc4ef84a6b"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/effect.schema.json",
+        "sha256": "sha256:4bc2cda84ba68be6e57a8b18a7fce733c54c6835e463822e5b9721a586456297"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/execution.schema.json",
+        "sha256": "sha256:eaf476d0dbc43a7abb3eabc55a427a0bfc8dfd8529f18d8e5efe53672f58085b"
+      }
+    ]
+  },
+  "artifact_schema_aggregate": {
+    "value": "sha256:638c7f520b0295aaae650e86ff86582e6ff3f680e426df84c95c296e2c6352ef",
+    "derivation": "For each schema emit '<lowercase-hex-sha256><SP><SP><repo-relative-path><LF>'; sort lines by path under unsigned byte order; concatenate with no separator; SHA-256 the result. Equivalent to: sha256sum <files> | LC_ALL=C sort -k2 | sha256sum",
+    "authoritative": "individual per-schema digests above; the aggregate is a convenience"
+  },
+  "historical_evidence_boundary": "No measurement recorded before this revision was made against r2. The C1 parity run, the historical 60-case corpus and every external run to date were measured against r1 and remain so. No historical external implementation is claimed to implement or pass r2."
+}

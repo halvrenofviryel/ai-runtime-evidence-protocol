@@ -1,0 +1,122 @@
+{
+  "request": {
+    "artifact": {
+      "decision_ref": {
+        "record_id": "demo.decision",
+        "chain_id": "demo.governance-chain"
+      },
+      "execution_ref": {
+        "record_id": "demo.fake-execution",
+        "chain_id": "demo.fake"
+      },
+      "observer_relationship": "independent",
+      "observed_state": {
+        "description": "Observer read worker state: paused",
+        "state_digest": "sha256:4821cc5060dde1f788aab1561014f18975782e7095fd276a44fca984d146fcff"
+      },
+      "airep_version": "0.2",
+      "artifact_type": "effect",
+      "chain_id": "demo.observation-chain",
+      "record_id": "demo.effect",
+      "sequence": 0,
+      "subject": {
+        "producer": "demo.observer",
+        "timestamp_utc": "2026-09-08T12:00:00Z"
+      },
+      "scope": {
+        "covers": [
+          "Authored report of the effect stage"
+        ],
+        "does_not_cover": [
+          "Truth of the report",
+          "Complete lifecycle history",
+          "Independent observation unless verified"
+        ]
+      },
+      "integrity": {
+        "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "current": "sha256:65362a671486a11ac08018736d18bc73aa24936028e71475312781e519e6de68",
+        "signature": {
+          "alg": "ed25519",
+          "value": "3ab4c66f1ce191f014e061b431eaf1158305bba5d9197d2a30befea96a3ea1c0bebb51dc7352fe34f45bd800ebfb0cd8a65ced8d3259c2bfd71febcf8e19940a"
+        }
+      }
+    },
+    "related_artifacts": [
+      {
+        "input": {
+          "input_ref": "runtime/governed-input.json",
+          "input_digest": "sha256:84cfbb9d9ff317a1e18497d28c92dc1e4519011976db41f1c0a3de3067bf86a9"
+        },
+        "claim": {
+          "assertion": "Local owner permits pausing the worker",
+          "basis": [
+            "demo.local-owner"
+          ]
+        },
+        "directive": {
+          "verb": "release",
+          "policy_basis": [
+            "demo.local-owner"
+          ]
+        },
+        "output": {
+          "result_ref": "runtime/decision-result.json",
+          "result_digest": "sha256:72ace527c24ad6913357f74e6fa66ad7b245ebd92b6578af8102c238a6fb0cba"
+        },
+        "evidence": [],
+        "airep_version": "0.2",
+        "artifact_type": "decision",
+        "chain_id": "demo.fake",
+        "record_id": "demo.fake-execution",
+        "sequence": 0,
+        "subject": {
+          "producer": "demo.executor",
+          "timestamp_utc": "2026-09-08T12:00:00Z"
+        },
+        "scope": {
+          "covers": [
+            "Authored report of the decision stage"
+          ],
+          "does_not_cover": [
+            "Truth of the report",
+            "Complete lifecycle history",
+            "Independent observation unless verified"
+          ]
+        },
+        "integrity": {
+          "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "current": "sha256:3e97cb0c309d42f63054daafbefede7e636ca19e0a74ec55cfb978bde7633792",
+          "signature": {
+            "alg": "ed25519",
+            "value": "ca634434cccac5f95ddb2ffe73a0ad897e222fc204e0e4b1453e935a16cfaeddeb04de32819db085bb5ba573df341d722e85634828ec030dd586a618051c5e0e"
+          }
+        }
+      }
+    ]
+  },
+  "historical_result": {
+    "artifact_ref": {
+      "chain_id": "demo.observation-chain",
+      "record_id": "demo.effect"
+    },
+    "class": "AIREP-Authenticated",
+    "authenticated_failures": [],
+    "authenticated_withheld": [],
+    "authenticated_caveats": [],
+    "witnessed_failures": [],
+    "witnessed_withheld": [
+      "no-witness-supplied"
+    ],
+    "observer_assessment": "independent",
+    "evidence": {
+      "now": null,
+      "freshness_window_seconds": null,
+      "bindings_digest": "sha256:c0e552bf23884a95f515ec6db3db1adf553951c7997137db293bb78789d4d289",
+      "independence_policy_digest": "sha256:b124ee583faee01755d531a71ff98db2e7adddc92e87ca243cb42b3748031951",
+      "revocation_digest": "sha256:67267c40ca39c51a32679548c64af11f1d70e69abf45140a306d6d6e231826c9"
+    }
+  },
+  "expected_observer_assessment": "unknown",
+  "reason": "A signed Decision cannot satisfy the Execution prerequisite."
+}
