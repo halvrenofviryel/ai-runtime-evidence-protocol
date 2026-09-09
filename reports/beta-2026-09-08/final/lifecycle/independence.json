@@ -1,0 +1,9 @@
+{
+  "independent_pairs": [
+    {
+      "a": "demo.executor",
+      "b": "demo.observer"
+    }
+  ],
+  "non_independent_pairs": []
+}

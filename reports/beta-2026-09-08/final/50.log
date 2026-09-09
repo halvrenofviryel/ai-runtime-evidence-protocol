@@ -1,0 +1,28 @@
+NOT MEASURED (branch): W1-BLK-IR13 item 9, Unicode-native name-key branch -- Node's readdirSync({ encoding: "buffer" }) always returns lossless raw bytes on this runtime, so a Unicode-native directory API -- the other of the two mutually exclusive branches section 8.6 defines -- cannot be constructed by this lane at all
+
+MANDATORY BLOCK REGISTRY (pinned by the contract, not by this file):
+  passed      W1-BLK-IR4 -- 26 assertion(s), 0 failed
+  passed      W1-BLK-IR5 -- 16 assertion(s), 0 failed
+  passed      W1-BLK-IR6 -- 10 assertion(s), 0 failed
+  passed      W1-BLK-IR7 -- 16 assertion(s), 0 failed
+  passed      W1-BLK-IR8 -- 55 assertion(s), 0 failed
+  passed      W1-BLK-IR9 -- 41 assertion(s), 0 failed
+  passed      W1-BLK-IR10 -- 12 assertion(s), 0 failed
+  passed      W1-BLK-IR11 -- 15 assertion(s), 0 failed
+  passed      W1-BLK-IR12 -- 50 assertion(s), 0 failed
+  passed      W1-BLK-IR13 -- 324 assertion(s), 0 failed
+  passed      W1-BLK-IR14 -- 20 assertion(s), 0 failed
+  passed      W1-BLK-IR15 -- 39 assertion(s), 0 failed
+  passed      W1-BLK-IR16 -- 58 assertion(s), 0 failed
+  passed      W1-BLK-IR17 -- 61 assertion(s), 0 failed
+  passed      W1-BLK-JCS -- 118 assertion(s), 0 failed
+  passed      W1-BLK-LIVE -- 81 assertion(s), 0 failed
+  passed      W1-BLK-PARITY -- 109 assertion(s), 0 failed
+  passed      W1-BLK-ARTIFACT-REF -- 193 assertion(s), 0 failed
+  passed      W1-BLK-JSON-BYTES -- 156 assertion(s), 0 failed
+  passed      W1-BLK-PATH -- 96 assertion(s), 0 failed
+
+NOT MEASURED branches (1), inside blocks that ran:
+  W1-BLK-IR13 item 9, Unicode-native name-key branch -- Node's readdirSync({ encoding: "buffer" }) always returns lossless raw bytes on this runtime, so a Unicode-native directory API -- the other of the two mutually exclusive branches section 8.6 defines -- cannot be constructed by this lane at all
+
+2329 passed / 0 failed / 0 skipped

@@ -50,6 +50,16 @@ cross-implementation corpus, external-standard mappings exercised) → **indepen
 > **Narrowly superseded for Core v0.2 stable gating by [AD-16](#ad-16--core-release-boundary-and-companion-profile-policy) (2026-09-03).**
 > AD-16 removes **only** the requirement that *specific external-standard mappings be exercised* before Core stable. The staged release model, the **≥2-producer interoperability gate**, and the **independence gate** are all preserved unchanged. The technical content of this decision is otherwise unchanged and remains adopted.
 
+
+> **Beta sequencing correction (2026-09-08):** the earlier alpha sentence above
+> included migration tooling, which the released alpha did not contain. This
+> mismatch is retained as history, not retroactively declared complete. The
+> current route is alpha → beta implementation readiness → RC candidate discipline
+> → stable independence/interoperability gates. The migration model is preserved;
+> tooling is deferred beyond beta. See
+> [RELEASE_STAGES.md](../v0.2/RELEASE_STAGES.md) for the complete staging contract,
+> including the preserved AD-15/AD-16 external independence requirements.
+
 **Consequence:** breaking design work happens here instead of as incremental v0.1 patches, so
 published v0.1 chains and citations stay stable.
 
@@ -553,6 +563,56 @@ working group, or any external party or project. No external participation is cl
 wire format, schema, integrity construction, fixed vector, assurance class, corpus, frozen evidence
 artefact, or released tag — `v0.2.0-alpha.1` is untouched.
 
+## AD-17 — JCS input admissibility and deterministic JSON data model
+
+**Status: Adopted (architecture) — 2026-09-04.** Associated with **AD-04**, which it does not rewrite.
+
+AD-04 adopted RFC 8785 (JCS) as v0.2's single byte-level canonicalization rule. RFC 8785 constrains
+the JSON data it will canonicalize, but AIREP never stated **where that input boundary is enforced**.
+A J1–J4 audit found the verifier path allows ordinary host-parser behaviour to determine the JCS
+input data model before any admissibility check runs — a **Core integration enforcement gap**, not a
+gap in RFC 8785 and not an intentional AIREP permission.
+
+The gap is concrete, not theoretical. `{"n":9007199254740993}` currently yields
+`9007199254740993` under the Python path (arbitrary precision) and `9007199254740992` under the Node
+path (binary64) — **the same bytes producing different values, hence different `jcs-bytes` and a
+different `integrity.current`**.
+
+**AD-17 owns this problem.** It is not a class-semantic question (P2-A is unaffected) and not a
+measurement-contract question: a measurement contract MUST rely on this Core precondition and MUST
+NOT define its own AIREP-artifact parsing rule.
+
+**Core principle.** Identical raw AIREP artifact bytes MUST produce either the same admissible JSON
+data model in every conforming implementation, or the same rejection outcome. Host-parser behaviour
+is not a protocol choice.
+
+**Normative surface.** Adopted additively as
+[`../v0.2/JSON_INPUT_ADMISSIBILITY.md`](../v0.2/JSON_INPUT_ADMISSIBILITY.md), so the frozen
+`INTEGRITY.md` stays byte-identical and no downstream digest identity is disturbed. It fixes: raw
+duplicate-member rejection (recursive, after escape processing, before any collapse); the I-JSON
+string domain (surrogates and noncharacters rejected, no normalization, semantic value preserved);
+and a **semantic** number model — every admitted token becomes the correctly rounded IEEE-754
+binary64 value, with non-finite results rejected and finite rounding explicitly **not** a failure.
+
+**Two provenance classes, deliberately not merged.** Most rules are **inherited** through the RFC
+8785 selection AIREP already made. One is **AIREP's own receiver policy**: rejecting an initial UTF-8
+BOM. RFC 8259 permits a parser to *ignore* a BOM, so rejection is a deterministic choice, not an
+inherited requirement, and must never be presented as one. Both current runtimes already reject a
+BOM, but **existing implementation agreement is not a previously specified protocol rule** — AD-17
+creates the rule for the first time.
+
+**Generic numbers are not exact Core integers.** `9007199254740993` is not rejected as a lexeme —
+that would be narrower than RFC 8785, whose safe-integer guidance is a `SHOULD` for true integers.
+Instead both implementations reach the same binary64 value, and fields with exact integer semantics
+apply their own bounds afterward. A five-schema audit records `common.schema.json` → `$defs.sequence`
+(`maximum: 9007199254740991`) as the only Core integer member carrying an explicit safe bound; no
+further bound is invented for symmetry.
+
+**Not wire-breaking.** No schema, no integrity construction, no assurance class and no wire version
+changes; `0.2` stands. No historical measurement is rescored: historical evidence did not exercise
+the newly explicit boundary, and no historical result has been shown to be wrong.
+
+
 ---
 
 ## Decision index
@@ -575,3 +635,4 @@ artefact, or released tag — `v0.2.0-alpha.1` is untouched.
 | 14 | Verifier parity gate | Adopted (architecture) | — |
 | 15 | Independence gate | Adopted (process) — **§3 superseded for Core gating by AD-16** | — |
 | 16 | Core release boundary and companion-profile policy | Adopted (architecture + process) | — |
+| 17 | JCS input admissibility, deterministic JSON data model | Adopted (architecture) | — |

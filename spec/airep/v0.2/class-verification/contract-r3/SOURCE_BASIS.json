@@ -1,0 +1,76 @@
+{
+  "measurement_contract_revision": "r3",
+  "contract_model": "STANDALONE with respect to r2 - r2 is not an input and no r2+patch composition exists. r1 IS a load-bearing input, normatively incorporated by reference for the surfaces enumerated in R3.1 and nothing else. Composition: effective contract = this document + r1 restricted to those surfaces; where they conflict, r3 prevails.",
+  "airep_wire_version": "0.2",
+  "note": "The revision axis is not the protocol version. r1/r2/r3 identify measurement-contract revisions only; no artifact carries one.",
+  "contract": {
+    "path": "spec/airep/v0.2/class-verification/contract-r3/CLASS_VERIFIER_CONTRACT_R3.md",
+    "sha256": "<self; recorded in REVISIONS.md and the P2-B evidence manifest>"
+  },
+  "semantic_basis": {
+    "normative_class_semantics": {
+      "path": "spec/airep/v0.2/CONFORMANCE_CLASSES.md",
+      "sha256": "sha256:331f7cabb99cb12aa55f2395f0f073caf58282e0a43756680b9d86bf59e9a9a6"
+    },
+    "profile_validation_decision": {
+      "path": "spec/airep/v0.2/profile-validation/N-01_PROFILE_VALIDATION_DECISION.md",
+      "sha256": "sha256:5b00cb833a8cca126c524ea4a51c98e2e1dce6fc1a65a7b11a93e764a1a7c7aa"
+    },
+    "integrity_construction": {
+      "path": "spec/airep/v0.2/INTEGRITY.md",
+      "sha256": "sha256:2fca9a02ebd8b22807f51742278d7ddfc101e25ca6fd4fa844d6c6a537e98c11"
+    },
+    "artifact_schemas": [
+      {
+        "path": "spec/airep/v0.2/schemas/common.schema.json",
+        "sha256": "sha256:b46a02988ba3260444cd92153562346ca633e79f64eaf12c684d5069830e714a"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/control.schema.json",
+        "sha256": "sha256:f986225eac62c8df2091fc1f2af917c717025a88b6b0fe9157fdb07732f00b90"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/decision.schema.json",
+        "sha256": "sha256:04b53d4a5a1f1e3c7ba4d5ad32072a09b9e2b58702304a7845d327bc4ef84a6b"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/effect.schema.json",
+        "sha256": "sha256:4bc2cda84ba68be6e57a8b18a7fce733c54c6835e463822e5b9721a586456297"
+      },
+      {
+        "path": "spec/airep/v0.2/schemas/execution.schema.json",
+        "sha256": "sha256:eaf476d0dbc43a7abb3eabc55a427a0bfc8dfd8529f18d8e5efe53672f58085b"
+      }
+    ],
+    "incorporated_contract_r1": {
+      "path": "spec/airep/v0.2/class-verification/CLASS_VERIFIER_CONTRACT.md",
+      "sha256": "sha256:7ecfce56ab576a495816df77e25442b25c1afdb22cc9828e47ba29a565138885",
+      "status": "historical - frozen; basis of every measurement recorded to date; never edited",
+      "role": "LOAD-BEARING - normatively incorporated by reference for the R3.1 surfaces only"
+    }
+  },
+  "validation_basis_closure": {
+    "model": "Model 1 - self-contained basis document",
+    "dialect": "JSON Schema Draft 2020-12, pinned by contract and never selected from $schema",
+    "format": "annotation only; NOT assertion-bearing; no format validation",
+    "vocabularies": "no custom/external semantic vocabulary; $vocabulary beyond pinned dialect => unusable; no implicit plugin or network loading",
+    "refs": "intra-document fragment refs permitted; file/network/relative/absolute external refs prohibited; network refs rejected without attempting retrieval",
+    "duplicate_members": "rejected at every depth, detected during parse, before semantic validation",
+    "consequence": "basis_digest = sha256(exact self-contained basis document bytes) identifies the complete validation semantics"
+  },
+  "artifact_schema_aggregate": {
+    "value": "sha256:638c7f520b0295aaae650e86ff86582e6ff3f680e426df84c95c296e2c6352ef",
+    "derivation": "For each schema emit '<lowercase-hex-sha256><SP><SP><repo-relative-path><LF>'; sort lines by path under unsigned byte order; concatenate; SHA-256. Equivalent to: sha256sum <files> | LC_ALL=C sort -k2 | sha256sum",
+    "authoritative": "individual per-schema digests above; the aggregate is a convenience"
+  },
+  "historical_evidence_boundary": "No measurement was made against r2 or r3. The C1 parity run, the historical 60-case corpus and every external run to date were measured against r1 and remain so. No historical external implementation is claimed to implement or pass r2 or r3.",
+  "superseded_not_load_bearing": {
+    "note": "Recorded for provenance only. NOT an input to the effective contract.",
+    "r2": {
+      "path": "spec/airep/v0.2/class-verification/contract-r2/CLASS_VERIFIER_CONTRACT_R2.md",
+      "sha256": "sha256:630676b1a199a5453e96b5e18890b17a4d0e5c290c2156aa15f1a3f899aad8a0",
+      "commit": "1400aa2451d0b94d07a5672a0baf404bac8448c8",
+      "status": "superseded before implementation/measurement - no implementation, corpus, parity or external result exists against it; superseded on a read-only audit, not because a measurement failed"
+    }
+  }
+}

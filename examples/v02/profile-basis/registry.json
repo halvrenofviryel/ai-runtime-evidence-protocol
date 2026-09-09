@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "airep.test-profile": {
+      "schema_path": "test-profile.schema.json",
+      "basis_digest": "sha256:372fd5e0454e8b11454eb61a6befbf9c235c61abb18ee27739745ab52be830db"
+    }
+  }
+}

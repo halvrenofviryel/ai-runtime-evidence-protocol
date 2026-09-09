@@ -1,0 +1,67 @@
+AIREP v0.1 conformance — schema https://raw.githubusercontent.com/halvrenofviryel/ai-runtime-evidence-protocol/main/spec/airep/v0.1/core.schema.json
+Found 8 example record(s).
+
+== FULL validation ==
+  PASS  control_delivery_failure.json FULL  (valid=True, expected=True)
+  PASS  eu_ai_act_record.json FULL  (valid=True, expected=True)
+  PASS  governance_record.json FULL  (valid=True, expected=True)
+  PASS  key_trust_record.json FULL  (valid=True, expected=True)
+  PASS  neutral_record.json FULL  (valid=True, expected=True)
+  PASS  observability_record.json FULL  (valid=True, expected=True)
+  PASS  phionyx_profile_record.json FULL  (valid=True, expected=True)
+  PASS  phionyx_profile_record_v0_8_1.json FULL  (valid=True, expected=True)
+
+== STRIP-PROFILES neutrality test (delete 'profiles' -> still valid) ==
+  PASS  control_delivery_failure.json strip-profiles  (valid=True, expected=True)
+  PASS  eu_ai_act_record.json strip-profiles  (valid=True, expected=True)
+  PASS  governance_record.json strip-profiles  (valid=True, expected=True)
+  PASS  key_trust_record.json strip-profiles  (valid=True, expected=True)
+  PASS  neutral_record.json strip-profiles  (valid=True, expected=True)
+  PASS  observability_record.json strip-profiles  (valid=True, expected=True)
+  PASS  phionyx_profile_record.json strip-profiles  (valid=True, expected=True)
+  PASS  phionyx_profile_record_v0_8_1.json strip-profiles  (valid=True, expected=True)
+
+== NEGATIVE tests (tightened core MUST reject) ==
+  PASS  bare vendor top-level key -> REJECTED  (valid=False, expected=False)
+  PASS  missing 'scope' -> REJECTED  (valid=False, expected=False)
+
+== INTEGRITY (recompute SHA-256 over canonical form + verify Ed25519 signature) ==
+  PASS  control_delivery_failure.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  eu_ai_act_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  governance_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  key_trust_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  neutral_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  observability_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  phionyx_profile_record.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+  PASS  phionyx_profile_record_v0_8_1.json integrity  (hash recompute=True, genesis previous=True, signature=verified)
+
+== CHAIN replay (each `previous` links to the prior `current`) ==
+  PASS  chain.jsonl  (5 records linked: hash + previous-link + index + signature)
+
+== CHAIN-WITNESS profile (freshness / head witness + truncation detection) ==
+  PASS  chain_witness.jsonl  (3 records linked: hash + previous-link + index + signature)
+  PASS  chain_witness.jsonl[0] FULL core  (valid=True, expected=True)
+  PASS  chain_witness.jsonl[1] FULL core  (valid=True, expected=True)
+  PASS  chain_witness.jsonl[2] FULL core  (valid=True, expected=True)
+  PASS  chain_witness.jsonl[checkpoint] strip-profiles  (valid=True, expected=True)
+  PASS  chain_witness block valid against chain_witness.schema.json
+  PASS  witness signature verifies under the independent witness key
+  PASS  witness key is distinct from the producer key
+  PASS  untruncated chain matches the witnessed length + head
+  PASS  dropped tail record -> truncation detected by the witness
+
+== TAMPER detection (each mutation MUST break exactly the right check) ==
+  PASS  baseline: stored integrity.current recomputes
+  PASS  edited output.result_ref -> hash mismatch detected
+  PASS  rewritten integrity.previous -> hash mismatch detected (anti-splice)
+  PASS  corrupted signature -> Ed25519 verification fails
+
+== PROFILE conformance (profiles.<name> -> profiles/<name>.schema.json) ==
+  PASS  control_delivery_failure.json profiles.control_delivery valid against control_delivery.schema.json
+  PASS  eu_ai_act_record.json profiles.eu_ai_act_log valid against eu_ai_act_log.schema.json
+  PASS  key_trust_record.json profiles.key_trust valid against key_trust.schema.json
+  PASS  governance_record.json profiles.nist_ai_rmf valid against nist_ai_rmf.schema.json
+  PASS  observability_record.json profiles.observability_transport valid against observability_transport.schema.json
+  PASS  governance_record.json profiles.owasp_threat valid against owasp_threat.schema.json
+
+RESULT: all conformance checks PASSED

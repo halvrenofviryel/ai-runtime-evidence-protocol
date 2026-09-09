@@ -1,0 +1,77 @@
+test_binary64_rounding_supplementary_unicode_and_safe_sequence (test_beta.AdmissionAndProfileTests.test_binary64_rounding_supplementary_unicode_and_safe_sequence) ... ok
+test_historical_sixty_cases_through_beta_adapters (test_beta.AdmissionAndProfileTests.test_historical_sixty_cases_through_beta_adapters) ... ok
+test_profile_fragment_refs_and_unknown_annotations (test_beta.AdmissionAndProfileTests.test_profile_fragment_refs_and_unknown_annotations) ... ok
+test_profile_identity_digest_and_order_are_not_substituted (test_beta.AdmissionAndProfileTests.test_profile_identity_digest_and_order_are_not_substituted) ... ok
+test_profiles_known_unknown_fail_and_format_annotation (test_beta.AdmissionAndProfileTests.test_profiles_known_unknown_fail_and_format_annotation) ... ok
+test_raw_json_boundary_in_both_runtimes (test_beta.AdmissionAndProfileTests.test_raw_json_boundary_in_both_runtimes) ... ok
+test_registry_duplicates_digest_substitution_and_containment (test_beta.AdmissionAndProfileTests.test_registry_duplicates_digest_substitution_and_containment) ... ok
+test_self_revocation_caveat_does_not_require_generic_basis (test_beta.AdmissionAndProfileTests.test_self_revocation_caveat_does_not_require_generic_basis) ... ok
+test_unknown_profile_cannot_raise_class_or_erase_withheld (test_beta.AdmissionAndProfileTests.test_unknown_profile_cannot_raise_class_or_erase_withheld) ... ok
+test_unusable_basis_invalidates_run_without_partial_output (test_beta.AdmissionAndProfileTests.test_unusable_basis_invalidates_run_without_partial_output) ... ok
+test_body_type_version_and_signature_tampering (test_beta.ProducerTests.test_body_type_version_and_signature_tampering) ... ok
+test_chain_cursor_and_resume_and_mutation_isolation (test_beta.ProducerTests.test_chain_cursor_and_resume_and_mutation_isolation) ... ok
+test_cli_every_emitter_and_verify_reconcile_negative (test_beta.ProducerTests.test_cli_every_emitter_and_verify_reconcile_negative) ... ok
+test_cli_invalid_input_emits_no_partial_results_or_traceback (test_beta.ProducerTests.test_cli_invalid_input_emits_no_partial_results_or_traceback) ... FAIL
+test_deterministic_fixtures_reproduce_exactly (test_beta.ProducerTests.test_deterministic_fixtures_reproduce_exactly) ... ok
+test_four_families_authenticated_and_core (test_beta.ProducerTests.test_four_families_authenticated_and_core) ... ok
+test_keygen_file_permissions_and_no_overwrite (test_beta.ProducerTests.test_keygen_file_permissions_and_no_overwrite) ... ok
+test_rejected_emission_does_not_consume_position (test_beta.ProducerTests.test_rejected_emission_does_not_consume_position) ... ok
+test_wire_alg_never_selects_suite (test_beta.ProducerTests.test_wire_alg_never_selects_suite) ... ok
+test_witness_all_families_and_no_truth_class (test_beta.ProducerTests.test_witness_all_families_and_no_truth_class) ... ok
+test_broken_previous_vs_missing_predecessor (test_beta.ReconciliationTests.test_broken_previous_vs_missing_predecessor) ... ok
+test_complete_lifecycle_keeps_unknown_total_coverage (test_beta.ReconciliationTests.test_complete_lifecycle_keeps_unknown_total_coverage) ... ok
+test_duplicate_global_identity_is_never_resolved_by_chain (test_beta.ReconciliationTests.test_duplicate_global_identity_is_never_resolved_by_chain) ... ok
+test_empty_malformed_and_core_only_are_not_success (test_beta.ReconciliationTests.test_empty_malformed_and_core_only_are_not_success) ... ERROR
+test_independence_requires_identity_key_policy_and_authentication (test_beta.ReconciliationTests.test_independence_requires_identity_key_policy_and_authentication) ... ok
+test_multiple_executions_effect_for_one_cannot_hide_other (test_beta.ReconciliationTests.test_multiple_executions_effect_for_one_cannot_hide_other) ... ok
+test_multiple_instructions_and_partial_observation (test_beta.ReconciliationTests.test_multiple_instructions_and_partial_observation) ... ok
+test_observer_requires_execution_family_and_unique_identity (test_beta.ReconciliationTests.test_observer_requires_execution_family_and_unique_identity) ... ok
+test_permutation_does_not_select_a_different_outcome (test_beta.ReconciliationTests.test_permutation_does_not_select_a_different_outcome) ... FAIL
+test_required_failure_variants (test_beta.ReconciliationTests.test_required_failure_variants) ... ok
+test_unresolved_wrong_family_wrong_chain_references (test_beta.ReconciliationTests.test_unresolved_wrong_family_wrong_chain_references) ... ok
+test_wrong_boundary_and_explicit_failed_suppressed_outcomes (test_beta.ReconciliationTests.test_wrong_boundary_and_explicit_failed_suppressed_outcomes) ... ok
+test_wrong_decision_and_instruction_digest (test_beta.ReconciliationTests.test_wrong_decision_and_instruction_digest) ... ok
+
+======================================================================
+ERROR: test_empty_malformed_and_core_only_are_not_success (test_beta.ReconciliationTests.test_empty_malformed_and_core_only_are_not_success)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/claude/airep-v02-beta-prep/tests/v02/test_beta.py", line 310, in test_empty_malformed_and_core_only_are_not_success
+    r=reconcile([None, {}, 7]+self.docs,ops=self.ops)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/claude/airep-v02-beta-prep/tools/airep_v02/reconcile.py", line 22, in reconcile
+    doc = check_core(artifact)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/data/claude/airep-v02-beta-prep/tools/airep_v02/producer.py", line 34, in check_core
+    verifier.schema_validate(doc, SCHEMAS)
+  File "/mnt/data/claude/airep-v02-beta-prep/spec/airep/v0.2/class-verification/verifier_py/class_verifier.py", line 279, in schema_validate
+    raise RunInvalid("artifact is not a JSON object")
+airep_historical_class_verifier.RunInvalid: artifact is not a JSON object
+
+======================================================================
+FAIL: test_cli_invalid_input_emits_no_partial_results_or_traceback (test_beta.ProducerTests.test_cli_invalid_input_emits_no_partial_results_or_traceback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/claude/airep-v02-beta-prep/tests/v02/test_beta.py", line 215, in test_cli_invalid_input_emits_no_partial_results_or_traceback
+    self.assertEqual(run.returncode,1); self.assertFalse(Path(out).exists()); self.assertNotIn('Traceback',run.stderr)
+                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'Traceback' unexpectedly found in 'Traceback (most recent call last):\n  File "<frozen runpy>", line 198, in _run_module_as_main\n  File "<frozen runpy>", line 88, in _run_code\n  File "/mnt/data/claude/airep-v02-beta-prep/tools/airep_v02/__main__.py", line 116, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File "/mnt/data/claude/airep-v02-beta-prep/tools/airep_v02/__main__.py", line 98, in main\n    v = evaluate_request({\'artifact\':doc, \'related_artifacts\':docs[:i]+docs[i+1:]}, ops=ops, profile_bases=bases)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/mnt/data/claude/airep-v02-beta-prep/tools/airep_v02/verify.py", line 23, in evaluate_request\n    verdict = verifier.evaluate(request, ops or verifier.OperatorInputs(), SCHEMAS,\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/mnt/data/claude/airep-v02-beta-prep/spec/airep/v0.2/class-verification/verifier_py/class_verifier.py", line 765, in evaluate\n    schema_validate(artifact, schema_dir)   # RunInvalid -> exit 1, no class\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/mnt/data/claude/airep-v02-beta-prep/spec/airep/v0.2/class-verification/verifier_py/class_verifier.py", line 286, in schema_validate\n    raise RunInvalid("schema validation failed: %s" % errors[0].message)\nairep_historical_class_verifier.RunInvalid: schema validation failed: \'instruction_digest\' is a required property\n'
+
+======================================================================
+FAIL: test_permutation_does_not_select_a_different_outcome (test_beta.ReconciliationTests.test_permutation_does_not_select_a_different_outcome)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/data/claude/airep-v02-beta-prep/tests/v02/test_beta.py", line 317, in test_permutation_does_not_select_a_different_outcome
+    self.assertEqual(sorted(map(lambda x:json.dumps(x,sort_keys=True),a['checks'])), sorted(map(lambda x:json.dumps(x,sort_keys=True),b['checks'])))
+AssertionError: Lists differ: ['{"c[1477 chars]demo.governance-chain", "record_id": "demo.dis[10132 chars]"}}'] != ['{"c[1477 chars]demo.execution-chain", "record_id": "demo.rece[10132 chars]"}}']
+
+First differing element 5:
+'{"ch[117 chars]demo.governance-chain", "record_id": "demo.dis[226 chars]1"}}'
+'{"ch[117 chars]demo.execution-chain", "record_id": "demo.rece[226 chars]1"}}'
+
+Diff is 14505 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 33 tests in 27.041s
+
+FAILED (failures=2, errors=1)

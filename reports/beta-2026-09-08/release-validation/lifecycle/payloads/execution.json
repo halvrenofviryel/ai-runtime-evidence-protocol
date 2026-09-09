@@ -1,0 +1,10 @@
+{
+  "decision_ref": {
+    "record_id": "demo.decision",
+    "chain_id": "demo.governance-chain"
+  },
+  "instruction_id": "demo.pause-1",
+  "instruction_digest": "sha256:8b2ef054e6398f26457fa6f05dc765b61023d7a3ba12b9d9dc40aa62aeac0390",
+  "executed_action_digest": "sha256:963e2b30267e0af1d67f031b60c158e97b16d681feacb1fdba0a00e9985810ec",
+  "execution_event": "executed"
+}

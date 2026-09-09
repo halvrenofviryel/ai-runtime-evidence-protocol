@@ -1,29 +1,26 @@
-# AIREP v0.2 — Specification tree (alpha)
+# AIREP v0.2 — beta implementation target
 
-**Status: `v0.2.0-alpha.1` prerelease.** This is an experimental prerelease of the v0.2 line.
-It does **not** supersede v0.1 as the stable/recommended implementation target, and it does
-**not** satisfy the AD-15 criteria for a stable `v0.2.0`.
+**`v0.2.0-beta.1` is the current implementation target. Wire version: `0.2`.**
+Experimental, not stable, and not yet a claim of independent same-version
+producer→consumer interoperability. v0.1 remains frozen and supported.
 
-The **wire version is `0.2`** — `airep_version` is pinned `"const": "0.2"` in the shared
-schema. Release SemVer and the wire identifier are separate: an artifact says `0.2`, the
-prerelease that shipped this tooling is `v0.2.0-alpha.1`.
+Start with **[SPEC.md](SPEC.md)** → [producer quickstart](QUICKSTART.md) →
+[verifier](VERIFICATION.md) → [runnable lifecycle](../../../examples/v02/README.md).
 
-| Present | Status |
+| Surface | Status |
 |---|---|
-| [`INTEGRITY.md`](./INTEGRITY.md) | **Normative.** The v0.2 integrity construction — domain tags, hash/signature/witness preimages, binding rules. Stage-2 integration of the frozen WP-α01 Stage-1 baseline (freeze basis `9a30f97`, PR #26). Byte-affecting changes require a WP-α01 Stage-1 re-review. |
-| [`vectors/`](./vectors/) | Stage-3 cross-language fixed vectors: shared semantic inputs, two independently written generators (Python / Node), a third-party comparator, and the byte-agreement evidence manifest. |
-| [`stage4/`](./stage4/) | Stage-4 test contract (normalized result contract, closed reason-code registry, fixture envelope + A1–A13 matrix) for the **WP-α01 integrity verifiers** — integrity-construction verifiers only, not full v0.2 conformance verifiers. WP-α01 ACCEPTED/CLOSED 2026-08-23. |
-| [`schema-design/`](./schema-design/) | Artifact-schema phase Stage 1: the **schema design contract** for the four artifact families — ACCEPTED 2026-08-23 as the frozen implementation basis. |
-| [`schemas/`](./schemas/) | The five JSON Schema (2020-12) files mechanically expressing the accepted design contract — ACCEPTED 2026-08-23 as the implementation basis. Schema validation confers no assurance class, signature validity, or evidence truth. |
-| [`schema-validation/`](./schema-validation/) | Schema fixture/validation phase — **COMPLETE 2026-08-23**: 117-fixture corpus + two-engine harness, ALL GATES PASSED. Measured claim only: the five schemas discriminate the measured corpus as expected under two independent engines. |
-| [`conformance-design/`](./conformance-design/) | Conformance-class phase Stage 1: the **class design contract** (Core → Authenticated → Witnessed; verifier-accepted binding; witness-key independence; snapshot revocation) — ACCEPTED 2026-08-23. |
-| [`class-verification/`](./class-verification/) | Class-verifier implementation contract **plus two separately authored verifiers, a 60-case corpus with 15 process probes, a parity comparator with five negative proofs, and the offline reproduction basis**. Class-verifier corpus/parity phase COMPLETE — current status in [`class-verification/STATUS.md`](./class-verification/STATUS.md), kept outside the contract because the contract is evidence-pinned. The measured claim is parity and conformance to the frozen expected values on the measured corpus — not correctness of the underlying semantics, and not third-party audit. |
+| [First-party producer/library/CLI](../../../tools/airep_v02/) | Four families, real tagged hashes and Ed25519 signatures |
+| [Lifecycle and negative corpus](../../../examples/v02/) | Decision, issuer dispatch, receiver receipt, Execution and Effect |
+| [Reconciliation](RECONCILIATION.md) | Structured facts, failure, missing evidence, unevaluated prerequisites and indeterminacy |
+| [Normative classes](CONFORMANCE_CLASSES.md) | Core / Authenticated / Witnessed; no truth assurance |
+| [Input admission](JSON_INPUT_ADMISSIBILITY.md) and [r3 profiles](class-verification/contract-r3/CLASS_VERIFIER_CONTRACT_R3.md) | Both beta verifier adapters; historical engines preserved |
+| [Integrity](INTEGRITY.md), [vectors](vectors/), [stage 4](stage4/), [schemas](schemas/) | Frozen accepted sources and reproduction evidence retained |
+| [Schema corpus](schema-validation/) and [class corpus](class-verification/) | Historical 117-case schema / 60-case class measurement bases retained |
+| [Imported W1 evaluators](interop/) | Prior Erratum-8 work consolidated with provenance; not an external beta interoperability result |
 
-**Still absent:** the profile schemas, the normative conformance-classes text, and any
-**producer** implementation. Producer work has not started. The stable-release criteria of
-AD-15 — including genuine external independence and interoperability evidence — are not met, so
-there is no plain `v0.2` and no stable `v0.2.0`.
-
-The design record for everything here lives in
-[`../v0.2-design/`](../v0.2-design/) — architecture decisions, breaking-change inventory,
-migration model, and the frozen WP-α01 construction document.
+See [BETA_READINESS.md](BETA_READINESS.md) for measured release criteria and
+[RELEASE_STAGES.md](RELEASE_STAGES.md) for remaining RC/stable work. The
+[architecture record](../v0.2-design/) and every evidence-pinned subsidiary
+contract remain available; their historical status prose is not the current
+beta status. SCITT/AuthZEN E2E, third-party v0.2 production and migration tooling
+are not claimed implemented.

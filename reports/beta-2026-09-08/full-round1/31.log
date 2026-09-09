@@ -1,0 +1,30 @@
+--- control: unmutated P2 with the UNMUTATED store is clean ---
+[ok  ] P2 control -> AIREP-Witnessed, all five channels empty
+--- R-8 7a: absent witness_id + MALFORMED store (governing combination) ---
+[ok  ] absent witness_id + malformed store -> witness-binding-missing ALONE
+[ok  ] absent witness_id + malformed store (missing container) -> same
+--- R-8 7a: NON-STRING witness_id (several forms) + MALFORMED store ---
+[ok  ] witness_id=null + malformed store -> witness-binding-missing ALONE
+[ok  ] witness_id=integer + malformed store -> witness-binding-missing ALONE
+[ok  ] witness_id=float + malformed store -> witness-binding-missing ALONE
+[ok  ] witness_id=bool + malformed store -> witness-binding-missing ALONE
+[ok  ] witness_id=array + malformed store -> witness-binding-missing ALONE
+[ok  ] witness_id=object + malformed store -> witness-binding-missing ALONE
+--- R-8 discrimination: MALFORMED store + valid present witness_id ---
+[ok  ] malformed store + valid witness_id -> witness-binding-malformed (7b alive)
+[ok  ] malformed store (missing container) + valid witness_id -> malformed
+--- R-8: the producer path still reaches the store gate ---
+[ok  ] malformed store, no head_witness -> producer-binding-malformed
+[ok  ] malformed store (missing container), no head_witness -> producer-binding-malformed
+--- R-8 7b: WELL-FORMED store, present usable id, no map entry ---
+[ok  ] well-formed store + present id absent from witness_bindings -> witness-binding-missing (7b), producer path untouched
+[ok  ] well-formed store + unknown-but-usable id -> witness-binding-missing (7b)
+--- R-8 7a with a well-formed store (unchanged behaviour, pinned) ---
+[ok  ] absent witness_id + well-formed store -> witness-binding-missing
+[ok  ] witness_id=null + well-formed store -> witness-binding-missing
+--- R-8 dependency: stage 6 not clean suppresses 7a as well ---
+[ok  ] stage-6 failure + absent witness_id + malformed store -> witness-claim-invalid alone, no stage-7 reason
+--- R-8 7c: no revocation reason when 7a stops stage 7 ---
+[ok  ] absent witness_id + malformed store + witness-less revocation snapshot -> witness-binding-missing alone (no revocation reason)
+
+all S9 round-4 probes passed

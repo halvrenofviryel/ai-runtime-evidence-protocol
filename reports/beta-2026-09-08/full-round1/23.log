@@ -1,0 +1,82 @@
+  ok  control: untouched P2 is clean AIREP-Witnessed
+  ok  R-1: unknown claim member => witness-claim-invalid, run stays valid
+  ok  R-1: missing claim member => witness-claim-invalid
+  ok  R-1: wrong-typed claim member => witness-claim-invalid
+  ok  R-2: 6a precedes 6b (claim defect + unresolvable head) => claim-invalid alone
+  ok  R-2: 6a precedes 6c (claim defect + bad witnessed_at) => claim-invalid alone
+  ok  R-2: 6b precedes 6c (unresolved head + bad witnessed_at) => head-unresolved alone
+  ok  R-2: 6b precedes 6c (non-reconciling head + bad witnessed_at) => head-mismatch alone
+  ok  R-2: 6c alone, with clock => witness-time-invalid alone (never freshness)
+  ok  R-2: 6c alone, no clock => witness-time-invalid alone (clock plays no part)
+  ok  R-2: valid-but-stale witnessed_at reaches stages 9 and 10
+  ok  R-3: witness unknown member + trusted:false => binding-malformed alone
+  ok  R-3: witness clean entry + trusted:false => binding-not-trusted alone
+  ok  R-3: producer unknown member + trusted:false => binding-malformed alone
+  ok  R-3: producer clean entry + trusted:false => binding-not-trusted alone
+  ok  R-3: malformed container + trusted:false => binding-malformed alone
+  ok  R-4: unknown member in head_witness.head_ref is run-invalid (exit 1)
+  ok  R-4: unknown member in head_witness.signature is run-invalid (exit 1)
+  ok  R-4: head_ref.record_id absent => witness-head-unresolved (not run-invalid)
+  ok  R-4: head_ref.record_id wrong-typed => witness-head-unresolved
+  ok  R-4: signature.value absent => witness-signature-invalid (not run-invalid)
+  ok  R-4: signature.value wrong-typed => witness-signature-invalid
+  ok  R-4: signature.value cryptographically invalid => witness-signature-invalid
+  ok  R-4: signature.alg absent => still AIREP-Witnessed, no reason at all
+  ok  R-4: signature.alg naming another suite selects nothing => still AIREP-Witnessed
+  ok  R-7 row1: head_witness absent => no-witness-supplied in witnessed_withheld
+  ok  R-7 row2: head_witness present as null is run-invalid (exit 1)
+  ok  R-7 row2: head_witness present as array is run-invalid (exit 1)
+  ok  R-7 row2: head_witness present as string is run-invalid (exit 1)
+  ok  R-7 row2: head_witness present as number is run-invalid (exit 1)
+  ok  R-7 row2: head_witness present as boolean is run-invalid (exit 1)
+  ok  R-7 row3: unknown member inside head_witness is run-invalid (exit 1)
+  ok  R-7 row4: claim absent => witness-claim-invalid in witnessed_failures
+  ok  R-7 row4: claim as string => witness-claim-invalid
+  ok  R-7 row4: claim as array => witness-claim-invalid
+  ok  R-7 row4: claim as null => witness-claim-invalid
+  ok  R-7 row4: claim as number => witness-claim-invalid
+  ok  R-7 row5: head_ref absent => witness-head-unresolved in witnessed_failures
+  ok  R-7 row5: head_ref as string => witness-head-unresolved
+  ok  R-7 row5: head_ref as array => witness-head-unresolved
+  ok  R-7 row5: head_ref as null => witness-head-unresolved
+  ok  R-7 row6: witness_id absent => witness-binding-missing in witnessed_WITHHELD
+  ok  R-7 row6: witness_id as number => witness-binding-missing (withheld)
+  ok  R-7 row6: witness_id as null => witness-binding-missing (withheld)
+  ok  R-7 row6: witness_id as object => witness-binding-missing (withheld)
+  ok  R-7 row7: signature absent => witness-signature-invalid in witnessed_failures
+  ok  R-7 row7: signature as string => witness-signature-invalid
+  ok  R-7 row7: signature as array => witness-signature-invalid
+  ok  R-7 row7: signature as null => witness-signature-invalid
+  ok  R-7 row7: signature as number => witness-signature-invalid
+  ok  R-7 row8: unknown member in head_witness.head_ref stays run-invalid (R-4 unchanged)
+  ok  R-7 row8: unknown member in head_witness.signature stays run-invalid (R-4 unchanged)
+  ok  R-7 divergence1: no-witness-supplied is WITHHELD per section 5
+  ok  R-7 divergence1: witness-binding-missing is WITHHELD per section 5
+  ok  R-7 divergence1: witness-claim-invalid is FAILURE per section 5
+  ok  R-7 divergence1: witness-head-unresolved is FAILURE per section 5
+  ok  R-7 divergence1: witness-signature-invalid is FAILURE per section 5
+  ok  R-7 divergence2: claim AND signature absent => witness-claim-invalid ALONE
+  ok  R-7 divergence2: all four members absent => witness-claim-invalid ALONE
+  ok  R-7 divergence2: head_witness as an empty object => witness-claim-invalid ALONE
+  ok  R-7 divergence2: head_ref AND witness_id absent => witness-head-unresolved ALONE
+  ok  R-7 divergence2: witness_id AND signature absent => witness-binding-missing ALONE
+  ok  R-7 divergence2: witness_id absent still leaves stage 10 running (no clock => freshness withheld)
+  ok  R-8 governing: witness_id ABSENT + malformed store => witness-binding-missing ALONE
+  ok  R-8 governing: witness_id ABSENT + store with unknown top member => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as number + malformed store => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as null + malformed store => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as object + malformed store => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as array + malformed store => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as boolean + malformed store => witness-binding-missing ALONE
+  ok  R-8 7a: witness_id as float + malformed store => witness-binding-missing ALONE
+  ok  R-8 discrimination: malformed store + present valid witness_id => witness-binding-MALFORMED
+  ok  R-8 discrimination: store with unknown top member + present witness_id => witness-binding-MALFORMED
+  ok  R-8 producer path: malformed store => producer-binding-malformed (witness_id present)
+  ok  R-8 producer path: malformed store => producer-binding-malformed (witness_id absent)
+  ok  R-8 producer path: identical producer channel with and without a usable witness_id
+  ok  R-8 7b: well-formed store, present id absent from the map => witness-binding-missing
+  ok  R-8 7b: well-formed store with the map entry removed => witness-binding-missing
+  ok  R-8 7b: R-3 unchanged inside 7b (malformed entry + trusted:false) => malformed alone
+  ok  R-8 7c: absent witness_id + malformed store, no clock => binding-missing + freshness only
+  ok  R-8 regression: untouched P2 still clean AIREP-Witnessed after the 7a gate
+RULINGS SELF-CHECK: clean

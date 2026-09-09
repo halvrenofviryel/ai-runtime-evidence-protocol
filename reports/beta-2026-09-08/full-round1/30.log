@@ -1,0 +1,79 @@
+--- control: unmutated P2 is clean (probe substrate is sound) ---
+[ok  ] P2 control -> AIREP-Witnessed, all five channels empty
+--- R-7 row 1: head_witness entirely absent ---
+[ok  ] R-7 head_witness absent -> no-witness-supplied (WITHHELD) alone
+--- R-7 row 2: head_witness present but null / non-object ---
+[ok  ] R-7 head_witness present as null -> run-invalid (exit 1, no verdict)
+[ok  ] R-7 head_witness present as string -> run-invalid (exit 1, no verdict)
+[ok  ] R-7 head_witness present as array -> run-invalid (exit 1, no verdict)
+[ok  ] R-7 head_witness present as number -> run-invalid (exit 1, no verdict)
+[ok  ] R-7 head_witness present as boolean -> run-invalid (exit 1, no verdict)
+--- R-7 row 3: unknown member inside head_witness ---
+[ok  ] R-7 unknown member in head_witness -> run-invalid (exit 1, no verdict)
+[ok  ] R-7 foreign member beats a missing known member -> run-invalid
+--- R-7 row 4: claim absent / non-object / structurally invalid ---
+[ok  ] R-7 claim ABSENT -> witness-claim-invalid (FAILURE) alone
+[ok  ] R-7 claim as null -> witness-claim-invalid (FAILURE) alone
+[ok  ] R-7 claim as string -> witness-claim-invalid (FAILURE) alone
+[ok  ] R-7 claim as array -> witness-claim-invalid (FAILURE) alone
+[ok  ] R-7 claim as number -> witness-claim-invalid (FAILURE) alone
+[ok  ] R-7 claim structurally invalid -> witness-claim-invalid (FAILURE) alone
+--- R-7 row 5: head_ref absent / non-object / no usable record_id ---
+[ok  ] R-7 head_ref ABSENT -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 head_ref as null -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 head_ref as string -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 head_ref as array -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 head_ref as number -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 head_ref without record_id -> witness-head-unresolved (FAILURE) alone
+[ok  ] R-7 claim AND head_ref absent -> witness-claim-invalid ALONE (6a gates 6b)
+--- R-7 row 6: witness_id absent / non-string (WITHHELD channel) ---
+[ok  ] R-7 witness_id ABSENT -> witness-binding-missing (WITHHELD) alone
+[ok  ] R-7 witness_id as null -> witness-binding-missing (WITHHELD) alone
+[ok  ] R-7 witness_id as number -> witness-binding-missing (WITHHELD) alone
+[ok  ] R-7 witness_id as array -> witness-binding-missing (WITHHELD) alone
+[ok  ] R-7 witness_id as object -> witness-binding-missing (WITHHELD) alone
+[ok  ] R-7 witness_id absent suppresses independence + witness-signature reasons
+--- R-7 row 7: signature absent / non-object / value absent or wrong-typed ---
+[ok  ] R-7 signature ABSENT -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature as null -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature as string -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature as array -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature as number -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature.value ABSENT -> witness-signature-invalid (FAILURE) alone
+[ok  ] R-7 signature.value wrong-typed -> witness-signature-invalid (FAILURE) alone
+--- R-7 row 8: R-4 nested closure is unchanged ---
+[ok  ] R-7/R-4 unknown member in head_witness.head_ref -> run-invalid
+[ok  ] R-7/R-4 unknown member in head_witness.signature -> run-invalid
+[ok  ] R-7/R-4 foreign member in head_ref + absent signature -> run-invalid
+--- divergence risk A: S5 channel assignment (withheld vs failure) ---
+[ok  ] A: head_witness absent -> no-witness-supplied in witnessed_withheld and NOT in witnessed_failures
+[ok  ] A: witness_id absent -> witness-binding-missing in witnessed_withheld and NOT in witnessed_failures
+[ok  ] A: claim absent -> witness-claim-invalid in witnessed_failures and NOT in witnessed_withheld
+[ok  ] A: head_ref absent -> witness-head-unresolved in witnessed_failures and NOT in witnessed_withheld
+[ok  ] A: signature absent -> witness-signature-invalid in witnessed_failures and NOT in witnessed_withheld
+[ok  ] A: head_witness absent -> class != AIREP-Witnessed
+[ok  ] A: witness_id absent -> class != AIREP-Witnessed
+[ok  ] A: claim absent -> class != AIREP-Witnessed
+[ok  ] A: head_ref absent -> class != AIREP-Witnessed
+[ok  ] A: signature absent -> class != AIREP-Witnessed
+--- divergence risk B: R-2 precedence over several absent members ---
+[ok  ] B: claim AND signature absent -> witness-claim-invalid ALONE
+[ok  ] B: head_witness = {} (all four absent) -> witness-claim-invalid ALONE
+[ok  ] B: head_ref + witness_id + signature absent -> witness-head-unresolved ALONE
+[ok  ] B: witness_id AND signature absent -> witness-binding-missing ALONE
+[ok  ] B discriminates: signature absent ALONE really emits witness-signature-invalid
+[ok  ] B discriminates: head_ref absent ALONE really emits witness-head-unresolved
+[ok  ] B discriminates: witness_id absent ALONE really emits witness-binding-missing
+--- R-7 closure: an absent sub-member is never no-witness-supplied ---
+[ok  ] R-7 head_witness.claim absent -> NOT no-witness-supplied
+[ok  ] R-7 head_witness.head_ref absent -> NOT no-witness-supplied
+[ok  ] R-7 head_witness.witness_id absent -> NOT no-witness-supplied
+[ok  ] R-7 head_witness.signature absent -> NOT no-witness-supplied
+--- packaging: repository JCS canonicalizer, offline, cwd-independent ---
+[ok  ] JCS module loaded from <repo>/spec/airep/v0.1/conformance/jcs.py
+[ok  ] JCS canonicalize() returns bytes (the interface class_verifier calls)
+[ok  ] JCS canonicalize() emits RFC 8785 form (sorted keys, no whitespace)
+[ok  ] verifier runs with cwd=/ and no --schema-dir -> AIREP-Witnessed
+[obs ] `import jcs` in this environment: exit=1 (no installed package -- the repository loader is the only source)
+
+all S9 round-3 probes passed

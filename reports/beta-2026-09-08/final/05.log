@@ -1,0 +1,87 @@
+AIREP v0.2 class-verification -- OFFLINE REPRODUCTION PREFLIGHT
+tree: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification
+
+-- 0. environment --
+  python: 3.12.3
+  node:   v20.19.6
+  kernel network isolation available: False (NOT enforced -- see module docstring)
+
+-- 1. Node dependency materialization (vendored tarballs, offline) --
+  [ ok ] node_modules materialized from vendored tarballs
+      ajv                    8.20.0   sha256-ok sri-ok identity-ok
+        fast-deep-equal        3.1.3    sha256-ok sri-ok identity-ok
+        fast-uri               3.1.6    sha256-ok sri-ok identity-ok
+        json-schema-traverse   1.0.0    sha256-ok sri-ok identity-ok
+        require-from-string    2.0.2    sha256-ok sri-ok identity-ok
+      
+      node_modules materialized offline from 5 vendored tarballs: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules
+
+-- 2. Python venv materialization (hash-pinned wheelhouse, offline) --
+  [ ok ] isolated venv built and isolation asserted
+      verifying wheelhouse against MANIFEST.json:
+        attrs                        23.2.0     sha256-ok
+        cffi                         2.0.0      sha256-ok
+        cryptography                 48.0.0     sha256-ok
+        jsonschema                   4.25.1     sha256-ok
+        jsonschema-specifications    2025.9.1   sha256-ok
+        pycparser                    3.0        sha256-ok
+        referencing                  0.37.0     sha256-ok
+        rpds-py                      0.30.0     sha256-ok
+        typing-extensions            4.15.0     sha256-ok
+        aggregate_sha256 ok: 39bad2faaf9bc126b25279b781aa7414b4211ccb292cbe99288b4197995e966f
+      
+      building isolated venv (no --system-site-packages, --no-index, --require-hashes):
+      
+      asserting isolation:
+        python in venv: 3.12.3
+        cryptography loads from: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/lib/python3.12/site-packages/cryptography/__init__.py
+        modules leaking from outside the venv: none
+          attrs                        23.2.0
+          cryptography                 48.0.0
+          jsonschema                   4.25.1
+          jsonschema-specifications    2025.9.1
+          referencing                  0.37.0
+          rpds-py                      0.30.0
+          typing-extensions            4.15.0
+      
+      offline venv ready: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv
+      run the verifier with: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/bin/python ../verifier_py/class_verifier.py ...
+
+-- 3. no system-dependency fallback --
+  [ ok ] python third-party imports resolve
+  [ ok ] sys.prefix is the bundle venv :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv
+  [ ok ] venv is isolated from the base interpreter
+  [ ok ] cryptography loads from the bundle venv :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/lib/python3.12/site-packages/cryptography/__init__.py
+  [ ok ] jsonschema loads from the bundle venv :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/lib/python3.12/site-packages/jsonschema/__init__.py
+  [ ok ] referencing loads from the bundle venv :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/offline-python-deps/.venv/lib/python3.12/site-packages/referencing/__init__.py
+  [ ok ] node resolves ajv
+  [ ok ] ajv loads from the vendored bundle, not a system path :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules/ajv/dist/ajv.js
+  [ ok ] ajv is NOT the system copy :: /tmp/airep-beta-check-80gudqaw/repo/spec/airep/v0.2/class-verification/verifier_node_r2/node_modules/ajv/dist/ajv.js
+
+-- 3b. disposable 60-case execution root --
+  [ ok ] combined index is 60 unique cases (45 C0 + 15 C1) :: 60
+  [ ok ] combined-index digest matches the accepted C1 execution basis :: 365c0a992c0cad09ae731d569f14cd064ba9218f6d3fd94a38dd69640a49803c
+
+-- 4. Python verifier, per-implementation determinism --
+  [ ok ] python verifier exit 0 on both runs :: [0, 0]
+  [ ok ] python verifier byte-deterministic across two runs
+  [ ok ] python verifier produced 60 verdicts :: 60
+      python digest: b078a3abeaf0555a9f369e3ffb244f8df6a472282e4c5f4f6191eb7aace363b1
+  [ ok ] python matches every frozen expected.json
+
+-- 5. Node verifier, per-implementation determinism --
+  [ ok ] node verifier exit 0 on both runs :: [0, 0]
+  [ ok ] node verifier byte-deterministic across two runs
+  [ ok ] node verifier produced 60 verdicts :: 60
+      node digest:   b078a3abeaf0555a9f369e3ffb244f8df6a472282e4c5f4f6191eb7aace363b1
+  [ ok ] node matches every frozen expected.json
+
+-- 6. frozen corpus integrity --
+  [ ok ] all 416 corpus file digests match the manifest
+  [ ok ] documented path-sort rule reproduces the recorded aggregate :: 55f5189e38dfc81c6be68b5a51c789d5ed0f3ac8b0e57becfd7d796f1fddda4a
+  [ ok ] whole-line/hash-prefix sort is a DIFFERENT rule (negative discrimination)
+
+========================================================================
+PREFLIGHT CLEAN.
+Per-implementation digests recorded above. NO cross-implementation comparison
+was performed; that measurement belongs to the third-context comparator.

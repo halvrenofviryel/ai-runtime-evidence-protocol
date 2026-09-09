@@ -1,0 +1,1 @@
+PROOF OK: parity comparator exits 0 on committed envelopes and exits 1 on an injected top-level metadata member

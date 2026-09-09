@@ -1,0 +1,14 @@
+[
+  {
+    "input": "{\"n\":9007199254740993}",
+    "historical_python": "{\"n\":9007199254740993}",
+    "historical_node": "{\"n\":9007199254740992}",
+    "finding": "binary64 divergence"
+  },
+  {
+    "input": "{\"a\":1,\"a\":2}",
+    "historical_python": "{\"a\":2}",
+    "historical_node": "{\"a\":2}",
+    "finding": "duplicate keys collapsed before admissibility"
+  }
+]

@@ -1,0 +1,23 @@
+FAIL: broken link: spec/airep/v0.2/SPEC.md -> ../../../../examples/v02/README.md
+FAIL: broken link: spec/airep/v0.2/SPEC.md -> ../../../../tools/airep_v02/
+FAIL: broken link: spec/airep/v0.2/SPEC.md -> ../../../../EXTERNAL_EVIDENCE.md
+FAIL: broken link: spec/airep/v0.2/QUICKSTART.md -> ../../../../examples/v02/README.md
+FAIL: broken link: spec/airep/v0.2/VERIFICATION.md -> ../../../../examples/v02/run_lifecycle.py
+FAIL: broken link: spec/airep/v0.2/VERIFICATION.md -> ../../../../examples/v02/profile-basis/
+FAIL: broken link: spec/airep/v0.2/RELEASE_STAGES.md -> ../../../../EXTERNAL_EVIDENCE.md
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../reports/beta-2026-09-08/WORK_REPORT_TR.md
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../tools/airep_v02/producer.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../tools/airep_v02/__main__.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../examples/v02/run_lifecycle.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../tools/airep_v02/reconcile.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../examples/v02/fixtures/
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../tests/v02/test_beta.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../scripts/check_beta_docs.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../.github/workflows/v0.2-beta.yml
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../scripts/check_beta.py
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../examples/v02/README.md
+FAIL: broken link: spec/airep/v0.2/BETA_READINESS.md -> ../../../../CHANGELOG.md
+FAIL: broken link: spec/airep/v0.2/RELEASE_READINESS.md -> ../../../../tools/airep_v02/
+FAIL: broken link: spec/airep/v0.2/RELEASE_READINESS.md -> ../../../../examples/v02/
+FAIL: broken link: spec/airep/v0.2/RELEASE_READINESS.md -> ../../../../scripts/check_beta.py
+Checked 12 reading-path documents; 1919 preserved historical files; 22 failures.

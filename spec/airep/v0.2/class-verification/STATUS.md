@@ -18,8 +18,8 @@ tie the status lifecycle to the evidence lifecycle, which is why they are now ap
 | Verifiers | **two**, authored separately against the frozen contract |
 | Corpus | **60 scored cases** (45 C0 + 15 C1) and **15 CLI/process-exit probes** |
 | Official C1 parity run | **PASS**, all hard gates, 0 findings |
-| Producer implementation | **not started** |
-| v0.2 | **`v0.2.0-alpha.1` — released prerelease.** Experimental and not stable. Producer implementation remains unstarted and the AD-15 stable-release criteria remain unmet. There is no stable `v0.2.0`. |
+| Producer implementation | **First-party four-family beta producer implemented** — [quickstart](../QUICKSTART.md) |
+| v0.2 | **`v0.2.0-beta.1` implementation target**, experimental and not stable. [Beta readiness](../BETA_READINESS.md); AD-15/AD-16 stable independence criteria remain unmet. |
 | Stable-release criteria (AD-15) | **not met** |
 
 ## What the phase result does and does not establish
@@ -82,3 +82,12 @@ the network was unavailable at the kernel level.
 
 CI runs this chain as **reproduction and regression evidence**. It does not produce new official
 acceptance evidence — the official runs are the ones recorded under `comparator/evidence/`.
+
+## Beta extension of the implementation surface
+
+The preserved engines above remain the r1 historical basis. The
+[beta adapters](../../../../tools/airep_v02/) add AD-17 raw input admission,
+r3 profile evaluation, and actual/unique Execution prerequisites for observer
+independence. Original C1 evidence and external measurements are unchanged.
+New parity is first-party regression evidence, not new independent-authoring
+or external-interoperability evidence. See [VERIFICATION.md](../VERIFICATION.md).

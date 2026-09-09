@@ -1,0 +1,410 @@
+{
+  "canonical_worktree": "/mnt/data/claude/airep-v02-beta-prep",
+  "head": {
+    "exit": 0,
+    "stdout": "1400aa2451d0b94d07a5672a0baf404bac8448c8\n",
+    "stderr": ""
+  },
+  "status": {
+    "exit": 0,
+    "stdout": " M spec/airep/v0.2-design/ARCHITECTURE_DECISIONS.md\n M spec/airep/v0.2/class-verification/REVISIONS.md\n?? reports/\n?? spec/airep/v0.2/JSON_INPUT_ADMISSIBILITY.md\n?? spec/airep/v0.2/class-verification/contract-r3/\n",
+    "stderr": ""
+  },
+  "remote_main": "a3973ce3b6ad984635867a2bb52d83c472e5c0cb",
+  "worktrees": [
+    {
+      "path": "/mnt/data/claude/ai-runtime-evidence-protocol",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "?? dist/\n?? spec/airep/v0.2/schema-validation/node_modules\n",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "449f4fb6a07fd54b45a6e68208dece109446ef93\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/mnt/data/claude/airep-v02-beta-prep",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": " M spec/airep/v0.2-design/ARCHITECTURE_DECISIONS.md\n M spec/airep/v0.2/class-verification/REVISIONS.md\n?? reports/\n?? spec/airep/v0.2/JSON_INPUT_ADMISSIBILITY.md\n?? spec/airep/v0.2/class-verification/contract-r3/\n",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "1400aa2451d0b94d07a5672a0baf404bac8448c8\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/mnt/data/claude/airep-wt-py-final",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "0d05975caacd4624e201c67b0f7ccd0abf648d26\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/mnt/data/claude/airep-wt-py-final2",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "8af0227344ee64cb5053454a6661d5f3c4e6453b\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/cl-node",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "809c610840a841531ade33fb077d29afb49343f0\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/cl-py",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "41516a292bf07b4c7875c2e370dd2fcb1396a20a\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/cw1/build",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "9fafe38788577452736ce8d885008c252be82993\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/e7-node",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "1d7b664405d68da0b0d600481be0592d46456e71\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/e7-py",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "a90e6279a2351953518ae94431ad4af6bb86abea\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/e8-node",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "c247a25dda62f80a50a627c4a522833d093818e3\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/e8-py",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "c589e7ab3ca608c0649be3f3ee7f388a2d145fd4\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-node",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "4babeb4a809f45ed4e2e9bbe1f530ef2d0a82651\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-py",
+      "exists": true,
+      "status": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-py'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-py\n"
+      },
+      "head": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-py'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/fr-py\n"
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/nf",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "7c873428f54d2707d414492eeb931e565a3f04bc\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/tc2",
+      "exists": true,
+      "status": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/tc2'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/tc2\n"
+      },
+      "head": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/tc2'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/tc2\n"
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/w1",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "8c5f444d572765a0d4a6ff966783b67ba4620d97\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wnode",
+      "exists": true,
+      "status": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wnode'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wnode\n"
+      },
+      "head": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wnode'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wnode\n"
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-final",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "c801d5058c5538de0fd0fb414a68041538806f0e\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-official",
+      "exists": true,
+      "status": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-official'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-official\n"
+      },
+      "head": {
+        "exit": 128,
+        "stdout": "",
+        "stderr": "fatal: detected dubious ownership in repository at '/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-official'\nTo add an exception for this directory, call:\n\n\tgit config --global --add safe.directory /tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-official\n"
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-node-r2",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "801a1dc1a056ab65e20d735c83cf04a28c1fb45d\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-py",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "4cc3773e1b27b85f889717afe5f2ba8121fd2a09\n",
+        "stderr": ""
+      }
+    },
+    {
+      "path": "/tmp/claude-1000/-mnt-data-claude-phionyx/63a167a2-2441-4fb8-b239-99babc26e0fa/scratchpad/wt-py-r2",
+      "exists": true,
+      "status": {
+        "exit": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "head": {
+        "exit": 0,
+        "stdout": "57c4a113883098ac7d5b033e16aed7f74f2e876f\n",
+        "stderr": ""
+      }
+    }
+  ],
+  "other_directories": [
+    {
+      "path": "/mnt/data/claude/.airep_fresh",
+      "git": true,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 2739
+    },
+    {
+      "path": "/mnt/data/claude/.airep_v3n",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 822
+    },
+    {
+      "path": "/mnt/data/claude/.airep_v3p",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 639
+    },
+    {
+      "path": "/mnt/data/claude/.airep_v4n",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 820
+    },
+    {
+      "path": "/mnt/data/claude/.airep_v4p",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 641
+    },
+    {
+      "path": "/mnt/data/claude/.airep_v5n",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 820
+    },
+    {
+      "path": "/mnt/data/claude/.airep_verify",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 281
+    },
+    {
+      "path": "/mnt/data/claude/.airep_verify_n",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 820
+    },
+    {
+      "path": "/mnt/data/claude/ai-runtime-evidence-protocol",
+      "git": true,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 7370
+    },
+    {
+      "path": "/mnt/data/claude/airep-release-artifacts",
+      "git": false,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 6
+    },
+    {
+      "path": "/mnt/data/claude/airep-v02-beta-prep",
+      "git": true,
+      "classification": "canonical beta worktree",
+      "files": 1975
+    },
+    {
+      "path": "/mnt/data/claude/airep-wt-py-final",
+      "git": true,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 1271
+    },
+    {
+      "path": "/mnt/data/claude/airep-wt-py-final2",
+      "git": true,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 1271
+    },
+    {
+      "path": "/mnt/data/claude/phionyx-rge-airep",
+      "git": true,
+      "classification": "retained source, historical worktree, snapshot, archive or downstream integration",
+      "files": 615
+    }
+  ]
+}

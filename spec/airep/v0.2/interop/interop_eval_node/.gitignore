@@ -1,0 +1,4 @@
+# generated / materialized artifacts -- never committed
+node_modules/
+tmp_*/
+out_*.json

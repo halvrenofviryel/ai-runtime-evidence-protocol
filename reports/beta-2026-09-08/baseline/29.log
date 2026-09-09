@@ -1,0 +1,58 @@
+--- control: unmutated P2 is clean (probe substrate is sound) ---
+[ok  ] P2 control -> AIREP-Witnessed, all five channels empty
+--- R-2: stage-6 dependent precedence ---
+[ok  ] R-2 6a+6c: sixth claim member + invalid Gregorian -> witness-claim-invalid ALONE
+[ok  ] R-2 6c discriminates: invalid Gregorian alone -> witness-time-invalid
+[ok  ] R-2 6a+6c: wrong-typed chain_id + invalid Gregorian -> witness-claim-invalid ALONE
+[ok  ] R-2 6b+6c: unresolvable head_ref + invalid Gregorian -> witness-head-unresolved ALONE
+[ok  ] R-2 6b+6c: reconciliation mismatch + invalid Gregorian -> witness-head-mismatch ALONE
+[ok  ] R-2 6a+6b: sixth claim member + unresolvable head_ref -> witness-claim-invalid ALONE
+[ok  ] R-2 6c is clock-independent: no clock -> witness-time-invalid, no freshness reason
+[ok  ] R-2 stage-6 failure suppresses all stage 7-10 reasons
+[ok  ] R-2 6c clean -> stage 6 clean, stages 7-10 run (no witness-time-invalid)
+--- R-3: binding precedence (structure before trust) ---
+[ok  ] R-3 producer clean entry + trusted:false -> producer-binding-not-trusted ONLY
+[ok  ] R-3 producer unknown member + trusted:false -> producer-binding-malformed ONLY
+[ok  ] R-3 producer missing `bindings` container + trusted:false -> producer-binding-malformed ONLY
+[ok  ] R-3 producer malformed public_key_hex + trusted:false -> producer-binding-malformed ONLY
+[ok  ] R-3 producer wrong role + trusted:false -> producer-binding-malformed ONLY
+[ok  ] R-3 producer non-namespaced subject_identity + trusted:false -> producer-binding-malformed ONLY
+[ok  ] R-3 producer `trusted` absent -> producer-binding-malformed, never producer-binding-not-trusted
+[ok  ] R-3 producer trusted:"true" (not literally true) -> producer-binding-not-trusted
+[ok  ] R-3 witness clean entry + trusted:false -> witness-binding-not-trusted ONLY
+[ok  ] R-3 witness unknown member + trusted:false -> witness-binding-malformed ONLY
+[ok  ] R-3 witness missing `bindings` container + trusted:false -> witness-binding-malformed ONLY
+[ok  ] R-3 witness malformed public_key_hex + trusted:false -> witness-binding-malformed ONLY
+[ok  ] R-3 witness wrong role + trusted:false -> witness-binding-malformed ONLY
+[ok  ] R-3 witness non-namespaced subject_identity + trusted:false -> witness-binding-malformed ONLY
+[ok  ] R-3 witness `trusted` absent -> witness-binding-malformed, never witness-binding-not-trusted
+[ok  ] R-3 witness trusted:"true" (not literally true) -> witness-binding-not-trusted
+--- R-4: nested-closure scope and non-requiredness ---
+[ok  ] R-4 unknown member in head_witness.head_ref -> run-invalid (exit 1, no verdict)
+[ok  ] R-4 unknown member in head_witness.signature -> run-invalid (exit 1, no verdict)
+[ok  ] R-4/R-1 EXTRA claim member -> witness-claim-invalid, exit 0 (not run-invalid)
+[ok  ] R-4/R-1 MISSING claim member `chain_id` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 MISSING claim member `sequence` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 MISSING claim member `current` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 MISSING claim member `length` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 MISSING claim member `witnessed_at` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 WRONG-TYPED claim member `chain_id` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 WRONG-TYPED claim member `sequence` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 WRONG-TYPED claim member `current` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 WRONG-TYPED claim member `length` -> witness-claim-invalid, exit 0
+[ok  ] R-4/R-1 WRONG-TYPED claim member `witnessed_at` -> witness-claim-invalid, exit 0
+[ok  ] R-4 head_ref.record_id absent -> witness-head-unresolved, exit 0
+[ok  ] R-4 head_ref.record_id wrong-typed -> witness-head-unresolved, exit 0
+[ok  ] R-4 head_ref.record_id unmatched -> witness-head-unresolved, exit 0
+[ok  ] R-4 signature.value absent -> witness-signature-invalid, exit 0
+[ok  ] R-4 signature.value wrong-typed -> witness-signature-invalid, exit 0
+[ok  ] R-4 signature.value cryptographically invalid -> witness-signature-invalid, exit 0
+[ok  ] R-4 signature.alg absent -> still AIREP-Witnessed, all channels empty
+[ok  ] R-4 signature.alg naming another suite selects nothing -> still AIREP-Witnessed
+--- R-7 (settled; asserted in round 3): whole head_witness member absent ---
+[obs ] head_witness.claim       absent -> exit=0  witnessed_failures=['witness-claim-invalid']
+[obs ] head_witness.head_ref    absent -> exit=0  witnessed_failures=['witness-head-unresolved']
+[obs ] head_witness.signature   absent -> exit=0  witnessed_failures=['witness-signature-invalid']
+[obs ] head_witness.witness_id  absent -> exit=0  witnessed_failures=[]
+
+all S9 round-2 probes passed

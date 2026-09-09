@@ -6,13 +6,16 @@ abstract: >-
   governance evidence: one signed, tamper-evident, chained record per AI decision, checkable
   offline by an independent verifier. AIREP is a proposed open format with one reference
   implementation; it is not a ratified standard. v0.1 is the stable, recommended
-  implementation target; v0.2.0-alpha.1 is an experimental prerelease that does not supersede
-  it and has no producer implementation.
+  implementation target for the frozen line; v0.2.0-beta.1 is an experimental implementation
+  target with a first-party four-family producer and lifecycle reconciliation. It is not stable
+  and does not establish independent same-version interoperability.
 type: software
-version: "0.2.0-alpha.1"
-date-released: 2026-08-25
-doi: 10.5281/zenodo.22101986
+version: "0.2.0-beta.1"
+doi: 10.5281/zenodo.20475136
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22101986
+    description: "Historical v0.2.0-alpha.1 archive; not the beta archive"
   - type: doi
     value: 10.5281/zenodo.20475136
     description: "AIREP concept DOI — all versions"

@@ -1,0 +1,51 @@
+--- E-1: numeric SOURCE lexeme rule (^(0|[1-9][0-9]*)$) ---
+[ok  ] E-1 control: unmutated P2 emits no witness-claim-invalid
+[ok  ] E-1 discriminates: `-0` parses to an int that passes every VALUE check
+[ok  ] E-1 sequence spelled `-0` (parses to 0) -> witness-claim-invalid
+[ok  ] E-1 `-0` suppresses all stage 7-10 reasons (S4 dependency rule)
+[ok  ] E-1 sequence spelled `0.0` -> witness-claim-invalid
+[ok  ] E-1 sequence spelled `0e0` -> witness-claim-invalid
+[ok  ] E-1 length spelled `1.0` -> witness-claim-invalid
+[ok  ] E-1 length spelled `1e0` -> witness-claim-invalid
+[ok  ] E-1 length spelled `1E+0` -> witness-claim-invalid
+[ok  ] E-1 canonical `0` still clean
+--- E-2: witnessed_at structural validity is a stage-6 gate ---
+[ok  ] E-2 2026-02-30T11:30:00Z         with clock -> witness-time-invalid
+[ok  ] E-2 2026-02-30T11:30:00Z         no clock  -> witness-time-invalid, NOT freshness-inputs-missing
+[ok  ] E-2 2026-08-23T11:30:60Z         with clock -> witness-time-invalid
+[ok  ] E-2 2026-08-23T11:30:60Z         no clock  -> witness-time-invalid, NOT freshness-inputs-missing
+[ok  ] E-2 2026-08-23T11:30:00.000Z     with clock -> witness-time-invalid
+[ok  ] E-2 2026-08-23T11:30:00.000Z     no clock  -> witness-time-invalid, NOT freshness-inputs-missing
+[ok  ] E-2 2026-08-23T11:30:00+00:00    with clock -> witness-time-invalid
+[ok  ] E-2 2026-08-23T11:30:00+00:00    no clock  -> witness-time-invalid, NOT freshness-inputs-missing
+[ok  ] E-2 2026-08-23T24:00:00Z         with clock -> witness-time-invalid
+[ok  ] E-2 2026-08-23T24:00:00Z         no clock  -> witness-time-invalid, NOT freshness-inputs-missing
+[ok  ] E-2 non-string witnessed_at -> witness-claim-invalid (type, not format)
+[ok  ] stage 10 still computes recency -> witness-freshness-outside-window
+[ok  ] stage 10 boundary-equal (3600s, window 3600s) is fresh
+[ok  ] stage 10 valid witnessed_at, no clock -> freshness-inputs-missing
+--- E-3: wire `independent` requires the PRIMARY to be Authenticated ---
+[ok  ] E-3 control: P3 primary Authenticated -> observer_assessment independent
+[ok  ] E-3 primary revoked, Execution still Authenticated -> observer unknown
+[ok  ] E-3 primary binding missing, Execution Authenticated -> observer unknown
+--- E-4: operator-input containers required + closed, fail-closed ---
+[ok  ] E-4 unknown member at binding-store top level -> *-binding-malformed
+[ok  ] E-4 binding store missing `bindings` -> producer-binding-malformed
+[ok  ] E-4 binding store missing `producer_bindings` -> producer-binding-malformed
+[ok  ] E-4 binding store missing `witness_bindings` -> producer-binding-malformed
+[ok  ] E-4 unknown member in an UNRELATED binding entry -> store malformed
+[ok  ] E-4 policy missing `independent_pairs` -> independence-policy-malformed (not empty)
+[ok  ] E-4 policy missing `non_independent_pairs` -> independence-policy-malformed (not empty)
+[ok  ] E-4 unknown member in independence policy -> independence-policy-malformed
+[ok  ] E-4 unknown member in revocation snapshot -> producer-revocation-state-malformed
+[ok  ] E-4 unknown member in S0 head_witness.head_ref -> run-invalid (exit 1)
+[ok  ] E-4 unknown member in S0 head_witness.signature -> run-invalid (exit 1)
+[ok  ] E-4 unknown member at S0 envelope top level -> run-invalid (exit 1)
+[ok  ] claim closure stays stage-6 witness-claim-invalid (E-1/E-5), not run-invalid
+--- E-6: CONFIRMED, unchanged (missing/malformed revocation is not `revoked`) ---
+[ok  ] E-6 revocation entry absent -> WITHHELD only, signature gate still ran
+[ok  ] E-6 revocation state neither value -> WITHHELD only, no producer-signature-invalid
+--- S9 portability note: default --schema-dir in the committed layout ---
+[ok  ] default schema dir resolves at <v0.2>/class-verification/verifier_py/
+
+all construction self-checks passed

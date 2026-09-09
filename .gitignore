@@ -12,3 +12,13 @@ __pycache__/
 # Kept out of the public AIREP repository assembly on purpose (see PUBLISH_MANIFEST.md).
 /v0.3-draft/
 /dist/
+
+# Reproducible dependencies / local beta runs; never release private test keys.
+node_modules/
+.venv/
+/demo-output/
+/my-test-key.json
+
+# Comparator scratch includes absolute temporary input links. Reports retain
+# its complete log, parity.json and parity.txt; scratch is regenerated each run.
+/reports/**/parity/
