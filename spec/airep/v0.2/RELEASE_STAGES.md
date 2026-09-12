@@ -1,6 +1,7 @@
 # v0.2 release stages — beta sequencing correction
 
-**Current implementation target: `v0.2.0-beta.1`; not yet a published beta tag.**
+**Published v0.2 implementation target: `v0.2.0-beta.1`
+(9 September 2026). Experimental prerelease; not stable.**
 This release-process clarification implements the beta task's staging requirements.
 It changes no v0.1 rules, v0.2 wire bytes, frozen integrity construction, schemas,
 class meanings, external evidence thresholds or prior measurements.

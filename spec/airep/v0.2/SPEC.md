@@ -229,11 +229,30 @@ lifecycle, profile-basis evaluation, reconciliation and implementation docs.
 It does not certify truth, deployment security, authority correctness, complete
 real-world histories, independent observation, or cross-deployment interoperability.
 
-One qualified external v0.2 consumer/verifier result exists against the earlier
-r1/handoff basis (17 AGREE / 1 DISAGREE; not expected-blind); see
-[EXTERNAL_EVIDENCE.md](../../../EXTERNAL_EVIDENCE.md). Emek's v0.1.2 producer
-result remains a separate version and evidence class. No same-version
-third-party v0.2 producer→consumer result exists. Neither is promoted by this beta.
+External implementation evidence is version- and role-specific.
+
+Emek Can Doğru's independently authored producer was measured against
+frozen AIREP v0.1.2 and accepted on first invocation by both pinned
+reference verifiers. It is a v0.1.2 producer-side compatibility result,
+not v0.2 producer evidence.
+
+Joel Hillier / Certisyn, Inc. independently implemented a v0.2
+consumer/verifier against the earlier r1/handoff basis. The six fixed
+vectors reproduced byte-exact, and the implementation matched the frozen
+class-verifier fields across all 18 cases. The frozen report remains
+17 AGREE / 1 DISAGREE. The sole disagreement concerns the handoff
+package's derived `cryptographic_result` projection for `CLS-XT1`
+(`PASS` expected, `NOT_EVALUATED` observed). This is recorded as an
+expected-projection defect, not a failure of the frozen class-verifier
+contract. The run was not expected-blind.
+
+Both results were reproduced on the maintainer side, subject to the
+methodology and exposure qualifications recorded in
+[EXTERNAL_EVIDENCE.md](../../../EXTERNAL_EVIDENCE.md).
+They cannot be combined into a same-version independent
+producer-to-consumer interoperability result and do not establish
+interoperability against this beta target. No historical measurement
+is rescored or promoted by publication of this beta.
 
 Independent v0.2 producer/consumer interoperability, external-standard E2E
 exercises, wire-freeze RC discipline, production HSM/KMS, hardware attestation,
