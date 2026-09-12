@@ -62,6 +62,15 @@ MUST remain distinct. Effect `observer_relationship` is `same_executor`,
 observer. An executor's own observation is evidence without independent
 corroboration. There is no automatic inference from absence to non-occurrence.
 
+### Related work (informative)
+
+The Vaara Receipt [VAARA-RECEIPT] describes a related signed-receipt model
+that distinguishes governance decisions from reported execution outcomes and
+binds receipts to predecessor evidence. Potential correspondences to AIREP
+artifact families, and their limits, require version-specific mapping evidence.
+This reference does not establish a field-for-field equivalence, supply missing
+Control or Effect evidence, or make Vaara a normative dependency of AIREP.
+
 ## 3. Common core and identity
 
 Every family MUST carry:
@@ -231,3 +240,12 @@ exercises, wire-freeze RC discipline, production HSM/KMS, hardware attestation,
 migration tooling and expanded companion profiles remain outside this beta.
 [RELEASE_STAGES.md](RELEASE_STAGES.md) preserves the stable independence gate and
 records the correction to AD-01's earlier migration-tooling sequencing.
+
+## 10. Informative references
+
+[VAARA-RECEIPT] H. Sirkkavaara, *The Vaara Receipt: A Recomputable Receipt
+Format for Decisions About Autonomous Actions*, Internet-Draft,
+[draft-sirkkavaara-vaara-receipt-09](https://www.ietf.org/archive/id/draft-sirkkavaara-vaara-receipt-09.html),
+4 September 2026. Work in Progress. This revision is cited for related work;
+a mapping experiment separately records its exact implementation and corpus
+identities.
