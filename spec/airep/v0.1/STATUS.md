@@ -6,7 +6,7 @@ This document follows the spirit of RFC 7841: the status is a *positive label fo
 lifecycle stage*, not a disclaimer of worth. AIREP v0.1 is a proposed open interchange format,
 published for examination, experimental implementation, and evaluation. It is **not** a ratified
 standard, and this label does not assert otherwise — the producing reference implementation is the
-Phionyx Reasoned Governance Envelope. An **independent second verifier** now exists: the conformance
+Phionyx Reasoned Governance Envelope. A **second cross-language first-party verifier implementation** exists: the conformance
 kit ships two implementations (Python `verify.py` and Node `verify.mjs`) on different language and
 crypto stacks that each, independently, validate a record's structure (the closed top level, the
 required members, the closed `directive.verb` / `evidence[].type` enums), run the strip-`profiles`
@@ -158,9 +158,15 @@ a claim that v0.1 intended one reading and failed to write it down.
 
 **Disposition.** v0.1.2 is frozen and is preserved unchanged — see the immutability rule in
 **Change control** below. v0.2 pins both points explicitly; see
-[`v0.2-design/MIGRATION.md`](../v0.2-design/MIGRATION.md). Whether the v0.1 line should receive an
-editorial clarification is deliberately left open, because adding algorithm-specific encoding to a
-released line may be more than editorial.
+[`v0.2-design/MIGRATION.md`](../v0.2-design/MIGRATION.md).
+
+**Maintenance decision (2026-09-12, [issue #36](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/issues/36)).** No v0.1.x editorial or
+encoding release is planned under that issue at this time. This is not a withdrawal of v0.1 support
+and not a claim that the v0.1 defect is fixed: released v0.1.2 bytes, its verification behaviour and
+this recorded limitation stay exactly as they are, and the exact signing-input/value contract exists
+only in the v0.2 line, which is still beta/experimental. The earlier statement that the editorial
+question was "deliberately left open" is historical; a reasoned new maintenance proposal, or a
+reopen of #36, remains possible if a concrete v0.1 consumer need arises.
 
 **Not part of this limitation.** Two adjacent observations from the same experiment are
 **interface conventions, not normative-core defects**, and are recorded as such: `SPEC.md` does
