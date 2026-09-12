@@ -99,6 +99,10 @@ The ordering matters and is not being restated: v0.2 was **not** designed in res
 experiment, which happened afterwards. The experiment is evidence that the ambiguity was real and
 reachable by an independent implementer, and that the v0.2 construction removes it.
 
+Maintenance disposition for the v0.1 line (2026-09-12): no v0.1.x editorial release is planned under
+[issue #36](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/issues/36); v0.1.2 stays unchanged, the limitation stays recorded in
+[`v0.1/STATUS.md`](../v0.1/STATUS.md), and the pinned contract remains a v0.2 property.
+
 `prove_signature_input_pinning.py` asserts the closure against the frozen v0.2 vectors: for V1–V4
 the pinned preimage reproduces the frozen bytes and the frozen signature verifies over it, while
 the digest-bytes reading yields different preimage bytes over which the same signature does not

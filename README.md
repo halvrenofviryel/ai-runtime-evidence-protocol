@@ -1,6 +1,7 @@
 # AI Runtime Evidence Protocol (AIREP)
 
 [![v0.1 conformance](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/conformance.yml)
+[![v0.2 beta implementation](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/v0.2-beta.yml/badge.svg)](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/actions/workflows/v0.2-beta.yml)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20475136-blue)](https://doi.org/10.5281/zenodo.20475136)
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
@@ -35,7 +36,8 @@ are formats and an *SBOM* is the thing.)
 > [EXTERNAL_EVIDENCE.md](EXTERNAL_EVIDENCE.md). No same-version third-party v0.2
 > producer→consumer interoperability result exists. Beta implementation readiness
 > does not satisfy the stable independence gate. See [beta readiness](spec/airep/v0.2/BETA_READINESS.md).
-> The badge above remains v0.1-specific; beta has its own CI workflow.
+> The `v0.1 conformance` badge is v0.1-specific; the `v0.2 beta implementation` badge is the beta's
+> own workflow. A green workflow is first-party test evidence, not an interoperability result.
 
 **Canonical home:** <https://github.com/halvrenofviryel/ai-runtime-evidence-protocol> — the schema
 `$id`s resolve as raw files under its `main` branch.
@@ -62,9 +64,11 @@ detectable. It does not establish report truth or the correctness of the decisio
 ## Who is this for — start here
 
 It is an **Experimental** proposed open format with a reference implementation — see
-[`STATUS.md`](./spec/airep/v0.1/STATUS.md). Pick your path:
+[`STATUS.md`](./spec/airep/v0.1/STATUS.md). The paths below refer to the **frozen v0.1** line;
+for the v0.2 beta implementation target start at [`spec/airep/v0.2/SPEC.md`](./spec/airep/v0.2/SPEC.md)
+and the [quickstart](./spec/airep/v0.2/QUICKSTART.md). Pick your path:
 
-- **Reviewing / evaluating it?** Read [`EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) (plain-language
+- **Reviewing / evaluating frozen v0.1?** Read [`EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) (plain-language
   tutorial, **start here**) and [`THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) (every threat
   graded honestly — `partial`/`none`, never "defended"). Then prove it yourself: `cd spec/airep/v0.1
   && pip install jsonschema cryptography` (Node 20+ also required), then `python3
@@ -113,17 +117,17 @@ It is an **Experimental** proposed open format with a reference implementation �
 | [`spec/airep/v0.2/SPEC.md`](./spec/airep/v0.2/SPEC.md) | **Start v0.2 here.** Consolidated normative beta implementation specification. |
 | [`tools/airep_v02/`](./tools/airep_v02/) | First-party four-family v0.2 producer, verifier adapters and reconciler. |
 | [`examples/v02/`](./examples/v02/) | Real local lifecycle and committed negative variants. |
-| [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here.** |
+| [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here for frozen v0.1.** |
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
 | [`spec/airep/v0.1/core.schema.json`](./spec/airep/v0.1/core.schema.json) | JSON Schema (draft 2020-12) for the core record. |
 | [`spec/airep/v0.1/profiles/`](./spec/airep/v0.1/profiles/) | Optional binding profiles — **`control_delivery`** (did a control instruction *arrive*?), key trust, chain-witness/freshness, EU AI Act, NIST AI RMF, OWASP/threat, observability. |
-| [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two cross-language verifier implementations (Python + Node) and a runnable validator. |
+| [`spec/airep/v0.1/conformance/`](./spec/airep/v0.1/conformance/) | Two cross-language first-party verifier implementations (Python + Node) and a runnable validator — frozen v0.1. |
 | [`spec/airep/v0.1/examples/`](./spec/airep/v0.1/examples/) | Worked records with really-computed hashes + Ed25519 signatures, including a 5-record chain. |
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
 | [`producers/python/`](./producers/python/) | Copy-paste producer — sign your own record with your own key. |
 | [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) | Independently authored implementations measured against frozen releases, with version and role boundaries. |
 
-## Check it yourself
+## Check it yourself (frozen v0.1)
 
 ```bash
 cd spec/airep/v0.1
@@ -135,8 +139,10 @@ node      conformance/verify.mjs examples/chain.jsonl --pubkey examples/test_pub
 
 Two implementations on different language and crypto stacks each validate structure, run the
 neutrality test, re-derive every hash and agree on it byte-for-byte, and re-verify the signatures.
-Two cross-language implementations agreeing is what makes AIREP an interchange format rather than a
-single-tool artifact.
+Two first-party implementations agreeing shows cross-language agreement on these selected inputs.
+It is not, by itself, an independent same-version producer/consumer or deployment interoperability
+result; [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) records what has been measured independently,
+and against which frozen version.
 
 ## Reference implementation
 
