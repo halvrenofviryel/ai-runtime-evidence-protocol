@@ -1,0 +1,82 @@
+{
+  "index_id": "AIREP-EMILIA-SOURCE-INDEX",
+  "revision": "0.2.0-draft",
+  "status": "DRAFT_PROVISIONAL_NOT_FROZEN",
+  "prepared_date": "2026-09-12",
+  "current_review_selection": {
+    "candidate": "emilia-airep-review-candidate-0.2.0.zip",
+    "sha256": "0a4671235ad5346fc26ccdea6aa78ae90b2aaf850501ec2e4a005132caf7f522",
+    "selection_root": "evidence/revision-0.2/",
+    "records": {
+      "AEI-EMILIA-001": 0,
+      "AEI-EMILIA-002": 2,
+      "AEI-EMILIA-003": 1,
+      "AEI-EMILIA-004": 2,
+      "AEI-EMILIA-005": 3,
+      "total": 8
+    },
+    "decision": "owner review selection; not mutual freeze; not result acceptance",
+    "supersedes": "active Case 4/5 selection only; 0.1.0 remains preserved"
+  },
+  "previous_candidate": {
+    "file": "emilia-airep-review-candidate-0.1.0.zip",
+    "sha256": "88bba19fe89ee0bb42d8de296ba80d45478c613f6deb2726e2b06013e607baa1",
+    "status": "historical, preserved"
+  },
+  "airep_target": {
+    "tag": "v0.2.0-beta.1",
+    "commit": "8a6c01ecce457aa94330c0ed7219e4c56ebfe771",
+    "verified": "13/13 vendored files match local beta objects"
+  },
+  "emilia_baseline": {
+    "commit": "b1275b08f91939a2330aee26a03d0a6bfda375d6",
+    "status": "DECLARED; 422 bundled files match the package's own pin; upstream not consulted"
+  },
+  "original_fixture": {
+    "sha256": "2d8faa1b64b8a73fd0bf81b21889bbf726cbfb324af099b700499627af84203a",
+    "status": "recomputed, matches"
+  },
+  "reported_local_suite": {
+    "tests": 119,
+    "status": "AUTHOR_REPORTED; 6/6 recorded log digests match delivered logs; NOT re-run"
+  },
+  "reference_cli_rehearsal": {
+    "label": "PRE_FREEZE_REHEARSAL",
+    "exposure": "open / previously exposed",
+    "operator_inputs": "proposed by the AIREP maintainer, not mutually accepted",
+    "where_recorded": "maintainer-side operator-review package PRE_FREEZE_CHECKS.json",
+    "is_accepted_run": false
+  },
+  "coverage_limit": "COMMITTED+INDETERMINATE from KERNEL_BEHAVIOR_PIN_v0.3 is not exercised by any selected case",
+  "trust_qualification": {
+    "externally_authored": true,
+    "separately_written": true,
+    "clean_room": false,
+    "expected_blind": false,
+    "certification": false,
+    "adoption": false,
+    "stable_release_qualification": false
+  },
+  "included_first_party_files": [
+    {
+      "file": "CASE_DISPOSITION_MATRIX.md",
+      "sha256": "fe4ab4ac66dc83b11d62f2560550bd545dbb64f22c33eee873c3276b64ca7ed5",
+      "bytes": 3539
+    },
+    {
+      "file": "CASE_SHEET_v0.2.md",
+      "sha256": "c9611ba94fe0aeb3f704fa65b150bc4f9ccadbd05b2163b48cbaa1152a9b0eed",
+      "bytes": 20798
+    },
+    {
+      "file": "MAPPING_CONTRACT_v0.3.md",
+      "sha256": "064986cdb69ee86bde4375dfe8fb145517d5db5720e662d502e3fbcc4eb6eeeb",
+      "bytes": 15283
+    },
+    {
+      "file": "README.md",
+      "sha256": "45acd3aaee8e68a56a064300a6479817066479d6789296b89b7d914931bd1c69",
+      "bytes": 3390
+    }
+  ]
+}
