@@ -1,0 +1,77 @@
+{
+  "engagement": {
+    "engagement_id": "example-engagement-2026-09",
+    "evaluator": {
+      "organization": "independent-evaluator.example",
+      "role": "third-party-evaluator"
+    },
+    "evaluated_party": "example-provider",
+    "independence": {
+      "status": "independent-declared",
+      "conflicts_disclosed": true,
+      "basis": [
+        "separate legal entity",
+        "no role in development of the evaluated checkpoint"
+      ]
+    }
+  },
+  "target": {
+    "provider": "example-provider",
+    "system_name": "example-model",
+    "release_state": "released"
+  },
+  "access": {
+    "tier": "public-black-box",
+    "capabilities": [
+      "public inference endpoint"
+    ],
+    "limitations": [
+      "no access to weights, logs or safeguard configuration"
+    ]
+  },
+  "evaluation": {
+    "run_id": "example-run-001",
+    "objective": "Measure whether the target reaches the declared accuracy criterion on the example task.",
+    "risk_domains": [
+      "capability-measurement"
+    ],
+    "framework": {
+      "version": "0.11.0"
+    },
+    "environment": {
+      "runner": "lighteval-cli",
+      "network_access": "open",
+      "tool_access": []
+    },
+    "safeguards": {
+      "state": "unknown"
+    }
+  },
+  "measurement": {
+    "criterion": {
+      "statement": "Accuracy on the example task must be at least 0.60.",
+      "task": "example|task|0",
+      "metric": "acc",
+      "threshold": ">= 0.60"
+    },
+    "limitations": [
+      "Synthetic example context; no claim about any real model or evaluator."
+    ]
+  },
+  "evidence": {
+    "visibility": "public",
+    "resolvable": false,
+    "ref_prefix": "file:"
+  },
+  "scope": {
+    "covers": [
+      "the declared evaluation run, target identity, access tier, configuration and recorded measurement state"
+    ],
+    "does_not_cover": [
+      "truth of evaluator independence",
+      "model safety or alignment",
+      "regulatory conformity",
+      "reproducibility without an independent rerun"
+    ]
+  }
+}
