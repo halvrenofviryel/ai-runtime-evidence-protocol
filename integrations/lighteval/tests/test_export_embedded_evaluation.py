@@ -79,11 +79,80 @@ class ExporterTests(unittest.TestCase):
                 self.assertEqual(payload['evaluation']['tasks'][0]['dataset_ref'], 'hf://datasets/example/eval-dataset')
                 self.assertEqual(payload['evaluation']['tasks'][0]['dataset_revision'], 'cafebabe')
                 self.assertEqual(payload['evaluation']['tasks'][0]['split'], 'test')
-                # Wall-clock window comes from the filename, not LightEval's monotonic counters.
+                # Wall-clock window comes only from the declared, offset-bearing context timestamps.
                 self.assertEqual((payload['evaluation']['started_at'], payload['evaluation']['ended_at']),
-                                 ('2026-09-12T10:10:00Z', '2026-09-12T10:20:00Z'))
-                self.assertTrue(any('monotonic' in s for s in m['limitations']))
+                                 ('2026-09-12T10:00:00Z', '2026-09-12T10:20:00Z'))
+                self.assertTrue(any('timezone-naive local time' in s for s in m['limitations']))
                 self.assertEqual(manifest['outputs']['profile_payload_sha256'], x.sha256_of(x.canonical(payload)))
+
+    def test_timezone_naive_filename_is_never_promoted_to_utc(self):
+        ctx = context()
+        del ctx['evaluation']['started_at']; del ctx['evaluation']['ended_at']
+        with self.assertRaises(x.ExportError) as caught:
+            self.run_export(ctx, native(synthetic_results(), name='results_2026-09-13T20-00-00.000000.json'))
+        message = str(caught.exception)
+        self.assertIn('timezone-naive', message)
+        self.assertIn("2026-09-13T20:00:00", message)
+        self.assertNotIn('20:00:00Z', json.dumps(ctx))
+        # Only one of the two declared is still a refusal.
+        ctx['evaluation']['started_at'] = '2026-09-13T17:00:00Z'
+        with self.assertRaises(x.ExportError):
+            self.run_export(ctx, native(synthetic_results()))
+
+    def test_explicit_offsets_are_normalised_and_utc_preserved(self):
+        ctx = context()
+        ctx['evaluation']['started_at'] = '2026-09-13T19:30:00+03:00'
+        ctx['evaluation']['ended_at'] = '2026-09-13T20:00:00+03:00'
+        payload, _, report = self.run_export(ctx, native(synthetic_results()))
+        self.assertTrue(report['schema_valid'], report['errors'])
+        self.assertEqual((payload['evaluation']['started_at'], payload['evaluation']['ended_at']),
+                         ('2026-09-13T16:30:00Z', '2026-09-13T17:00:00Z'))
+        ctx['evaluation']['started_at'] = '2026-09-13T16:00:00Z'
+        ctx['evaluation']['ended_at'] = '2026-09-13T17:00:00Z'
+        payload, _, _ = self.run_export(ctx, native(synthetic_results()))
+        self.assertEqual(payload['evaluation']['ended_at'], '2026-09-13T17:00:00Z')
+        for naive in ('2026-09-13T17:00:00', '2026-09-13 17:00:00', '2026-09-13'):
+            with self.subTest(naive=naive):
+                ctx['evaluation']['ended_at'] = naive
+                with self.assertRaises(x.ExportError):
+                    self.run_export(ctx, native(synthetic_results()))
+
+    def test_negative_duration_is_refused(self):
+        ctx = context()
+        ctx['evaluation']['started_at'] = '2026-09-13T17:00:00Z'
+        ctx['evaluation']['ended_at'] = '2026-09-13T16:59:59Z'
+        with self.assertRaises(x.ExportError) as caught:
+            self.run_export(ctx, native(synthetic_results()))
+        self.assertIn('precedes', str(caught.exception))
+        # Different offsets that still order correctly are fine.
+        ctx['evaluation']['started_at'] = '2026-09-13T19:00:00+03:00'   # 16:00Z
+        ctx['evaluation']['ended_at'] = '2026-09-13T16:30:00Z'
+        payload, _, _ = self.run_export(ctx, native(synthetic_results()))
+        self.assertEqual(payload['evaluation']['started_at'], '2026-09-13T16:00:00Z')
+
+    def test_unsupported_input_shape_is_named_not_generic(self):
+        valid_but_wrong = x.NativeFile(RESULTS_NAME, 'aggregate-result', json.dumps({'evaluation_results': [], 'schema_version': '0.3.0'}).encode())
+        with self.assertRaises(x.ExportError) as caught:
+            self.run_export(context(), valid_but_wrong)
+        self.assertIn('Unsupported input shape', str(caught.exception))
+        self.assertIn('LightEval', str(caught.exception))
+        broken = x.NativeFile(RESULTS_NAME, 'aggregate-result', b'{not json')
+        with self.assertRaises(x.ExportError) as caught:
+            self.run_export(context(), broken)
+        self.assertIn('not valid JSON', str(caught.exception))
+        self.assertNotIn('Unsupported input shape', str(caught.exception))
+
+    def test_claim_vocabulary_records_declarations_and_establishes_only_digests(self):
+        _, manifest, _ = self.run_export(context(), native(synthetic_results()))
+        claims = manifest['claims']
+        self.assertEqual(set(claims), {'records_or_preserves', 'establishes', 'does_not_establish'})
+        self.assertTrue(all(c.startswith('declared ') for c in claims['records_or_preserves']), claims['records_or_preserves'])
+        self.assertEqual(len(claims['establishes']), 2)
+        joined = ' '.join(claims['establishes']).lower()
+        self.assertIn('sha-256', joined); self.assertIn('validates', joined)
+        for word in ('declared', 'engagement', 'access', 'target', 'measurement state', 'true', 'safe'):
+            self.assertNotIn(word, joined, f'"{word}" must not appear under establishes')
+        self.assertTrue(any('declarations are recorded, not verified' in c for c in claims['does_not_establish']))
 
     def test_evidence_digests_are_sha256_of_exact_bytes(self):
         results = native(synthetic_results())

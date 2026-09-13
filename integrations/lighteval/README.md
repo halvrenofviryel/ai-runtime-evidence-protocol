@@ -1,7 +1,13 @@
-# LightEval / Inspect / OpenEvals → AIREP Embedded Evaluation Profile exporter
+# LightEval results → AIREP Embedded Evaluation Profile exporter
 
 **Status:** non-normative integration. Nothing here is part of the AIREP specification or of
 the profile basis; it is one way to fill the profile from native evaluation output.
+
+**Current parser: LightEval `results_*.json`.** Designed to preserve evidence from LightEval
+evaluation runs. Inspect and OpenEvals are related evaluation ecosystems discussed as future
+integration targets; native Inspect `.eval` and arbitrary OpenEvals result formats are **not**
+parsed by this implementation. A valid JSON file that is not LightEval-shaped is refused with
+`Unsupported input shape`, not with a generic JSON error.
 
 The exporter reads the files an evaluation harness already wrote, hashes them, and produces
 the `airep.embedded-evaluation` companion-profile payload (profile version `0.1`, carrier
@@ -29,13 +35,22 @@ provenance metadata bound to them.
 | `config_tasks[task].hf_repo` / `hf_subset` / `hf_revision` / `evaluation_splits` | `evaluation.tasks[]` (`dataset_ref`, `dataset_revision`, `split`, `configuration_digest`) |
 | `config_tasks[task].effective_num_docs` | `measurement.sample_count` |
 | `results[task][metric]` vs. `criterion.threshold` | `measurement.observed.status` (`PASS`/`FAIL`), `metric_value`, `execution_status = RAN` |
-| results filename date id + `total_evaluation_time_secondes` | `evaluation.started_at` / `ended_at` (LightEval's `start_time`/`end_time` are monotonic counters, not timestamps; the derivation is recorded in `measurement.limitations`) |
+| results filename date id | recorded in `measurement.limitations` as a **source observation only** — it is `datetime.now().isoformat()` on the evaluating machine, timezone-naive, and is never converted to UTC |
 
 ## What is never inferred
 
 `engagement.independence`, `access.tier`, `access.capabilities`, `access.limitations`,
 `evaluation.environment`, `evaluation.safeguards` and `scope` must be declared in the context.
 A missing declaration is an error, not a default.
+
+## Timestamps
+
+`evaluation.started_at` and `evaluation.ended_at` **must be declared in the context** as ISO-8601
+with an explicit `Z` or `±HH:MM` offset; they are normalised to the profile's UTC form
+(`2026-09-13T20:00:00+03:00` → `2026-09-13T17:00:00Z`). A timezone-naive value, a missing value,
+or `ended_at` before `started_at` is refused. The LightEval filename date id is timezone-naive
+local time (`datetime.now().isoformat()` with `:` → `-`); the exporter never assumes it is UTC and
+never reads the host timezone as a proxy for the evaluating machine's.
 
 ## Measurement-state discipline
 
@@ -46,7 +61,8 @@ The exporter refuses (exit `2`, no payload) when the inputs contradict each othe
 - an explicit `observed.status` that contradicts the threshold result;
 - a declared metric that is absent from the results while `RAN` would be reported;
 - a metric without a threshold and without an explicit observed status;
-- `NOT_RUN` with anything but `NOT_MEASURED`/`NOT_APPLICABLE`; `INVALIDATED` with `PASS`/`FAIL`.
+- `NOT_RUN` with anything but `NOT_MEASURED`/`NOT_APPLICABLE`; `INVALIDATED` with `PASS`/`FAIL`;
+- timezone-naive or missing `started_at`/`ended_at`, or a negative duration.
 
 Absence of evaluation evidence is preserved as `NOT_RUN → NOT_MEASURED`; it never becomes success.
 
@@ -66,6 +82,11 @@ out/embedded-evaluation.profile.json   # written only when it validates against 
 out/evidence-manifest.json             # inputs with SHA-256, basis digests, claim boundaries
 out/validation-report.json             # schema result; "PASS" = validates against the exact basis only
 ```
+
+`evidence-manifest.json` separates three claim classes: `records_or_preserves` (declared context —
+evaluator/engagement, target, access, configuration, measurement state — recorded as declared, not
+verified), `establishes` (only the SHA-256 digests of the supplied bytes and whether the payload
+validates against the digest-pinned basis) and `does_not_establish`.
 
 The schema and registry are loaded from
 [`spec/airep/v0.2/profiles/embedded-evaluation/`](../../spec/airep/v0.2/profiles/embedded-evaluation/)
