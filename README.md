@@ -160,9 +160,16 @@ and against which frozen version.
 
 ## Reference implementation
 
-The first producer of AIREP records is the **Phionyx Reasoned Governance Envelope**, which matures
-by conforming to this format. AIREP itself carries no Phionyx-specific physics, vocabulary, or
-dependency — that is the point of the neutrality test.
+**AIREP v0.2.0-beta.1 ships its own first-party reference producer** for the four artifact
+families ([`tools/airep_v02/`](./tools/airep_v02/)); for frozen v0.1 the copy-paste producer is
+[`producers/python/`](./producers/python/). AIREP carries no Phionyx-specific physics, vocabulary,
+or dependency — that is the point of the neutrality test.
+
+The **Phionyx Reasoned Governance Envelope (RGE)** is a related runtime evidence source developed
+alongside AIREP, not an AIREP producer. **Raw RGE records are not AIREP-conformant** — AIREP's own
+reference verifier rejects an RGE envelope handed to it directly — and **no released RGE → AIREP
+projection exists.** None is implied by this repository; if one is released it will be named here
+with its version and publicly checkable evidence.
 
 An **independently authored v0.1 producer** has since been measured against frozen **v0.1.2**: its
 records were accepted on first invocation by both pinned reference verifiers, and the experiment
