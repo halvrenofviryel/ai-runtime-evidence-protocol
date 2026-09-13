@@ -34,7 +34,8 @@ def main():
         return ignored
     shutil.copytree(ROOT, scratch, ignore=ignore)
     basis=[]
-    for pattern in ('tools/airep_v02', 'tests/v02', 'examples/v02', 'scripts', '.github/workflows'):
+    for pattern in ('tools/airep_v02', 'tests/v02', 'examples/v02', 'scripts', '.github/workflows',
+                    'spec/airep/v0.2/profiles', 'integrations/lighteval'):
         for p in sorted((ROOT/pattern).rglob('*')):
             if p.is_file() and '__pycache__' not in p.parts:
                 basis.append({'path':str(p.relative_to(ROOT)), 'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
@@ -98,6 +99,7 @@ def main():
     add('spec/airep/v0.2/interop/interop_eval_node', 'node', 'selftest.mjs')
     if not args.historical_only:
         add('.', str(venv), '-m', 'unittest', 'discover', '-s', 'tests/v02', '-v')
+        add('.', str(venv), '-m', 'unittest', 'discover', '-s', 'integrations/lighteval/tests', '-v')
         add('.', str(venv), 'examples/v02/run_lifecycle.py', '--out', str(args.out.resolve() / 'lifecycle'))
         add('.', str(venv), 'scripts/check_quickstart.py')
         add('.', str(venv), 'scripts/check_beta_docs.py')
