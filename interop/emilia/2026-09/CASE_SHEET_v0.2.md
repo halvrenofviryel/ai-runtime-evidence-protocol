@@ -1,21 +1,21 @@
 # AIREP × EMILIA — proposed interoperability case sheet
 ## Review revision 0.2 · 10 September 2026
 
-**For Iman Schrock’s native-evidence review. Not frozen; no adapter assigned; no interoperability run performed.** This supersedes document revision 0.1, not either protocol. The five primary questions are unchanged. Machine-readable counterparts are in `AIREP_EMILIA_INTEROP_MANIFEST_v0.2.json` and `inputs/`.
+**Phionyx first-party provisional case sheet. Not frozen; no adapter assigned; no interoperability run performed; no interoperability result is claimed.** This supersedes document revision 0.1, not either protocol. The five primary questions are unchanged. Machine-readable counterparts are in `AIREP_EMILIA_INTEROP_MANIFEST_v0.2.json` and `inputs/`.
 
 ### 1. Fixed reference and proposed source baseline
 
 | Item | Reference | Status |
 |---|---|---|
 | AIREP | `v0.2.0-beta.1`, commit `8a6c01ecce457aa94330c0ed7219e4c56ebfe771` | Exact published implementation target; wire version `0.2` |
-| EMILIA | commit `b1275b08f91939a2330aee26a03d0a6bfda375d6` | Inspected repository snapshot; subject to Iman’s acceptance before experiment freeze |
-| Source audit | `SOURCE_LOCK.json` / `SOURCE_REVIEW.md` | Names the actual documents, implementation functions and tests inspected; not a fresh build/test claim |
+| EMILIA | commit `b1275b08f91939a2330aee26a03d0a6bfda375d6` | Public upstream repository snapshot inspected by Phionyx; subject to source-selection review before any future measurement |
+| Source audit | first-party source-audit records, retained privately | Name the actual documents, implementation functions and tests inspected; not a fresh build/test claim |
 
 The AIREP specification incorporates its accepted schema design; the latter explicitly distinguishes an action having run from its material success. The release tag was checked separately from historical prepublication wording in repository documents. This sheet does not assert an overall EMILIA package version or equate an IETF draft revision with a repository implementation. [A-SPEC] [A-DESIGN] [A-STAGES]
 
 ### 2. Question and reporting boundary
 
-**Can the agreed EMILIA evidence support honest AIREP records while preserving the original claims, omissions, uncertainty, target scope and observation provenance?** Record the answer for each fact, not by matching similarly named status values.
+**Can the selected EMILIA evidence support honest AIREP records while preserving the original claims, omissions, uncertainty, target scope and observation provenance?** Record the answer for each fact, not by matching similarly named status values.
 
 The baseline permits ordinary beta fields, accurate `scope`, descriptions and hashed `evidence[]` references. An experiment sidecar retains native facts that the stock AIREP tools do not interpret. A new profile is *not* required for this first proposal; profiles are an existing AIREP extension mechanism, not prohibited by the protocol. Any new mapping profile needs separate agreement and must not change core meanings. A native byte reference preserves evidence availability; it does not mean AIREP has verified or semantically interpreted that evidence. Do not invent a Decision/Execution just to obtain a container for an otherwise unsupported state. [A-COMMON] [A-SPEC] [A-VERIFY]
 
@@ -23,7 +23,7 @@ Use these **experiment-only**, per-fact dispositions after review: `CORE_TYPED`,
 
 ### 3. Rules that apply to all five cases
 
-**No stage promotion.** Authorization/reservation does not establish delivery, provider entry or action execution. Equally, an unknown provider/effect outcome does not establish that the action did not run. AIREP `executed` reports that the exact scoped action ran, not that its desired effect happened. Native evidence must establish the actual event at an agreed action granularity before selecting `executed`, `failed` or `suppressed`. Custody words alone are insufficient. [A-DESIGN] [A-EXECUTION] [E-KERNEL]
+**No stage promotion.** Authorization/reservation does not establish delivery, provider entry or action execution. Equally, an unknown provider/effect outcome does not establish that the action did not run. AIREP `executed` reports that the exact scoped action ran, not that its desired effect happened. Native evidence must establish the actual event at a defined action granularity before selecting `executed`, `failed` or `suppressed`. Custody words alone are insufficient. [A-DESIGN] [A-EXECUTION] [E-KERNEL]
 
 **Keep the objects separate.** A freeze instruction, a protected business operation, provider entry and an observed post-state are not the same object. Preserve instruction IDs and decision/Execution references. AIREP’s Control `authorized_action_digest` and Execution `executed_action_digest` must refer to the corresponding action under an explicit byte/projection rule; they are not aliases for `instruction_digest`. No synthetic receipt, action digest, control-side authority declaration or missing Decision may be silently supplied. [A-SPEC] [A-CONTROL] [A-EXECUTION]
 
@@ -45,7 +45,7 @@ Its original ID is `freeze-after-provider-entry-with-multiple-required-targets`.
 
 The five `inputs/AEI-EMILIA-00N.v0.2.json` files are **proposed scenario descriptors**, not native EMILIA records or AIREP artifacts. Their new adapted IDs end in `-review-v0.2`. Cases 2–5 contain proposed fixed timelines and separate action/instruction byte files in `preimages/`. These use a small synthetic `test.record.set` operation. SHA-256 binds the exact UTF-8 file bytes, including the final newline; it is not asserted to equal an EMILIA CAID or `capabilityActionDigest`. No CAID registration or native verification success is invented. Case 5 includes proposed requested/observed state values, explicitly not measurements.
 
-This makes the scenario inputs reviewable now. The exact native capture, source verification, mapping prerequisites and mutually accepted EMILIA revision remain pre-run gates, not hidden defaults. Normalized AEB input fields such as `native_verification: VERIFIED` are upstream-test findings, not independently executed native signature verification. The Gate reference demo’s in-memory state and synthetic control verifier are also identified explicitly. [E-KERNEL] [E-AEB-TESTS] [E-FREEZE-DEMO]
+This makes the scenario inputs reviewable now. The exact native capture, source verification, mapping prerequisites and the selected EMILIA revision remain pre-run gates, not hidden defaults. Normalized AEB input fields such as `native_verification: VERIFIED` are upstream-test findings, not independently executed native signature verification. The Gate reference demo’s in-memory state and synthetic control verifier are also identified explicitly. [E-KERNEL] [E-AEB-TESTS] [E-FREEZE-DEMO]
 
 ### 5. Five proposed cases
 
@@ -87,7 +87,7 @@ This makes the scenario inputs reviewable now. The exact native capture, source 
 
 **Permitted handling.** Emit `executed` only when its own prerequisites are met. The missing Effect stays absent; stock reconciliation should name `effect_evidence=MISSING` for that admitted Execution. This is missing evidence, not failure to execute and not proof of no effect. [A-RECON-CODE] [A-TESTS]
 
-**Native nuance.** The inspected AEB kernel allows provider `COMMITTED` with effect `NOT_OBSERVED`, but does not classify that pair as fully terminal. The provider and effect axes must not be flattened. Its generic reason-selection branch also merits review for that pair; `SOURCE_REVIEW.md` records the exact static observation without claiming a reproduced runtime defect. A reason string is never a substitute for an observation. [E-KERNEL]
+**Native nuance.** The inspected AEB kernel allows provider `COMMITTED` with effect `NOT_OBSERVED`, but does not classify that pair as fully terminal. The provider and effect axes must not be flattened. Its generic reason-selection branch also merits scrutiny for that pair; `MAPPING_CONTRACT_v0.3.md` section 2 records the exact static observation, cited to public source, without claiming a reproduced runtime defect. A reason string is never a substitute for an observation. [E-KERNEL]
 
 **Forbidden.** Execution ⇒ observed effect; missing Effect ⇒ no effect; a misleading reason label ⇒ observation success; `INCOMPLETE` ⇒ unfaithful mapping.
 
@@ -95,7 +95,7 @@ This makes the scenario inputs reviewable now. The exact native capture, source 
 
 **Source/input.** Separate execution/provider evidence and a later source-bound post-state observation, with method, window and comparison basis. Proposed byte files set the requested test value to `requested` and observed value to `different`. The upstream anchor `provider_committed_effect_diverged` verifies that EMILIA preserves distinct provider/effect axes. [E-AEB-TESTS]
 
-**Permitted handling.** A properly bound Execution and Effect can preserve the reported action and actual observed state. A description and hashed native evidence can retain the divergence assertion even though AIREP has no core `DIVERGED` enum. The stock reconciler checks binding/presence and observer treatment, not whether requested and observed business states match. Report separately whether divergence was merely retained or actually recomputed under an agreed comparison rule. [A-EFFECT] [A-RECON-CODE]
+**Permitted handling.** A properly bound Execution and Effect can preserve the reported action and actual observed state. A description and hashed native evidence can retain the divergence assertion even though AIREP has no core `DIVERGED` enum. The stock reconciler checks binding/presence and observer treatment, not whether requested and observed business states match. Report separately whether divergence was merely retained or actually recomputed under a defined comparison rule. [A-EFFECT] [A-RECON-CODE]
 
 **Forbidden.** Commitment ⇒ requested effect; bound Effect `SATISFIED` ⇒ business success; adapter signature ⇒ native source identity; same-executor observation ⇒ independent corroboration. No novel enum or fabricated observer is needed to report an actual divergent observation.
 
@@ -105,11 +105,11 @@ This makes the scenario inputs reviewable now. The exact native capture, source 
 
 Every required fact must have a source pointer, disposition, output reference or explicit non-emission reason. No empty-output “pass” and no silent dropping of custody, target or effect facts. A valid cryptographic artifact does not prove a faithful mapping. Preserve all raw reference findings; negative/unknown outcomes may be the correct case result. A case can yield `SEMANTIC_GAP` or `INSUFFICIENT_EVIDENCE` without being rewritten into success. A complete semantic-gap report with no independently emitted validated artifacts does **not** establish producer interoperability.
 
-These are **expected-aware** cases. Adapter authorship, code exposure/reuse, general-purpose dependencies and AI assistance must be disclosed. Not importing the reference producer is necessary to the proposed independence claim, not sufficient proof. Reference Python/Node parity is not a new non-maintainer consumer. Adapter selection follows native review, as agreed. This limited exercise does not by itself satisfy the stable requirements for same-candidate producers, a qualifying non-maintainer consumer and broader normative/adversarial coverage. [A-STAGES]
+These are **expected-aware** cases. Adapter authorship, code exposure/reuse, general-purpose dependencies and AI assistance must be disclosed. Not importing the reference producer is necessary to the proposed independence claim, not sufficient proof. Reference Python/Node parity is not a new non-maintainer consumer. Adapter selection follows source-selection review; no implementer is selected here. This limited exercise does not by itself satisfy the stable requirements for same-candidate producers, a qualifying non-maintainer consumer and broader normative/adversarial coverage. [A-STAGES]
 
-Before freezing: settle native commit/source selection; complete byte/projection and family-field mappings; agree per-fact expectations, observation/trust inputs and target handling; then agree implementer, toolchains and output contract. Custody all final native bytes/hashes and approvals against the final document digest. A changed meaning/input produces a new revision; hashing a proposal does not make it mutually approved.
+Any future measured experiment would require a separately defined and independently recorded input/acceptance basis: settled native commit/source selection; completed byte/projection and family-field mappings; recorded per-fact expectations, observation/trust inputs and target handling; then a recorded implementer, toolchains and output contract. Custody all final native bytes and hashes against the final document digest. A changed meaning or input produces a new revision; hashing a proposal does not make it approved.
 
-**Suggested first review response:** confirm or amend R1–R7 in the manifest, especially target representation (R3), the action-ran boundary (R4), suppression binding (R5) and observer attribution (R6). R8 implementation planning follows that review.
+**Open requirement:** settle or amend R1–R7 in the manifest, especially target representation (R3), the action-ran boundary (R4), suppression binding (R5) and observer attribution (R6). R8 implementation planning follows that step.
 
 
 [A-SPEC]: https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/blob/8a6c01ecce457aa94330c0ed7219e4c56ebfe771/spec/airep/v0.2/SPEC.md
