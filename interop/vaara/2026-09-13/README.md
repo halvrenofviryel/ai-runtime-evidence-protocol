@@ -1,4 +1,4 @@
-# Vaara external reproduction record — 13 September 2026
+# Vaara reproduction registry metadata — 13 September 2026
 
 The immutable Phionyx reproduction record is preserved at:
 
