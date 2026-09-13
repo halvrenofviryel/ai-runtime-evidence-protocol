@@ -1,0 +1,147 @@
+{
+  "profile_version": "0.1",
+  "engagement": {
+    "engagement_id": "example-engagement-2026-09",
+    "evaluator": {
+      "organization": "independent-evaluator.example",
+      "role": "third-party-evaluator",
+      "identity_ref": "did:web:independent-evaluator.example"
+    },
+    "evaluated_party": "example-frontier-lab",
+    "independence": {
+      "status": "independent-declared",
+      "conflicts_disclosed": true,
+      "basis": [
+        "separate legal entity",
+        "no role in development of the evaluated checkpoint"
+      ],
+      "contract_ref": "urn:example:engagement-contract:2026-09"
+    }
+  },
+  "target": {
+    "provider": "example-frontier-lab",
+    "system_name": "example-model",
+    "model_id": "example-model",
+    "model_revision": "checkpoint-2026-09-12",
+    "checkpoint_ref": "urn:example:checkpoint:2026-09-12",
+    "release_state": "pre-release"
+  },
+  "access": {
+    "tier": "embedded-employee-like",
+    "capabilities": [
+      "internal evaluation endpoint",
+      "selected safety telemetry"
+    ],
+    "limitations": [
+      "no write access to training infrastructure"
+    ],
+    "environment_ref": "urn:example:eval-environment:run-001"
+  },
+  "evaluation": {
+    "run_id": "run-001",
+    "objective": "Measure whether the target crosses the declared example risk threshold.",
+    "risk_domains": [
+      "deception"
+    ],
+    "framework": {
+      "name": "example-evaluation-harness",
+      "version": "1.2.3",
+      "revision": "abc123",
+      "source_ref": "https://example.invalid/eval-harness/tree/abc123",
+      "configuration_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "tasks": [
+      {
+        "task_id": "example-task-001",
+        "dataset_ref": "hf://datasets/example/eval-dataset",
+        "dataset_revision": "deadbeef",
+        "dataset_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "split": "test",
+        "configuration_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    ],
+    "started_at": "2026-09-12T10:00:00Z",
+    "ended_at": "2026-09-12T10:20:00Z",
+    "environment": {
+      "runner": "isolated-eval-runner",
+      "container_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "hardware": "example accelerator",
+      "network_access": "restricted",
+      "tool_access": [
+        "shell",
+        "browser-sandbox"
+      ]
+    },
+    "safeguards": {
+      "state": "enabled",
+      "configuration_ref": "urn:example:safeguards:rev-7",
+      "configuration_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
+    }
+  },
+  "measurement": {
+    "execution_status": "RAN",
+    "criterion": {
+      "statement": "The measured success rate must be at or below 0.05.",
+      "metric": "success_rate",
+      "threshold": "<= 0.05"
+    },
+    "observed": {
+      "status": "FAIL",
+      "summary": "The observed example success rate exceeded the declared criterion.",
+      "metric_value": 0.08
+    },
+    "sample_count": 100,
+    "attempts": 1,
+    "limitations": [
+      "Synthetic example only; no claim about any real model or evaluator."
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "ev-results",
+      "role": "aggregate-result",
+      "ref": "urn:example:results:run-001",
+      "resolvable": false,
+      "digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "media_type": "application/json",
+      "visibility": "public"
+    },
+    {
+      "evidence_id": "ev-details",
+      "role": "sample-details",
+      "ref": "urn:example:details:run-001",
+      "resolvable": false,
+      "digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "media_type": "application/x-parquet",
+      "visibility": "restricted"
+    }
+  ],
+  "disclosure": {
+    "redactions_present": false,
+    "redactions": [],
+    "deviations": [],
+    "retries": [],
+    "incidents": []
+  },
+  "verification": [
+    {
+      "verifier": "example-platform-verifier",
+      "kind": "platform-verification",
+      "status": "NOT_EVALUATED",
+      "ref": "urn:example:verification:run-001",
+      "digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "independence": "unknown"
+    }
+  ],
+  "scope": {
+    "covers": [
+      "the declared evaluation run, target identity, access tier, configuration and recorded measurement state"
+    ],
+    "does_not_cover": [
+      "truth of evaluator independence",
+      "overall model safety or alignment",
+      "regulatory conformity",
+      "reproducibility without an independent rerun"
+    ]
+  }
+}

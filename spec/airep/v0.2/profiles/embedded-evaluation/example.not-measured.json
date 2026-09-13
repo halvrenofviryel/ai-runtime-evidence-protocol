@@ -1,0 +1,106 @@
+{
+  "profile_version": "0.1",
+  "engagement": {
+    "engagement_id": "example-engagement-not-run",
+    "evaluator": {
+      "organization": "independent-evaluator.example",
+      "role": "third-party-evaluator"
+    },
+    "evaluated_party": "example-provider",
+    "independence": {
+      "status": "unknown",
+      "conflicts_disclosed": false,
+      "basis": [
+        "independence was not assessed in this fixture"
+      ]
+    }
+  },
+  "target": {
+    "provider": "example-provider",
+    "system_name": "example-model",
+    "release_state": "unknown"
+  },
+  "access": {
+    "tier": "private-black-box",
+    "capabilities": [
+      "planned private endpoint access"
+    ],
+    "limitations": [
+      "endpoint credentials were not available for the scheduled run"
+    ]
+  },
+  "evaluation": {
+    "run_id": "run-not-executed",
+    "objective": "Demonstrate explicit preservation of a planned evaluation that did not run.",
+    "risk_domains": [
+      "example-risk"
+    ],
+    "framework": {
+      "name": "example-harness",
+      "revision": "planned-revision",
+      "configuration_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "tasks": [
+      {
+        "task_id": "example-task-not-run",
+        "configuration_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999"
+      }
+    ],
+    "started_at": "2026-09-12T12:00:00Z",
+    "ended_at": "2026-09-12T12:00:00Z",
+    "environment": {
+      "network_access": "unknown",
+      "tool_access": []
+    },
+    "safeguards": {
+      "state": "unknown"
+    }
+  },
+  "measurement": {
+    "execution_status": "NOT_RUN",
+    "criterion": {
+      "statement": "A result would be reported only if the declared task executed."
+    },
+    "observed": {
+      "status": "NOT_MEASURED",
+      "summary": "No task execution occurred; no performance or safety result is claimed."
+    },
+    "sample_count": 0,
+    "attempts": 0,
+    "limitations": [
+      "No model response was collected."
+    ]
+  },
+  "evidence": [
+    {
+      "evidence_id": "ev-plan",
+      "role": "plan",
+      "ref": "urn:example:plan:not-run",
+      "resolvable": false,
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "media_type": "application/json",
+      "visibility": "public"
+    }
+  ],
+  "disclosure": {
+    "redactions_present": false,
+    "redactions": [],
+    "deviations": [
+      {
+        "type": "access-unavailable",
+        "description": "The scheduled evaluation endpoint was unavailable.",
+        "impact": "material"
+      }
+    ],
+    "retries": [],
+    "incidents": []
+  },
+  "scope": {
+    "covers": [
+      "the planned evaluation identity and the fact that no measurement was made"
+    ],
+    "does_not_cover": [
+      "any model capability, safety, alignment or compliance conclusion"
+    ]
+  }
+}

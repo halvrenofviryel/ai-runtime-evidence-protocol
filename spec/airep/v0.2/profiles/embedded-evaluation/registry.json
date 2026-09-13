@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "airep.embedded-evaluation": {
+      "schema_path": "embedded-evaluation.schema.json",
+      "basis_digest": "sha256:ce57bd493d1a3166051bc9029972d6be215793edcd3f1b314534959659b3da8b"
+    }
+  }
+}
