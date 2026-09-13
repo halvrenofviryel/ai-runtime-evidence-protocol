@@ -264,7 +264,6 @@ records the correction to AD-01's earlier migration-tooling sequencing.
 
 [VAARA-RECEIPT] H. Sirkkavaara, *The Vaara Receipt: A Recomputable Receipt
 Format for Decisions About Autonomous Actions*, Internet-Draft,
-[draft-sirkkavaara-vaara-receipt-09](https://www.ietf.org/archive/id/draft-sirkkavaara-vaara-receipt-09.html),
-4 September 2026. Work in Progress. This revision is cited for related work;
-a mapping experiment separately records its exact implementation and corpus
-identities.
+[draft-sirkkavaara-vaara-receipt](https://datatracker.ietf.org/doc/draft-sirkkavaara-vaara-receipt/).
+Work in Progress. Version-specific mapping experiments separately record
+their exact implementation, corpus and source identities.
