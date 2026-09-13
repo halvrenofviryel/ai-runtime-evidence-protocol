@@ -1,0 +1,15 @@
+Byte-integrity preflight (not the measured run), from the repository root of the pinned checkout:
+
+    python3 conformance/sep2828/run.py --verify-manifest
+
+Official recorded reproduction run, from the repository root of the pinned checkout:
+
+    python3 scripts/conformance_runner.py \
+      --vectors-dir conformance/sep2828 \
+      --corpus record_conformance_v0 \
+      --corpus record_set_v0 \
+      --json ../VAARA-SEP2828-REPRODUCTION-20260913T132310Z-96321b403812/vaara-conformance-report.json
+
+The --with-vaara flag was not used. No additional suites were selected. The individual
+checker scripts were not invoked manually, and conformance/sep2828/run.py was not run
+without --verify-manifest before the recorded run.

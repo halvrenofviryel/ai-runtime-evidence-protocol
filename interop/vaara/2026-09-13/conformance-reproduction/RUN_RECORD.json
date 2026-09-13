@@ -1,0 +1,152 @@
+{
+ "run_id": "VAARA-SEP2828-REPRODUCTION-20260913T132310Z-96321b403812",
+ "run_kind": "Reproduction: the author's checkers over the author's vectors",
+ "executed_by": "Ali Toygar Abak / Phionyx",
+ "independent_execution_means": "the run happened outside the maintainer's environment; it does NOT mean an independently authored checker or independently constructed vectors",
+ "prior_approval": "none required, none sought, none claimed",
+ "pinned_source": {
+  "repository": "https://github.com/vaaraio/vaara",
+  "commit": "d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317",
+  "checkout": "detached",
+  "corpus": "conformance/sep2828",
+  "corpus_version": "1.0.0",
+  "suites": [
+   "record_conformance_v0",
+   "record_set_v0"
+  ],
+  "run_py_git_blob": "679742ba01aace46f902798e5f778507892155ab",
+  "aggregate_runner_git_blob": "fd52d30665419dbc07981a59e3099817e6a8cf94"
+ },
+ "dependency_boundary": {
+  "sep2828_run_py_stdlib_only": true,
+  "record_conformance_v0_checker_stdlib_only": true,
+  "record_set_v0_checker_stdlib_only": true,
+  "aggregate_runner_stdlib_only": true,
+  "imports_vaara": false,
+  "packages_installed_for_this_run": []
+ },
+ "manifest_preflight": {
+  "argv": "python3 conformance/sep2828/run.py --verify-manifest",
+  "exit_code": 0,
+  "stdout": "MANIFEST OK: 32 files match, corpusDigest sha256:0baa437da95d6ffb6bda3185d657385b7738c79daba77819acc0c6280ac0ed7a",
+  "stdout_sha256": "fc23b29e286636e47ee3645cb1b724b1843788cf3b6b4c48e1b423a79d42ca67",
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "expected_MANIFEST_corpusDigest": "sha256:0baa437da95d6ffb6bda3185d657385b7738c79daba77819acc0c6280ac0ed7a",
+  "matched": true,
+  "note": "byte-integrity preflight only; not the measured reproduction run"
+ },
+ "recorded_run": {
+  "argv": [
+   "python3",
+   "scripts/conformance_runner.py",
+   "--vectors-dir",
+   "conformance/sep2828",
+   "--corpus",
+   "record_conformance_v0",
+   "--corpus",
+   "record_set_v0",
+   "--json",
+   "../VAARA-SEP2828-REPRODUCTION-20260913T132310Z-96321b403812/vaara-conformance-report.json"
+  ],
+  "with_vaara_flag_used": false,
+  "cwd": "repository root of the pinned checkout",
+  "start_utc": "2026-09-13T13:23:10.698921337Z",
+  "end_utc": "2026-09-13T13:23:10.824499828Z",
+  "exit_code": 0,
+  "exit_code_meaning": "every suite that ran matched its published expected verdicts; nothing wider",
+  "stdout_sha256": "e514c03d816b5356465754a3cf241e41d8edc0c15c6ba746272f260f1359b63b",
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "report_sha256": "8640a4193080212766865837f4bffc11c69e7846d3b5fe411b690452ea07118c",
+  "first_checker_execution_of_this_run_identity": true,
+  "second_measured_run_performed": false
+ },
+ "report_fields": {
+  "tool": "vaara-conformance-runner",
+  "record_version": 1,
+  "canonicalization": "json-sorted-compact-utf8",
+  "generated_at": "2026-09-13T13:23:10Z",
+  "vectors_dir": "conformance/sep2828",
+  "python": "3.12.3",
+  "platform": "Linux-6.11.0-29-generic-x86_64-with-glibc2.39",
+  "commit": "d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317",
+  "commit_dirty": false,
+  "totals": {
+   "suites": 2,
+   "passed": 2,
+   "failed": 0,
+   "skipped": 0,
+   "cases_passed": 0
+  },
+  "all_passed": true,
+  "record_sha256": "96c56875bdc3d62e08360002ee412a4027116da723403b5843b26e42d74b15d6"
+ },
+ "report_suites": [
+  {
+   "suite": "record_conformance_v0",
+   "status": "PASS",
+   "cases": null,
+   "returncode": 0,
+   "duration_s": 0.026
+  },
+  {
+   "suite": "record_set_v0",
+   "status": "PASS",
+   "cases": null,
+   "returncode": 0,
+   "duration_s": 0.028
+  }
+ ],
+ "report_corpus": {
+  "suites": {
+   "record_conformance_v0": {
+    "checker_sha256": "7ebe0672fb2a3fd1d30cd86ded48b7f3e5ba7f8abdd1f5c214a48edeaddd0067",
+    "file_count": 12
+   },
+   "record_set_v0": {
+    "checker_sha256": "1d7cfa7f59a2ec2c211f9347af3b84093717798d93fe7c790e6b616ed8d36558",
+    "file_count": 18
+   }
+  },
+  "corpus_sha256": "0cfc3fc33646a58445a151efbc06ac376f0cabf19acbd64a9385c06d13be6fbd"
+ },
+ "two_distinct_digest_constructions": {
+  "MANIFEST.json_corpusDigest": "sha256:0baa437da95d6ffb6bda3185d657385b7738c79daba77819acc0c6280ac0ed7a",
+  "aggregate_runner_corpus_sha256": "0cfc3fc33646a58445a151efbc06ac376f0cabf19acbd64a9385c06d13be6fbd",
+  "note": "these are different declared digest constructions over different file sets. They are recorded side by side under their own names and are deliberately NOT compared for equality."
+ },
+ "case_count_note": "suites[].cases is null and totals.cases_passed is 0 because the aggregate runner derives a declared case count from expected.json['cases'] or a cases/ directory. These two suites key expected.json by case name at top level and store inputs under records/ and sets/, so no count is derivable. Both checkers executed (returncode 0) and matched their published expected verdicts. '0 cases' means the case count is not declared in a shape this runner recognises, NOT that zero cases were graded. The graded file set is pinned by SHA-256 in report.corpus.suites.",
+ "source_integrity": {
+  "git_status_porcelain_before": "empty",
+  "git_status_porcelain_after": "empty",
+  "git_diff_before": "empty",
+  "git_diff_cached_before": "empty",
+  "corpus_files_hashed": 35,
+  "corpus_hashes_before_vs_after": "identical",
+  "tracked_source_byte_changed": false,
+  "python_bytecode_byproducts_created": false
+ },
+ "supersedes": {
+  "run_id": "VAARA-SEP2828-REPRODUCTION-20260913T125351Z-859f338d695f",
+  "reason": "that first attempt executed the same two suites with the same result, but its report recorded commit:null because the clone sat on a root-owned mount and the runner's plain `git rev-parse HEAD` subprocess was refused with 'detected dubious ownership'. commit_dirty:false there was produced by the same failure rather than by observing a clean tree. It is preserved unmodified and unpublished; this run was authorized by the owner as a new run identity and executed on a user-owned path.",
+  "preserved": true,
+  "published": false
+ },
+ "establishes": [
+  "the observed behavior of these pinned public checkers over these pinned public vectors in this environment",
+  "that the two suites ran outside the maintainer's environment and matched their published expected verdicts"
+ ],
+ "does_not_establish": [
+  "an independently authored implementation from the specification text",
+  "independently constructed vectors",
+  "correctness of the specification",
+  "signature authentication beyond what the checkers actually test",
+  "complete Vaara product conformance",
+  "hosted-service interoperability",
+  "AIREP interoperability or any Vaara x AIREP mapping result",
+  "endorsement by Vaara or its maintainer",
+  "certification"
+ ],
+ "conformance_row_submitted": false
+}
