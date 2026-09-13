@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""LightEval / Inspect / OpenEvals native results → AIREP Embedded Evaluation Profile v0.1.
+"""LightEval results → AIREP Embedded Evaluation Profile v0.1 exporter.
 
-Non-normative integration. It consumes native evaluation output files exactly as the
-harness wrote them, hashes them, and produces:
+Non-normative integration. **Current parser: LightEval ``results_*.json``.** Inspect and
+OpenEvals are related evaluation ecosystems discussed as future integration targets; native
+Inspect ``.eval`` and arbitrary OpenEvals result formats are not parsed by this implementation.
+It consumes the files LightEval wrote, hashes them, and produces:
 
 * ``embedded-evaluation.profile.json`` — the ``profiles["airep.embedded-evaluation"]``
   payload (profile version 0.1, carrier AIREP 0.2), written only when it validates;
@@ -16,7 +18,9 @@ What it never does:
   evidence (``verification[].kind = "platform-verification"``, status ``NOT_EVALUATED``);
 * manufacture an AIREP Decision/Control/Execution/Effect artifact — the native result files
   remain the source evidence, and the payload is context and evidence metadata around them;
-* let a missing or contradictory measurement state become success.
+* let a missing or contradictory measurement state become success;
+* turn a timezone-naive LightEval filename date id into a UTC timestamp — the filename does not
+  establish UTC, so ``started_at``/``ended_at`` must be declared with an explicit offset.
 
 Usage:
 
@@ -27,7 +31,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -40,7 +44,7 @@ PROFILE_ID = 'airep.embedded-evaluation'
 PROFILE_VERSION = '0.1'
 CARRIER_AIREP_VERSION = '0.2'
 EXPORTER_NAME = 'airep-lighteval-exporter'
-EXPORTER_VERSION = '0.1.0'
+EXPORTER_VERSION = '0.1.1'
 
 MEDIA_TYPES = {'.json': 'application/json', '.jsonl': 'application/x-ndjson',
                '.parquet': 'application/x-parquet', '.log': 'text/plain', '.txt': 'text/plain',
@@ -50,10 +54,16 @@ THRESHOLD = re.compile(r'^\s*(<=|>=|==|!=|<|>)\s*(-?\d+(?:\.\d+)?)\s*$')
 EXECUTION_STATES = ('RAN', 'NOT_RUN', 'PARTIAL', 'INVALIDATED')
 OBSERVED_STATES = ('PASS', 'FAIL', 'NOT_MEASURED', 'INCONCLUSIVE', 'ERROR', 'NOT_APPLICABLE')
 CLAIMS = {
+    'records_or_preserves': [
+        'declared evaluator / engagement context',
+        'declared target identity',
+        'declared access context',
+        'declared evaluation configuration (framework, tasks, environment, safeguards)',
+        'declared measurement state and criterion',
+    ],
     'establishes': [
-        'the declared engagement, target, access, run configuration and measurement state as written',
-        'SHA-256 digests of the exact native evidence bytes that were supplied to the exporter',
-        'that the profile payload validates against the digest-pinned profile basis (validation-report.json)',
+        'SHA-256 digests of the exact evidence bytes supplied to this exporter',
+        'whether the generated profile payload validates against the exact digest-pinned profile basis',
     ],
     'does_not_establish': [
         'evaluator independence or competence (declared in the context, never inferred)',
@@ -62,6 +72,8 @@ CLAIMS = {
         'model safety, alignment, security, regulatory conformity or deployment suitability',
         'any AIREP assurance class; the payload is a companion profile, not an artifact family',
         'validity of a platform verifyToken; it is preserved as evidence, not evaluated',
+        'that any declared context is factually true; declarations are recorded, not verified',
+        'wall-clock timing of the run beyond the explicitly declared, offset-bearing timestamps',
     ],
 }
 
@@ -142,18 +154,40 @@ def parse_results(raw: bytes) -> dict:
     except (UnicodeDecodeError, ValueError) as exc:
         raise ExportError(f'results file is not valid JSON: {exc}') from exc
     if not isinstance(doc, dict) or not isinstance(doc.get('results'), dict):
-        raise ExportError('results file has no "results" object (LightEval results_*.json shape)')
+        raise ExportError('Unsupported input shape: the current implementation expects LightEval '
+                          'results_*.json output (a top-level object with a "results" mapping). '
+                          'Native Inspect .eval and other result formats are not parsed.')
     return doc
 
 
-def timestamps_from_name(name: str):
+def naive_date_id(name: str) -> str | None:
+    """The LightEval filename date id as written: ``datetime.now().isoformat()`` with ':' → '-'.
+
+    It is a timezone-naive local time on the machine that ran the evaluation. It is returned as a
+    source observation only and is never converted to UTC by assumption.
+    """
     match = RESULTS_NAME.search(Path(name).name)
     if not match:
         return None
     text = match.group('date')
-    # LightEval spells the ISO time with '-' in place of ':' because of Windows filenames.
-    text = text[:13] + ':' + text[14:16] + ':' + text[17:]
-    return datetime.fromisoformat(text).replace(tzinfo=timezone.utc)
+    return text[:13] + ':' + text[14:16] + ':' + text[17:]
+
+
+def parse_declared_timestamp(value, field: str) -> str:
+    """ISO-8601 with an explicit 'Z' or ±HH:MM offset, normalised to the profile's UTC form."""
+    if not isinstance(value, str) or not value.strip():
+        raise ExportError(f'{field} must be an ISO-8601 string with an explicit timezone')
+    text = value.strip()
+    if text.endswith(('Z', 'z')):
+        text = text[:-1] + '+00:00'
+    try:
+        ts = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise ExportError(f'{field} is not ISO-8601: {value!r}') from exc
+    if ts.tzinfo is None or ts.utcoffset() is None:
+        raise ExportError(f'{field} is timezone-naive ({value!r}); declare it with an explicit "Z" or '
+                          '±HH:MM offset. The host timezone is never assumed.')
+    return utc(ts)
 
 
 def compare(value, threshold):
@@ -231,24 +265,24 @@ def map_tasks(context: dict, results: dict | None) -> list[dict]:
 
 def map_window(context: dict, results_name: str | None, results: dict | None, limitations: list) -> tuple[str, str]:
     evaluation = context.get('evaluation') or {}
-    if evaluation.get('started_at') and evaluation.get('ended_at'):
-        return evaluation['started_at'], evaluation['ended_at']
-    ended = timestamps_from_name(results_name) if results_name else None
-    if ended is None:
-        raise ExportError('context must declare evaluation.started_at and ended_at; the results '
-                          'filename carries no LightEval date id to derive them from')
-    started = ended
-    total = ((results or {}).get('config_general') or {}).get('total_evaluation_time_secondes')
-    try:
-        seconds = float(total)
-        if seconds >= 0:
-            started = ended - timedelta(seconds=seconds)
-    except (TypeError, ValueError):
-        pass
-    limitations.append('started_at/ended_at derived from the LightEval results filename date id and '
-                       'total_evaluation_time_secondes; LightEval start_time/end_time are monotonic '
-                       'counters, not wall-clock timestamps')
-    return utc(started), utc(ended)
+    date_id = naive_date_id(results_name) if results_name else None
+    declared = evaluation.get('started_at'), evaluation.get('ended_at')
+    if not all(declared):
+        hint = (f' The LightEval date id {date_id!r} in the results filename is timezone-naive and is '
+                'not used as UTC.') if date_id else ''
+        raise ExportError('LightEval date_id is timezone-naive. Declare evaluation.started_at and '
+                          'evaluation.ended_at with an explicit timezone/offset in the context.' + hint)
+    started = parse_declared_timestamp(declared[0], 'evaluation.started_at')
+    ended = parse_declared_timestamp(declared[1], 'evaluation.ended_at')
+    if ended < started:
+        raise ExportError(f'evaluation.ended_at ({ended}) precedes started_at ({started}); a negative '
+                          'duration is refused rather than reordered')
+    if date_id:
+        limitations.append(f'LightEval results filename date id {date_id} is a timezone-naive local '
+                           'time recorded here as a source observation only; started_at/ended_at come '
+                           'from the declared, offset-bearing context timestamps. LightEval '
+                           'start_time/end_time are monotonic counters, not wall-clock timestamps.')
+    return started, ended
 
 
 def map_measurement(context: dict, results: dict | None, tasks: list[dict]) -> dict:
@@ -458,7 +492,7 @@ def export(context_raw: bytes, results: NativeFile | None, extra: list[NativeFil
 # ------------------------------------------------------------------ CLI
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--results', type=Path, help='native LightEval results_*.json (aggregate-result)')
+    ap.add_argument('--results', type=Path, help='LightEval results_*.json (aggregate-result); the only parsed input shape')
     ap.add_argument('--details', type=Path, nargs='*', default=[], help='native details_*.parquet (sample-details)')
     ap.add_argument('--raw-output', type=Path, nargs='*', default=[], help='raw model output files (raw-output)')
     ap.add_argument('--log', type=Path, nargs='*', default=[], help='harness/system logs (system-log)')
