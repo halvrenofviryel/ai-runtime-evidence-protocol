@@ -1,7 +1,7 @@
 {
   "report_kind": "UNMEASURED_TEMPLATE_NOT_A_RESULT",
   "contract_id": "VAARA-AIREP-MAP",
-  "contract_revision": "0.1.0-review",
+  "contract_revision": "0.1.1-freeze-candidate",
   "measurement_status": "NOT_RUN",
   "accepted_contract_sha256": null,
   "accepted_source_manifest_sha256": null,
