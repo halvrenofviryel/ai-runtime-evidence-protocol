@@ -13,24 +13,6 @@ vectors. Both the checkers and the vectors are Vaara's, taken unmodified at a pi
 
 No prior approval from Vaara was required, sought or claimed. The repository and corpus are public.
 
-## External registry
-
-Published as **Vaara Conformance Results row #7**:
-
-[![Vaara Conformance Results row 7](https://vaara.io/badge/ali-toygar-abak.svg)](https://vaara.io/conformance.html)
-
-Registry links:
-
-- Conformance page: https://vaara.io/conformance.html
-- Canonical row JSON: https://vaara.io/badge/ali-toygar-abak.json
-- Printable row: https://vaara.io/badge/ali-toygar-abak.html
-
-This external registry entry records a **reproduction of Vaara's published checkers over Vaara's
-published vectors** at the pinned commit below. It does not establish an independent
-implementation, independently constructed vectors, specification correctness, complete Vaara
-product conformance, hosted-service interoperability, Vaara-AIREP interoperability, certification,
-or endorsement.
-
 ## Result
 
 | | |
