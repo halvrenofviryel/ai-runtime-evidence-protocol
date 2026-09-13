@@ -28,6 +28,15 @@ issued, correctly signed and never delivered leaves a record indistinguishable f
 
 Twelve criteria separate what a record establishes from what a reader has to assume.
 
+### Related technical note
+
+CDE-12 asks what a later reader can establish from a record. This note extends that question
+downstream: whether adapters, dashboards and evaluation reports preserve the same claim boundary.
+CDE-12 remains separate from the AIREP specification, and the note changes nothing in the instrument
+or its dataset.
+
+[Access Is Not Yet Verifiability →](https://huggingface.co/blog/phionyx/access-is-not-yet-verifiability)
+
 ## Score your own system
 
 Read `CDE-12.md`, score every criterion, run the validator, open a PR or an issue.

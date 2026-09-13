@@ -110,6 +110,18 @@ and the [quickstart](./spec/airep/v0.2/QUICKSTART.md). Pick your path:
   wanted — see [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) for what has been measured so far
   and against which frozen version.
 
+### Related technical note
+
+**Access Is Not Yet Verifiability: Toward a Claim-Preserving Evidence Contract for AI Assurance**
+
+A technical position paper on preserving the scope and limitations of runtime-evidence claims as they
+pass through verifiers, adapters, dashboards and third-party evaluation reports.
+
+[Read on Hugging Face →](https://huggingface.co/blog/phionyx/access-is-not-yet-verifiability)
+
+It is not part of the AIREP specification and does not change AIREP conformance; it uses AIREP as one
+concrete source of stage-specific evidence semantics.
+
 ## Repository map
 
 | Path | What it is |
