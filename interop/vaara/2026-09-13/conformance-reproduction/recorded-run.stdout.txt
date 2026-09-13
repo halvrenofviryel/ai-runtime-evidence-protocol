@@ -1,0 +1,23 @@
+  PASS  record_conformance_v0            
+  PASS  record_set_v0                    
+
+report written to ../VAARA-SEP2828-REPRODUCTION-20260913T132310Z-96321b403812/vaara-conformance-report.json
+
+2 passed, 0 failed, 0 skipped (0 cases) across 2 suites.
+PASS: every suite that ran matched its expected verdicts.
+
+Want this result listed at vaara.io/conformance.html?
+Open this link. Your commit, suites and totals are already filled in;
+add your name and where you reported it, then submit. No install, no PR,
+no approval step. A row that failed is as welcome as one that passed.
+
+  https://github.com/vaaraio/vaara/issues/new?template=conformance-row.yml&title=VCR%3A+reproduction+by+&suites=record_conformance_v0%2C+record_set_v0&result=2+passed%2C+0+failed%2C+0+skipped%2C+0+cases&at-commit=d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317
+
+Not listing it? The run is still provable on its own.
+  record digest  96c56875bdc3d62e08360002ee412a4027116da723403b5843b26e42d74b15d6
+  corpus digest  0cfc3fc33646a58445a151efbc06ac376f0cabf19acbd64a9385c06d13be6fbd
+
+  ../VAARA-SEP2828-REPRODUCTION-20260913T132310Z-96321b403812/vaara-conformance-report.json pins the commit and the sha256 of every checker
+  and case file that was graded. Hand it to whoever you like:
+  they recompute it against a clean clone and need neither this
+  page nor our word for it.
