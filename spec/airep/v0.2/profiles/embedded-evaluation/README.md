@@ -285,6 +285,10 @@ measurement work:
   <https://huggingface.co/collections/phionyx/phionyx-runtime-evidence-and-measurement>
 - technical note, *Access Is Not Yet Verifiability: Toward a Claim-Preserving Evidence Contract for
   AI Assurance*: <https://huggingface.co/blog/phionyx/access-is-not-yet-verifiability>
+- Hugging Face dataset mirror of this profile (schema, registry, fixtures, byte-identical to the
+  canonical directory at the merged commit named on its card): <https://huggingface.co/datasets/phionyx/airep-embedded-evaluation-profile>
+- exporter Space (LightEval/Inspect/OpenEvals → profile payload + evidence manifest, non-normative,
+  source in [`integrations/lighteval/`](../../../../../integrations/lighteval/)): <https://huggingface.co/spaces/phionyx/airep-evaluation-evidence>
 
 The Hugging Face collection is related work and a distribution/discovery surface. The canonical
 schema and version history remain in the AIREP repository.
