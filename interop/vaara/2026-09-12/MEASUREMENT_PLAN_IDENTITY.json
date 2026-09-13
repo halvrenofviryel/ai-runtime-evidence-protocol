@@ -1,0 +1,63 @@
+{
+  "record_kind": "PHIONYX_INDEPENDENT_MEASUREMENT_PLAN",
+  "plan_id": "VAARA-AIREP-MAP",
+  "plan_revision": "0.2.0-independent-plan",
+  "plan_date": "2026-09-13",
+  "authored_and_owned_by": "Phionyx",
+  "first_party_record": true,
+  "jointly_authored": false,
+  "externally_endorsed": false,
+  "external_acceptance_required": false,
+  "external_acceptance_claimed": false,
+  "plan_frozen_by_phionyx": false,
+  "recorded_run": false,
+  "measured": false,
+  "interoperability_result": false,
+  "exposure": "OPEN_EXPECTED",
+  "exposure_note": "not expected-blind; the fixtures and their published expectations are already public",
+  "upstream_material": {
+    "public": true,
+    "prior_approval_required": false,
+    "note": "the upstream repository and corpus are public; pinning and measuring them implies no involvement, acceptance or endorsement by the upstream project, and none is claimed"
+  },
+  "vaara_basis": {
+    "repository": "vaaraio/vaara",
+    "commit": "d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317",
+    "corpus": "conformance/sep2828",
+    "corpus_version": "1.0.0"
+  },
+  "airep_basis": {
+    "tag": "v0.2.0-beta.1",
+    "commit": "8a6c01ecce457aa94330c0ed7219e4c56ebfe771",
+    "wire_version": "0.2"
+  },
+  "measurement_units": [
+    "VAM-01",
+    "VAM-02",
+    "VAM-03",
+    "VAM-04",
+    "VAM-05"
+  ],
+  "measurement_rules": {
+    "source_signature_verification": "NOT_EVALUATED",
+    "control_without_source_evidence": false,
+    "effect_without_source_evidence": false,
+    "result_digest_substitutes_action_or_instruction_digest": false,
+    "partial_and_no_map_allowed": true,
+    "successful_artifact_emission_required": false,
+    "interoperability_claim_before_measurement": false
+  },
+  "separate_outputs": [
+    "A. reproduction of the upstream project's public native conformance surface (the author's checkers over the author's vectors)",
+    "B. the independent five-unit AIREP mapping measurement"
+  ],
+  "files": {
+    "mapping_contract_sha256": "0bbc97c5e46c45d637d51058e59d9f96a6d95bc81eb97cbf9dd29bd879f4fe81",
+    "source_manifest_sha256": "c40cec344a17d0a2f236a6363288a05b76a45d72b8bd0536d90f02bc5544a8b0",
+    "source_verification_sha256": "67f749040cb3b2b240826d21d7de049446bba01ae69fcef5c337144752ec2a9e",
+    "report_template_sha256": "cb4b2144c1df75fac625ea189ba126fdafeea3fc6f5034c6162cdb871dcd7cd0",
+    "next_steps_sha256": "a7973a240a1b0ecd8b09d0bdc8d9a57eb904a1383d26355fd774f83d949de5b9"
+  },
+  "self_digest_included": false,
+  "supersedes": "FREEZE_CANDIDATE.json of revision 0.1.1-freeze-candidate, which described a bilateral mutual-freeze model that is not being pursued; the earlier file and revision remain in this branch's git history"
+}

@@ -1,15 +1,16 @@
 {
   "report_kind": "UNMEASURED_TEMPLATE_NOT_A_RESULT",
   "contract_id": "VAARA-AIREP-MAP",
-  "contract_revision": "0.1.1-freeze-candidate",
+  "plan_revision": "0.2.0-independent-plan",
+  "measurement_owner": "Phionyx (independent; not jointly authored, not endorsed)",
   "measurement_status": "NOT_RUN",
-  "accepted_contract_sha256": null,
-  "accepted_source_manifest_sha256": null,
+  "frozen_plan_sha256": null,
+  "frozen_source_manifest_sha256": null,
   "adapter_commit_or_package_sha256": null,
   "commands_and_environment": null,
   "first_run_output_sha256": null,
   "source_signature_verification": "NOT_EVALUATED",
-  "reviewer_acceptance": null,
+  "external_acceptance_required": false,
   "cases": [
     {
       "case_id": "VAM-01",

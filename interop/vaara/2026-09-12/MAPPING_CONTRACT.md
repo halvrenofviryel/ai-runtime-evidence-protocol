@@ -1,8 +1,10 @@
-# Vaara × AIREP — Source-Pinned Mapping Contract
+# Vaara × AIREP — Phionyx Independent Measurement Plan
 
-**ID:** `VAARA-AIREP-MAP` · **Revision:** `0.1.1-freeze-candidate` · **Date:** 13 September 2026  
-**Status:** PROPOSED FREEZE CANDIDATE. Review feedback incorporated. Source identities are pinned. Not mutually frozen. Not run.  
-**Prepared on the Phionyx side for review.** This is a proposed experimental contract, not a joint result, certification, legal agreement, or new protocol version.
+**ID:** `VAARA-AIREP-MAP` · **Revision:** `0.2.0-independent-plan` · **Date:** 13 September 2026  
+**Status:** INDEPENDENT PHIONYX MEASUREMENT PLAN. Public source-pinned corpus. `OPEN_EXPECTED`. Not jointly authored. Not endorsed. Not run. Not measured.  
+**Authored and owned by Phionyx.** This plan is written, scoped and owned by Phionyx alone. It is not a joint experiment, a joint result, a certification, a legal agreement, or a new protocol version. It requires no approval from the upstream project and claims none.
+
+The upstream material it measures is public. Phionyx alone chooses this measurement scope and is solely responsible for it. Technical feedback received earlier informed this plan; it creates no joint ownership, no acceptance, no endorsement and no obligation on the upstream project, and none is claimed. Nothing here makes Vaara an AIREP producer, and nothing here establishes interoperability.
 
 ## 1. Question, deliverable and evidence class
 
@@ -14,7 +16,7 @@ This pass is **`OPEN_EXPECTED`** over existing public fixtures. It is **not expe
 
 ## 2. Exact source and target bases
 
-The machine-readable companion [SOURCE_MANIFEST.json](SOURCE_MANIFEST.json) is part of this review package.
+The machine-readable companion [SOURCE_MANIFEST.json](SOURCE_MANIFEST.json) is part of this plan package. The upstream repository and the `conformance/sep2828` corpus are public; pinning them requires no agreement with, and implies no involvement of, the upstream project.
 
 | Component | Pinned identity |
 |---|---|
@@ -54,7 +56,7 @@ Source IDs are local to these case boundaries. A matching test nonce or repeated
 
 No selected source supplies Control delivery observations or an Effect state observation. Absence is a representational limit of this selection, not a new positive test or a claim that the underlying event did not occur.
 
-**Reviewed basis for this candidate.** Upstream maintainer review feedback confirms the five measurement units exactly as listed. VAM-01 remains the complete three-record unit — `decision_a`, `decision_b` and `outcome_a` as one unit — with the `escalate` decision's absent outcome visible inside the set rather than removed from it. VAM-04 and VAM-05 remain distinct negative units: they fail at different layers, and merging them would hide which one moved.
+**Phionyx measurement rule.** The five measurement units are fixed exactly as listed. VAM-01 is the complete three-record unit — `decision_a`, `decision_b` and `outcome_a` as one unit — with the `escalate` decision's absent outcome visible inside the set rather than removed from it. VAM-04 and VAM-05 are distinct negative units: they fail at different layers, and merging them would hide which one moved.
 
 ## 4. Rules preserving the strength of claims
 
@@ -72,7 +74,7 @@ The following are experimental acceptance rules, not additions to the AIREP wire
 
 **R6 — No invented completeness.** A missing outcome means absent from the supplied set. `escalate` does not establish a completed human decision. A complete pair does not establish complete history. New AIREP chain sequence numbers describe the adapter's emission, not Vaara's historical completeness. No tail-truncation, witness or all-target coverage claim is added in this first pass.
 
-**Reviewed basis for this candidate.** R3 is carried forward substantively unchanged. A native `conforms: true` establishes neither source signature authentication nor a source key claim, and does not show that the source bytes are bound to an accepted key. Source signature verification remains `NOT_EVALUATED` in this pass.
+**Phionyx measurement rule.** R3 is not weakened in any revision of this plan. A native `conforms: true` establishes neither source signature authentication nor a source key claim, and does not show that the source bytes are bound to an accepted key. Source signature verification remains `NOT_EVALUATED` in this pass.
 
 ## 5. Field-level projection policy
 
@@ -97,11 +99,11 @@ A mapping report records each candidate target field as `SOURCE_VALUE`, `DERIVED
 - **Execution:** identify the Decision reference, instruction identity and digest, executed-action digest and explicit outcome. The supplied result digest and backlink cannot fill missing instruction/action commitments by shape alone. Rejected source records cannot supply accepted execution facts.
 - **Effect:** no state-observation evidence is supplied. Do not emit Effect, including one with an invented `same_executor` or `unknown` observer relationship.
 
-For unsupported required semantics, emit a report entry, not a malformed artifact or a placeholder digest. Partial payloads are not described as conforming AIREP records. The review may therefore conclude that this selection supports no complete native-lifecycle AIREP artifacts. That result is reportable and must not be disguised as producer interoperability. A new AIREP Decision about *admitting a source record* would be a different, adapter-authored governance event and is outside this first-pass native-lifecycle mapping claim.
+For unsupported required semantics, emit a report entry, not a malformed artifact or a placeholder digest. Partial payloads are not described as conforming AIREP records. This measurement may therefore conclude that this selection supports no complete native-lifecycle AIREP artifacts. That result is reportable and must not be disguised as producer interoperability. A new AIREP Decision about *admitting a source record* would be a different, adapter-authored governance event and is outside this first-pass native-lifecycle mapping claim.
 
-Any concrete derivation beyond the rules above needs a versioned rule in the contract and reviewer disposition before the measured run. A proof-of-representability check may occur during review, labelled development; it is not retrospectively the measured run.
+Any concrete derivation beyond the rules above needs a versioned rule recorded in this plan before the measured run. A proof-of-representability check may occur during preparation, labelled development; it is not retrospectively the measured run.
 
-**Reviewed basis for this candidate.** The field-sufficiency and no-fabrication rules above are carried forward unchanged. No Control or Effect artifact is emitted without source evidence; a result digest never substitutes for an instruction or executed-action digest; a partial mapping or an explicit no-map remains a valid outcome. Successful AIREP artifact emission is not a goal of this pass.
+**Phionyx measurement rule.** The field-sufficiency and no-fabrication rules above bind this measurement. No Control or Effect artifact is emitted without source evidence; a result digest never substitutes for an instruction or executed-action digest; a partial mapping or an explicit no-map remains a valid outcome. Successful AIREP artifact emission is not required and is not a goal of this pass. No interoperability claim is made before measurement, and measurement alone does not create one.
 
 ## 6. Separate outputs and comparison dimensions
 
@@ -117,40 +119,40 @@ For each family in each case, use these mapping-report dispositions:
 | `REJECTED_SOURCE` | Relevant source fails applicable admission checks; retain its defect and source identity. |
 | `NOT_EVALUATED` | The mapping has not been evaluated, or a named prerequisite prevents evaluation. |
 
-Comparison is a different axis: `NOT_COMPARED`, `AGREE`, or `DISAGREE`. Both sides may agree on `NO_MAP`; that does not become a full mapping. Agreement on a coarse disposition does not conceal disagreement on supporting fields or reasons.
+Comparison is a different axis: `NOT_COMPARED`, `AGREE`, or `DISAGREE`. The native report and the mapping report may both record `NO_MAP`; that does not become a full mapping. Agreement on a coarse disposition does not conceal disagreement on supporting fields or reasons.
 
 The [REPORT_TEMPLATE.json](REPORT_TEMPLATE.json) has five unmeasured rows. Preserve source signature-check state, native failures and advisories, per-field provenance, per-family dispositions, output digests and disagreements. A detailed machine schema can be fixed with the implementation; it is not claimed as delivered here.
 
-## 7. Acceptance procedure and freeze
+## 7. Independent freeze procedure
 
-1. Review this revision and its source manifest. Resolve field sufficiency, exact derivation rules and the case grouping. Record changes in a new revision; do not silently edit a version already cited in correspondence. Upstream maintainer review feedback on sections 3 to 5 and on the five-unit grouping has been incorporated into this revision, which is offered as a freeze candidate.
-2. Exact mutual freeze still requires both sides to accept this candidate's exact identities and digests. [FREEZE_CANDIDATE.json](FREEZE_CANDIDATE.json) states the proposed identities; on both sides' explicit acceptance, record the accepted contract and manifest file digests together in an acceptance record. Neither this candidate nor its transport checksum records acceptance on behalf of the upstream maintainer.
-3. Only after candidate freeze, and before the measured run, pin adapter code, dependency versions, commands, any declared projection rules, target-verifier inputs and test-key policy. Do not insert private keys or credentials into the public report.
-4. Verify selected source bytes at the pin. Reproduce the public native surface with an exact seven-file selection wrapper calling the pinned checker functions. Preserve the three-record set. A run of the complete upstream runner, if also made, is a separate full-corpus baseline, not five extra mapping results.
+1. Phionyx settles this revision and its source manifest: field sufficiency, exact derivation rules and the case grouping. Changes are recorded in a new revision; a version already published is not silently edited. No external acceptance is sought, required or claimed for any revision.
+2. Phionyx freezes this plan on its own authority by recording the exact plan and manifest digests in [MEASUREMENT_PLAN_IDENTITY.json](MEASUREMENT_PLAN_IDENTITY.json). That record is first-party only: it binds Phionyx's own measurement and states nothing on behalf of the upstream project.
+3. Only after the plan is frozen, and before the measured run, pin adapter code, dependency versions, commands, environment, any declared projection rules, target-verifier inputs and test-key policy. Do not insert private keys or credentials into the public report.
+4. Verify selected source bytes at the pin. Reproduce the public native surface with an exact seven-file selection wrapper calling the pinned checker functions. Preserve the three-record set. The native reproduction and the AIREP mapping measurement are two separate outputs and are reported separately. A run of the complete upstream runner, if also made, is a separate full-corpus baseline, not five extra mapping results.
 5. Capture native results and adapter outputs without altering sources or public expectations. Evaluate only target artifacts actually emitted. Freeze raw first-run output digests before adjudication.
-6. Compare against the open expectations and agreed mapping rules. Publish disagreements, implementation failures, source limits and unperformed checks. Corrections produce a new run identity; preserve the first result. The first run is preserved as recorded and is not repaired to reach an expected result.
+6. Compare against the public expectations and this plan's mapping rules. Publish disagreements, implementation failures, source limits and unperformed checks. Corrections produce a new run identity; preserve the first result. The first run is preserved as recorded and is not repaired to reach an expected result.
 
 Transport/run failures, semantic mapping limitations and mismatches are distinct. An adapter test passes only when it reports the required boundaries correctly and any emitted artifacts satisfy the relevant AIREP checks. A correctly preserved `INCOMPLETE` reconciliation result is not automatically a failed mapping test. No global lifecycle success is inferred from a command exiting zero.
 
 ## 8. Attribution, publication and exclusions
 
-The Vaara draft is an informative reference in AIREP's active specification, independently of whether the experiment finds a full mapping. Two citation needs are distinct. In the **active specification**, the draft is cited by its revision-independent Internet-Draft name and Datatracker document URL, because it is Work in Progress; that generic citation does not change the beta experiment basis. In a **measured report**, if an exact Internet-Draft revision is actually used as semantic evidence, that exact revision is separately pinned, hashed and recorded in the report alongside the source commits. Do not turn the reference into a normative dependency or a claim of historical priority, equivalence, endorsement or completed interoperability.
+The Vaara draft is an informative reference in AIREP's active specification, independently of whether this measurement finds a full mapping. Citing public work requires no agreement from its author, and the citation is not evidence of one. Two citation needs are distinct. In the **active specification**, the draft is cited by its revision-independent Internet-Draft name and Datatracker document URL, because it is Work in Progress; that generic citation does not change the beta experiment basis. In a **measured report**, if an exact Internet-Draft revision is actually used as semantic evidence, that exact revision is separately pinned, hashed and recorded in the report alongside the source commits. Do not turn the reference into a normative dependency or a claim of historical priority, equivalence, endorsement or completed interoperability.
 
-Use `interop/vaara/2026-09-12/` in the AIREP repository as the proposed review location. Publish this contract, the source manifest and later accepted reports with truthful status labels. Link upstream Vaara files by their pinned identities rather than copying them into this package. Any later redistribution of upstream material retains its applicable terms; this draft grants no rights in other parties' material.
+Use `interop/vaara/2026-09-12/` in the AIREP repository as the location of this plan. Publish this plan, the source manifest and later reports under Phionyx's own name, with truthful status labels and Phionyx's own scoping. Link upstream Vaara files by their pinned identities rather than copying them into this package. Any later redistribution of upstream material retains its applicable terms; this draft grants no rights in other parties' material.
 
-Do not publish private email text, private enclosures, credentials, or imply Henri's approval or joint authorship without permission. A public draft PR is an invitation to review, not evidence of acceptance. Do not create a successful `EXTERNAL_EVIDENCE.md` entry or rewrite a frozen release from this planning package.
+Do not publish private email text, private enclosures or credentials, and do not imply upstream approval, endorsement or joint authorship. A public draft PR is a published plan, not evidence of anyone else's acceptance. Do not create a successful `EXTERNAL_EVIDENCE.md` entry or rewrite a frozen release from this planning package.
 
 The reciprocal AIREP verifier run is separate: the existing *Independent-Verifier Corpus v0.2* is alpha.1-based. A beta measurement requires an explicitly beta-based package and implementation provenance. Neither this mapping exercise nor that future run is pre-counted as closing the full stable gate.
 
 Excluded from this pass: live provider integration, new Vaara fixtures, source-key authentication, positive Effect observations, delivery witnesses, completeness/sealing extensions, held-out blind tests, performance benchmarks, and production interoperability claims.
 
-## 9. Current status and review decision requested
+## 9. Current status and next step
 
 The selected source identities and applicable source code have been inspected. This preparation has **not** run the full corpus, verified source signatures, implemented the adapter, emitted AIREP artifacts, or measured interoperability. Earlier selected-file probes are not a substitute for the run record defined above.
 
-Upstream maintainer review feedback has been incorporated into this candidate. The reviewed technical scope is sections 3 to 5, the five-unit grouping, and the mapping/verifier handoff scope relevant to this mapping contract. The reciprocal AIREP verifier package's 60 class cases, its 117 schema fixtures and its 11 example variants are outside this mapping-contract review. No interoperability measurement has occurred, and this review establishes no interoperability result. No additional Vaara implementation work is a prerequisite for reviewing this contract.
+This plan is Phionyx's alone. Earlier technical feedback informed it and is not a warrant for it: no upstream acceptance, endorsement, joint authorship or result obligation exists or is claimed, and none is required, because the upstream repository and corpus are public. The reciprocal AIREP verifier package — its class cases, schema fixtures and example variants — is separate work and is outside this plan's scope. No measurement has occurred, and nothing here establishes interoperability.
 
-Remaining decision: mutual freeze is pending acceptance of this candidate's exact identity — the contract and source-manifest digests recorded in [FREEZE_CANDIDATE.json](FREEZE_CANDIDATE.json), together with the pull request head commit. After that acceptance, the next step is the adapter implementation and its frozen run plan—not a new high-level collaboration proposal.
+Next step: Phionyx freezes this plan, its adapter code, commands and environment on its own authority, then reproduces the public native conformance surface and runs the five-unit AIREP mapping measurement. Those are two separate outputs. First-run results are preserved as recorded rather than repaired toward an expected result, and scoped results are published under Phionyx's own name. See [MEASUREMENT_NEXT_STEPS.md](MEASUREMENT_NEXT_STEPS.md).
 
 ## Source references
 
