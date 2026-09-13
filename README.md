@@ -129,6 +129,8 @@ concrete source of stage-specific evidence semantics.
 | [`spec/airep/v0.2/SPEC.md`](./spec/airep/v0.2/SPEC.md) | **Start v0.2 here.** Consolidated normative beta implementation specification. |
 | [`tools/airep_v02/`](./tools/airep_v02/) | First-party four-family v0.2 producer, verifier adapters and reconciler. |
 | [`examples/v02/`](./examples/v02/) | Real local lifecycle and committed negative variants. |
+| [`spec/airep/v0.2/profiles/embedded-evaluation/`](./spec/airep/v0.2/profiles/embedded-evaluation/) | Experimental Embedded Evaluation Profile v0.1 — evaluation identity, access, configuration, explicit measurement state, evidence provenance and verification references. A companion profile on the `profiles` extension surface, not a fifth artifact family; a profile PASS is not an assurance class. |
+| [`integrations/lighteval/`](./integrations/lighteval/) | Non-normative LightEval/Inspect/OpenEvals → Embedded Evaluation Profile exporter: hashes native result files into a profile payload plus evidence manifest; never infers evaluator independence or access. |
 | [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here for frozen v0.1.** |
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
 | [`spec/airep/v0.1/core.schema.json`](./spec/airep/v0.1/core.schema.json) | JSON Schema (draft 2020-12) for the core record. |
