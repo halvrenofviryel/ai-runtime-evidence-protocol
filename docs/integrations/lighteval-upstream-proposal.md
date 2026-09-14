@@ -16,8 +16,11 @@ output path:
   depending on flags, calls `push_to_hub`, `push_to_wandb` or the TensorBoard exporter.
 - `push_to_hub` uploads the results JSON and details parquet to a `details_{model}` dataset
   repository and regenerates its metadata card.
-- `GeneralConfigLogger.start_time` / `end_time` are `time.perf_counter()` values; the wall-clock
-  identity of a run lives in the `date_id` embedded in the filenames.
+- `GeneralConfigLogger.start_time` / `end_time` are `time.perf_counter()` values, not wall-clock
+  timestamps. `date_id` comes from timezone-naive `datetime.now().isoformat()` with `:` replaced
+  by `-`; the filename does not establish a UTC instant or an offset. The current AIREP exporter
+  requires separately declared, timezone-aware start and end timestamps and never infers either
+  timezone from the current machine or the uploader.
 
 Every downstream consumer therefore has to re-derive provenance from files and filenames after
 the fact. There is no point at which a third party can be handed "the exact bytes that were just
@@ -69,6 +72,9 @@ exporter ([`integrations/lighteval/`](../../integrations/lighteval/)) would be *
 of the hook: it would hash `results_path` and `details_paths`, take `task_configs` and
 `general_config` as the mapping source, and still require its own explicitly declared context
 for evaluator identity, independence and access tier — the hook cannot and should not supply those.
+It also requires explicit timezone-aware start/end declarations; `date_id` and monotonic counters
+cannot supply them. The current parser expects LightEval `results_*.json` structure. Native Inspect
+`.eval` and arbitrary OpenEvals result formats are future integration targets, not parsed inputs.
 
 ## What the hook would not do
 
