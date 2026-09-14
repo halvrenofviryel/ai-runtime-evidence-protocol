@@ -261,7 +261,13 @@ preserved as platform-specific verification evidence. This profile is complement
 engagement/access/configuration/evidence/disclosure context and must not reinterpret the token as a
 general safety or assurance certificate.
 
-A low-friction integration is:
+The following is a conceptual integration pattern across related ecosystems, not a list of
+implemented parsers. The current exporter expects LightEval `results_*.json` structure; native
+Inspect `.eval` and arbitrary OpenEvals result formats are not currently parsed. Native files
+remain source evidence. LightEval's timezone-naive filename timestamp is never silently labelled
+UTC: the exporter requires explicit timezone-aware start/end timestamps in the declared context.
+
+A possible integration pattern is:
 
 ```text
 LightEval / Inspect / OpenEvals native run
@@ -287,7 +293,8 @@ measurement work:
   AI Assurance*: <https://huggingface.co/blog/phionyx/access-is-not-yet-verifiability>
 - Hugging Face dataset mirror of this profile (schema, registry, fixtures, byte-identical to the
   canonical directory at the merged commit named on its card): <https://huggingface.co/datasets/phionyx/airep-embedded-evaluation-profile>
-- exporter Space (LightEval/Inspect/OpenEvals → profile payload + evidence manifest, non-normative,
+- exporter Space (LightEval results → AIREP Embedded Evaluation Profile payload + evidence manifest,
+  experimental and non-normative; native Inspect `.eval` and arbitrary OpenEvals formats are not parsed,
   source in [`integrations/lighteval/`](../../../../../integrations/lighteval/)): <https://huggingface.co/spaces/phionyx/airep-evaluation-evidence>
 
 The Hugging Face collection is related work and a distribution/discovery surface. The canonical

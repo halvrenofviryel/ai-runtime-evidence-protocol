@@ -167,9 +167,11 @@ or dependency — that is the point of the neutrality test.
 
 The **Phionyx Reasoned Governance Envelope (RGE)** is a related runtime evidence source developed
 alongside AIREP, not an AIREP producer. **Raw RGE records are not AIREP-conformant** — AIREP's own
-reference verifier rejects an RGE envelope handed to it directly — and **no released RGE → AIREP
-projection exists.** None is implied by this repository; if one is released it will be named here
-with its version and publicly checkable evidence.
+reference verifier rejects an RGE envelope handed to it directly. **No publicly checkable released
+RGE → AIREP projection is identified by this repository as of 14 September 2026.** Private
+experimental projections are separate from the first-party AIREP producer and do not establish
+public interoperability. A projection claim requires a named release, target version and
+publicly checkable source and verification evidence.
 
 An **independently authored v0.1 producer** has since been measured against frozen **v0.1.2**: its
 records were accepted on first invocation by both pinned reference verifiers, and the experiment

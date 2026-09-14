@@ -130,6 +130,49 @@ class ExporterTests(unittest.TestCase):
         payload, _, _ = self.run_export(ctx, native(synthetic_results()))
         self.assertEqual(payload['evaluation']['started_at'], '2026-09-13T16:00:00Z')
 
+    def test_malformed_offsets_are_refused_in_either_timestamp(self):
+        # datetime.fromisoformat alone accepts several of these, including +03:60.
+        for field in ('started_at', 'ended_at'):
+            for offset in ('+03:60', '-00:60', '+24:00', '+0300', '+03',
+                           '+03:00:01', '+3:00', '+03:0', '+ab:cd'):
+                with self.subTest(field=field, offset=offset):
+                    ctx = context()
+                    ctx['evaluation'][field] = '2026-09-13T17:00:00' + offset
+                    with self.assertRaises(x.ExportError):
+                        self.run_export(ctx, native(synthetic_results()))
+
+    def test_fractional_seconds_are_preserved_and_ordered_before_rounding(self):
+        ctx = context()
+        ctx['evaluation']['started_at'] = '2026-09-13T20:00:00.900000+03:00'
+        ctx['evaluation']['ended_at'] = '2026-09-13T17:00:00.100000Z'
+        with self.assertRaisesRegex(x.ExportError, 'precedes'):
+            self.run_export(ctx, native(synthetic_results()))
+        ctx['evaluation']['started_at'] = '2026-09-13T20:00:00+03:00'
+        payload, _, report = self.run_export(ctx, native(synthetic_results()))
+        self.assertTrue(report['schema_valid'], report['errors'])
+        self.assertEqual(payload['evaluation']['started_at'], '2026-09-13T17:00:00Z')
+        self.assertEqual(payload['evaluation']['ended_at'], '2026-09-13T17:00:00.100000Z')
+
+    def test_unrepresentable_precision_and_utc_range_fail_closed(self):
+        for value in ('2026-09-13T17:00:00.0000001Z', '0001-01-01T00:00:00+03:00',
+                      '9999-12-31T23:59:59-03:00'):
+            with self.subTest(value=value):
+                ctx = context()
+                ctx['evaluation']['ended_at'] = value
+                with self.assertRaises(x.ExportError):
+                    self.run_export(ctx, native(synthetic_results()))
+
+    def test_both_context_timestamps_are_required_and_naive_values_refused(self):
+        for field in ('started_at', 'ended_at'):
+            with self.subTest(field=field):
+                ctx = context()
+                del ctx['evaluation'][field]
+                with self.assertRaisesRegex(x.ExportError, 'explicit timezone/offset'):
+                    self.run_export(ctx, native(synthetic_results()))
+                ctx['evaluation'][field] = '2026-09-13T17:00:00'
+                with self.assertRaisesRegex(x.ExportError, 'timezone-naive'):
+                    self.run_export(ctx, native(synthetic_results()))
+
     def test_unsupported_input_shape_is_named_not_generic(self):
         valid_but_wrong = x.NativeFile(RESULTS_NAME, 'aggregate-result', json.dumps({'evaluation_results': [], 'schema_version': '0.3.0'}).encode())
         with self.assertRaises(x.ExportError) as caught:

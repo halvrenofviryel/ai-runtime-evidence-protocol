@@ -52,6 +52,11 @@ or `ended_at` before `started_at` is refused. The LightEval filename date id is 
 local time (`datetime.now().isoformat()` with `:` → `-`); the exporter never assumes it is UTC and
 never reads the host timezone as a proxy for the evaluating machine's.
 
+Use `YYYY-MM-DDTHH:MM:SS[.ffffff]Z` or the same time with `±HH:MM`. Offset hours must be
+00–23 and minutes 00–59; malformed offsets such as `+03:60` are rejected rather than carried
+into the next hour. Up to six fractional digits are preserved, including when checking that
+the end is not before the start. Excess precision or an unrepresentable UTC time is rejected.
+
 ## Measurement-state discipline
 
 The exporter refuses (exit `2`, no payload) when the inputs contradict each other:

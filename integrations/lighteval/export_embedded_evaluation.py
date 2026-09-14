@@ -44,12 +44,16 @@ PROFILE_ID = 'airep.embedded-evaluation'
 PROFILE_VERSION = '0.1'
 CARRIER_AIREP_VERSION = '0.2'
 EXPORTER_NAME = 'airep-lighteval-exporter'
-EXPORTER_VERSION = '0.1.1'
+EXPORTER_VERSION = '0.1.2'
 
 MEDIA_TYPES = {'.json': 'application/json', '.jsonl': 'application/x-ndjson',
                '.parquet': 'application/x-parquet', '.log': 'text/plain', '.txt': 'text/plain',
                '.yaml': 'application/yaml', '.yml': 'application/yaml'}
 RESULTS_NAME = re.compile(r'results_(?P<date>\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}(?:\.\d{1,6})?)\.json$')
+DECLARED_TIMESTAMP = re.compile(
+    r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}'
+    r'(?:\.[0-9]{1,6})?(?:[Zz]|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])'
+)
 THRESHOLD = re.compile(r'^\s*(<=|>=|==|!=|<|>)\s*(-?\d+(?:\.\d+)?)\s*$')
 EXECUTION_STATES = ('RAN', 'NOT_RUN', 'PARTIAL', 'INVALIDATED')
 OBSERVED_STATES = ('PASS', 'FAIL', 'NOT_MEASURED', 'INCONCLUSIVE', 'ERROR', 'NOT_APPLICABLE')
@@ -96,7 +100,9 @@ def media_type(name: str) -> str:
 
 
 def utc(ts: datetime) -> str:
-    return ts.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    if ts.tzinfo is None or ts.utcoffset() is None:
+        raise ExportError('cannot normalise a timezone-naive timestamp; declare an explicit offset')
+    return ts.astimezone(timezone.utc).isoformat().replace('+00:00', 'Z')
 
 
 def require(mapping, path, what):
@@ -187,7 +193,16 @@ def parse_declared_timestamp(value, field: str) -> str:
     if ts.tzinfo is None or ts.utcoffset() is None:
         raise ExportError(f'{field} is timezone-naive ({value!r}); declare it with an explicit "Z" or '
                           '±HH:MM offset. The host timezone is never assumed.')
-    return utc(ts)
+    # fromisoformat accepts compact offsets and silently carries offset minutes >= 60.
+    # Restrict the declared grammar before allowing any UTC conversion. Reject excess
+    # fractional precision rather than silently discarding it.
+    if not DECLARED_TIMESTAMP.fullmatch(value.strip()):
+        raise ExportError(f'{field} must use YYYY-MM-DDTHH:MM:SS[.ffffff] with explicit Z or '
+                          '±HH:MM (offset hours 00–23, minutes 00–59)')
+    try:
+        return utc(ts)
+    except (OverflowError, ValueError) as exc:
+        raise ExportError(f'{field} cannot be represented as a UTC timestamp') from exc
 
 
 def compare(value, threshold):
@@ -274,7 +289,7 @@ def map_window(context: dict, results_name: str | None, results: dict | None, li
                           'evaluation.ended_at with an explicit timezone/offset in the context.' + hint)
     started = parse_declared_timestamp(declared[0], 'evaluation.started_at')
     ended = parse_declared_timestamp(declared[1], 'evaluation.ended_at')
-    if ended < started:
+    if datetime.fromisoformat(ended) < datetime.fromisoformat(started):
         raise ExportError(f'evaluation.ended_at ({ended}) precedes started_at ({started}); a negative '
                           'duration is refused rather than reordered')
     if date_id:
