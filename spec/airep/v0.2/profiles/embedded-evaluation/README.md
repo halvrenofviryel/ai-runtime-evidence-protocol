@@ -238,8 +238,11 @@ Without an accepted basis for the exact identifier, the correct profile result r
 This section is **informative**. It is an integration aid, not a claim that Hugging Face implements
 or endorses AIREP.
 
-A native LightEval/OpenEvals result can remain authoritative in its own format while this profile
-binds its provenance and evaluation context.
+A native evaluation result can remain authoritative in its own format while this profile binds its
+provenance and evaluation context. The mapping below is ecosystem-level guidance; it does not mean
+that the repository ships a parser for every named format. The current exporter parses LightEval
+`results_*.json` only. Native Inspect `.eval` logs and arbitrary OpenEvals result formats are future
+integration targets and are not currently parsed.
 
 | Native evaluation concept | Suggested profile mapping |
 |---|---|
@@ -293,8 +296,9 @@ measurement work:
   AI Assurance*: <https://huggingface.co/blog/phionyx/access-is-not-yet-verifiability>
 - Hugging Face dataset mirror of this profile (schema, registry, fixtures, byte-identical to the
   canonical directory at the merged commit named on its card): <https://huggingface.co/datasets/phionyx/airep-embedded-evaluation-profile>
-- exporter Space (LightEval results → AIREP Embedded Evaluation Profile payload + evidence manifest,
-  experimental and non-normative; native Inspect `.eval` and arbitrary OpenEvals formats are not parsed,
+- exporter Space (LightEval `results_*.json` → AIREP Embedded Evaluation Profile payload + evidence
+  manifest, experimental and non-normative; native Inspect `.eval` and arbitrary OpenEvals result
+  formats are not currently parsed;
   source in [`integrations/lighteval/`](../../../../../integrations/lighteval/)): <https://huggingface.co/spaces/phionyx/airep-evaluation-evidence>
 
 The Hugging Face collection is related work and a distribution/discovery surface. The canonical
