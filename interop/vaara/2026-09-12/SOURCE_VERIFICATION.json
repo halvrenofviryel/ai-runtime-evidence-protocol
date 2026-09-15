@@ -1,0 +1,194 @@
+{
+  "verification_id": "VAARA-SOURCE-VERIFICATION",
+  "run_id": "20260912T061928Z-b6b9c5f557fd",
+  "manifest_source": {
+    "file": "vaara_airep_review_20260912.zip/repo-overlay/interop/vaara/2026-09-12/SOURCE_MANIFEST.json",
+    "sha256": "c40cec344a17d0a2f236a6363288a05b76a45d72b8bd0536d90f02bc5544a8b0",
+    "contract_revision": "0.1.0-review"
+  },
+  "vaara_repository": "vaaraio/vaara",
+  "pinned_commit": "d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317",
+  "retrieval": {
+    "method": "HTTPS GET raw.githubusercontent.com at exact pinned commit; max 2 redirects; no credentials; no branch-latest substitution",
+    "window_utc": [
+      "2026-09-12T06:19:52Z",
+      "2026-09-12T06:19:59Z"
+    ],
+    "ls_remote_observed": "repository reachable; HEAD/main d325da1695c97ebdca6a79fb917630bc78eec0de (NOT used; only the pinned commit was read)"
+  },
+  "selected_artifacts": [
+    {
+      "source_id": "S1",
+      "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_a.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_a.json",
+      "http_status": 200,
+      "size_bytes": 549,
+      "declared_sha256": "sha256:a150126b372a07e8ae4f695068361f28ebd4903285c247880e884d7860a4bd29",
+      "computed_sha256": "sha256:a150126b372a07e8ae4f695068361f28ebd4903285c247880e884d7860a4bd29",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "9ecb0b124327c6a420585d44150993e5dd5eb2dd"
+    },
+    {
+      "source_id": "S2",
+      "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_b.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_b.json",
+      "http_status": 200,
+      "size_bytes": 552,
+      "declared_sha256": "sha256:5206085bd548a056dab32c6d94e3a1f97cfe838cdbf03e44bd833e3ac942479b",
+      "computed_sha256": "sha256:5206085bd548a056dab32c6d94e3a1f97cfe838cdbf03e44bd833e3ac942479b",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "492f8f02ccb6da8f8105072214a9edd4abcc9bd4"
+    },
+    {
+      "source_id": "S3",
+      "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/outcome_a.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/outcome_a.json",
+      "http_status": 200,
+      "size_bytes": 894,
+      "declared_sha256": "sha256:7646dcb8da4b2969937eaaf96d32df348ffa560251bee84e83eb686cb67761cf",
+      "computed_sha256": "sha256:7646dcb8da4b2969937eaaf96d32df348ffa560251bee84e83eb686cb67761cf",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "ebca996f87fe3c909602263577b0a7737c382737"
+    },
+    {
+      "source_id": "S4",
+      "repository_path": "conformance/sep2828/record_conformance_v0/records/conforming_refused_no_commitment.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/conforming_refused_no_commitment.json",
+      "http_status": 200,
+      "size_bytes": 1044,
+      "declared_sha256": "sha256:e0148f02748e93e1479a109aa0bf9f48477e2acf4655e9fd3fc9fe9c35d9f80f",
+      "computed_sha256": "sha256:e0148f02748e93e1479a109aa0bf9f48477e2acf4655e9fd3fc9fe9c35d9f80f",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "8e3836de31d1d818a42ecebd362e30cd2d070a5e"
+    },
+    {
+      "source_id": "S5",
+      "repository_path": "conformance/sep2828/record_conformance_v0/records/conforming_executed_projection.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/conforming_executed_projection.json",
+      "http_status": 200,
+      "size_bytes": 869,
+      "declared_sha256": "sha256:58da5dc50fa2d0f12f3d790a4644f07e5e0f5fff9a9ce27e8ae7b415e93984ce",
+      "computed_sha256": "sha256:58da5dc50fa2d0f12f3d790a4644f07e5e0f5fff9a9ce27e8ae7b415e93984ce",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "a3987f64deeb4ae82efe42bfbe14bf918de01625"
+    },
+    {
+      "source_id": "S6",
+      "repository_path": "conformance/sep2828/record_conformance_v0/records/neg_digest_mismatch.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/neg_digest_mismatch.json",
+      "http_status": 200,
+      "size_bytes": 869,
+      "declared_sha256": "sha256:e71ee5730978722132fa15b96cb4436a2d03b395d0ae68790ac06b5526a82793",
+      "computed_sha256": "sha256:e71ee5730978722132fa15b96cb4436a2d03b395d0ae68790ac06b5526a82793",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "0079c42413db6853602bc5c0d51ec02a59f18d10"
+    },
+    {
+      "source_id": "S7",
+      "repository_path": "conformance/sep2828/record_conformance_v0/records/neg_malformed_backlink_digest.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/neg_malformed_backlink_digest.json",
+      "http_status": 200,
+      "size_bytes": 806,
+      "declared_sha256": "sha256:d9632e4ec235a846893eb019ba412b40afedb6fb6d050256feba2cdaf25cbdba",
+      "computed_sha256": "sha256:d9632e4ec235a846893eb019ba412b40afedb6fb6d050256feba2cdaf25cbdba",
+      "result": "VERIFIED",
+      "computed_git_blob_sha1": "6514e6ea95f64654c0192d51aef77432139b8364"
+    }
+  ],
+  "native_surface_files": [
+    {
+      "repository_path": "conformance/sep2828/MANIFEST.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/MANIFEST.json",
+      "http_status": 200,
+      "size_bytes": 4463,
+      "declared_sha256": null,
+      "computed_sha256": "sha256:0e19d18328355a5e83803c2652a519c1d40be37714650eb311ff9413466b0100",
+      "declared_git_blob_sha1": "2f3a3c3a470a5250dae857d0540453d574840ed9",
+      "computed_git_blob_sha1": "2f3a3c3a470a5250dae857d0540453d574840ed9",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "git_blob_sha1"
+      ]
+    },
+    {
+      "repository_path": "conformance/sep2828/run.py",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/run.py",
+      "http_status": 200,
+      "size_bytes": 7244,
+      "declared_sha256": null,
+      "computed_sha256": "sha256:e56c21bdb4bb89e5bd3d38fcf67029a86a86828df3205c2b3ffdee04241fb4d6",
+      "declared_git_blob_sha1": "679742ba01aace46f902798e5f778507892155ab",
+      "computed_git_blob_sha1": "679742ba01aace46f902798e5f778507892155ab",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "git_blob_sha1"
+      ]
+    },
+    {
+      "repository_path": "conformance/sep2828/record_conformance_v0/_check_independent.py",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/_check_independent.py",
+      "http_status": 200,
+      "size_bytes": 5171,
+      "declared_sha256": "sha256:7ebe0672fb2a3fd1d30cd86ded48b7f3e5ba7f8abdd1f5c214a48edeaddd0067",
+      "computed_sha256": "sha256:7ebe0672fb2a3fd1d30cd86ded48b7f3e5ba7f8abdd1f5c214a48edeaddd0067",
+      "declared_git_blob_sha1": "7e050afd8ec20d6ce5161e589e04b1964fc1a5bb",
+      "computed_git_blob_sha1": "7e050afd8ec20d6ce5161e589e04b1964fc1a5bb",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "sha256",
+        "git_blob_sha1"
+      ]
+    },
+    {
+      "repository_path": "conformance/sep2828/record_set_v0/_check_independent.py",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/_check_independent.py",
+      "http_status": 200,
+      "size_bytes": 7294,
+      "declared_sha256": "sha256:1d7cfa7f59a2ec2c211f9347af3b84093717798d93fe7c790e6b616ed8d36558",
+      "computed_sha256": "sha256:1d7cfa7f59a2ec2c211f9347af3b84093717798d93fe7c790e6b616ed8d36558",
+      "declared_git_blob_sha1": "5ca92e9c0bc7b320a4d41072d11984b4a0f54b75",
+      "computed_git_blob_sha1": "5ca92e9c0bc7b320a4d41072d11984b4a0f54b75",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "sha256",
+        "git_blob_sha1"
+      ]
+    },
+    {
+      "repository_path": "conformance/sep2828/record_conformance_v0/expected.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/expected.json",
+      "http_status": 200,
+      "size_bytes": 1330,
+      "declared_sha256": "sha256:442e582d7a1e288d6339e437c26e51e9f2ad227f2578b92dfd9900ad9ab925c5",
+      "computed_sha256": "sha256:442e582d7a1e288d6339e437c26e51e9f2ad227f2578b92dfd9900ad9ab925c5",
+      "declared_git_blob_sha1": null,
+      "computed_git_blob_sha1": "8ffbb6b9c95b939308d8ae2003916be236778b5f",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "sha256"
+      ]
+    },
+    {
+      "repository_path": "conformance/sep2828/record_set_v0/expected.json",
+      "url": "https://raw.githubusercontent.com/vaaraio/vaara/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/expected.json",
+      "http_status": 200,
+      "size_bytes": 1674,
+      "declared_sha256": "sha256:f8df251a4984b66bcf745d309d319eeb70f8f453e9330dfaf6ef943b9f1465ee",
+      "computed_sha256": "sha256:f8df251a4984b66bcf745d309d319eeb70f8f453e9330dfaf6ef943b9f1465ee",
+      "declared_git_blob_sha1": "d8f9eada340896970a33fd0b9255a6faf5b41d52",
+      "computed_git_blob_sha1": "d8f9eada340896970a33fd0b9255a6faf5b41d52",
+      "result": "VERIFIED",
+      "checked_identities": [
+        "sha256",
+        "git_blob_sha1"
+      ]
+    }
+  ],
+  "summary": {
+    "selected_artifacts_verified": "7/7",
+    "native_surface_files_verified": "6/6",
+    "measurement_units_preserved": "7 files / 5 units; decision_without_outcome (S1,S2,S3) is one unit; VAM-04 and VAM-05 remain distinct",
+    "what_this_is_not": "Source-byte identity verification only. No native checker run, no signature verification, no adapter, no AIREP emission, no interop measurement.",
+    "original_manifest_modified": false
+  }
+}
