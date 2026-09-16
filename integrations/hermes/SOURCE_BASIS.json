@@ -1,0 +1,26 @@
+{
+  "airep_repository": "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol",
+  "airep_commit": "2c44cb66d2722e9bf039f1e7659afe727db4d50a",
+  "hermes_repository": "https://github.com/NousResearch/hermes-agent",
+  "hermes_commit": "9796235822b89e08597a402dad045b5b4464e474",
+  "hermes_issue_89853": {
+    "url": "https://github.com/NousResearch/hermes-agent/issues/89853",
+    "title": "Expose a broker-verifiable durable approval receipt",
+    "status": "open at measurement time"
+  },
+  "hermes_pr_104960": {
+    "url": "https://github.com/NousResearch/hermes-agent/pull/104960",
+    "title": "fix(gateway): bind Discord exec-approval cards to their own request (#104915)",
+    "head_commit": "89311702f35e3f1dd6afbeb688c11f3c3c5be05d",
+    "status": "open/unmerged at measurement time"
+  },
+  "reviewed_hermes_paths": {
+    "tools/approval.py": "git-blob:062cd78c035dba78db1f432614ba3bf49c66d604",
+    "tools/approval_gateway_wait.py": "git-blob:f433713229ec5ee45aba6fbb236bd627cd37b696",
+    "tools/approval_prompt.py": "git-blob:85129a16a912a017072447fdbe7c114a2afa13fe",
+    "hermes_cli/approval_transport.py": "git-blob:bf141d0b9f43f7e0f1c9f69b8792b597990460ab",
+    "website/docs/developer-guide/observer-hooks.md": "git-blob:6a7d1389fb0fa6e8b9d651d6cc3418207551d478"
+  },
+  "generated_at": "2026-09-16T17:07:48Z",
+  "mapping_version": "0.1"
+}
