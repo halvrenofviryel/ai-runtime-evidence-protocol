@@ -1,0 +1,71 @@
+{
+  "scenario_id": "HERMES-AIREP-10",
+  "title": "one native consume; replay rejected",
+  "source_kind": "deterministic synthetic scenario, not a production Hermes run",
+  "observed_source_facts": {
+    "approval_request_id": "hermes-request-10",
+    "governed_intent_exists": true,
+    "decision_event": {
+      "request_id": "hermes-request-10",
+      "source": "human",
+      "choice": "once"
+    },
+    "authorization_instruction_dispatch_observed": true,
+    "receiver_receipt_observed": true,
+    "execution_event": "executed",
+    "native_consume_race": {
+      "consumer_a": "consume-succeeded",
+      "consumer_b": "replay-rejected",
+      "property_owner": "Hermes native authorization layer"
+    },
+    "rejected_replay_created_release": false,
+    "replay_decision_event": {
+      "request_id": "hermes-request-10",
+      "source": "runtime",
+      "choice": "replay-rejected"
+    }
+  },
+  "fixture_only_constructed_values": {
+    "governed_intent_projection": {
+      "projection_version": "example.hermes.fixture-intent.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-10",
+      "parameters": {
+        "command": "printf hermes-airep-10"
+      }
+    },
+    "authorized_action_projection": {
+      "projection_version": "example.hermes.fixture-action.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-10",
+      "parameters": {
+        "command": "printf hermes-airep-10"
+      }
+    },
+    "decision_result": {
+      "decision": "release",
+      "reason": "human-approved-once",
+      "approval_request_id": "hermes-request-10"
+    },
+    "authorization_instruction_projection": {
+      "projection_version": "example.hermes.fixture-instruction.v1",
+      "instruction_id": "hermes-instruction-10-v1",
+      "decision_record_id": "hermes-airep-10-decision",
+      "approval_request_id": "hermes-request-10",
+      "authorized_action_digest": "sha256:c3212fe956df22c6f5b47426d8f76603cefac229738d7f5012bda61413fb322d"
+    },
+    "replay_decision_result": {
+      "decision": "block",
+      "reason": "native-replay-rejected",
+      "approval_request_id": "hermes-request-10"
+    }
+  },
+  "mapping_choices": {
+    "governed_intent_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "authorization_action_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "approval_request_id_is_instruction_id": false,
+    "fixture_projection_notice": "This projection is local to the integration fixtures. It is not a Hermes-native authorization contract."
+  }
+}

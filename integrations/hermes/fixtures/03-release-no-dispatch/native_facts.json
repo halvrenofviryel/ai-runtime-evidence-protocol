@@ -1,0 +1,48 @@
+{
+  "scenario_id": "HERMES-AIREP-03",
+  "title": "release without dispatch evidence",
+  "source_kind": "deterministic synthetic scenario, not a production Hermes run",
+  "observed_source_facts": {
+    "approval_request_id": "hermes-request-03",
+    "governed_intent_exists": true,
+    "decision_event": {
+      "request_id": "hermes-request-03",
+      "source": "human",
+      "choice": "once"
+    },
+    "release_decision_established": true,
+    "authorization_instruction_dispatch_observed": false,
+    "execution_observed": false
+  },
+  "fixture_only_constructed_values": {
+    "governed_intent_projection": {
+      "projection_version": "example.hermes.fixture-intent.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-03",
+      "parameters": {
+        "command": "printf hermes-airep-03"
+      }
+    },
+    "authorized_action_projection": {
+      "projection_version": "example.hermes.fixture-action.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-03",
+      "parameters": {
+        "command": "printf hermes-airep-03"
+      }
+    },
+    "decision_result": {
+      "decision": "release",
+      "reason": "human-approved-once",
+      "approval_request_id": "hermes-request-03"
+    }
+  },
+  "mapping_choices": {
+    "governed_intent_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "authorization_action_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "approval_request_id_is_instruction_id": false,
+    "fixture_projection_notice": "This projection is local to the integration fixtures. It is not a Hermes-native authorization contract."
+  }
+}

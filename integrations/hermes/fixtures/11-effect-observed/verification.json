@@ -1,0 +1,137 @@
+{
+  "scope": "AIREP v0.2 schema/tagged-hash/signature/class verification using pinned, test-only producer bindings and revocation inputs. Authentication does not establish report truth.",
+  "operator_inputs": [
+    "../../fixture_operator_inputs/bindings.json",
+    "../../fixture_operator_inputs/revocation.json"
+  ],
+  "all_records_authenticated": true,
+  "chain_link_states": [
+    "SATISFIED",
+    "SATISFIED",
+    "SATISFIED",
+    "SATISFIED",
+    "SATISFIED"
+  ],
+  "verdicts": [
+    {
+      "artifact_ref": {
+        "chain_id": "hermes-airep-11-governor-chain",
+        "record_id": "hermes-airep-11-decision"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+        "independence_policy_digest": null,
+        "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "hermes-airep-11-governor-chain",
+        "record_id": "hermes-airep-11-dispatch"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+        "independence_policy_digest": null,
+        "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "hermes-airep-11-executor-chain",
+        "record_id": "hermes-airep-11-receipt"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+        "independence_policy_digest": null,
+        "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "hermes-airep-11-executor-chain",
+        "record_id": "hermes-airep-11-execution"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "not_applicable",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+        "independence_policy_digest": null,
+        "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    },
+    {
+      "artifact_ref": {
+        "chain_id": "hermes-airep-11-executor-chain",
+        "record_id": "hermes-airep-11-effect"
+      },
+      "class": "AIREP-Authenticated",
+      "authenticated_failures": [],
+      "authenticated_withheld": [],
+      "authenticated_caveats": [],
+      "witnessed_failures": [],
+      "witnessed_withheld": [
+        "no-witness-supplied"
+      ],
+      "observer_assessment": "same_executor",
+      "evidence": {
+        "now": null,
+        "freshness_window_seconds": null,
+        "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+        "independence_policy_digest": null,
+        "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+        "profile_bases_digest": null
+      },
+      "profile_evaluations": {}
+    }
+  ]
+}

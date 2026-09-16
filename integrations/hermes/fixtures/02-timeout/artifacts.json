@@ -1,0 +1,62 @@
+[
+  {
+    "input": {
+      "input_ref": "native_facts.json#/fixture_only_constructed_values/governed_intent_projection",
+      "input_digest": "sha256:98d65cf34343a1f7a5c6f99124ab2d488fb5d9a6087101cddc3383983ceb6ff3",
+      "digest_projection": "example.hermes.fixture-intent-v1"
+    },
+    "claim": {
+      "assertion": "The synthetic Hermes scenario reports a block decision: runtime-fail-closed-timeout.",
+      "basis": [
+        "fixture-source:runtime-fail-closed-timeout"
+      ]
+    },
+    "directive": {
+      "verb": "block",
+      "policy_basis": [
+        "example.hermes.fixture-policy"
+      ]
+    },
+    "output": {
+      "result_ref": "native_facts.json#/fixture_only_constructed_values/decision_result",
+      "result_digest": "sha256:fda042b9d20b0069bd88976be150c187e01c6e487156848f66c72e778ef5ca5e"
+    },
+    "evidence": [
+      {
+        "type": "other",
+        "ref": "native_facts.json#/observed_source_facts/decision_event",
+        "resolvable": true,
+        "content_hash": "sha256:7ce26bd95bf2038ec18930e3c67956eecb8f2457591d147cb99c5ad73f5e9130"
+      }
+    ],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "hermes-airep-02-governor-chain",
+    "record_id": "hermes-airep-02-decision",
+    "sequence": 0,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:9f765c0a7e99d00cc9c24662d2e4dbc093c11eafb731fdb4514cde887c2cb352",
+      "signature": {
+        "alg": "ed25519",
+        "value": "2df159ecb113e3e386d6d9e43a27d29b8c10cd6d204dacd023dd45a9a81f9b31893e22e6535fae24fe0ee3f7035ac990158a439c985084e66ac310b11f1b3204"
+      }
+    }
+  }
+]

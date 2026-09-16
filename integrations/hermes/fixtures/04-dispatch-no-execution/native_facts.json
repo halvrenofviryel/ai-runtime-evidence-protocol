@@ -1,0 +1,55 @@
+{
+  "scenario_id": "HERMES-AIREP-04",
+  "title": "dispatch without receipt or execution",
+  "source_kind": "deterministic synthetic scenario, not a production Hermes run",
+  "observed_source_facts": {
+    "approval_request_id": "hermes-request-04",
+    "governed_intent_exists": true,
+    "decision_event": {
+      "request_id": "hermes-request-04",
+      "source": "human",
+      "choice": "once"
+    },
+    "authorization_instruction_dispatch_observed": true,
+    "receiver_receipt_observed": false,
+    "execution_observed": false
+  },
+  "fixture_only_constructed_values": {
+    "governed_intent_projection": {
+      "projection_version": "example.hermes.fixture-intent.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-04",
+      "parameters": {
+        "command": "printf hermes-airep-04"
+      }
+    },
+    "authorized_action_projection": {
+      "projection_version": "example.hermes.fixture-action.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-04",
+      "parameters": {
+        "command": "printf hermes-airep-04"
+      }
+    },
+    "decision_result": {
+      "decision": "release",
+      "reason": "human-approved-once",
+      "approval_request_id": "hermes-request-04"
+    },
+    "authorization_instruction_projection": {
+      "projection_version": "example.hermes.fixture-instruction.v1",
+      "instruction_id": "hermes-instruction-04-v1",
+      "decision_record_id": "hermes-airep-04-decision",
+      "approval_request_id": "hermes-request-04",
+      "authorized_action_digest": "sha256:27decfd75856ac2d3ef8947da8906ad5b479cd1e997420ad3009b1fdca161724"
+    }
+  },
+  "mapping_choices": {
+    "governed_intent_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "authorization_action_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "approval_request_id_is_instruction_id": false,
+    "fixture_projection_notice": "This projection is local to the integration fixtures. It is not a Hermes-native authorization contract."
+  }
+}

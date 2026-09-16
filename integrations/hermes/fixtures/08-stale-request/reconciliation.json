@@ -1,0 +1,131 @@
+{
+  "reconciliation_version": "0.2-beta.1",
+  "scope": "Supplied evidence reports only; no truth or total-history assurance.",
+  "summary": {
+    "status": "INCOMPLETE",
+    "counts": {
+      "SATISFIED": 4,
+      "FAILURE": 0,
+      "MISSING": 1,
+      "NOT_EVALUATED": 1,
+      "INDETERMINATE": 0
+    }
+  },
+  "records": [
+    {
+      "input_index": 0,
+      "artifact_ref": {
+        "record_id": "hermes-airep-08-decision",
+        "chain_id": "hermes-airep-08-governor-chain"
+      },
+      "admission": "SATISFIED",
+      "class_result": {
+        "artifact_ref": {
+          "chain_id": "hermes-airep-08-governor-chain",
+          "record_id": "hermes-airep-08-decision"
+        },
+        "class": "AIREP-Authenticated",
+        "authenticated_failures": [],
+        "authenticated_withheld": [],
+        "authenticated_caveats": [],
+        "witnessed_failures": [],
+        "witnessed_withheld": [
+          "no-witness-supplied"
+        ],
+        "observer_assessment": "not_applicable",
+        "evidence": {
+          "now": null,
+          "freshness_window_seconds": null,
+          "bindings_digest": "sha256:63ecb5334ef7c7e0a8f623a4df11525edf083e1553a481ba21570b1a9ffedbf7",
+          "independence_policy_digest": null,
+          "revocation_digest": "sha256:3ad6832277e6e39d730b71f49c366a2fe0ca1673b70c437929ed4faac7229b7c",
+          "profile_bases_digest": null
+        },
+        "profile_evaluations": {}
+      }
+    }
+  ],
+  "checks": [
+    {
+      "check": "artifact_admission",
+      "subject": {
+        "record_id": "hermes-airep-08-decision",
+        "chain_id": "hermes-airep-08-governor-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Family schema and tagged hash verified.",
+      "evidence": [
+        {
+          "record_id": "hermes-airep-08-decision",
+          "chain_id": "hermes-airep-08-governor-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_identity",
+      "subject": {
+        "record_id": "hermes-airep-08-decision"
+      },
+      "state": "SATISFIED",
+      "detail": "Unique global record identity.",
+      "evidence": [
+        {
+          "record_id": "hermes-airep-08-decision",
+          "chain_id": "hermes-airep-08-governor-chain"
+        }
+      ]
+    },
+    {
+      "check": "record_authentication",
+      "subject": {
+        "record_id": "hermes-airep-08-decision",
+        "chain_id": "hermes-airep-08-governor-chain"
+      },
+      "state": "SATISFIED",
+      "detail": "Class result retained separately; authentication does not establish report truth.",
+      "evidence": [
+        {
+          "record_id": "hermes-airep-08-decision",
+          "chain_id": "hermes-airep-08-governor-chain"
+        }
+      ]
+    },
+    {
+      "check": "chain_link",
+      "subject": {
+        "chain_id": "hermes-airep-08-governor-chain",
+        "sequence": 0
+      },
+      "state": "SATISFIED",
+      "detail": "Genesis cannot restart a chain after an earlier supplied record.",
+      "evidence": [
+        {
+          "record_id": "hermes-airep-08-decision",
+          "chain_id": "hermes-airep-08-governor-chain"
+        }
+      ]
+    },
+    {
+      "check": "instruction_evidence",
+      "subject": {
+        "record_id": "hermes-airep-08-decision",
+        "chain_id": "hermes-airep-08-governor-chain"
+      },
+      "state": "MISSING",
+      "detail": "No control/execution instruction evidence supplied.",
+      "evidence": [
+        {
+          "record_id": "hermes-airep-08-decision",
+          "chain_id": "hermes-airep-08-governor-chain"
+        }
+      ]
+    },
+    {
+      "check": "intended_target_coverage",
+      "subject": {},
+      "state": "NOT_EVALUATED",
+      "detail": "No intended-target inventory supplied; total lifecycle completeness is not established.",
+      "evidence": []
+    }
+  ]
+}

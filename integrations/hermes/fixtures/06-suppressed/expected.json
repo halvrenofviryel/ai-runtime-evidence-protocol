@@ -1,0 +1,61 @@
+{
+  "artifact_family_counts": {
+    "control": 2,
+    "decision": 1,
+    "execution": 1
+  },
+  "absent_families": [
+    "effect"
+  ],
+  "verification_class": "AIREP-Authenticated",
+  "reconciliation_states": {
+    "artifact_admission": [
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED"
+    ],
+    "record_authentication": [
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED"
+    ],
+    "chain_link": [
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED",
+      "SATISFIED"
+    ],
+    "intended_target_coverage": [
+      "NOT_EVALUATED"
+    ],
+    "instruction_evidence": [
+      "SATISFIED"
+    ],
+    "issuer_dispatch": [
+      "SATISFIED"
+    ],
+    "receiver_receipt": [
+      "SATISFIED"
+    ],
+    "execution_evidence": [
+      "SATISFIED"
+    ],
+    "toctou": [
+      "SATISFIED"
+    ],
+    "execution_outcome": [
+      "FAILURE"
+    ],
+    "effect_evidence": [
+      "MISSING"
+    ]
+  },
+  "expected_negative_states": {
+    "execution_outcome": [
+      "FAILURE"
+    ]
+  },
+  "global_satisfied_status_required": false
+}

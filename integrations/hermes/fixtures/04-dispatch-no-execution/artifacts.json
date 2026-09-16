@@ -1,0 +1,106 @@
+[
+  {
+    "input": {
+      "input_ref": "native_facts.json#/fixture_only_constructed_values/governed_intent_projection",
+      "input_digest": "sha256:d373c8f03d4dba0ac1e8903cc8078a96f0e626145441f43da9d3b844aafaa399",
+      "digest_projection": "example.hermes.fixture-intent-v1"
+    },
+    "claim": {
+      "assertion": "The synthetic Hermes scenario reports a release decision: human-approved-once.",
+      "basis": [
+        "fixture-source:human-approved-once"
+      ]
+    },
+    "directive": {
+      "verb": "release",
+      "policy_basis": [
+        "example.hermes.fixture-policy"
+      ]
+    },
+    "output": {
+      "result_ref": "native_facts.json#/fixture_only_constructed_values/decision_result",
+      "result_digest": "sha256:916da7e33438cf9df436afa75cb8ea25097093d4d51188903cfdf48d2e33bcac"
+    },
+    "evidence": [
+      {
+        "type": "human_approval",
+        "ref": "native_facts.json#/observed_source_facts/decision_event",
+        "resolvable": true,
+        "content_hash": "sha256:fe23677e631c355677a5371585e80a292119ad25a5aed294dfa493bec580964a"
+      }
+    ],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "hermes-airep-04-governor-chain",
+    "record_id": "hermes-airep-04-decision",
+    "sequence": 0,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:58a52b484e8efba2d49fe629fb5ebd09b20d6f1809d961e1c09bcbde2c300cd7",
+      "signature": {
+        "alg": "ed25519",
+        "value": "c4c22cd1a73544cff9938e009908337e78b5dcef243043f05233fe6d8c90bdc72d7de7e13febee805eefc8103b1e9c6b44abd3d8fd1df6fe64c746aeb0ae360f"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "hermes-airep-04-decision",
+      "chain_id": "hermes-airep-04-governor-chain"
+    },
+    "instruction_id": "hermes-instruction-04-v1",
+    "instruction_digest": "sha256:4547cae37506d43bab28703a348e419c66bd7f08f865ac6cab96aca06443a9e2",
+    "authorized_action_digest": "sha256:27decfd75856ac2d3ef8947da8906ad5b479cd1e997420ad3009b1fdca161724",
+    "control_event": "dispatched",
+    "boundary_side": "issuer",
+    "authority": {
+      "issuer_id": "example.hermes.governor",
+      "writable_by_controlled_system": false
+    },
+    "airep_version": "0.2",
+    "artifact_type": "control",
+    "chain_id": "hermes-airep-04-governor-chain",
+    "record_id": "hermes-airep-04-dispatch",
+    "sequence": 1,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:58a52b484e8efba2d49fe629fb5ebd09b20d6f1809d961e1c09bcbde2c300cd7",
+      "current": "sha256:90f2b473ccc038268d6174cd9a917f6c93546d38ddf499119e0bcdf1fcdd3fd1",
+      "signature": {
+        "alg": "ed25519",
+        "value": "a6cb6edde45a730aee277822e81afc950c012d438cf89b4f18056f929bae30fa010f92bf8c6f1f827844af1982038826b94ce65be1ca9ce01c7b33c2c1c7e80a"
+      }
+    }
+  }
+]
