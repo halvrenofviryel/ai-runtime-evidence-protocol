@@ -1,0 +1,48 @@
+{
+  "scenario_id": "HERMES-AIREP-08",
+  "title": "stale request rejected",
+  "source_kind": "deterministic synthetic scenario, not a production Hermes run",
+  "observed_source_facts": {
+    "approval_request_id": "hermes-request-08",
+    "governed_intent_exists": true,
+    "decision_event": {
+      "request_id": "hermes-request-08",
+      "source": "runtime",
+      "choice": "stale-request-rejected"
+    },
+    "rejected_interaction_created_release": false,
+    "runtime_block_decision_established": true,
+    "execution_observed": false
+  },
+  "fixture_only_constructed_values": {
+    "governed_intent_projection": {
+      "projection_version": "example.hermes.fixture-intent.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-08",
+      "parameters": {
+        "command": "printf hermes-airep-08"
+      }
+    },
+    "authorized_action_projection": {
+      "projection_version": "example.hermes.fixture-action.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-08",
+      "parameters": {
+        "command": "printf hermes-airep-08"
+      }
+    },
+    "decision_result": {
+      "decision": "block",
+      "reason": "stale-request-rejected",
+      "approval_request_id": "hermes-request-08"
+    }
+  },
+  "mapping_choices": {
+    "governed_intent_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "authorization_action_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "approval_request_id_is_instruction_id": false,
+    "fixture_projection_notice": "This projection is local to the integration fixtures. It is not a Hermes-native authorization contract."
+  }
+}

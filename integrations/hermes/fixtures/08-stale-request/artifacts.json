@@ -1,0 +1,62 @@
+[
+  {
+    "input": {
+      "input_ref": "native_facts.json#/fixture_only_constructed_values/governed_intent_projection",
+      "input_digest": "sha256:cb4bffe53ecbaa6779850eeee91918dac3438a97ca34448629cc507fa1ea84c6",
+      "digest_projection": "example.hermes.fixture-intent-v1"
+    },
+    "claim": {
+      "assertion": "The synthetic Hermes scenario reports a block decision: stale-request-rejected.",
+      "basis": [
+        "fixture-source:stale-request-rejected"
+      ]
+    },
+    "directive": {
+      "verb": "block",
+      "policy_basis": [
+        "example.hermes.fixture-policy"
+      ]
+    },
+    "output": {
+      "result_ref": "native_facts.json#/fixture_only_constructed_values/decision_result",
+      "result_digest": "sha256:eede24522d7f4c6e3897f74f7b0ffc242a192c7ee30985ab1f7d0ef6a65573cd"
+    },
+    "evidence": [
+      {
+        "type": "other",
+        "ref": "native_facts.json#/observed_source_facts/decision_event",
+        "resolvable": true,
+        "content_hash": "sha256:da63736c5d49709460ea5494ec8cb96767d641034941cc57ba9d849ba91e6b55"
+      }
+    ],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "hermes-airep-08-governor-chain",
+    "record_id": "hermes-airep-08-decision",
+    "sequence": 0,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:2d5cea5b54a91e059e37f32a416fb010adf8fb605a04face7e3f4253e77d700d",
+      "signature": {
+        "alg": "ed25519",
+        "value": "3d778db9d0615333cae1e4d47a8cebb1ff3de6e09a77d7e20d15130553bb97cb6dd2ad004d7220477071159a8ce0f28a768d5787ad1bdfb2dd901c6c22726202"
+      }
+    }
+  }
+]

@@ -1,0 +1,49 @@
+{
+  "scenario_id": "HERMES-AIREP-02",
+  "title": "runtime fail-closed timeout",
+  "source_kind": "deterministic synthetic scenario, not a production Hermes run",
+  "observed_source_facts": {
+    "approval_request_id": "hermes-request-02",
+    "governed_intent_exists": true,
+    "decision_event": {
+      "request_id": "hermes-request-02",
+      "source": "runtime",
+      "choice": "timeout"
+    },
+    "runtime_behavior": "fail-closed",
+    "human_denial_observed": false,
+    "authorization_instruction_issued": false,
+    "execution_observed": false
+  },
+  "fixture_only_constructed_values": {
+    "governed_intent_projection": {
+      "projection_version": "example.hermes.fixture-intent.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-02",
+      "parameters": {
+        "command": "printf hermes-airep-02"
+      }
+    },
+    "authorized_action_projection": {
+      "projection_version": "example.hermes.fixture-action.v1",
+      "tool": "terminal",
+      "action": "execute",
+      "target": "fixture-target-02",
+      "parameters": {
+        "command": "printf hermes-airep-02"
+      }
+    },
+    "decision_result": {
+      "decision": "block",
+      "reason": "runtime-fail-closed-timeout",
+      "approval_request_id": "hermes-request-02"
+    }
+  },
+  "mapping_choices": {
+    "governed_intent_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "authorization_action_digest": "digest_json (RFC 8785 JSON via the AIREP producer)",
+    "approval_request_id_is_instruction_id": false,
+    "fixture_projection_notice": "This projection is local to the integration fixtures. It is not a Hermes-native authorization contract."
+  }
+}

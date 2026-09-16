@@ -1,0 +1,249 @@
+[
+  {
+    "input": {
+      "input_ref": "native_facts.json#/fixture_only_constructed_values/governed_intent_projection",
+      "input_digest": "sha256:772b126d656ba139a810e8d9b0299971ea54f8c1d7b4825e5869ce77d945d7c5",
+      "digest_projection": "example.hermes.fixture-intent-v1"
+    },
+    "claim": {
+      "assertion": "The synthetic Hermes scenario reports a release decision: human-approved-once.",
+      "basis": [
+        "fixture-source:human-approved-once"
+      ]
+    },
+    "directive": {
+      "verb": "release",
+      "policy_basis": [
+        "example.hermes.fixture-policy"
+      ]
+    },
+    "output": {
+      "result_ref": "native_facts.json#/fixture_only_constructed_values/decision_result",
+      "result_digest": "sha256:9fc96ca5828bf619535ad1b433caf24dc227591c506774bc33ae8f639347642c"
+    },
+    "evidence": [
+      {
+        "type": "human_approval",
+        "ref": "native_facts.json#/observed_source_facts/decision_event",
+        "resolvable": true,
+        "content_hash": "sha256:a80e37e0c2a7d90e63d6d43a78399d9a7ba6979b48432c841364f4d283b0e270"
+      }
+    ],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "hermes-airep-10-governor-chain",
+    "record_id": "hermes-airep-10-decision",
+    "sequence": 0,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:fae6677a425eaf3362c8ef9628257e3761b741a6263f0f4b81afcab204ca29c1",
+      "signature": {
+        "alg": "ed25519",
+        "value": "414d1400248f960891ad8132a6e08f60df7805619ca1a72bc4741675f131252194a1f495e1d255f0f390c3c44ed01eab067ffbee022de2ead46b6763e96d9606"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "hermes-airep-10-decision",
+      "chain_id": "hermes-airep-10-governor-chain"
+    },
+    "instruction_id": "hermes-instruction-10-v1",
+    "instruction_digest": "sha256:b313ba2384bc0309aa63bd5891f6c8a34099df3e3b4f52b372396a9f24a8ad2c",
+    "authorized_action_digest": "sha256:c3212fe956df22c6f5b47426d8f76603cefac229738d7f5012bda61413fb322d",
+    "control_event": "dispatched",
+    "boundary_side": "issuer",
+    "authority": {
+      "issuer_id": "example.hermes.governor",
+      "writable_by_controlled_system": false
+    },
+    "airep_version": "0.2",
+    "artifact_type": "control",
+    "chain_id": "hermes-airep-10-governor-chain",
+    "record_id": "hermes-airep-10-dispatch",
+    "sequence": 1,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:fae6677a425eaf3362c8ef9628257e3761b741a6263f0f4b81afcab204ca29c1",
+      "current": "sha256:77a80319ff6b6d4999cb637533454e41cbb149562f7c14a5e1fc6633f0072edb",
+      "signature": {
+        "alg": "ed25519",
+        "value": "cb13ff78d00ad75f0ebf1ea51cfd9a32da182634a7ccc6c0bda797c6130cd0668b8ba047735e63499f3f737558e555acb07657512add40a2795e24dd04b1c700"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "hermes-airep-10-decision",
+      "chain_id": "hermes-airep-10-governor-chain"
+    },
+    "instruction_id": "hermes-instruction-10-v1",
+    "instruction_digest": "sha256:b313ba2384bc0309aa63bd5891f6c8a34099df3e3b4f52b372396a9f24a8ad2c",
+    "authorized_action_digest": "sha256:c3212fe956df22c6f5b47426d8f76603cefac229738d7f5012bda61413fb322d",
+    "control_event": "received",
+    "boundary_side": "receiver",
+    "authority": {
+      "issuer_id": "example.hermes.governor",
+      "writable_by_controlled_system": true
+    },
+    "airep_version": "0.2",
+    "artifact_type": "control",
+    "chain_id": "hermes-airep-10-executor-chain",
+    "record_id": "hermes-airep-10-receipt",
+    "sequence": 0,
+    "subject": {
+      "producer": "example.hermes.executor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "current": "sha256:160772e05d80b0b109f3c92199ffa9a79b211b8e96f8ed4e103fe0a9ec168765",
+      "signature": {
+        "alg": "ed25519",
+        "value": "3eebbcd6dece1169e7f47dcbd45e3c57becf960f0c6c84ee802421ff71e4870fb91ca64f6c5cdde7fd245065d4462cc5dfeb5472e12bd87b56a157521332290e"
+      }
+    }
+  },
+  {
+    "decision_ref": {
+      "record_id": "hermes-airep-10-decision",
+      "chain_id": "hermes-airep-10-governor-chain"
+    },
+    "instruction_id": "hermes-instruction-10-v1",
+    "instruction_digest": "sha256:b313ba2384bc0309aa63bd5891f6c8a34099df3e3b4f52b372396a9f24a8ad2c",
+    "executed_action_digest": "sha256:c3212fe956df22c6f5b47426d8f76603cefac229738d7f5012bda61413fb322d",
+    "execution_event": "executed",
+    "airep_version": "0.2",
+    "artifact_type": "execution",
+    "chain_id": "hermes-airep-10-executor-chain",
+    "record_id": "hermes-airep-10-execution",
+    "sequence": 1,
+    "subject": {
+      "producer": "example.hermes.executor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:160772e05d80b0b109f3c92199ffa9a79b211b8e96f8ed4e103fe0a9ec168765",
+      "current": "sha256:98f1e47d841ae363addedbdc11e02811622294ce56287d090071189b1d04e21e",
+      "signature": {
+        "alg": "ed25519",
+        "value": "ec61f5381102ba344d4a54844ad24f7847004a9469ebc3e4999bfc0cace12e70bcaf6cc45636a3be9d028f6b57a17b447c3fb7a911147e7ae83dbde38d54d702"
+      }
+    }
+  },
+  {
+    "input": {
+      "input_ref": "native_facts.json#/fixture_only_constructed_values/governed_intent_projection",
+      "input_digest": "sha256:772b126d656ba139a810e8d9b0299971ea54f8c1d7b4825e5869ce77d945d7c5",
+      "digest_projection": "example.hermes.fixture-intent-v1"
+    },
+    "claim": {
+      "assertion": "The synthetic Hermes native layer reports the replay rejected.",
+      "basis": [
+        "fixture-source:native-replay-rejected"
+      ]
+    },
+    "directive": {
+      "verb": "block",
+      "policy_basis": [
+        "example.hermes.fixture-replay-policy"
+      ]
+    },
+    "output": {
+      "result_ref": "native_facts.json#/fixture_only_constructed_values/replay_decision_result",
+      "result_digest": "sha256:3319d08661857549085f16edf03afc6a618c0292d5cbc6a3a29bc8b33a3a630b"
+    },
+    "evidence": [
+      {
+        "type": "other",
+        "ref": "native_facts.json#/observed_source_facts/replay_decision_event",
+        "resolvable": true,
+        "content_hash": "sha256:4ef448534a0bbd102e0bdfc432c14a6d5a621ab6f6b132f2b65b3eabca0dd8df"
+      }
+    ],
+    "airep_version": "0.2",
+    "artifact_type": "decision",
+    "chain_id": "hermes-airep-10-governor-chain",
+    "record_id": "hermes-airep-10-replay-block-decision",
+    "sequence": 2,
+    "subject": {
+      "producer": "example.hermes.governor",
+      "timestamp_utc": "2026-09-16T12:00:00Z"
+    },
+    "scope": {
+      "covers": [
+        "Deterministic fixture report of explicitly named Hermes scenario facts"
+      ],
+      "does_not_cover": [
+        "Truth beyond the synthetic source facts",
+        "Complete Hermes event history",
+        "Hermes authorization or exactly-once enforcement correctness",
+        "Approver authentication, policy correctness, execution, or real-world effect beyond the named report",
+        "Independent observation"
+      ]
+    },
+    "integrity": {
+      "previous": "sha256:77a80319ff6b6d4999cb637533454e41cbb149562f7c14a5e1fc6633f0072edb",
+      "current": "sha256:220525d7553e9732043161a31e6f0b19bca30970c69fda410fbbda8da38c19f2",
+      "signature": {
+        "alg": "ed25519",
+        "value": "b90a6cec4e04c8beda87969fb2c5502fbab4a6b9810fca8f8c55796194dda6c779d6d2da7c0a43b38b4765974c8feb0398d03046033ff6652b0a1514da2adc0a"
+      }
+    }
+  }
+]

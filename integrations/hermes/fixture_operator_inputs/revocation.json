@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "example.hermes.fixture-revocation-snapshot",
+  "bindings": {
+    "example.hermes.governor": {
+      "state": "active"
+    },
+    "example.hermes.executor": {
+      "state": "active"
+    }
+  }
+}

@@ -1,0 +1,900 @@
+{
+  "mapping_version": "0.1",
+  "generated_at": "2026-09-16T17:07:48Z",
+  "airep_commit": "2c44cb66d2722e9bf039f1e7659afe727db4d50a",
+  "hermes_commit": "9796235822b89e08597a402dad045b5b4464e474",
+  "verification_scope": "AIREP-Authenticated under pinned test-only bindings and revocation inputs",
+  "fixtures": [
+    {
+      "id": "HERMES-AIREP-01",
+      "directory": "01-human-deny",
+      "title": "explicit human denial",
+      "artifact_family_counts": {
+        "decision": 1
+      },
+      "record_count": 1,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 4,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-02",
+      "directory": "02-timeout",
+      "title": "runtime fail-closed timeout",
+      "artifact_family_counts": {
+        "decision": 1
+      },
+      "record_count": 1,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 4,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-03",
+      "directory": "03-release-no-dispatch",
+      "title": "release without dispatch evidence",
+      "artifact_family_counts": {
+        "decision": 1
+      },
+      "record_count": 1,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 4,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-04",
+      "directory": "04-dispatch-no-execution",
+      "title": "dispatch without receipt or execution",
+      "artifact_family_counts": {
+        "control": 1,
+        "decision": 1
+      },
+      "record_count": 2,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "MISSING"
+        ],
+        "execution_evidence": [
+          "MISSING"
+        ],
+        "toctou": [
+          "NOT_EVALUATED"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 13,
+          "FAILURE": 0,
+          "MISSING": 2,
+          "NOT_EVALUATED": 3,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-05",
+      "directory": "05-executed",
+      "title": "received and executed",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 1,
+        "execution": 1
+      },
+      "record_count": 4,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "SATISFIED"
+        ],
+        "toctou": [
+          "SATISFIED"
+        ],
+        "execution_outcome": [
+          "SATISFIED"
+        ],
+        "effect_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 28,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-06",
+      "directory": "06-suppressed",
+      "title": "executor suppression",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 1,
+        "execution": 1
+      },
+      "record_count": 4,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "SATISFIED"
+        ],
+        "toctou": [
+          "SATISFIED"
+        ],
+        "execution_outcome": [
+          "FAILURE"
+        ],
+        "effect_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {
+        "execution_outcome": [
+          "FAILURE"
+        ]
+      },
+      "reconciliation_summary": {
+        "status": "FAILURE",
+        "counts": {
+          "SATISFIED": 27,
+          "FAILURE": 1,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-07",
+      "directory": "07-action-mismatch",
+      "title": "authorized/executed action mismatch",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 1,
+        "execution": 1
+      },
+      "record_count": 4,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "SATISFIED"
+        ],
+        "toctou": [
+          "FAILURE"
+        ],
+        "execution_outcome": [
+          "SATISFIED"
+        ],
+        "effect_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {
+        "toctou": [
+          "FAILURE"
+        ]
+      },
+      "reconciliation_summary": {
+        "status": "FAILURE",
+        "counts": {
+          "SATISFIED": 27,
+          "FAILURE": 1,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-08",
+      "directory": "08-stale-request",
+      "title": "stale request rejected",
+      "artifact_family_counts": {
+        "decision": 1
+      },
+      "record_count": 1,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 4,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-09",
+      "directory": "09-consumed-crash-unknown",
+      "title": "consumed then crash; execution unknown",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 1
+      },
+      "record_count": 3,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "MISSING"
+        ],
+        "toctou": [
+          "NOT_EVALUATED"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 19,
+          "FAILURE": 0,
+          "MISSING": 1,
+          "NOT_EVALUATED": 3,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-10",
+      "directory": "10-concurrent-replay",
+      "title": "one native consume; replay rejected",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 2,
+        "execution": 1
+      },
+      "record_count": 5,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED",
+          "MISSING"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "SATISFIED"
+        ],
+        "execution_outcome": [
+          "SATISFIED"
+        ],
+        "toctou": [
+          "SATISFIED"
+        ],
+        "effect_evidence": [
+          "MISSING"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 32,
+          "FAILURE": 0,
+          "MISSING": 2,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    },
+    {
+      "id": "HERMES-AIREP-11",
+      "directory": "11-effect-observed",
+      "title": "same-executor effect observation",
+      "artifact_family_counts": {
+        "control": 2,
+        "decision": 1,
+        "effect": 1,
+        "execution": 1
+      },
+      "record_count": 5,
+      "all_records_authenticated_under_test_inputs": true,
+      "important_reconciliation_states": {
+        "artifact_admission": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "record_authentication": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "chain_link": [
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED",
+          "SATISFIED"
+        ],
+        "intended_target_coverage": [
+          "NOT_EVALUATED"
+        ],
+        "instruction_evidence": [
+          "SATISFIED"
+        ],
+        "issuer_dispatch": [
+          "SATISFIED"
+        ],
+        "receiver_receipt": [
+          "SATISFIED"
+        ],
+        "execution_evidence": [
+          "SATISFIED"
+        ],
+        "toctou": [
+          "SATISFIED"
+        ],
+        "execution_outcome": [
+          "SATISFIED"
+        ],
+        "effect_evidence": [
+          "SATISFIED"
+        ],
+        "effect_binding": [
+          "SATISFIED"
+        ],
+        "observer_relationship": [
+          "SATISFIED"
+        ]
+      },
+      "expected_negative_states": {},
+      "reconciliation_summary": {
+        "status": "INCOMPLETE",
+        "counts": {
+          "SATISFIED": 37,
+          "FAILURE": 0,
+          "MISSING": 0,
+          "NOT_EVALUATED": 1,
+          "INDETERMINATE": 0
+        }
+      }
+    }
+  ],
+  "corpus": {
+    "root": "fixtures",
+    "file_count": 66,
+    "manifest": [
+      {
+        "path": "01-human-deny/README.md",
+        "sha256": "07a836f42a51ad7342aba2d4e14fa3a1216eccf9ba090a589c8746b01dfb7b22"
+      },
+      {
+        "path": "01-human-deny/artifacts.json",
+        "sha256": "8f18a28c9816a6a2f4461abb7de75ba6646be9d2ffe4f66323bf5db14e6253fa"
+      },
+      {
+        "path": "01-human-deny/expected.json",
+        "sha256": "2399411f5f0896ac46c559a91b8f76a164cdaaf45e454c39719bc255864a4318"
+      },
+      {
+        "path": "01-human-deny/native_facts.json",
+        "sha256": "47f73b215ff97016063d1ddd4dd8ec2e29a6b03c583cb03587ee6342680d9522"
+      },
+      {
+        "path": "01-human-deny/reconciliation.json",
+        "sha256": "4c1e853d7574e8023646378acd1f2019518b02512396add9e50ef7a2f1836786"
+      },
+      {
+        "path": "01-human-deny/verification.json",
+        "sha256": "efcfb8bb8df0823f7b0bd811fff1a8fd549922a231bd9ec45c2af9b089722524"
+      },
+      {
+        "path": "02-timeout/README.md",
+        "sha256": "8cef53de9316bf28827437dcf1e1261d27ce29a30a2cf9311117617c3a9e2246"
+      },
+      {
+        "path": "02-timeout/artifacts.json",
+        "sha256": "46d093bdc356bded46040e8a5ba91a0aedd8deec3019e48fbcf9503b65172351"
+      },
+      {
+        "path": "02-timeout/expected.json",
+        "sha256": "2399411f5f0896ac46c559a91b8f76a164cdaaf45e454c39719bc255864a4318"
+      },
+      {
+        "path": "02-timeout/native_facts.json",
+        "sha256": "fba51e8180eda0f7438911e45b12712754aae444c1797e7ce2f8d3731632a6b9"
+      },
+      {
+        "path": "02-timeout/reconciliation.json",
+        "sha256": "353c14795f92748df29bcd40e4406d879f374b4ea69da6443a54859c495b1af2"
+      },
+      {
+        "path": "02-timeout/verification.json",
+        "sha256": "29a1e458b8bd17dc6bfdbde3fb4e0e58bca641a2f825b2de49ca8900208555a8"
+      },
+      {
+        "path": "03-release-no-dispatch/README.md",
+        "sha256": "71d74787ed2b93659196b28ffec5277100d0e31f26d415506cff393da22ec193"
+      },
+      {
+        "path": "03-release-no-dispatch/artifacts.json",
+        "sha256": "1f3459ef37e71812e139c82ebfd4273a0992b121727b1cde7261ab533ef40cf2"
+      },
+      {
+        "path": "03-release-no-dispatch/expected.json",
+        "sha256": "2399411f5f0896ac46c559a91b8f76a164cdaaf45e454c39719bc255864a4318"
+      },
+      {
+        "path": "03-release-no-dispatch/native_facts.json",
+        "sha256": "835dc46a9830f2b47a9e46273f8f8dce2c761297ece169e7cd62e6bad2dcf67e"
+      },
+      {
+        "path": "03-release-no-dispatch/reconciliation.json",
+        "sha256": "c208e0e4adb1ad51b80d6f52473f45ae4d63f46cca7b934dbc55e9a9d27dd8fa"
+      },
+      {
+        "path": "03-release-no-dispatch/verification.json",
+        "sha256": "c018345a69afc8b42a180d29cdf667652cd70541f71ba996e81813bc956eb2db"
+      },
+      {
+        "path": "04-dispatch-no-execution/README.md",
+        "sha256": "d7d6519dfbf0feac4967f760a1d4a57a7da268b488f90b21d88bbede6da907e9"
+      },
+      {
+        "path": "04-dispatch-no-execution/artifacts.json",
+        "sha256": "abc41f093e9ea2c8e6a5a840d1e292b31aaa535235985b12a2d7b0140d1dac47"
+      },
+      {
+        "path": "04-dispatch-no-execution/expected.json",
+        "sha256": "0062710606a3b6e998c4e522921a76aefb850075066877c51e6eeff5a522602b"
+      },
+      {
+        "path": "04-dispatch-no-execution/native_facts.json",
+        "sha256": "47c471c06b3b1e68674ea1eee89d3b184d53390ecac7ab58aaff33cb16a78423"
+      },
+      {
+        "path": "04-dispatch-no-execution/reconciliation.json",
+        "sha256": "5189f30468e7aec59ee18748f75a86d75ea56a196054d49229fcea1cc5c2e108"
+      },
+      {
+        "path": "04-dispatch-no-execution/verification.json",
+        "sha256": "03aeec2b4e815ccb29e41a7680807300e76361e90894f974466f6c9a40b45ebc"
+      },
+      {
+        "path": "05-executed/README.md",
+        "sha256": "aeeb0fa5be11924a589e56a88c91070c0f0b11c2b9eecb4ef370cebe9b69611c"
+      },
+      {
+        "path": "05-executed/artifacts.json",
+        "sha256": "c89314b47c90040cca34d48fe81610b8cdaa2db3ae1611b15f139bfee0ff6326"
+      },
+      {
+        "path": "05-executed/expected.json",
+        "sha256": "955e813bd5b656406d7feeb9906b0ff7a2e817e44081aca38d22c1a9b599da89"
+      },
+      {
+        "path": "05-executed/native_facts.json",
+        "sha256": "bc79a95c6746d674b045bbbbaa777a4e0607bc9c2c21be8fb3d335dfb9597a27"
+      },
+      {
+        "path": "05-executed/reconciliation.json",
+        "sha256": "d667d80482fcd9c05a95867aabdc72477f354a129b00cf6ea3a5f5d0c0ea58d7"
+      },
+      {
+        "path": "05-executed/verification.json",
+        "sha256": "d59f26210218ea3d1b83652e0b7941c24a52703ae5b7963e319d786ebfe2270e"
+      },
+      {
+        "path": "06-suppressed/README.md",
+        "sha256": "7c86f027cd7087f1905a37db240e7598667154fbb05f3fb0ec82d457d0333343"
+      },
+      {
+        "path": "06-suppressed/artifacts.json",
+        "sha256": "a240286078ea38d42ee16f1dc76a2018ff97f7594576446cf26e57694bf792ee"
+      },
+      {
+        "path": "06-suppressed/expected.json",
+        "sha256": "5ea15a093db8439e84cf8820bbbca76880e6ed4e7aab7443166820bd741fc63f"
+      },
+      {
+        "path": "06-suppressed/native_facts.json",
+        "sha256": "4601ebec7c9c6f8365d2187923c59543b7f07a20402d6fe3b5617880aedb2317"
+      },
+      {
+        "path": "06-suppressed/reconciliation.json",
+        "sha256": "15671c2975452474cae51274144e4de0b5cf926570d7d4268e848f334e59653f"
+      },
+      {
+        "path": "06-suppressed/verification.json",
+        "sha256": "00c67300b88db98363d7fc1c0a417330232d80a9f1e17069d6425cc64d635e65"
+      },
+      {
+        "path": "07-action-mismatch/README.md",
+        "sha256": "7f3456cfe293cdbb37b7c9d88bc99497851af78b41ba11b58081f26533c0b799"
+      },
+      {
+        "path": "07-action-mismatch/artifacts.json",
+        "sha256": "0fa894979d15ea56fe534411ea775d2191d126160ef7eca20b4d0a4d13bd4206"
+      },
+      {
+        "path": "07-action-mismatch/expected.json",
+        "sha256": "64b38c015bf53d33fd087e1cc0bb887a55662cc59aad62d508ab39aa72608242"
+      },
+      {
+        "path": "07-action-mismatch/native_facts.json",
+        "sha256": "c785a745106f4cf444c06c65c3d4a059ae14d281bba7ed4e8407e6d282f82e96"
+      },
+      {
+        "path": "07-action-mismatch/reconciliation.json",
+        "sha256": "9b46507fc4cdddeffd920c339fae77643f0e0a0d71a7530f544b00e05467507b"
+      },
+      {
+        "path": "07-action-mismatch/verification.json",
+        "sha256": "18c1247c277c9ac7a03a1ecdd37026eb859aa66b5bacd208d5a4bfd3951863a3"
+      },
+      {
+        "path": "08-stale-request/README.md",
+        "sha256": "d0044c10a37a4efcba789901af49362da4bff0e01a9e63a35778fd310e5312d5"
+      },
+      {
+        "path": "08-stale-request/artifacts.json",
+        "sha256": "9454747b65338593813295630f262ba0c3cd05bf2226d63574e2dfa06b43da71"
+      },
+      {
+        "path": "08-stale-request/expected.json",
+        "sha256": "2399411f5f0896ac46c559a91b8f76a164cdaaf45e454c39719bc255864a4318"
+      },
+      {
+        "path": "08-stale-request/native_facts.json",
+        "sha256": "2cec6fb7e69fb8eda6eefa0c7050d1b8903412b595aaefe9e4a679914b1b9c42"
+      },
+      {
+        "path": "08-stale-request/reconciliation.json",
+        "sha256": "15092f1516388d1c350907e42ddbc62c86eb9594f1cc7eccc9968fdb40f36ef3"
+      },
+      {
+        "path": "08-stale-request/verification.json",
+        "sha256": "e568f88759726545921fbbd5454f4504ace22086a7afaf864e573ff824871f47"
+      },
+      {
+        "path": "09-consumed-crash-unknown/README.md",
+        "sha256": "6cbd1411bdd28d1cb5272396e0026999ec39d72659b9f94cb8a4b16ee2ce52d8"
+      },
+      {
+        "path": "09-consumed-crash-unknown/artifacts.json",
+        "sha256": "c82f1bdac258f6f109272fb3a04bb5bffd2819f5e971692816cc72e2cca045ab"
+      },
+      {
+        "path": "09-consumed-crash-unknown/expected.json",
+        "sha256": "c937ad15bb795068e8c62d353aa84ad9cdd1f6895f5fbc4e753fbb53867719e8"
+      },
+      {
+        "path": "09-consumed-crash-unknown/native_facts.json",
+        "sha256": "ef0f4fc009a84d8d294c2943bef1d77c95ffc5a6746518e15da8c4f5c9ed049a"
+      },
+      {
+        "path": "09-consumed-crash-unknown/reconciliation.json",
+        "sha256": "c523daaf58a18e0293ffec9496b0e5c0cd2bef53e0c72818f5cae4f526bf8fee"
+      },
+      {
+        "path": "09-consumed-crash-unknown/verification.json",
+        "sha256": "d2e6596e19a9e8c459c04b0dc3b91b47fa45e29c2a837ce255e4710409ccb943"
+      },
+      {
+        "path": "10-concurrent-replay/README.md",
+        "sha256": "878025b7d0c96186f53c98ece0a8bc9d18d21d7f1e3677929ef9dd6d7a9588af"
+      },
+      {
+        "path": "10-concurrent-replay/artifacts.json",
+        "sha256": "167297b1d5309b74ce333f98c5c8fa414c97464c431594a3325382687bbaa3d6"
+      },
+      {
+        "path": "10-concurrent-replay/expected.json",
+        "sha256": "cf761fbdb1bd91a8fbfdbb98fbae35ceb4a9f685e95fa6ef0655be0486b54f65"
+      },
+      {
+        "path": "10-concurrent-replay/native_facts.json",
+        "sha256": "bbf810b1e15cce036a7dae111c2ebb108b84097bb24db75a0a5aa0e00c0d165f"
+      },
+      {
+        "path": "10-concurrent-replay/reconciliation.json",
+        "sha256": "8a94f3eb7078c725608aeab0c87348b804390bdd56302bd7e98f8c2d1e95e536"
+      },
+      {
+        "path": "10-concurrent-replay/verification.json",
+        "sha256": "2955f1ab7eab02b1a42a463da45ee0fa05c8310cfe369d196691a3f68a157145"
+      },
+      {
+        "path": "11-effect-observed/README.md",
+        "sha256": "b75872181d0b9891643a1f007b653fa6607933c0ffd715412e2eddfe590b3278"
+      },
+      {
+        "path": "11-effect-observed/artifacts.json",
+        "sha256": "a1b4a7283e1031141ee0f9b221fc54665b0f74fa0b636d4fdc9b2590791e2a90"
+      },
+      {
+        "path": "11-effect-observed/expected.json",
+        "sha256": "b6adf8d042dd1ac4d35b496f67bf09e305648243a70b068adb544cf0dd4fbc53"
+      },
+      {
+        "path": "11-effect-observed/native_facts.json",
+        "sha256": "fc7da73f2dda00fb0e8db8ca37346edf3e2640c914e3aee751ddf58405dbd51d"
+      },
+      {
+        "path": "11-effect-observed/reconciliation.json",
+        "sha256": "cb95898d615edb72c1859a3696d8d94c9b5597bc46a5fcd0577f3a9b5eca7f34"
+      },
+      {
+        "path": "11-effect-observed/verification.json",
+        "sha256": "22f9f505409dc0155f3060bf3c9f8e395d7dc0def2a5e029b6dff95bfbf76117"
+      }
+    ],
+    "manifest_digest": "sha256:abc04e23b0e5095a441d93e7e0e46f09e1d2bf7dfd692bbf91c0211ee4127f50"
+  }
+}
