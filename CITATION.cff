@@ -2,13 +2,14 @@ cff-version: 1.2.0
 message: "If you use the AI Runtime Evidence Protocol (AIREP), please cite it as below."
 title: "AI Runtime Evidence Protocol (AIREP)"
 abstract: >-
-  A neutral, vendor- and model-independent record format for per-decision AI runtime
-  governance evidence: one signed, tamper-evident, chained record per AI decision, checkable
-  offline by an independent verifier. AIREP is a proposed open format with one reference
-  implementation; it is not a ratified standard. v0.1 is the stable, recommended
-  implementation target for the frozen line; v0.2.0-beta.1 is an experimental implementation
-  target with a first-party four-family producer and lifecycle reconciliation. It is not stable
-  and does not establish independent same-version interoperability.
+  A neutral, vendor- and model-independent protocol that separates AI runtime-governance
+  evidence into four correlated artifact families: Decision, Control, Execution and Effect.
+  Deterministic wire and integrity construction supports offline checking; bounded Core,
+  Authenticated and Witnessed assurance concerns provenance, integrity and freshness rather
+  than event truth; and lifecycle reconciliation preserves failure, missing, not-evaluated and
+  indeterminate states. v0.2.0-beta.1 is an experimental, not-stable implementation target with
+  a first-party four-family producer. No same-version third-party v0.2 producer-to-consumer
+  interoperability result has been established.
 type: software
 version: "0.2.0-beta.1"
 date-released: "2026-09-09"

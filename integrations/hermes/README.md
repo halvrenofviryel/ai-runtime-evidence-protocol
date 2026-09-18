@@ -3,10 +3,11 @@
 **Hermes decides and enforces. AIREP preserves evidence of what Hermes reports it decided,
 delivered, executed, and observed.**
 
-This directory is a non-normative, first-party AIREP integration study against the public Hermes
-source model. AIREP v0.2 is an experimental beta. There is no Hermes dependency on AIREP, no AIREP
-dependency on Hermes, no Nous Research endorsement, and no independent interoperability or Hermes
-adoption claim.
+This directory is a **non-normative, first-party AIREP integration exercise** against the public
+Hermes source model. It is **not external adoption**, **not third-party endorsement**, and **not
+interoperability evidence**. AIREP v0.2 is an experimental beta. There is no Hermes dependency on
+AIREP, no AIREP dependency on Hermes, and no Nous Research endorsement. The paper that discusses
+this exercise is [AIREP arXiv v2](https://arxiv.org/abs/2608.21363).
 
 The deterministic scenarios are synthetic. Their canonical intent/action/instruction projections
 are fixture-local and are not a production Hermes authorization contract. The integration does not

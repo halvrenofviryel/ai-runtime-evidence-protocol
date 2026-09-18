@@ -1,7 +1,10 @@
 # LightEval results → AIREP Embedded Evaluation Profile exporter
 
-**Status:** non-normative integration. Nothing here is part of the AIREP specification or of
-the profile basis; it is one way to fill the profile from native evaluation output.
+**Publication status:** this is a **non-normative, first-party AIREP integration exercise**.
+It is **not external adoption**, **not third-party endorsement**, and **not interoperability
+evidence**. Nothing here is part of the AIREP specification or of the profile basis; it is one
+way to fill the profile from native evaluation output. The paper that discusses this exercise is
+[AIREP arXiv v2](https://arxiv.org/abs/2608.21363).
 
 **Current parser: LightEval `results_*.json`.** Designed to preserve evidence from LightEval
 evaluation runs. Inspect and OpenEvals are related evaluation ecosystems discussed as future

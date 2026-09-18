@@ -6,17 +6,19 @@
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
 
-**Signed, checkable evidence of decisions, control delivery, execution and observed effects, tied to no vendor.**
+**Vendor- and model-independent runtime evidence for decisions, control delivery, execution and observed effects.**
 
-When an AI system decides something — answer this, refuse that, hand it to a person — someone
-may later need to ask: *what did it decide, why, and on what basis?* Today every system answers
-that differently, or not at all. AIREP is a small, fixed record format that answers it the same
-way everywhere — **an AI decision receipt** — so an auditor, a regulator, a customer, or a teammate
-on another product can read one decision and check it offline, without access to the model that made
-it. (AIREP is the format; *AI decision receipt* is the thing it produces — the way SPDX and CycloneDX
-are formats and an *SBOM* is the thing.)
+AIREP is an open runtime-evidence protocol for AI governance. In v0.2, evidence is separated into
+four correlated artifact families — **Decision → Control → Execution → Effect** — so different
+components can record what they observed at each lifecycle boundary. Explicit references and digests
+bind those artifacts together, and structured reconciliation preserves `FAILURE`, `MISSING`,
+`NOT_EVALUATED` and `INDETERMINATE` instead of converting absent evidence into success.
 
-> **Status: Experimental.** AIREP is a *proposed* open format with one reference implementation.
+The earlier v0.1 line is frozen and supported under its own rules. It represents one governance
+decision as a signed, hash-chained record — an **AI decision receipt**. In v0.2, that phrase describes
+the Decision artifact, not the whole protocol.
+
+> **Status: Experimental.** AIREP is a *proposed* open format with a first-party reference implementation.
 > It is **not** a ratified standard. See [`spec/airep/v0.1/STATUS.md`](./spec/airep/v0.1/STATUS.md)
 > for the maturity picture, open items, and change control.
 >
@@ -42,9 +44,19 @@ are formats and an *SBOM* is the thing.)
 **Canonical home:** <https://github.com/halvrenofviryel/ai-runtime-evidence-protocol> — the schema
 `$id`s resolve as raw files under its `main` branch.
 
-## What a record is
+> **Publication update.** Paper revised substantially in arXiv v2 (16 September 2026): four-family
+> Decision–Control–Execution–Effect model, deterministic wire/integrity construction, bounded
+> assurance semantics, lifecycle reconciliation, updated implementation/external-evidence status,
+> and non-normative Hermes/LightEval integration exercises. [Read arXiv:2608.21363](https://arxiv.org/abs/2608.21363).
 
-The frozen v0.1 record and the v0.2 Decision Receipt describe one decision: who decided and when (`subject`), what was decided on
+## What v0.2 records
+
+The v0.2 beta gives Decision, Control, Execution and Effect their own artifact schemas. They correlate
+by explicit references and digests, allowing a verifier to reconcile the lifecycle without treating
+missing, withheld or unevaluated evidence as success. Their fields and meanings are defined in
+[the v0.2 specification](spec/airep/v0.2/SPEC.md).
+
+The v0.2 Decision artifact and frozen v0.1 decision record describe one decision: who decided and when (`subject`), what was decided on
 (`input`), the claim and its basis (`claim`), the result (`output`), the supporting pointers
 (`evidence`), the decision as one verb (`directive`), an honest statement of what it does and does
 **not** cover (`scope`), and a tamper-evident stamp — hash, signature, and a chain link to the
@@ -53,13 +65,10 @@ are referenced by pointer and hash, so a record can be kept and shared without e
 data. Vendor-, model-, or domain-specific detail lives only under an optional `profiles` block, and
 a **neutrality test** proves nothing leaked into the shared core.
 
-The v0.2 beta gives Control, Execution and Effect their own artifact schemas; they
-correlate by explicit references and digests. Their fields and meanings are defined
-in [the v0.2 specification](spec/airep/v0.2/SPEC.md).
-
-A verified signature binds the record to a verifier-accepted key and makes later changes
-detectable. It does not establish report truth or the correctness of the decision;
-`scope.does_not_cover` keeps that boundary explicit.
+A verified signature binds an artifact to a verifier-accepted key and makes later changes
+detectable. The v0.2 assurance ladder — AIREP-Core, AIREP-Authenticated and AIREP-Witnessed —
+concerns provenance, integrity and freshness. It does not establish event truth or the correctness
+of a decision; `scope.does_not_cover` keeps that boundary explicit.
 
 ## Who is this for — start here
 
@@ -130,7 +139,7 @@ concrete source of stage-specific evidence semantics.
 | [`tools/airep_v02/`](./tools/airep_v02/) | First-party four-family v0.2 producer, verifier adapters and reconciler. |
 | [`examples/v02/`](./examples/v02/) | Real local lifecycle and committed negative variants. |
 | [`spec/airep/v0.2/profiles/embedded-evaluation/`](./spec/airep/v0.2/profiles/embedded-evaluation/) | Experimental Embedded Evaluation Profile v0.1 — evaluation identity, access, configuration, explicit measurement state, evidence provenance and verification references. A companion profile on the `profiles` extension surface, not a fifth artifact family; a profile PASS is not an assurance class. Hugging Face: [dataset mirror](https://huggingface.co/datasets/phionyx/airep-embedded-evaluation-profile) · [exporter Space](https://huggingface.co/spaces/phionyx/airep-evaluation-evidence). |
-| [`integrations/lighteval/`](./integrations/lighteval/) | Non-normative LightEval results → Embedded Evaluation Profile exporter: hashes the LightEval `results_*.json` (and any supplied details/log files) into a profile payload plus evidence manifest; never infers evaluator independence or access, and never converts LightEval's timezone-naive filename date id into UTC. Inspect/OpenEvals are future targets, not parsed. |
+| [`integrations/lighteval/`](./integrations/lighteval/) | Non-normative, first-party AIREP integration exercise: hashes LightEval `results_*.json` (and supplied details/log files) into an Embedded Evaluation Profile payload plus evidence manifest. It is not external adoption, third-party endorsement or interoperability evidence. |
 | [`integrations/hermes/`](./integrations/hermes/) | Non-normative Hermes approval/runtime → AIREP v0.2 mapping and deterministic lifecycle fixtures: first-party AIREP integration evidence against an external runtime/source model, not independent Hermes adoption or interoperability. |
 | [`spec/airep/v0.1/EXPLAINER.md`](./spec/airep/v0.1/EXPLAINER.md) | Plain-language tutorial. **Start here for frozen v0.1.** |
 | [`spec/airep/v0.1/SPEC.md`](./spec/airep/v0.1/SPEC.md) | Normative specification — the binding rules. |
@@ -209,7 +218,9 @@ See [`PATENT_NON_ASSERTION.md`](./PATENT_NON_ASSERTION.md).
 
 ## Citation
 
-Paper: *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance*, [arXiv:2608.21363](https://arxiv.org/abs/2608.21363) (preprint, not peer reviewed).
+Paper: *AIREP: A Protocol for Per-Decision Evidence in AI Runtime Governance*, revised substantially
+in arXiv v2 on 16 September 2026 — [arXiv:2608.21363](https://arxiv.org/abs/2608.21363),
+[DOI 10.48550/arXiv.2608.21363](https://doi.org/10.48550/arXiv.2608.21363) (preprint, not peer reviewed).
 
 Existing Zenodo archives:
 
