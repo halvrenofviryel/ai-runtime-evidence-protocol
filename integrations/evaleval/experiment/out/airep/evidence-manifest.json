@@ -1,0 +1,60 @@
+{
+  "generator": {
+    "name": "airep-lighteval-exporter",
+    "version": "0.1.2",
+    "source": "integrations/lighteval/export_embedded_evaluation.py"
+  },
+  "profile": {
+    "id": "airep.embedded-evaluation",
+    "version": "0.1",
+    "carrier_airep_version": "0.2",
+    "schema_basis_digest": "sha256:ce57bd493d1a3166051bc9029972d6be215793edcd3f1b314534959659b3da8b",
+    "registry_digest": "sha256:e59270f13d2d84c318b9fdb75b0ea8eb9c23935884276de776b0d338fdbb2aed"
+  },
+  "inputs": [
+    {
+      "name": "results_2026-09-24T00-59-40.590371.json",
+      "role": "aggregate-result",
+      "bytes": 3827,
+      "sha256": "sha256:1b3464e5237d77d648b1960b7a879f4674d59a3c04d97279135a1b0fa59e103b",
+      "media_type": "application/json"
+    },
+    {
+      "name": "details_hellaswag_0_2026-09-24T00-59-40.590371.parquet",
+      "role": "sample-details",
+      "bytes": 24016,
+      "sha256": "sha256:c4f6ea15515ff7f0d1cfc9a6c23e1079dfc5b07fa508dab717d12777f315b298",
+      "media_type": "application/x-parquet"
+    }
+  ],
+  "context": {
+    "sha256": "sha256:0a6970f93e3a2142eff905abfc6a1cb3e0172e9187f5a285119699e1e2b1fd41",
+    "bytes": 4091
+  },
+  "outputs": {
+    "profile_payload_sha256": "sha256:2c67e2acd512c80fd8d93f069e99b7693468aac57b140846a0c2b8a51bb075dc"
+  },
+  "claims": {
+    "records_or_preserves": [
+      "declared evaluator / engagement context",
+      "declared target identity",
+      "declared access context",
+      "declared evaluation configuration (framework, tasks, environment, safeguards)",
+      "declared measurement state and criterion"
+    ],
+    "establishes": [
+      "SHA-256 digests of the exact evidence bytes supplied to this exporter",
+      "whether the generated profile payload validates against the exact digest-pinned profile basis"
+    ],
+    "does_not_establish": [
+      "evaluator independence or competence (declared in the context, never inferred)",
+      "that the named model, revision or configuration was the one actually executed",
+      "truth, representativeness, completeness or reproducibility of the observations",
+      "model safety, alignment, security, regulatory conformity or deployment suitability",
+      "any AIREP assurance class; the payload is a companion profile, not an artifact family",
+      "validity of a platform verifyToken; it is preserved as evidence, not evaluated",
+      "that any declared context is factually true; declarations are recorded, not verified",
+      "wall-clock timing of the run beyond the explicitly declared, offset-bearing timestamps"
+    ]
+  }
+}

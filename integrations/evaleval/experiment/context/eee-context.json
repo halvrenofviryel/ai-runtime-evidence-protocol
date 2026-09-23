@@ -1,0 +1,48 @@
+{
+  "record_created_at": "2026-09-23T22:03:06.509768Z",
+  "selector": {
+    "task": "hellaswag|0",
+    "metric": "em",
+    "stderr_metric": "em_stderr"
+  },
+  "expected": {
+    "lighteval_commit": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+    "model_id": "sshleifer/tiny-gpt2",
+    "model_revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+    "dataset_repo": "Rowan/hellaswag",
+    "dataset_revision": "218ec52e09a7e7462a5400043bb9a69a41d06b76"
+  },
+  "source": {
+    "source_name": "LightEval native results",
+    "source_type": "evaluation_run",
+    "source_organization_name": "AIREP EEE crosswalk experiment",
+    "evaluator_relationship": "third_party",
+    "relationship_basis": "Declared relationship: the local experiment operator is not the model developer. This does not establish evaluator identity or independence."
+  },
+  "lighteval": {
+    "package_version": "0.13.1.dev0"
+  },
+  "model": {
+    "inference_platform": "local CPU",
+    "inference_engine": {
+      "name": "transformers",
+      "version": "4.57.3"
+    },
+    "deployment_type": "self_deployed",
+    "model_availability": "open_weights"
+  },
+  "dataset": {
+    "dataset_name": "HellaSwag"
+  },
+  "metric": {
+    "metric_id": "exact-match",
+    "metric_kind": "accuracy",
+    "metric_unit": "proportion",
+    "lower_is_better": false,
+    "score_type": "continuous",
+    "min_score": 0.0,
+    "max_score": 1.0,
+    "description": "Source-reported exact-match score for the selected LightEval HellaSwag task; this description supplies no criterion or verdict.",
+    "registry_revision": "8b83e9c"
+  }
+}

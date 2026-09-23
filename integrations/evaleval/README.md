@@ -83,4 +83,3 @@ EEE–AIREP interoperability.
 
 Canonical local references: [AIREP profile](../../spec/airep/v0.2/profiles/embedded-evaluation/README.md),
 [AIREP LightEval exporter](../lighteval/README.md).
-

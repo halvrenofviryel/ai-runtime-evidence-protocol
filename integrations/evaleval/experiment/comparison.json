@@ -1,0 +1,148 @@
+{
+  "study": "same-source EEE and AIREP mapping experiment",
+  "classification": "non-normative first-party research",
+  "source_facts": {
+    "framework": {
+      "name": "lighteval",
+      "package_version": "0.13.1.dev0",
+      "commit": "6b9d193b48de24d1ee87f3089303643b993cf4f9"
+    },
+    "configured_model": {
+      "id": "sshleifer/tiny-gpt2",
+      "revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+      "executed_bytes_verified": false
+    },
+    "task": {
+      "id": "hellaswag|0",
+      "dataset": "Rowan/hellaswag",
+      "dataset_revision": "218ec52e09a7e7462a5400043bb9a69a41d06b76",
+      "split": "validation",
+      "max_samples_cap": 2
+    },
+    "selected_observation": {
+      "metric": "em",
+      "value": 0.0,
+      "standard_error": 0.0,
+      "criterion_present_in_source": false,
+      "source_verdict_present": false
+    },
+    "native_files": [
+      {
+        "role": "aggregate-result",
+        "path": "native/results/sshleifer/tiny-gpt2/results_2026-09-24T00-59-40.590371.json",
+        "bytes": 3827,
+        "sha256": "1b3464e5237d77d648b1960b7a879f4674d59a3c04d97279135a1b0fa59e103b"
+      },
+      {
+        "role": "sample-details",
+        "path": "native/details/sshleifer/tiny-gpt2/2026-09-24T00-59-40.590371/details_hellaswag_0_2026-09-24T00-59-40.590371.parquet",
+        "bytes": 24016,
+        "sha256": "c4f6ea15515ff7f0d1cfc9a6c23e1079dfc5b07fa508dab717d12777f315b298",
+        "rows": 2
+      },
+      {
+        "role": "declared-wall-clock-window",
+        "path": "native/run-window.json",
+        "bytes": 95,
+        "sha256": "e42b54daf171792af018ac1cfd309ae483cb4297f38d2bf83d807ccc91b6bc89"
+      }
+    ]
+  },
+  "declared_context": {
+    "eee_context_sha256": "35defd2ac81277455bf35cf84bb39fbe8679156437e17a839441d56969195f00",
+    "airep_context_sha256": "0a6970f93e3a2142eff905abfc6a1cb3e0172e9187f5a285119699e1e2b1fd41",
+    "items_not_present_in_native_results": [
+      "evaluator/source organization and relationship basis",
+      "model deployment type and availability classification",
+      "metric registry id, kind, unit, score type and range",
+      "independence and conflict-disclosure status",
+      "access tier, capabilities and limitations",
+      "offset-bearing wall-clock run interval",
+      "safeguard state",
+      "evidence visibility and resolvability",
+      "scope and explicit non-claims"
+    ]
+  },
+  "derived_values": [
+    {
+      "value": "deterministic EEE record UUID/evaluation_id",
+      "basis": "native results bytes plus exact task/metric selector",
+      "does_not_establish": "an upstream LightEval or EvalEval-issued identity"
+    },
+    {
+      "value": "general and task configuration SHA-256",
+      "basis": "canonical JSON of the exact native config objects",
+      "does_not_establish": "executed model identity or configuration truth"
+    },
+    {
+      "value": "AIREP evidence SHA-256",
+      "basis": "exact aggregate JSON and portable-name Parquet bytes supplied to the existing exporter",
+      "does_not_establish": "public availability or future resolvability"
+    }
+  ],
+  "representations": {
+    "eee": {
+      "path": "out/eee/data/hellaswag/sshleifer/tiny-gpt2/f741fa4b-ad52-42c5-9820-d2b9f93d1723.json",
+      "sha256": "ae3f6c27bc2f5cc4ab6c0df6793940cf093d2fecf56857b849e7eec7af8a62fb",
+      "schema_version": "0.3.0",
+      "code_commit": "d734a861e80e1aae136e617007b74bce5bfe156a",
+      "represented_only_here": [
+        "typed metric direction/range/kind/unit and score type",
+        "source-reported standard error",
+        "generation arguments and task-generation detail"
+      ]
+    },
+    "airep": {
+      "path": "out/airep/embedded-evaluation.profile.json",
+      "sha256": "b4eb510d82fafc0d78aa4f2d69be773d24f2760dd31dd813fc290f324db7f5a8",
+      "profile_id": "airep.embedded-evaluation",
+      "profile_version": "0.1",
+      "schema_basis_sha256": "ce57bd493d1a3166051bc9029972d6be215793edcd3f1b314534959659b3da8b",
+      "represented_only_here": [
+        "separate execution state, criterion statement and observation status",
+        "access, independence declaration, run environment and safeguards",
+        "evidence visibility/resolvability, disclosure and scope"
+      ]
+    },
+    "represented_in_both": [
+      "framework/version/revision",
+      "configured model id/revision",
+      "task/dataset/revision/split",
+      "selected raw metric value",
+      "configuration digests",
+      "sample-cap limitation"
+    ]
+  },
+  "validation_results": {
+    "eee": {
+      "exit_code": 0,
+      "valid": true,
+      "errors": [],
+      "warnings": [],
+      "validator_report_sha256": "f1c97405d5e0712cfb4b22ccc3f39587fae8184badcf7b4350e8f3bc60f6c3b7"
+    },
+    "airep": {
+      "schema_valid": true,
+      "errors": [],
+      "validator": "jsonschema Draft202012Validator, format_checker=None",
+      "validator_report_sha256": "aefc8351c96bf8bf687e9173b30cc2a40802c07ec9304d8f5ba478a8b5e5af07"
+    },
+    "meaning": "Validation results apply only to the pinned validator/schema bases and do not establish semantic truth or interoperability."
+  },
+  "analyst_conclusions": [
+    "The overlap is real but not lossless: the formats model different claim surfaces.",
+    "A raw EEE/LightEval score cannot safely become AIREP PASS/FAIL without an external criterion and attribution.",
+    "EEE evaluator_relationship cannot safely become AIREP independence.",
+    "Native instance details can be retained as AIREP evidence but are not AIREP lifecycle artifacts."
+  ],
+  "not_established": [
+    "semantic equivalence or bidirectional lossless conversion",
+    "result truth, representativeness or benchmark completeness",
+    "executed weight identity",
+    "evaluator identity, competence or independence",
+    "model capability, quality, safety or alignment",
+    "general reproducibility",
+    "EvalEval or Hugging Face endorsement",
+    "EEE-AIREP interoperability"
+  ]
+}

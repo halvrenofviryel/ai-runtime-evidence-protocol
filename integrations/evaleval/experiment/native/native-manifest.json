@@ -1,0 +1,69 @@
+{
+  "study": "same-source EEE and AIREP mapping experiment",
+  "authority": "The listed native LightEval files are source evidence; derived EEE and AIREP documents are not replacements.",
+  "run": {
+    "status": "completed",
+    "started_at": "2026-09-23T21:59:21.284513Z",
+    "ended_at": "2026-09-23T21:59:40.610125Z",
+    "execution_method": "Python API lighteval.main_accelerate.accelerate after setting the built-in HellaSwag task hf_revision to the pinned dataset revision",
+    "reproduction_command": "python3 integrations/evaleval/run_experiment.py generate-native --lighteval-root /path/to/lighteval-at-6b9d193 --output-dir /tmp/eee-airep-native",
+    "sample_cap": 2,
+    "credentials_used": false,
+    "paid_inference_used": false,
+    "warning": "This is an explicitly partial run for a mapping experiment, not a capability comparison."
+  },
+  "inputs": {
+    "lighteval_commit": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+    "lighteval_package_version": "0.13.1.dev0",
+    "model_id": "sshleifer/tiny-gpt2",
+    "model_revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+    "dataset_id": "Rowan/hellaswag",
+    "dataset_revision": "218ec52e09a7e7462a5400043bb9a69a41d06b76",
+    "dataset_split": "validation",
+    "task": "hellaswag|0",
+    "metric": "em"
+  },
+  "environment": {
+    "python": "3.12.3",
+    "platform": "Linux-6.11.0-29-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "device": "cpu",
+    "packages": {
+      "torch": "2.9.1",
+      "transformers": "4.57.3",
+      "datasets": "5.0.1",
+      "accelerate": "1.15.0",
+      "pyarrow": "25.0.1"
+    }
+  },
+  "files": [
+    {
+      "path": "results/sshleifer/tiny-gpt2/results_2026-09-24T00-59-40.590371.json",
+      "role": "aggregate-result",
+      "bytes": 3827,
+      "sha256": "1b3464e5237d77d648b1960b7a879f4674d59a3c04d97279135a1b0fa59e103b"
+    },
+    {
+      "path": "details/sshleifer/tiny-gpt2/2026-09-24T00-59-40.590371/details_hellaswag_0_2026-09-24T00-59-40.590371.parquet",
+      "role": "sample-details",
+      "bytes": 24016,
+      "sha256": "c4f6ea15515ff7f0d1cfc9a6c23e1079dfc5b07fa508dab717d12777f315b298",
+      "rows": 2
+    },
+    {
+      "path": "run-window.json",
+      "role": "declared-wall-clock-window",
+      "bytes": 95,
+      "sha256": "e42b54daf171792af018ac1cfd309ae483cb4297f38d2bf83d807ccc91b6bc89"
+    }
+  ],
+  "source_observations": {
+    "result_selector": "results['hellaswag|0']['em']",
+    "metric_value": 0.0,
+    "standard_error_selector": "results['hellaswag|0']['em_stderr']",
+    "standard_error": 0.0,
+    "details_rows": 2,
+    "results_filename_timestamp_note": "The LightEval date id is timezone-naive local time and is not treated as UTC. The run-window file carries separately captured UTC times.",
+    "committed_filename_note": "The native details filename contained a pipe character in hellaswag|0. Only the filename was made portable as hellaswag_0 when copied; the bytes and SHA-256 are unchanged."
+  }
+}

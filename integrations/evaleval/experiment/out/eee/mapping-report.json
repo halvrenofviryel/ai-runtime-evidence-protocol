@@ -1,0 +1,49 @@
+{
+  "study": "non-normative first-party mapping study",
+  "mapper": {
+    "id": "airep-study.lighteval-to-eee",
+    "version": "0.1.0"
+  },
+  "source": {
+    "format": "LightEval results_*.json",
+    "sha256": "sha256:1b3464e5237d77d648b1960b7a879f4674d59a3c04d97279135a1b0fa59e103b",
+    "selection": {
+      "task": "hellaswag|0",
+      "metric": "em",
+      "stderr_metric": "em_stderr"
+    },
+    "interpretation_basis": {
+      "repository": "https://github.com/huggingface/lighteval",
+      "commit": "6b9d193b48de24d1ee87f3089303643b993cf4f9"
+    }
+  },
+  "destination": {
+    "format": "Every Eval Ever aggregate EvaluationLog",
+    "schema_version": "0.3.0",
+    "output_sha256": "sha256:ae3f6c27bc2f5cc4ab6c0df6793940cf093d2fecf56857b849e7eec7af8a62fb",
+    "path": "data/hellaswag/sshleifer/tiny-gpt2/f741fa4b-ad52-42c5-9820-d2b9f93d1723.json"
+  },
+  "preserved_or_explicitly_derived": [
+    "selected task and metric",
+    "numeric score and source-reported standard error",
+    "metric direction and [0,1] scale under the pinned metric guidance",
+    "model and dataset identifiers plus pinned revisions",
+    "LightEval version/commit, configuration digests and sample cap",
+    "declared evaluator relationship, kept distinct from independence"
+  ],
+  "material_limits": [
+    "EEE evaluation_timestamp is omitted because its upstream wire format is unresolved",
+    "max_samples is a cap, not proof of exact population size or completeness",
+    "no source criterion or PASS/FAIL verdict exists",
+    "no evaluator independence is established",
+    "model configuration names a revision but does not independently prove executed identity",
+    "native details parquet is retained separately and is not converted to an EEE instance sidecar",
+    "schema validation does not establish semantic equivalence, truth or interoperability"
+  ],
+  "not_established": [
+    "model capability or safety",
+    "result truth, completeness or reproducibility",
+    "EvalEval or Hugging Face endorsement",
+    "EEE-AIREP interoperability"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "command": [
+    "/tmp/airep-eee-venv/bin/python",
+    "-m",
+    "every_eval_ever",
+    "validate",
+    "--format",
+    "json",
+    "data/hellaswag/sshleifer/tiny-gpt2/f741fa4b-ad52-42c5-9820-d2b9f93d1723.json"
+  ],
+  "exit_code": 0,
+  "stdout": "[\n  {\n    \"file\": \"data/hellaswag/sshleifer/tiny-gpt2/f741fa4b-ad52-42c5-9820-d2b9f93d1723.json\",\n    \"valid\": true,\n    \"file_type\": \"aggregate\",\n    \"line_count\": 0,\n    \"errors\": [],\n    \"warnings\": []\n  }\n]\n",
+  "stderr": "",
+  "passed": true,
+  "meaning": "PASS means validation under the pinned EEE implementation; it does not establish semantic equivalence, result truth or interoperability.",
+  "eee_commit": "d734a861e80e1aae136e617007b74bce5bfe156a",
+  "schema_version": "0.3.0",
+  "schema_sha256": "c9c6195aec8a9dfa0b2aba4924ac1aa8a184c9d8ca97cee778cb531088e39b48",
+  "record": "eee/data/hellaswag/sshleifer/tiny-gpt2/f741fa4b-ad52-42c5-9820-d2b9f93d1723.json",
+  "record_sha256": "ae3f6c27bc2f5cc4ab6c0df6793940cf093d2fecf56857b849e7eec7af8a62fb",
+  "mapping_report": "eee/mapping-report.json"
+}

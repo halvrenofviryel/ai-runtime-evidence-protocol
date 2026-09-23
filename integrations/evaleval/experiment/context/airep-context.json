@@ -1,0 +1,109 @@
+{
+  "engagement": {
+    "engagement_id": "eee-airep-crosswalk-2026-09-23",
+    "evaluator": {
+      "organization": "AIREP EEE crosswalk experiment",
+      "role": "other"
+    },
+    "evaluated_party": "sshleifer",
+    "independence": {
+      "status": "unknown",
+      "conflicts_disclosed": false,
+      "basis": [
+        "No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context."
+      ],
+      "conflict_statement": "No conflict inquiry was performed, so absence of disclosed conflicts is not established."
+    }
+  },
+  "target": {
+    "provider": "sshleifer",
+    "system_name": "tiny-gpt2",
+    "model_id": "sshleifer/tiny-gpt2",
+    "model_revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+    "release_state": "released"
+  },
+  "access": {
+    "tier": "grey-box",
+    "capabilities": [
+      "downloaded public model weights",
+      "local CPU inference",
+      "public benchmark data"
+    ],
+    "limitations": [
+      "no access to training data, model-development records, deployment telemetry or an official serving environment",
+      "the configured model revision was not independently bound to executed weight bytes"
+    ]
+  },
+  "evaluation": {
+    "run_id": "lighteval-hellaswag-tiny-gpt2-2026-09-23T21:59:21Z",
+    "objective": "Exercise same-source EEE and AIREP mappings over one real, two-sample LightEval run; not measure general model capability or safety.",
+    "risk_domains": [
+      "capability-measurement"
+    ],
+    "framework": {
+      "name": "lighteval",
+      "version": "0.13.1.dev0",
+      "revision": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+      "source_ref": "https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9"
+    },
+    "started_at": "2026-09-23T21:59:21.284513Z",
+    "ended_at": "2026-09-23T21:59:40.610125Z",
+    "environment": {
+      "runner": "local Python API via lighteval.main_accelerate.accelerate",
+      "hardware": "x86_64 CPU; torch device=cpu; no accelerator requested",
+      "network_access": "open",
+      "tool_access": []
+    },
+    "safeguards": {
+      "state": "unknown"
+    }
+  },
+  "measurement": {
+    "execution_status": "RAN",
+    "criterion": {
+      "statement": "Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.",
+      "task": "hellaswag|0",
+      "metric": "em"
+    },
+    "observed": {
+      "status": "INCONCLUSIVE",
+      "summary": "LightEval reported em = 0.0 on a deliberately capped two-example run; no criterion verdict is attributed to the evaluator."
+    },
+    "sample_count": 2,
+    "limitations": [
+      "The run was deliberately capped at two HellaSwag validation examples and does not establish complete benchmark coverage.",
+      "The tiny model and sample are non-representative; no capability, quality or safety conclusion is supported.",
+      "The sample count is verified from the committed details parquet; benchmark population and denominator completeness are not established."
+    ]
+  },
+  "evidence": {
+    "visibility": "restricted",
+    "resolvable": false,
+    "ref_prefix": "file:"
+  },
+  "disclosure": {
+    "redactions_present": false,
+    "redactions": [],
+    "deviations": [
+      {
+        "type": "deliberate sample cap",
+        "description": "The run evaluated only two examples because the experiment concerns mapping semantics, not benchmark quality.",
+        "impact": "material"
+      }
+    ],
+    "retries": [],
+    "incidents": []
+  },
+  "scope": {
+    "covers": [
+      "the selected LightEval run configuration, source-reported em observation, committed evidence bytes and explicit experiment context"
+    ],
+    "does_not_cover": [
+      "model capability, quality, safety or alignment",
+      "complete HellaSwag population coverage",
+      "executed model-weight identity beyond the configured revision string",
+      "evaluator identity or independence verification",
+      "result truth, general reproducibility, EvalEval endorsement or EEE-AIREP interoperability"
+    ]
+  }
+}

@@ -79,4 +79,3 @@ above identifies the retrieved snapshot bytes; the two values must not be collap
 - Dataset: `Rowan/hellaswag`, revision
   `218ec52e09a7e7462a5400043bb9a69a41d06b76`, validation split
 - Exact native output digests are in `experiment/native/native-manifest.json`.
-

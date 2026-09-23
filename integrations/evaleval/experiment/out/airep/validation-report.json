@@ -1,0 +1,9 @@
+{
+  "profile_id": "airep.embedded-evaluation",
+  "profile_version": "0.1",
+  "basis_digest": "sha256:ce57bd493d1a3166051bc9029972d6be215793edcd3f1b314534959659b3da8b",
+  "validator": "jsonschema Draft202012Validator, format_checker=None",
+  "schema_valid": true,
+  "errors": [],
+  "meaning": "schema_valid true means only that the payload validates against the digest-pinned basis; see claims.does_not_establish in evidence-manifest.json"
+}

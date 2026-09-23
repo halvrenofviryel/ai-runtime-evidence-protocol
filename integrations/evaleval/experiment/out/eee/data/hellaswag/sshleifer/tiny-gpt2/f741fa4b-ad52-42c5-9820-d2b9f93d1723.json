@@ -1,0 +1,106 @@
+{
+  "schema_version": "0.3.0",
+  "evaluation_id": "hellaswag/sshleifer_tiny-gpt2/1b3464e5237d77d6",
+  "retrieved_timestamp": "1790200986.509768",
+  "source_metadata": {
+    "source_name": "LightEval native results",
+    "source_type": "evaluation_run",
+    "source_organization_name": "AIREP EEE crosswalk experiment",
+    "evaluator_relationship": "third_party",
+    "additional_details": {
+      "relationship_basis": "Declared relationship: the local experiment operator is not the model developer. This does not establish evaluator identity or independence.",
+      "native_results_sha256": "1b3464e5237d77d648b1960b7a879f4674d59a3c04d97279135a1b0fa59e103b",
+      "mapping_profile": "airep-study.lighteval-to-eee@0.1.0"
+    }
+  },
+  "eval_library": {
+    "name": "lighteval",
+    "version": "0.13.1.dev0",
+    "additional_details": {
+      "repository": "https://github.com/huggingface/lighteval",
+      "commit": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+      "general_config_sha256": "d63bbf341e31b9e68753632b0f6d18fefa8393a5bd88ebbf40ee1f4a02f6c328",
+      "max_samples_cap": "2",
+      "partial_run": "true"
+    }
+  },
+  "model_info": {
+    "name": "tiny-gpt2",
+    "id": "sshleifer/tiny-gpt2",
+    "developer": "sshleifer",
+    "inference_platform": "local CPU",
+    "inference_engine": {
+      "name": "transformers",
+      "version": "4.57.3"
+    },
+    "additional_details": {
+      "revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+      "deployment_type": "self_deployed",
+      "model_availability": "open_weights",
+      "model_id_resolution": "source-hf-id; registry lookup not performed",
+      "executed_identity_status": "declared-by-native-run-config; not independently verified"
+    }
+  },
+  "evaluation_results": [
+    {
+      "evaluation_result_id": "hellaswag|0#em",
+      "evaluation_name": "hellaswag|0",
+      "source_data": {
+        "dataset_name": "HellaSwag",
+        "source_type": "hf_dataset",
+        "hf_repo": "Rowan/hellaswag",
+        "hf_split": "validation",
+        "additional_details": {
+          "dataset_revision": "218ec52e09a7e7462a5400043bb9a69a41d06b76",
+          "task_configuration_sha256": "e50a535930fadaec22ecf3f6a64c7d77805f10dc2d8b2739c5d544dff9bf128f",
+          "max_samples_cap": "2",
+          "population_completeness": "not established"
+        }
+      },
+      "metric_config": {
+        "evaluation_description": "Source-reported exact-match score for the selected LightEval HellaSwag task; this description supplies no criterion or verdict.",
+        "metric_id": "exact-match",
+        "metric_name": "em",
+        "metric_kind": "accuracy",
+        "metric_unit": "proportion",
+        "lower_is_better": false,
+        "score_type": "continuous",
+        "min_score": 0.0,
+        "max_score": 1.0,
+        "additional_details": {
+          "metric_id_registry_revision": "8b83e9c",
+          "source_metric_definition": "ExactMatches(aggregation_function=max, normalize_gold=None, normalize_pred=None, strip_strings=True, type_exact_match=full)",
+          "source_corpus_aggregation": "mean"
+        }
+      },
+      "score_details": {
+        "score": 0.0,
+        "details": {
+          "source_selector": "results['hellaswag|0']['em']",
+          "partial_run": "true",
+          "max_samples_cap": "2",
+          "criterion": "not present in native LightEval results",
+          "verdict": "not attributed to source evaluator"
+        },
+        "uncertainty": {
+          "standard_error": {
+            "value": 0.0,
+            "method": "source-reported by LightEval"
+          }
+        }
+      },
+      "generation_config": {
+        "generation_args": {
+          "temperature": 0
+        },
+        "additional_details": {
+          "model_revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+          "task_generation_size": "1",
+          "num_fewshots": "0",
+          "prompt_function": "hellaswag_prompt",
+          "stop_sequence": "[\"\\n\"]"
+        }
+      }
+    }
+  ]
+}
