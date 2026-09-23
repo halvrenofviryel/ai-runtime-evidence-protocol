@@ -131,6 +131,14 @@ pass through verifiers, adapters, dashboards and third-party evaluation reports.
 It is not part of the AIREP specification and does not change AIREP conformance; it uses AIREP as one
 concrete source of stage-specific evidence semantics.
 
+### Related standards work
+
+[Claim-Preserving Exchange of AI Evaluation Evidence](https://datatracker.ietf.org/doc/draft-abak-ai-evaluation-claim-preservation/)
+is an individual Informational Internet-Draft authored by Ali Toygar Abak. It is not WG-adopted and
+addresses format-neutral preservation of AI evaluation claims. The draft cites AIREP Embedded
+Evaluation Profile 0.1 as informative related work; publication does not change AIREP conformance or
+maturity and is not evidence of AIREP adoption or standardization.
+
 ## Repository map
 
 | Path | What it is |
