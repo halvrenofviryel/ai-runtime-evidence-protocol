@@ -16,6 +16,7 @@ __pycache__/
 # Reproducible dependencies / local beta runs; never release private test keys.
 node_modules/
 .venv/
+/.airep-demo/
 /demo-output/
 /my-test-key.json
 

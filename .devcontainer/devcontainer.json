@@ -1,0 +1,11 @@
+{
+  "name": "AIREP v0.2",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "postCreateCommand": "python3 --version && node --version && make --version",
+  "remoteUser": "vscode"
+}

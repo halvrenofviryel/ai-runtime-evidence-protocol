@@ -26,7 +26,7 @@ def main():
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     scratch = Path(tempfile.mkdtemp(prefix='airep-beta-check-')) / 'repo'
-    common_ignore=shutil.ignore_patterns('.git', '.venv', 'node_modules', '__pycache__', '.pytest_cache', 'dist')
+    common_ignore=shutil.ignore_patterns('.git', '.venv', '.airep-demo', 'node_modules', '__pycache__', '.pytest_cache', 'dist')
     def ignore(directory, names):
         ignored=common_ignore(directory, names)
         if Path(directory).is_relative_to(ROOT/'reports'):
@@ -103,6 +103,8 @@ def main():
         add('.', str(venv), '-m', 'unittest', 'discover', '-s', 'integrations/hermes/tests', '-v')
         add('.', str(venv), 'integrations/hermes/verify_fixtures.py')
         add('.', str(venv), 'examples/v02/run_lifecycle.py', '--out', str(args.out.resolve() / 'lifecycle'))
+        add('.', str(venv), 'scripts/test_demo.py')
+        add('.', str(venv), 'scripts/demo.py', '--skip-bootstrap', '--out', str(args.out.resolve() / 'demo'))
         add('.', str(venv), 'scripts/check_quickstart.py')
         add('.', str(venv), 'scripts/check_beta_docs.py')
     results = []

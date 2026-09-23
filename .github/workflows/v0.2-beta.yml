@@ -9,6 +9,22 @@ permissions:
   contents: read
 
 jobs:
+  demo:
+    name: Fresh-clone one-command demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.3'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.6'
+      - name: Presentation semantics are derived from reconciler results
+        run: python3 scripts/test_demo.py
+      - name: Run from a clean checkout without a separate dependency-install step
+        run: make demo
+
   beta:
     runs-on: ubuntu-latest
     steps:
