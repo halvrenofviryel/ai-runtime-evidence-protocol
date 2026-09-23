@@ -9,6 +9,15 @@ independently authored **v0.1.2 producer** and an independently implemented **v0
 consumer/verifier** have each been measured, and results against different versions are not
 additive. See [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md).
 
+## Independent v0.2 producer challenge
+
+Issue [#62](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/issues/62)
+asks for a release-pinned minimal v0.2 lifecycle from an independently authored
+producer. The target, required evidence bundle, and three equally useful outcomes
+(`compatible`, `divergence found`, or `spec ambiguity found`) are fixed in the
+issue. A PASS is not required, and the result is summarized only after
+maintainer-side reproduction.
+
 ## Ground rules
 
 1. **The normative text and the conformance vectors change in lockstep.** Any change to
@@ -39,6 +48,20 @@ additive. See [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md).
   `examples/`, and confirm it passes the neutrality test.
 
 ## Before you open a PR
+
+For v0.2 implementation, demo, or documentation changes, run from the repository
+root:
+
+```bash
+make demo-test
+make demo
+python3 scripts/check_beta.py --out /tmp/airep-beta-check
+```
+
+The `--out` path must not already exist. The beta check preserves complete command
+outputs and returns non-zero if any gate fails.
+
+For frozen v0.1 conformance work:
 
 ```bash
 cd spec/airep/v0.1

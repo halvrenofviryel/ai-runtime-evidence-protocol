@@ -1,10 +1,47 @@
-# A runnable v0.2 lifecycle in about ten minutes
+# Run a v0.2 lifecycle
 
 Start with [SPEC.md](SPEC.md). Commands below run from a fresh repository root.
 Python 3.12 and Node 20 are the reproduced axis (3.12.3 / 20.19.6). There are
 no private packages, services, credentials or monorepo dependencies.
 
-## 1. Install and run
+## One-command demo
+
+With Python 3.12, Node 20, and GNU Make installed:
+
+```bash
+make demo
+```
+
+On the reproduced Linux x86-64 axis, this verifies and installs the vendored Python
+wheel bundle into `.airep-demo/venv`, materializes the vendored Node dependencies,
+runs the complete local lifecycle plus a missing-receipt variant, and retains all
+artifacts under `.airep-demo/runs/`. Subsequent runs reuse the pinned Python
+environment. On other platforms, the same command creates the environment using
+the two pinned top-level packages from the configured Python package index.
+
+The human-readable summary does not implement separate lifecycle semantics. It
+parses the Python reconciler output and the Node verifier output. In particular,
+the complete supplied lifecycle remains `INCOMPLETE` because intended-target
+coverage is `NOT_EVALUATED`; the missing-receipt case reports both receipt and
+Execution evidence as `MISSING` and TOCTOU as `NOT_EVALUATED`.
+
+Exit zero means setup, execution, and result parsing completed. It does **not**
+mean every governance check passed: `FAILURE`, `MISSING`, `NOT_EVALUATED`, and
+`INDETERMINATE` are result states, not infrastructure exit codes. Setup, runtime,
+or malformed-result failures exit non-zero.
+
+Use a new explicit output directory when needed:
+
+```bash
+make demo DEMO_ARGS="--out /tmp/airep-demo"
+```
+
+Or [open the repository in GitHub Codespaces](https://codespaces.new/halvrenofviryel/ai-runtime-evidence-protocol?quickstart=1)
+and run `make demo` in the terminal.
+
+## Manual workflow (about ten minutes)
+
+### 1. Install and run
 
 ```bash
 git clone https://github.com/halvrenofviryel/ai-runtime-evidence-protocol.git
@@ -31,7 +68,7 @@ three test keys, operator policies, verification requests, reconciliation and
 ten negative/qualification variants. It refuses to overwrite an existing output
 directory. All included seeds are **public test keys**.
 
-## 2. Generate or load a key; emit each family
+### 2. Generate or load a key; emit each family
 
 To generate a new test key instead of loading the demonstration keys:
 
@@ -95,7 +132,7 @@ decision_ref = reference(decision)
 the same API. `digest_bytes` hashes exact bytes; `digest_json` explicitly chooses
 JCS JSON bytes. The producer never invents an observation to fill a lifecycle gap.
 
-## 3. Verify and reconcile
+### 3. Verify and reconcile
 
 ```bash
 .venv/bin/python -m tools.airep_v02 verify --input lifecycle.json \
@@ -122,7 +159,7 @@ The last command independently exercises the existing Node class engine through
 the beta admission/profile adapter. [VERIFICATION.md](VERIFICATION.md) describes
 the request envelope, operator trust inputs, profile basis and exit semantics.
 
-## 4. Observe a negative case
+### 4. Observe a negative case
 
 ```bash
 .venv/bin/python -m tools.airep_v02 reconcile \

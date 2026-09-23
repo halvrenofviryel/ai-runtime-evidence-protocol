@@ -6,40 +6,80 @@
 [![License: Apache-2.0](https://img.shields.io/badge/code-Apache--2.0-green)](./LICENSE)
 [![License: CC-BY-4.0](https://img.shields.io/badge/spec-CC--BY--4.0-green)](./LICENSE-CC-BY-4.0.txt)
 
-**Vendor- and model-independent runtime evidence for decisions, control delivery, execution and observed effects.**
+**Open, vendor-neutral runtime evidence for AI decisions, control delivery, execution, and observed effects. Signed, hash-linked, offline-checkable.**
 
-AIREP is an open runtime-evidence protocol for AI governance. In v0.2, evidence is separated into
-four correlated artifact families — **Decision → Control → Execution → Effect** — so different
-components can record what they observed at each lifecycle boundary. Explicit references and digests
-bind those artifacts together, and structured reconciliation preserves `FAILURE`, `MISSING`,
-`NOT_EVALUATED` and `INDETERMINATE` instead of converting absent evidence into success.
+```mermaid
+flowchart LR
+  D["Decision<br/>what was decided"] --> C["Control<br/>what was delivered"]
+  C --> X["Execution<br/>what ran"]
+  X --> E["Effect<br/>what was observed"]
+```
 
-The earlier v0.1 line is frozen and supported under its own rules. It represents one governance
-decision as a signed, hash-chained record — an **AI decision receipt**. In v0.2, that phrase describes
-the Decision artifact, not the whole protocol.
+**[Run the demo](#one-command-demo) · [Read the v0.2 specification](spec/airep/v0.2/SPEC.md) · [Read the paper](https://arxiv.org/abs/2608.21363) · [Open in Codespaces](https://codespaces.new/halvrenofviryel/ai-runtime-evidence-protocol?quickstart=1)**
 
-> **Status: Experimental.** AIREP is a *proposed* open format with a first-party reference implementation.
-> It is **not** a ratified standard. See [`spec/airep/v0.1/STATUS.md`](./spec/airep/v0.1/STATUS.md)
-> for the maturity picture, open items, and change control.
+> **Status: Experimental.** AIREP is a proposed open format with a first-party reference
+> implementation. It is **not** a ratified standard, and a valid record does not establish that
+> its reported event is true. See the [maturity and change-control status](spec/airep/v0.1/STATUS.md).
+
+AIREP separates runtime evidence into four correlated artifact families so different components can
+record what they observed at each lifecycle boundary. Explicit references and digests bind those
+artifacts together. Structured reconciliation preserves `FAILURE`, `MISSING`, `NOT_EVALUATED`, and
+`INDETERMINATE` instead of converting absent evidence into success.
+
+## One-command demo
+
+From a fresh clone with Python 3.12, Node 20, and GNU Make:
+
+```bash
+make demo
+```
+
+The command prepares pinned dependencies, runs a real local Decision → Control → Execution → Effect
+lifecycle, verifies it with the Python and Node paths, and derives this summary from the reconciler's
+JSON output:
+
+```text
+COMPLETE SUPPLIED LIFECYCLE
+  Receiver receipt          SATISFIED
+  Execution evidence        SATISFIED
+  Intended-target coverage  NOT_EVALUATED
+  Overall                   INCOMPLETE
+
+MISSING-RECEIPT VARIANT
+  Receiver receipt    MISSING
+  Execution evidence  MISSING
+  TOCTOU comparison   NOT_EVALUATED
+  Overall             INCOMPLETE
+```
+
+Exit zero means the evaluation completed; negative or withheld governance states remain visible in
+the JSON and summary. `MISSING` is not proof that delivery or execution did not occur. The generated
+artifacts are retained under `.airep-demo/runs/`. See the [full quickstart](spec/airep/v0.2/QUICKSTART.md).
+
+## What has actually been independently reproduced?
+
+| Target | Independent role | Observed result | Does not establish |
+|---|---|---|---|
+| frozen v0.1.2 | independently authored producer | accepted on first invocation by both pinned v0.1.2 reference verifiers | general interchange or deployment interoperability |
+| v0.2 handoff corpus v0.1 | independently implemented consumer/verifier | 17 AGREE / 1 DISAGREE; the disagreement exposed an expected-projection defect | a same-version v0.2 producer→consumer interoperability result |
+
+The results target different frozen versions and **must not be combined** into an interoperability
+claim. The exact artifacts, reproduction steps, qualifications, and non-claims are recorded in
+[EXTERNAL_EVIDENCE.md](EXTERNAL_EVIDENCE.md).
+
+> **Current v0.2 implementation target: `v0.2.0-beta.1`.** The beta includes a first-party Python
+> producer for all four artifact families, structured reconciliation, and Python/Node
+> admission/profile verification. It is experimental and **not stable**. **v0.1 remains frozen and
+> supported** under its own unchanged verification rules. See [beta readiness](spec/airep/v0.2/BETA_READINESS.md).
 >
-> **Current v0.2 implementation target: `v0.2.0-beta.1`.** The beta adds a first-party
-> Python producer for all four artifact families, a runnable Decision → Control →
-> Execution → Effect lifecycle, structured reconciliation, and Python/Node
-> admission/profile verification. It is experimental and **not stable**.
-> **v0.1 remains frozen and supported** under its own unchanged verification rules.
->
-> **Start v0.2 here:** [normative specification](spec/airep/v0.2/SPEC.md) →
+> **Start v0.2 here:** [specification](spec/airep/v0.2/SPEC.md) →
 > [producer quickstart](spec/airep/v0.2/QUICKSTART.md) →
-> [verifier](spec/airep/v0.2/VERIFICATION.md) →
-> [lifecycle example](examples/v02/README.md).
->
-> One external v0.2 consumer/verifier result exists against the earlier r1 basis:
-> **17 AGREE / 1 DISAGREE**, not expected-blind, with the qualifications in
-> [EXTERNAL_EVIDENCE.md](EXTERNAL_EVIDENCE.md). No same-version third-party v0.2
-> producer→consumer interoperability result exists. Beta implementation readiness
-> does not satisfy the stable independence gate. See [beta readiness](spec/airep/v0.2/BETA_READINESS.md).
+> [verifier](spec/airep/v0.2/VERIFICATION.md) → [lifecycle example](examples/v02/README.md).
 > The `v0.1 conformance` badge is v0.1-specific; the `v0.2 beta implementation` badge is the beta's
 > own workflow. A green workflow is first-party test evidence, not an interoperability result.
+
+The earlier v0.1 line represents one governance decision as a signed, hash-chained record — an
+**AI decision receipt**. In v0.2, that phrase describes the Decision artifact, not the whole protocol.
 
 **Canonical home:** <https://github.com/halvrenofviryel/ai-runtime-evidence-protocol> — the schema
 `$id`s resolve as raw files under its `main` branch.
@@ -117,7 +157,9 @@ and the [quickstart](./spec/airep/v0.2/QUICKSTART.md). Pick your path:
   verifier / crypto flaws privately via [`SECURITY.md`](./SECURITY.md). Independently authored
   producers, independent consumers/verifiers, and adversarial cross-implementation testing are all
   wanted — see [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) for what has been measured so far
-  and against which frozen version.
+  and against which frozen version. The release-pinned
+  [independent v0.2 producer challenge](https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/issues/62)
+  treats compatible output, a reproducible divergence, or a specification ambiguity as useful evidence.
 
 ### Related technical note
 

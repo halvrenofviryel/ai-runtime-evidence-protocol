@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+* Added a fresh-clone `make demo` path that prepares pinned dependencies, runs
+  the v0.2 lifecycle and Node verification, and renders reconciler-derived
+  complete and missing-receipt summaries without treating governance findings
+  as infrastructure failures.
+* Added semantic regression tests and a clean-checkout CI job for the demo.
+* Added a Python 3.12 / Node 20 development container for GitHub Codespaces.
+* Reworked the README entry path around the lifecycle, one-command demo, and a
+  version-separated independent-evidence table with explicit non-claims.
+
 ## v0.2.0-beta.1 — 2026-09-09
 
 * First-party Python reference producer/library and four emit commands with
