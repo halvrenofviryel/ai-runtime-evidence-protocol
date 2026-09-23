@@ -1,0 +1,361 @@
+{
+  "study": "non-normative EEE to AIREP Embedded Evaluation Profile semantic crosswalk",
+  "basis": {
+    "eee_commit": "d734a861e80e1aae136e617007b74bce5bfe156a",
+    "eee_schema_version": "0.3.0",
+    "eee_datastore_revision": "0147f886c45d56b2a53db25bfd1c42e3239b0bf2",
+    "airep_profile_id": "airep.embedded-evaluation",
+    "airep_profile_version": "0.1",
+    "airep_schema_sha256": "ce57bd493d1a3166051bc9029972d6be215793edcd3f1b314534959659b3da8b"
+  },
+  "classes": [
+    "EXACT_OR_NEAR_EXACT",
+    "PARTIAL",
+    "EEE_ONLY",
+    "AIREP_ONLY",
+    "DERIVABLE_WITH_QUALIFICATION",
+    "NOT_SAFELY_DERIVABLE",
+    "DIFFERENT_CLAIM"
+  ],
+  "rows": [
+    {
+      "id": "identity-source-provenance", "domain": "identity/provenance",
+      "eee": "source_metadata.{source_name,source_type,source_organization_name}",
+      "airep": "engagement.evaluator plus evidence[].role/ref",
+      "mapping_class": "PARTIAL", "safe_directions": ["EEE_TO_AIREP_QUALIFIED", "AIREP_TO_EEE_QUALIFIED"],
+      "value_source": "source record plus explicit evaluator context", "requires_new_assertion": true,
+      "loss_eee_to_airep": "EEE source_type has no single profile field.",
+      "loss_airep_to_eee": "Evidence roles and engagement identity do not fit one EEE source block.",
+      "claim_risk": "Attributing a collector, harness, or publisher as the evaluator.",
+      "sources": ["EEE eval.schema.json SourceMetadata", "AIREP schema $defs.engagement/evidence_item"]
+    },
+    {
+      "id": "identity-evaluator-relationship", "domain": "identity/provenance",
+      "eee": "source_metadata.evaluator_relationship", "airep": "engagement.independence",
+      "mapping_class": "DIFFERENT_CLAIM", "safe_directions": [],
+      "value_source": "EEE relationship is relative to model developer; AIREP independence is a declaration with basis.",
+      "requires_new_assertion": true, "loss_eee_to_airep": "Relationship category is not independence evidence.",
+      "loss_airep_to_eee": "Conflict disclosure and basis are lost.",
+      "claim_risk": "third_party becoming independent or verified.",
+      "sources": ["EEE eval.schema.json evaluator_relationship", "AIREP schema $defs.independence"]
+    },
+    {
+      "id": "identity-model", "domain": "identity/provenance",
+      "eee": "model_info.{name,id,developer}", "airep": "target.{provider,system_name,model_id}",
+      "mapping_class": "PARTIAL", "safe_directions": ["BOTH_QUALIFIED"],
+      "value_source": "source configuration or declared context", "requires_new_assertion": false,
+      "loss_eee_to_airep": "EEE registry-resolution detail may be lost.",
+      "loss_airep_to_eee": "provider/system_name may not split into EEE developer/name.",
+      "claim_risk": "Configured identity being described as executed identity.",
+      "sources": ["EEE eval.schema.json ModelInfo", "AIREP schema $defs.target"]
+    },
+    {
+      "id": "identity-model-revision", "domain": "identity/provenance",
+      "eee": "model_info.additional_details revision/checkpoint conventions", "airep": "target.{model_revision,checkpoint_ref,weights_digest}",
+      "mapping_class": "PARTIAL", "safe_directions": ["EEE_TO_AIREP_IF_TYPED", "AIREP_TO_EEE_AS_ADDITIONAL_DETAIL"],
+      "value_source": "native run configuration or supplied digest bytes", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Untyped additional details cannot safely choose revision vs checkpoint vs weights digest.",
+      "loss_airep_to_eee": "Typed identity assurance collapses into string details.",
+      "claim_risk": "A revision label being promoted to verified checkpoint execution.",
+      "sources": ["EEE real records and field guidance", "AIREP schema $defs.target"]
+    },
+    {
+      "id": "identity-evaluation-run", "domain": "identity/provenance",
+      "eee": "evaluation_id", "airep": "evaluation.run_id",
+      "mapping_class": "EXACT_OR_NEAR_EXACT", "safe_directions": ["BOTH"],
+      "value_source": "native run identity or deterministic mapping identity", "requires_new_assertion": false,
+      "loss_eee_to_airep": "EEE collection routing convention may be lost.", "loss_airep_to_eee": "None if uniqueness scope is documented.",
+      "claim_risk": "Invented IDs can be mistaken for upstream IDs.",
+      "sources": ["EEE eval.schema.json evaluation_id", "AIREP schema $defs.evaluation.run_id"]
+    },
+    {
+      "id": "identity-framework", "domain": "identity/provenance",
+      "eee": "eval_library.{name,version,additional_details}", "airep": "evaluation.framework.{name,version,revision}",
+      "mapping_class": "EXACT_OR_NEAR_EXACT", "safe_directions": ["BOTH"],
+      "value_source": "native framework output", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Free-form additional details may not transfer.", "loss_airep_to_eee": "Typed revision may become additional detail.",
+      "claim_risk": "Replacing an absent revision with current HEAD.",
+      "sources": ["EEE eval.schema.json EvalLibrary", "AIREP schema $defs.framework"]
+    },
+    {
+      "id": "identity-source-refs", "domain": "identity/provenance",
+      "eee": "source URLs and detailed_evaluation_results.file_path", "airep": "evidence[].ref",
+      "mapping_class": "PARTIAL", "safe_directions": ["BOTH_QUALIFIED"],
+      "value_source": "source-reported reference", "requires_new_assertion": false,
+      "loss_eee_to_airep": "EEE detailed-result row count/format need separate retention.",
+      "loss_airep_to_eee": "AIREP role, visibility and resolvability are not native EEE reference semantics.",
+      "claim_risk": "A reference string being treated as reachable or public.",
+      "sources": ["EEE DetailedEvaluationResults", "AIREP schema $defs.evidence_item"]
+    },
+    {
+      "id": "config-generation", "domain": "evaluation configuration",
+      "eee": "evaluation_results[].generation_config", "airep": "evaluation.environment plus task.configuration_digest",
+      "mapping_class": "PARTIAL", "safe_directions": ["EEE_TO_AIREP_SUMMARY", "AIREP_TO_EEE_IF_FIELDS_KNOWN"],
+      "value_source": "native run/task configuration", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Typed generation arguments are reduced to evidence/config digest.",
+      "loss_airep_to_eee": "Environment declarations are broader than generation config.",
+      "claim_risk": "A digest being presented as decoded configuration.",
+      "sources": ["EEE GenerationConfig", "AIREP schema $defs.evaluation/task/environment"]
+    },
+    {
+      "id": "config-task-dataset", "domain": "evaluation configuration",
+      "eee": "evaluation_results[].{evaluation_name,source_data}", "airep": "evaluation.tasks[]",
+      "mapping_class": "EXACT_OR_NEAR_EXACT", "safe_directions": ["BOTH"],
+      "value_source": "native task configuration", "requires_new_assertion": false,
+      "loss_eee_to_airep": "EEE source_data extensions may be lost.", "loss_airep_to_eee": "AIREP task configuration digest has no dedicated EEE field.",
+      "claim_risk": "Dataset name without revision/split can select different populations.",
+      "sources": ["EEE EvaluationResult/SourceData", "AIREP schema $defs.task"]
+    },
+    {
+      "id": "config-metric-definition", "domain": "evaluation configuration",
+      "eee": "evaluation_results[].metric_config", "airep": "measurement.criterion.metric and observed.metric_value",
+      "mapping_class": "PARTIAL", "safe_directions": ["EEE_TO_AIREP_VALUE_IF_SELECTED", "AIREP_TO_EEE_IF_METRIC_DEFINED"],
+      "value_source": "native metric definition plus pinned registry guidance", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Metric kind, unit, range and score type have no full profile destination.",
+      "loss_airep_to_eee": "Criterion statement/threshold is not a metric definition.",
+      "claim_risk": "Same metric label masking different implementations.",
+      "sources": ["EEE MetricConfig", "AIREP schema $defs.criterion/observation"]
+    },
+    {
+      "id": "config-metric-direction-range", "domain": "evaluation configuration",
+      "eee": "metric_config.{lower_is_better,min_score,max_score,score_type}", "airep": "no dedicated equivalent; retain native evidence/limitations",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_AS_EXPLICIT_LIMIT_OR_CONTEXT"],
+      "value_source": "native metric definition", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Typed direction/range becomes external context.", "loss_airep_to_eee": "Cannot be reconstructed generally.",
+      "claim_risk": "Reversing interpretation or assuming [0,1].",
+      "sources": ["EEE MetricConfig validators", "AIREP profile has no metric-definition object"]
+    },
+    {
+      "id": "config-generation-arguments", "domain": "evaluation configuration",
+      "eee": "generation_config.generation_args", "airep": "no dedicated equivalent",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_EVIDENCE_ONLY"],
+      "value_source": "native model configuration", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Argument names and values are not represented in the profile.", "loss_airep_to_eee": "Not applicable.",
+      "claim_risk": "Omitted decoding/sampling settings can make results look comparable.",
+      "sources": ["EEE GenerationConfig", "AIREP schema evaluation.environment"]
+    },
+    {
+      "id": "config-agent-runtime", "domain": "evaluation configuration",
+      "eee": "agent tools, sandbox and limit fields", "airep": "evaluation.environment.{tool_access,...} and access",
+      "mapping_class": "PARTIAL", "safe_directions": ["BOTH_QUALIFIED"],
+      "value_source": "native evaluator runtime or explicit declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Per-agent typed limits/traces are coarser in AIREP.", "loss_airep_to_eee": "Evaluator access tier is not agent runtime configuration.",
+      "claim_risk": "Conflating model tool access with evaluator access.",
+      "sources": ["EEE aggregate/instance models", "AIREP schema access/environment"]
+    },
+    {
+      "id": "result-raw-score", "domain": "result semantics",
+      "eee": "score_details.score", "airep": "measurement.observed.metric_value",
+      "mapping_class": "EXACT_OR_NEAR_EXACT", "safe_directions": ["BOTH_IF_METRIC_SELECTED"],
+      "value_source": "native result exact JSON number", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Score detail structure may be lost.", "loss_airep_to_eee": "AIREP observation status is separate and may be lost.",
+      "claim_risk": "Copying the wrong task/metric or rounding.",
+      "sources": ["EEE ScoreDetails", "AIREP schema $defs.observation"]
+    },
+    {
+      "id": "result-uncertainty", "domain": "result semantics",
+      "eee": "score_details.uncertainty", "airep": "no dedicated equivalent",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_EVIDENCE_ONLY"],
+      "value_source": "source-reported uncertainty", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Typed uncertainty value/method is absent.", "loss_airep_to_eee": "Not applicable.",
+      "claim_risk": "A point estimate appearing more certain after transformation.",
+      "sources": ["EEE ScoreDetails uncertainty", "AIREP profile has no uncertainty field"]
+    },
+    {
+      "id": "result-criterion-verdict", "domain": "result semantics",
+      "eee": "raw score; no general predeclared criterion/PASS field", "airep": "measurement.{criterion,observed.status}",
+      "mapping_class": "DIFFERENT_CLAIM", "safe_directions": ["AIREP_TO_EEE_SCORE_ONLY_WITH_LOSS"],
+      "value_source": "criterion declaration plus observed metric", "requires_new_assertion": true,
+      "loss_eee_to_airep": "A raw score cannot supply criterion chronology or verdict.", "loss_airep_to_eee": "Criterion, assessment author and PASS/FAIL are lost.",
+      "claim_risk": "Criterion laundering and attribution of a downstream judgment to evaluator.",
+      "sources": ["EEE EvaluationResult", "AIREP schema $defs.measurement/criterion/observation"]
+    },
+    {
+      "id": "result-execution-state", "domain": "result semantics",
+      "eee": "no aggregate equivalent with AIREP state semantics", "airep": "measurement.execution_status",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_ADDITIONAL_DETAIL_WITH_LOSS"],
+      "value_source": "run evidence plus explicit context", "requires_new_assertion": true,
+      "loss_eee_to_airep": "File/result presence cannot distinguish all states.", "loss_airep_to_eee": "RAN/PARTIAL/NOT_RUN/INVALIDATED semantics are not preserved structurally.",
+      "claim_risk": "Run completion becoming metric PASS or missing becoming zero.",
+      "sources": ["EEE aggregate model", "AIREP schema execution_status"]
+    },
+    {
+      "id": "result-aggregate-instance", "domain": "result semantics",
+      "eee": "aggregate record plus optional instance-level JSONL", "airep": "evidence references only",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_EVIDENCE_ONLY"],
+      "value_source": "EEE aggregate and companion records", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Instance semantics remain opaque evidence bytes.", "loss_airep_to_eee": "Not applicable.",
+      "claim_risk": "Treating EEE messages/tool calls as AIREP lifecycle stages.",
+      "sources": ["EEE instance_level_eval.schema.json", "AIREP profile evidence only"]
+    },
+    {
+      "id": "coverage-population", "domain": "coverage",
+      "eee": "sample counts/details and source_data; conventions vary", "airep": "measurement.sample_count and limitations",
+      "mapping_class": "PARTIAL", "safe_directions": ["BOTH_QUALIFIED"],
+      "value_source": "native evaluated rows or explicit declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Population and denominator semantics can be lost.", "loss_airep_to_eee": "Limitations are not a typed denominator.",
+      "claim_risk": "max_samples cap becoming exact or complete coverage.",
+      "sources": ["EEE aggregate/instance schemas", "AIREP measurement.sample_count/limitations"]
+    },
+    {
+      "id": "coverage-attempts", "domain": "coverage",
+      "eee": "instance rows and source-specific invalid/error states", "airep": "measurement.attempts plus disclosure.{retries,incidents}",
+      "mapping_class": "PARTIAL", "safe_directions": ["BOTH_IF_STATE_MAPPING_EXPLICIT"],
+      "value_source": "native execution trace", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Per-instance failures can be aggregated away.", "loss_airep_to_eee": "Disclosure records do not map to result rows.",
+      "claim_risk": "Dropping exclusions, failed attempts or retries changes denominator.",
+      "sources": ["EEE instance schema", "AIREP measurement/disclosure"]
+    },
+    {
+      "id": "evidence-digest", "domain": "evidence/availability",
+      "eee": "detailed_evaluation_results.{hash_algorithm,checksum}", "airep": "evidence[].digest",
+      "mapping_class": "DERIVABLE_WITH_QUALIFICATION", "safe_directions": ["BOTH_IF_HASH_SCOPE_AND_ORIGIN_RECORDED"],
+      "value_source": "reported checksum or recomputation over named bytes", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Reported-vs-recomputed origin is not automatic.", "loss_airep_to_eee": "Evidence role/visibility/resolvability are lost.",
+      "claim_risk": "Copying a checksum as if the destination recomputed the retrieved bytes.",
+      "sources": ["EEE DetailedEvaluationResults", "AIREP evidence_item.digest", "inspected datastore sidecar"]
+    },
+    {
+      "id": "evidence-availability", "domain": "evidence/availability",
+      "eee": "file_path/source references and real-record missing/unknown conventions", "airep": "evidence[].{visibility,resolvable,withholding_reason}",
+      "mapping_class": "PARTIAL", "safe_directions": ["EEE_TO_AIREP_WITH_EXPLICIT_CONTEXT", "AIREP_TO_EEE_REFERENCE_ONLY"],
+      "value_source": "current retrieval observation or explicit custodian declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "A path alone says nothing about later availability.", "loss_airep_to_eee": "Visibility/withholding semantics have no dedicated EEE equivalent.",
+      "claim_risk": "restricted, unavailable or unknown evidence becoming public/resolvable.",
+      "sources": ["EEE real datastore records", "AIREP evidence_item"]
+    },
+    {
+      "id": "evaluator-access", "domain": "evaluator context",
+      "eee": "no aggregate field with the same evaluator-access semantics", "airep": "access.{tier,capabilities,limitations}",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_ADDITIONAL_DETAIL_WITH_LOSS"],
+      "value_source": "explicit evaluator declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Cannot be inferred from model availability/deployment fields.", "loss_airep_to_eee": "Typed access distinctions collapse.",
+      "claim_risk": "Open weights becoming white-box evaluation access.",
+      "sources": ["EEE ModelInfo", "AIREP schema $defs.access"]
+    },
+    {
+      "id": "evaluator-independence", "domain": "evaluator context",
+      "eee": "no equivalent beyond evaluator_relationship", "airep": "engagement.independence.{status,conflicts_disclosed,basis}",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_RELATIONSHIP_ONLY_WITH_LOSS"],
+      "value_source": "explicit declaration and supporting basis", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Independence cannot be inferred.", "loss_airep_to_eee": "Status, conflict statement and basis are lost.",
+      "claim_risk": "Declared independence being reworded as verified identity/independence.",
+      "sources": ["EEE source_metadata", "AIREP schema $defs.independence"]
+    },
+    {
+      "id": "evaluator-safeguards", "domain": "evaluator context",
+      "eee": "no aggregate equivalent", "airep": "evaluation.safeguards",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_ADDITIONAL_DETAIL_WITH_LOSS"],
+      "value_source": "explicit context", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Unknown must remain unknown.", "loss_airep_to_eee": "Typed state/evidence refs collapse.",
+      "claim_risk": "Silence becoming safeguards present or absent.",
+      "sources": ["AIREP schema $defs.safeguards"]
+    },
+    {
+      "id": "disclosure", "domain": "disclosure/claim boundary",
+      "eee": "no aggregate equivalent for the full set", "airep": "disclosure.{redactions,deviations,retries,incidents}",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_ADDITIONAL_DETAIL_WITH_LOSS"],
+      "value_source": "explicit evaluator/custodian declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Cannot infer absence from missing fields.", "loss_airep_to_eee": "Typed disclosure entries are lost.",
+      "claim_risk": "Undisclosed retry/redaction state making evidence look complete.",
+      "sources": ["AIREP schema $defs.disclosure"]
+    },
+    {
+      "id": "scope-boundary", "domain": "disclosure/claim boundary",
+      "eee": "free-form additional details only", "airep": "scope.{covers,does_not_cover}",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_ADDITIONAL_DETAIL_WITH_LOSS"],
+      "value_source": "explicit profile author declaration", "requires_new_assertion": true,
+      "loss_eee_to_airep": "No generic EEE field can be treated as scope boundary.", "loss_airep_to_eee": "Positive and negative scope distinction collapses.",
+      "claim_risk": "A narrow measurement becoming a model-wide claim.",
+      "sources": ["AIREP schema $defs.scope"]
+    },
+    {
+      "id": "later-verification", "domain": "disclosure/claim boundary",
+      "eee": "no equivalent verification array", "airep": "verification[]",
+      "mapping_class": "AIREP_ONLY", "safe_directions": ["AIREP_TO_EEE_REFERENCE_ONLY_WITH_LOSS"],
+      "value_source": "later verifier record", "requires_new_assertion": true,
+      "loss_eee_to_airep": "No later verification may be inferred.", "loss_airep_to_eee": "Kind/status/independence are lost.",
+      "claim_risk": "Platform token or schema validation becoming independent verification.",
+      "sources": ["AIREP schema $defs.verification_item"]
+    },
+    {
+      "id": "instance-interactions", "domain": "instance-level data",
+      "eee": "single_turn/multi_turn/agentic messages, tool calls and answer attribution", "airep": "no equivalent; evidence reference only",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_EVIDENCE_ONLY"],
+      "value_source": "native per-instance trace", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Interaction structure and attribution are opaque.", "loss_airep_to_eee": "Not applicable.",
+      "claim_risk": "Relabeling trace events as AIREP lifecycle artifacts.",
+      "sources": ["EEE instance_level_eval.schema.json", "inspected Inspect companion"]
+    },
+    {
+      "id": "instance-performance", "domain": "instance-level data",
+      "eee": "token usage and performance fields", "airep": "no dedicated equivalent",
+      "mapping_class": "EEE_ONLY", "safe_directions": ["EEE_TO_AIREP_EVIDENCE_ONLY"],
+      "value_source": "native per-instance instrumentation", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Typed token/latency measurements are not represented.", "loss_airep_to_eee": "Not applicable.",
+      "claim_risk": "Omitted performance differences can undermine comparability.",
+      "sources": ["EEE instance_level_eval.schema.json performance/token fields"]
+    },
+    {
+      "id": "timestamp-normalization", "domain": "identity/provenance",
+      "eee": "evaluation_timestamp (format unresolved upstream)", "airep": "evaluation.{started_at,ended_at} UTC timestamps",
+      "mapping_class": "NOT_SAFELY_DERIVABLE", "safe_directions": ["AIREP_TO_EEE_ONLY_AFTER_UPSTREAM_FORMAT_CHOICE"],
+      "value_source": "producer-specific EEE value or explicit offset-bearing run window", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Epoch/ISO value may identify a different event and timezone semantics may be absent.", "loss_airep_to_eee": "Run interval collapses to one ambiguous field.",
+      "claim_risk": "Silently treating local/epoch/ISO text as UTC run time.",
+      "sources": ["EEE issue #237", "AIREP schema timestamp_utc"]
+    },
+    {
+      "id": "identity-verification", "domain": "identity/provenance",
+      "eee": "model/revision strings", "airep": "target identity plus optional verification references",
+      "mapping_class": "NOT_SAFELY_DERIVABLE", "safe_directions": [],
+      "value_source": "configuration is distinct from verification evidence", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Strings do not prove executed bytes.", "loss_airep_to_eee": "Verification qualification is lost.",
+      "claim_risk": "Configured revision becoming verified execution identity.",
+      "sources": ["EEE ModelInfo guidance", "AIREP target/verification"]
+    },
+    {
+      "id": "verdict-from-score", "domain": "result semantics",
+      "eee": "score_details.score", "airep": "measurement.observed.status PASS/FAIL",
+      "mapping_class": "NOT_SAFELY_DERIVABLE", "safe_directions": [],
+      "value_source": "requires a criterion, comparator, chronology and assessment author", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Raw value cannot establish verdict.", "loss_airep_to_eee": "Verdict rationale disappears if only score is retained.",
+      "claim_risk": "Threshold invention or evaluator misattribution.",
+      "sources": ["EEE ScoreDetails", "AIREP measurement criterion/observed", "I-D R-CP-5"]
+    },
+    {
+      "id": "schema-validity", "domain": "disclosure/claim boundary",
+      "eee": "pinned EEE validator PASS", "airep": "profile validation-report schema_valid=true",
+      "mapping_class": "DIFFERENT_CLAIM", "safe_directions": [],
+      "value_source": "validator execution against pinned code/schema", "requires_new_assertion": false,
+      "loss_eee_to_airep": "Validator-specific semantic checks differ.", "loss_airep_to_eee": "JSON Schema result differs from EEE Pydantic/publication checks.",
+      "claim_risk": "Structural validation being reworded as truth, safety or interoperability.",
+      "sources": ["EEE validator", "AIREP validation-report meaning"]
+    },
+    {
+      "id": "unknown-missing-inferred", "domain": "disclosure/claim boundary",
+      "eee": "producer-specific unknown, missing and *_inferred_fields conventions", "airep": "explicit unknown enums, limitations and disclosure",
+      "mapping_class": "DIFFERENT_CLAIM", "safe_directions": ["BOTH_ONLY_WITH_FIELD_SPECIFIC_RULES"],
+      "value_source": "actual field semantics and producer provenance", "requires_new_assertion": true,
+      "loss_eee_to_airep": "Missing, literal unknown and inferred provenance are not interchangeable.", "loss_airep_to_eee": "Explicit limitation/disclosure can collapse to absence.",
+      "claim_risk": "Treating missing as false, unknown as known-unavailable, or inferred as source-reported.",
+      "sources": ["EEE real datastore records", "EEE field guidance", "AIREP typed states"]
+    }
+  ],
+  "summary": {
+    "EXACT_OR_NEAR_EXACT": 4,
+    "PARTIAL": 10,
+    "EEE_ONLY": 6,
+    "AIREP_ONLY": 7,
+    "DERIVABLE_WITH_QUALIFICATION": 1,
+    "NOT_SAFELY_DERIVABLE": 3,
+    "DIFFERENT_CLAIM": 4,
+    "total": 35
+  },
+  "non_claims": [
+    "The formats are not asserted to be equivalent or interoperable.",
+    "Neither schema validation establishes result truth, model safety, identity, completeness or reproducibility.",
+    "This is not EvalEval adoption, endorsement or an official converter.",
+    "The claim-preservation Internet-Draft is an analytical lens, not an EEE requirement."
+  ]
+}
