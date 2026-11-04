@@ -67,6 +67,26 @@ The results target different frozen versions and **must not be combined** into a
 claim. The exact artifacts, reproduction steps, qualifications, and non-claims are recorded in
 [EXTERNAL_EVIDENCE.md](EXTERNAL_EVIDENCE.md).
 
+### Control delivery is not execution
+
+The public Phionyx control-evidence study applies the same boundary to a frozen
+synthetic comparison and a controlled LangGraph runtime lane. On its declared
+24-case corpus, an explicitly naive ACK-promotion rule made unsupported stronger
+assertions in 16 of 18 shared holdout cases; the bounded evaluator made 0 of 18.
+The runtime lane preserves request, receipt, execution, and observed effect as
+separate evidence in six controlled scenarios.
+
+Read the [immutable study landing page](https://github.com/halvrenofviryel/phionyx-research/blob/54682cfd312dc8c7935e926539811cfc29ea6568/docs/CONTROL_EVIDENCE_RESEARCH.md)
+and [PR #108](https://github.com/halvrenofviryel/phionyx-research/pull/108).
+These are author-side, controlled results. They do not establish production
+safety, same-version external interoperability, independent validation,
+adoption, or standards endorsement.
+
+To contribute evidence against the exact beta rather than repeat a broad claim,
+use the [v0.2 producer challenge kit](interop/v02-producer-challenge/README.md).
+It records compatible output, a reproducible rejection, and specification
+ambiguity as distinct useful outcomes.
+
 > **Current v0.2 implementation target: `v0.2.0-beta.1`.** The beta includes a first-party Python
 > producer for all four artifact families, structured reconciliation, and Python/Node
 > admission/profile verification. It is experimental and **not stable**. **v0.1 remains frozen and
@@ -201,6 +221,8 @@ maturity and is not evidence of AIREP adoption or standardization.
 | [`spec/airep/v0.1/THREAT_MODEL.md`](./spec/airep/v0.1/THREAT_MODEL.md) | What the format detects, how, and what it does not. |
 | [`producers/python/`](./producers/python/) | Copy-paste producer — sign your own record with your own key. |
 | [`EXTERNAL_EVIDENCE.md`](./EXTERNAL_EVIDENCE.md) | Independently authored implementations measured against frozen releases, with version and role boundaries. |
+| [`interop/v02-producer-challenge/`](./interop/v02-producer-challenge/) | Release-pinned submission contract and runner for external v0.2 producer evidence. |
+| [`release-metadata/v0.2.0-beta.1/`](./release-metadata/v0.2.0-beta.1/) | Draft metadata for a future exact beta archive DOI; no DOI is asserted. |
 
 ## Check it yourself (frozen v0.1)
 
