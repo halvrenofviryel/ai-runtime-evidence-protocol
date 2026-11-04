@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12.3'
@@ -39,6 +41,8 @@ jobs:
         run: python3 -m pip install pytest==9.0.2 jsonschema==4.25.1 cryptography==48.0.0
       - name: Frozen reproduction, imported W1 checks, beta producer and reconciliation
         run: python3 scripts/check_beta.py --out "$RUNNER_TEMP/airep-beta-results"
+      - name: Exercise the release-pinned external-producer runner
+        run: make challenge-test
       - name: Retain every command result, including failed runs
         if: always()
         uses: actions/upload-artifact@v4

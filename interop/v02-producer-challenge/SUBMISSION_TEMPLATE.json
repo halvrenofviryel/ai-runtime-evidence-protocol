@@ -1,0 +1,23 @@
+{
+  "schema": "airep-v02-producer-challenge-submission-v1",
+  "target": {
+    "tag": "v0.2.0-beta.1",
+    "commit": "8a6c01ecce457aa94330c0ed7219e4c56ebfe771"
+  },
+  "producer_implementation": {
+    "name": "replace-with-project-name",
+    "repository": "https://example.invalid/replace-with-public-source",
+    "commit": "replace-with-full-source-commit",
+    "license": "replace-with-SPDX-identifier"
+  },
+  "reproduction": {
+    "command_argv": ["replace", "with", "the", "actual", "command"],
+    "environment": "replace with OS, architecture and runtime versions"
+  },
+  "authorship": {
+    "relationship_to_airep_maintainer": "replace with factual relationship",
+    "independence_is_self_attested": true,
+    "public_credit_permission": "withheld"
+  },
+  "notes": "Contributor-supplied context; runner does not verify authorship or independence."
+}

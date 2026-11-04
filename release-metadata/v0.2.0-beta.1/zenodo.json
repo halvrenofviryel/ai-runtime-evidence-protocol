@@ -1,0 +1,40 @@
+{
+  "title": "AI Runtime Evidence Protocol (AIREP) v0.2.0-beta.1",
+  "upload_type": "software",
+  "description": "Experimental AIREP beta implementing separate Decision, Control, Execution and Effect artifact families, deterministic wire and integrity construction, bounded assurance semantics, lifecycle reconciliation, a first-party four-family producer, and Python/Node verification paths. This release does not establish event truth, same-version third-party interoperability, production readiness, adoption or standards endorsement.",
+  "creators": [
+    {
+      "name": "Abak, Ali Toygar",
+      "orcid": "0009-0002-3718-4010"
+    }
+  ],
+  "publication_date": "2026-09-09",
+  "version": "0.2.0-beta.1",
+  "access_right": "open",
+  "license": "other-open",
+  "keywords": [
+    "AI governance",
+    "runtime evidence",
+    "control delivery",
+    "execution evidence",
+    "tamper-evident records"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://doi.org/10.5281/zenodo.20475136",
+      "relation": "isVersionOf",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "https://doi.org/10.48550/arXiv.2608.21363",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-article"
+    },
+    {
+      "identifier": "https://github.com/halvrenofviryel/ai-runtime-evidence-protocol/releases/tag/v0.2.0-beta.1",
+      "relation": "isIdenticalTo",
+      "resource_type": "software"
+    }
+  ],
+  "notes": "Preparation metadata only. No beta version DOI has been assigned. Specification text and schemas are CC-BY-4.0; code is Apache-2.0. See repository licence files."
+}
