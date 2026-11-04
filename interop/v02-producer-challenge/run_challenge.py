@@ -111,9 +111,13 @@ def main() -> int:
     parser.add_argument("--submission", type=Path, required=True)
     parser.add_argument("--results", type=Path, required=True)
     args = parser.parse_args()
-    submission = args.submission.resolve()
-    results = args.results.resolve()
+    # Keep the final path component unresolved so load_inputs can reject a
+    # symlink used in place of the submission directory.
+    submission = args.submission.absolute()
+    results = args.results.absolute()
     try:
+        if results == submission or submission in results.parents:
+            fail("results directory must be outside the submission directory")
         _, rows = load_inputs(submission)
         results.mkdir(parents=True, exist_ok=False)
         with tempfile.TemporaryDirectory(prefix="airep-beta1-") as temporary:

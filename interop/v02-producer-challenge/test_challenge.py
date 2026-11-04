@@ -55,6 +55,16 @@ def main() -> int:
         assert all(item["exit_code"] == 0 for item in record["commands"].values())
         assert json.loads((base / "result/verification.json").read_text())["verdicts"]
 
+        submission_link = base / "submission-link"
+        submission_link.symlink_to(submission, target_is_directory=True)
+        linked = invoke(submission_link, base / "linked-result")
+        assert linked.returncode == 2
+        assert "submission must be a real directory" in linked.stderr
+
+        nested = invoke(submission, submission / "result")
+        assert nested.returncode == 2
+        assert "results directory must be outside" in nested.stderr
+
         (submission / "extra.json").write_text("{}\n")
         rejected = invoke(submission, base / "rejected")
         assert rejected.returncode == 2
