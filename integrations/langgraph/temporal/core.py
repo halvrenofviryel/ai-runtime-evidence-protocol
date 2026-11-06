@@ -95,6 +95,8 @@ def admit(delivery, sources, ops, *, source_policy=None):
         or artifact['output']['result_digest'] != digest_bytes(raw)
         or basis not in artifact['claim']['basis']):
         raise ValueError('signed actor/source/basis binding mismatch')
+    if source_policy is not None and hasattr(source_policy, 'validate_artifact'):
+        source_policy.validate_artifact(artifact)
     return {'event': event, 'event_hash': digest_bytes(raw), 'arrival_time': delivery['arrival_time'],
             'artifact_ref': {'chain_id': artifact['chain_id'], 'record_id': artifact['record_id']},
             'native_verification': native}
