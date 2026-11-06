@@ -41,7 +41,8 @@ def window(value):
     return tuple(value)
 
 
-def admit(delivery, sources, ops):
+def admit(delivery, sources, ops, *, source_policy=None):
+    basis = BASIS if source_policy is None else source_policy.basis
     raw = delivery['event_bytes']
     if type(raw) is not bytes or len(raw) > MAX_BYTES:
         raise ValueError('bounded exact event bytes required')
@@ -49,7 +50,7 @@ def admit(delivery, sources, ops):
     if type(event) is not dict or set(event) - REQUIRED - {'supersedes', 'revision_reason'} or REQUIRED - set(event):
         raise ValueError('closed event contract violated')
     identity(event['identity'])
-    if event['basis_digest'] != BASIS:
+    if event['basis_digest'] != basis:
         raise ValueError('unaccepted interpretation basis')
     if any(type(event[k]) is not str or not event[k] or len(event[k]) > 1024
            for k in ('event_id', 'source_actor', 'boundary', 'predicate_id', 'source_ref', 'clock_id')):
@@ -62,7 +63,7 @@ def admit(delivery, sources, ops):
     if window(event['window'])[1] > event['observed_time']:
         raise ValueError('observation precedes its claimed window')
     if event['observer_relationship'] != 'same_executor':
-        raise ValueError('this fixture contract does not establish independence')
+        raise ValueError('this local contract does not establish independence')
     if ('supersedes' in event) != ('revision_reason' in event):
         raise ValueError('revision reference and reason required together')
     if 'supersedes' in event and any(type(event[k]) is not str or not event[k]
@@ -72,13 +73,14 @@ def admit(delivery, sources, ops):
     if type(source) is not bytes or len(source) > MAX_BYTES or digest_bytes(source) != event['source_hash']:
         raise ValueError('source bytes missing or hash mismatch')
     projection = {k: v for k, v in event.items() if k not in ('basis_digest', 'source_ref', 'source_hash')}
-    if loads(source) != projection:
-        raise ValueError('fixture source-to-event identity/state projection mismatch')
+    source_projection = loads(source) if source_policy is None else source_policy.project(source)
+    if source_projection != projection:
+        raise ValueError('source-to-event identity/state projection mismatch')
     artifact = delivery['artifact']
-    # This initial producer creates Decisions to record fixture observations.
-    # It does not fabricate Control, Execution or Effect runtime artifacts.
+    # Decisions record test reports under an explicit source policy. They are
+    # not substituted for the native Control/Execution/Effect lifecycle.
     if artifact['artifact_type'] != 'decision':
-        raise ValueError('fixture report must be a Decision; runtime adapter is a separate step')
+        raise ValueError('temporal test report must be a Decision')
     check_core(artifact)
     native = evaluate_request({'artifact': artifact, 'related_artifacts': []}, ops=ops)
     if native['authenticated_failures'] or native['authenticated_withheld']:
@@ -91,25 +93,25 @@ def admit(delivery, sources, ops):
         or artifact['input']['input_digest'] != event['source_hash']
         or artifact['output']['result_ref'] != delivery['event_ref']
         or artifact['output']['result_digest'] != digest_bytes(raw)
-        or BASIS not in artifact['claim']['basis']):
+        or basis not in artifact['claim']['basis']):
         raise ValueError('signed actor/source/basis binding mismatch')
     return {'event': event, 'event_hash': digest_bytes(raw), 'arrival_time': delivery['arrival_time'],
             'artifact_ref': {'chain_id': artifact['chain_id'], 'record_id': artifact['record_id']},
             'native_verification': native}
 
 
-def evaluate(deliveries, query, sources, ops, *, revision_authorities=()):
+def evaluate(deliveries, query, sources, ops, *, revision_authorities=(), source_policy=None):
     wanted = identity(query['identity'])
     target_window = window(query['window'])
     if (not tick(query['cutoff']) or query['cutoff'] < target_window[1]
         or any(type(query[k]) is not str or not query[k] for k in ('clock_id', 'boundary', 'predicate_id'))):
         raise ValueError('explicit accepted clock and cutoff covering window required')
     if len(deliveries) > 1000:
-        raise ValueError('bounded fixture inventory exceeded')
+        raise ValueError('bounded report inventory exceeded')
     history, errors, grouped = [], [], defaultdict(list)
     for index, delivery in enumerate(deliveries):
         try:
-            row = admit(delivery, sources, ops)
+            row = admit(delivery, sources, ops, source_policy=source_policy)
             e = row['event']
             grouped[(identity(e['identity']), e['event_id'])].append(row)
         except (ValueError, TypeError, KeyError, RecursionError, verifier.RunInvalid) as exc:
@@ -177,11 +179,13 @@ def evaluate(deliveries, query, sources, ops, *, revision_authorities=()):
         if errors or conflict or wrong_clock or revision_errors:
             status = 'INDETERMINATE'
         stages[kind] = {'status': status, 'event_ids': sorted(r['event']['event_id'] for r in rows)}
-    return {'policy': 'local-temporal-consumer-v1', 'basis_digest': BASIS, 'query': query,
+    return {'policy': 'local-temporal-consumer-v1' if source_policy is None else source_policy.name,
+            'basis_digest': BASIS if source_policy is None else source_policy.basis, 'query': query,
             'stages': stages, 'history': history, 'binding_errors': errors,
             'identity_conflict': conflict, 'ordering_unestablished': wrong_clock,
             'revision_errors': revision_errors, 'duplicate_deliveries': duplicates,
-            'limits': ['Authored fixture reports; no independently observed enforcement.',
+            'limits': (['Authored fixture reports; no independently observed enforcement.',
                        'Effect result is bounded to the requested window and supplied inventory.',
                        'Native verifier results are retained; this policy does not upgrade them.',
-                       'No durable restart, independent observer, or production adapter tested here.']}
+                       'No durable restart, independent observer, or production adapter tested here.']
+                       if source_policy is None else list(source_policy.limits))}

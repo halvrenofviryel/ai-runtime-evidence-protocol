@@ -1,4 +1,53 @@
-# First local implementation result — 6 November 2026
+# Captured-runtime Core result — 6 November 2026
+
+This second local slice connects the temporal consumer to real captured
+LangGraph 1.2.19 events. The earlier fixture-only delivery is retained below as a
+historical result. No public release or independent reproduction is claimed.
+
+| Check | Observed | Scope |
+|---|---:|---|
+| Temporal tests | 35 passed: 18 original + 17 captured-source tests | Real capture, projection, binding, mutation controls and saved-input replay |
+| Existing K3 runtime tests | 13 passed | Original six scenarios, imported source bytes unchanged |
+| D explain/CLI tests | 14 passed | Existing native and explanatory results preserved |
+| New captured runs | 3 | Native pause; ignored controls with two real file writes; pause with no observer |
+| Offline delivery views | 14/14 matched | T01–T03, T09–T11 and positive support |
+| Saved-input replay | 14/14 identical | Native verifier and consumer output equality; no fresh runtime in replay |
+| Browser check | 14 views + 2 buttons passed | Scope, sampled windows, time bases, failures and limits visible |
+| Original fixture report | 8/8 matched | Original source policy still explicit and separate |
+
+**G2-Core: local PASS for captured-runtime mapping and offline delivery replay.**
+The runtime uses real InMemorySaver checkpoints, receiver command bytes, native
+interrupt payloads and file snapshots. Query-supplied identities cannot relabel
+those captured bytes even when an altered projection has a valid local signature.
+The control/run identity negatives keep the old observation window and clock so
+that mismatched windows cannot conceal a broken ID matcher.
+
+Arrival order is scheduled during offline replay. It is not a live network
+latency test. The HTML displays precomputed report views. Two identical file
+samples support only a bounded sampled-quiescence report, not continuous stopping
+or causal enforcement. Receipt, execution and effect remain separate. Run B can
+be temporarily quiescent while its handler deliberately ignores a pause.
+
+The mapping produces signed Decision reports, with the existing verifier's
+native result retained. It does not upgrade them into native Control/Execution/
+Effect artifacts or independent observation. The original native K3 lifecycle
+adapter remains unchanged. The original 39-test beta validation from the first
+slice is not counted as a new run here; the producer/verifier/reconciler sources
+are unchanged and their source hashes are checked.
+
+**Open:** G2-Extended durable restart/resume, node replay effects, observer write
+privileges and multi-target behavior. G3 reusable application hooks, wheel
+resources and clean installation outside a checkout remain separate work.
+
+During development, the initial new report run was withheld by the native
+verifier because its local test revocation snapshot ID lacked a namespace. The
+reporting input was corrected; the verifier was not weakened. The initial
+failure is not a passing result. Local browser serving required permission to
+bind a loopback socket after the sandbox denied it; no public listener was used.
+
+## Historical first slice
+
+### First local implementation result — 6 November 2026
 
 Base: AIREP main `10b4a9114d04b17fdcd7204a571dbe563d17e295`.
 Imported D/K3 source: `76ecce0b378a6b391850795abf45fb6aca8e1d6b`;
