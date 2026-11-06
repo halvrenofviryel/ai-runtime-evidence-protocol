@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>AIREP temporal regression fixture</title>
+<style>body{font:16px system-ui;color:#192434;background:#f6f8fb;margin:32px;line-height:1.5}main{max-width:1320px;margin:auto}h1{margin-bottom:4px}p{max-width:1000px}.notice{background:#fff4d5;padding:16px;border-left:4px solid #9b6a00}select,button{font:inherit;padding:10px;margin:8px 8px 8px 0}pre{white-space:pre-wrap;background:white;padding:14px}.stages{display:flex;gap:16px;flex-wrap:wrap}.stage{padding:16px;background:white;border:1px solid #b9c6d8}table{border-collapse:collapse;width:100%;background:white}th,td{text-align:left;border:1px solid #ccd4de;padding:9px;vertical-align:top;font-size:13px}th{background:#e7edf5}.table-wrap{overflow:auto}details{margin:16px 0}footer{margin-top:24px}</style>
+<main><h1>AIREP temporal regression fixture</h1>
+<p class="notice">Local authored test reports. A valid signature authenticates a report; it does not establish event truth, independent observation or enforcement. No durable restart is tested here.</p>
+<label for="scenario">Scenario</label><br><select id="scenario"></select><button id="late">Deliver delayed observation (T01)</button><button id="reverse">Reverse arrival list (T01)</button>
+<h2 id="title"></h2><pre id="scope"></pre><div class="stages" id="stages"></div>
+<h2>Evidence history</h2><p>Event and observation ticks use the selected fixture clock. Arrival ticks are local transport metadata. Historical quiescence is limited to its window.</p>
+<div class="table-wrap"><table><thead><tr><th>Event / native authentication</th><th>Run / epoch / control / target</th><th>Reported stage / state</th><th>Event / observed / arrivals</th><th>Window / scope</th><th>Source limitation / revision</th></tr></thead><tbody id="history"></tbody></table></div>
+<pre id="errors"></pre><details><summary>Exact JSON, source references and native verifier results</summary><pre id="json"></pre></details><footer id="limits"></footer>
+<script type="application/json" id="data">__REPORT_DATA__</script>
+<script>
+const views=JSON.parse(document.getElementById('data').textContent), select=document.getElementById('scenario');
+views.forEach((v,i)=>{const o=document.createElement('option');o.value=i;o.textContent=v.label;select.append(o)});
+function show(i){select.value=i;const v=views[i],r=v.result,q=r.query;document.getElementById('title').textContent=v.label;
+document.getElementById('scope').textContent=JSON.stringify(q,null,2);
+const s=document.getElementById('stages');s.replaceChildren();['receipt','execution','effect'].forEach(k=>{const d=document.createElement('div');d.className='stage';d.id=k;d.textContent=k+': '+r.stages[k].status;s.append(d)});
+const h=document.getElementById('history');h.replaceChildren();r.history.forEach(x=>{const e=x.event,tr=document.createElement('tr');
+const fields=[e.event_id+' / '+x.native_verification.class,[e.identity.run_id,e.identity.runtime_epoch,e.identity.control_id,e.identity.target_id].join(' / '),e.kind+' / '+e.status,[e.event_time,e.observed_time,JSON.stringify(x.arrivals)].join(' / '),JSON.stringify(e.window)+' / '+(x.in_query_identity?'same identity':'other identity'),e.observer_relationship+' / '+(x.superseded?'superseded: retained in history':(e.revision_reason||'no revision'))];
+fields.forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.append(td)});h.append(tr)});
+document.getElementById('errors').textContent=JSON.stringify({binding_errors:r.binding_errors,identity_conflict:r.identity_conflict,ordering_unestablished:r.ordering_unestablished,revision_errors:r.revision_errors},null,2);
+document.getElementById('json').textContent=JSON.stringify(r,null,2);document.getElementById('limits').textContent=r.limits.join(' ');}
+select.addEventListener('change',()=>show(Number(select.value)));document.getElementById('late').addEventListener('click',()=>show(1));document.getElementById('reverse').addEventListener('click',()=>show(2));show(0);
+</script></main></html>

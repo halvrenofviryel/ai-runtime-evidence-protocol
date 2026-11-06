@@ -1,0 +1,10 @@
+{
+  "profile": "local-temporal-consumer-v1",
+  "status": "experimental fixture consumer; not a registered AIREP profile",
+  "identity": ["workflow_id", "run_id", "runtime_epoch", "checkpoint_id", "control_id", "attempt_id", "target_id"],
+  "ordering": "Compare declared event ticks only within exact identity and an explicitly selected clock. Arrival time never orders source events. This fixture basis does not authenticate a real clock.",
+  "effect": "Exact window match only. Conflicting observations of the same window remain indeterminate unless an explicitly authorized same-actor revision supersedes one. Quiescence reported is bounded to that window.",
+  "revision": "Named earlier event, identical identity/kind/window/clock/source actor, later event time and observation time, configured revision authority; history is retained.",
+  "trust": "Use existing AIREP Core and Authenticated verifier with caller-supplied operator inputs. Validate exact event bytes, exact referenced source bytes, and this basis digest. No URL or file dereferencing.",
+  "nonclaims": ["runtime truth", "independent observer", "durable restart", "continuous monitoring", "complete history", "production SDK"]
+}
