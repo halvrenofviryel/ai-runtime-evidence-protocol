@@ -26,6 +26,8 @@ def consume(raw, *, ops, expected_identity):
             raise ValueError('source projection and artifact inventory differ')
         core = {'airep_version', 'artifact_type', 'chain_id', 'record_id', 'sequence', 'subject', 'scope', 'integrity', 'timestamp'}
         for row, actual in zip(expected, bundle['artifacts']):
+            if actual.get('scope') != row['scope']:
+                raise ValueError('signed artifact scope differs from SDK contract')
             if (actual['artifact_type'] != row['family'] or actual['record_id'] != bundle['identity']['run_id'] + '.' + row['name'] or
                     actual['chain_id'] != bundle['identity']['run_id'] + '.chain' or actual['subject']['producer'] != bundle['producer'] or
                     actual['subject']['timestamp_utc'] != row['timestamp'] or

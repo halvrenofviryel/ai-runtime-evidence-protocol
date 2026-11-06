@@ -125,6 +125,74 @@ class InstalledSDK(unittest.TestCase):
         b['artifacts'][-1]['integrity']['signature']['value'] = '0' * 128
         self.assertEqual(self.result(b, trust)['consumer']['policy_result'], 'NO_MATCH')
 
+    def resign_scopes(self, bundle, key, changes):
+        # Rebuild the entire chain: negatives must retain valid signatures,
+        # hashes and predecessor links, including when only one scope changes.
+        from airep import Chain
+        from airep.mapping import project
+        b = copy.deepcopy(bundle)
+        rows, _ = project([s.encode() for s in b['sources']], b['identity'], b['producer'])
+        chain = Chain(key, b['producer'], chain_id=b['identity']['run_id'] + '.chain')
+        b['artifacts'] = [chain.emit(row['family'], row['payload'],
+            record_id=b['identity']['run_id'] + '.' + row['name'], timestamp=row['timestamp'],
+            scope=changes.get(i, bundle['artifacts'][i]['scope'])) for i, row in enumerate(rows)]
+        return b
+
+    def assert_scope_rejected(self, bundle, key, trust, changes):
+        original = self.result(bundle, trust)
+        changed = self.resign_scopes(bundle, key, changes)
+        r = self.result(changed, trust)
+        self.assertEqual(r['native']['summary'], original['native']['summary'])
+        for row in r['native']['records']:
+            self.assertEqual(row['admission'], 'SATISFIED')
+            self.assertFalse(row['class_result']['authenticated_failures'])
+            self.assertFalse(row['class_result']['authenticated_withheld'])
+        self.assertEqual(r['consumer']['policy_result'], 'NO_MATCH')
+        self.assertEqual(r['consumer']['observation']['effect'], 'INDETERMINATE')
+        self.assertEqual(r['consumer']['errors'], ['signed artifact scope differs from SDK contract'])
+
+    def test_each_validly_resigned_artifact_rejects_expanded_scope(self):
+        b, key, trust, *_ = self.run_graph()
+        for i, artifact in enumerate(b['artifacts']):
+            for claim in ('Continuous, independently verified full workflow stop',
+                          'Production enforcement certified', 'SYNTHETIC_PRIVATE_SCOPE_MARKER'):
+                with self.subTest(artifact=i, claim=claim):
+                    scope = copy.deepcopy(artifact['scope'])
+                    scope['covers'].append(claim)
+                    self.assert_scope_rejected(b, key, trust, {i: scope})
+
+    def test_each_artifact_requires_every_scope_exclusion(self):
+        b, key, trust, *_ = self.run_graph()
+        for i, artifact in enumerate(b['artifacts']):
+            for j in range(len(artifact['scope']['does_not_cover'])):
+                with self.subTest(artifact=i, missing_exclusion=j):
+                    scope = copy.deepcopy(artifact['scope'])
+                    del scope['does_not_cover'][j]
+                    self.assert_scope_rejected(b, key, trust, {i: scope})
+
+    def test_consistently_expanded_scope_across_entire_chain_is_rejected(self):
+        b, key, trust, *_ = self.run_graph()
+        changes = {}
+        for i, artifact in enumerate(b['artifacts']):
+            scope = copy.deepcopy(artifact['scope'])
+            scope['covers'] = ['Production enforcement certified']
+            scope['does_not_cover'] = []
+            changes[i] = scope
+        self.assert_scope_rejected(b, key, trust, changes)
+
+    def test_scope_contract_is_exact_not_free_text_inference(self):
+        b, key, trust, *_ = self.run_graph()
+        scope = copy.deepcopy(b['artifacts'][-1]['scope'])
+        scope['does_not_cover'].reverse()
+        self.assert_scope_rejected(b, key, trust, {len(b['artifacts']) - 1: scope})
+
+    def test_previous_scope_basis_is_not_silently_reinterpreted(self):
+        b, _, trust, *_ = self.run_graph()
+        # Exact contract digest from the retained 0.1.0a2 wheel.
+        b['basis'] = 'sha256:d75d8ec2cb52e05802b3e678327ae34452ddc1a7f786902587e905258a87b398'
+        with self.assertRaisesRegex(ValueError, 'unknown or malformed SDK mapping basis'):
+            self.result(b, trust)
+
     def test_no_implicit_trust_from_producer_bundle(self):
         b, *_ = self.run_graph()
         self.assertEqual(self.result(b, {})['consumer']['observation']['execution'], 'INDETERMINATE')

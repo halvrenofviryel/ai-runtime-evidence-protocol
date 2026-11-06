@@ -1,6 +1,6 @@
 {
   "name": "airep-sdk-local-pause-samples-v1",
-  "version": 1,
+  "version": 2,
   "clock": "Monotonic elapsed nanoseconds within one invocation; no ordering across runs or hosts is inferred",
   "input": "Exact SDK hook bundle, separate operator trust and explicit expected identity",
   "identity": [
@@ -28,6 +28,12 @@
   },
   "scope": "A first-party report of cooperative pause at one instrumented synchronous node and matching file samples; no continuous stopping, causal enforcement, total target coverage, durable restart or independent observer",
   "native": "Unmodified 0.2.0-beta.1 verifier and reconciliation outputs remain separate. Exit zero means evaluation completed. MATCH is only this explicit local policy.",
+  "artifact_scope": {
+    "covers": ["First-party report from one instrumented synchronous node and optional file samples"],
+    "does_not_cover": ["Independent event truth", "Durable restart/resume", "Total target coverage",
+                       "Continuous stopping", "Production key management or hard cancellation"]
+  },
+  "artifact_scope_admission": "Every signed artifact must have exactly artifact_scope, including list order and all exclusions. Expanded, missing or otherwise altered scope is NO_MATCH with a constant diagnostic. This closed mapping contract does not classify arbitrary scope prose.",
   "source_admission": {
     "native_interrupts": "Only the exact hook control interrupt is admitted; application interrupts and foreign next-node names are rejected before evidence serialization.",
     "sample_order": "dispatch <= initial sample start <= initial sample end <= receipt <= native result <= final sample start <= final sample end <= effect event"

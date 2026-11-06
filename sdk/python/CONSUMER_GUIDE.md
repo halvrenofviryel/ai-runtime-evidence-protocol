@@ -24,6 +24,7 @@ timeout is 124.
 | ignored | CONTINUED_REPORTED | CHANGED_REPORTED | NO_MATCH | FAILURE |
 | unobserved | PAUSED_REPORTED | MISSING | NO_MATCH | INCOMPLETE |
 | foreign identity query | MISSING | MISSING | NO_MATCH | Original native result retained |
+| signed scope mismatch | INDETERMINATE | INDETERMINATE | NO_MATCH | Original native result retained |
 | signature/source mismatch | INDETERMINATE | INDETERMINATE | NO_MATCH | Original native result retained |
 
 Native INCOMPLETE includes intended-target coverage NOT_EVALUATED. Matching this
@@ -33,6 +34,14 @@ sample must begin after the native runtime result. Application interrupts other
 than the exact SDK control interrupt are rejected before evidence serialization. The graph, hook, observer and test key share a trust domain.
 Input trust shipped by the example is merely a reproducible test choice; an
 external consumer must explicitly decide whether that key/producer is accepted.
+
+The signed scope of **every** artifact must exactly equal `artifact_scope` in
+contract revision 2, including all exclusions and list order. An added assertion,
+removed limitation or otherwise changed scope yields NO_MATCH even with valid
+signatures and source links. The diagnostic is fixed and does not echo the
+submitted scope. This is a closed SDK mapping rule, not an interpretation of
+arbitrary scope text. The native API continues to evaluate native artifacts
+under its original rules.
 
 For an external trial, record the wheel/source/contract hashes, Python/LangGraph
 versions, exact commands, expected/observed results and limitations using

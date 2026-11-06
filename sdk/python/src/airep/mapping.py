@@ -92,7 +92,9 @@ def project(sources, expected, producer):
     def add(name, family, payload, kinds):
         payload = dict(payload, evidence=[{'type': 'other', 'ref': 'source:' + digest_bytes(raw_by_kind[k]),
             'content_hash': digest_bytes(raw_by_kind[k]), 'resolvable': True} for k in kinds])
-        output.append({'name': name, 'family': family, 'payload': payload, 'timestamp': events[kinds[-1]]['utc']})
+        output.append({'name': name, 'family': family, 'payload': payload,
+                       'scope': json.loads(CONTRACT)['artifact_scope'],
+                       'timestamp': events[kinds[-1]]['utc']})
 
     add('decision', 'decision', {'input': {'input_ref': 'command:' + digest_bytes(command_raw), 'input_digest': digest_bytes(command_raw)},
         'claim': {'assertion': 'Operator requested cooperative pause at one instrumented node.', 'basis': [BASIS]},

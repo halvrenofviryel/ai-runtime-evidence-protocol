@@ -135,9 +135,7 @@ class ControlSession:
         chain = Chain(self._key, self.producer, chain_id=self.identity['run_id'] + '.chain')
         artifacts = [chain.emit(row['family'], row['payload'],
             record_id=self.identity['run_id'] + '.' + row['name'], timestamp=row['timestamp'],
-            scope={'covers': ['First-party report from one instrumented synchronous node and optional file samples'],
-                   'does_not_cover': ['Independent event truth', 'Durable restart/resume', 'Total target coverage',
-                                      'Continuous stopping', 'Production key management or hard cancellation']})
+            scope=row['scope'])
             for row in expected]
         bundle = {'format': 'airep-sdk-hook-v1', 'basis': BASIS, 'identity': self.identity,
             'producer': self.producer, 'sources': [raw.decode() for raw in self._events], 'artifacts': artifacts}
