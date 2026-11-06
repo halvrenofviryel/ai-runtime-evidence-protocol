@@ -1,0 +1,19 @@
+test_all_native_checks_and_assurance_channels_are_lossless (test_explain.ExplainTests.test_all_native_checks_and_assurance_channels_are_lossless) ... ok
+test_cli_admission_errors_and_no_overwrite_in_both_modes (test_explain.ExplainTests.test_cli_admission_errors_and_no_overwrite_in_both_modes) ... ok
+test_complete_supplied_lifecycle_is_not_complete_population (test_explain.ExplainTests.test_complete_supplied_lifecycle_is_not_complete_population) ... ok
+test_duplicate_identity_does_not_select_an_occurrence (test_explain.ExplainTests.test_duplicate_identity_does_not_select_an_occurrence) ... ok
+test_empty_and_invalid_artifacts_stay_visible (test_explain.ExplainTests.test_empty_and_invalid_artifacts_stay_visible) ... ok
+test_failed_suppressed_and_bad_signature_are_not_success (test_explain.ExplainTests.test_failed_suppressed_and_bad_signature_are_not_success) ... ok
+test_indeterminate_and_same_executor_qualifications_survive (test_explain.ExplainTests.test_indeterminate_and_same_executor_qualifications_survive) ... ok
+test_missing_receipt_does_not_establish_non_delivery (test_explain.ExplainTests.test_missing_receipt_does_not_establish_non_delivery) ... ok
+test_multiple_instructions_keep_separate_subjects (test_explain.ExplainTests.test_multiple_instructions_keep_separate_subjects) ... ok
+test_reported_pause_execution_does_not_fill_unknown_effect (test_explain.ExplainTests.test_reported_pause_execution_does_not_fill_unknown_effect) ... ok
+test_signature_and_integrity_are_not_event_truth (test_explain.ExplainTests.test_signature_and_integrity_are_not_event_truth) ... ok
+test_structural_result_never_adjudicates_relying_party_claim (test_explain.ExplainTests.test_structural_result_never_adjudicates_relying_party_claim) ... ok
+test_text_escapes_untrusted_report_content_without_losing_it (test_explain.ExplainTests.test_text_escapes_untrusted_report_content_without_losing_it) ... ok
+test_text_json_parity_including_all_qualifications (test_explain.ExplainTests.test_text_json_parity_including_all_qualifications) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 3.527s
+
+OK

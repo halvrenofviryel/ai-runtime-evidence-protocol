@@ -1,0 +1,3936 @@
+{
+  "created_utc": "2026-11-06T17:43:29.508565Z",
+  "replay_input_sha256": null,
+  "runtime": {
+    "dependencies": [
+      {
+        "name": "annotated-types",
+        "version": "0.8.0"
+      },
+      {
+        "name": "anyio",
+        "version": "4.16.0"
+      },
+      {
+        "name": "attrs",
+        "version": "26.1.0"
+      },
+      {
+        "name": "certifi",
+        "version": "2026.10.23"
+      },
+      {
+        "name": "cffi",
+        "version": "2.1.1"
+      },
+      {
+        "name": "charset-normalizer",
+        "version": "3.5.2"
+      },
+      {
+        "name": "cryptography",
+        "version": "48.0.0"
+      },
+      {
+        "name": "distro",
+        "version": "1.9.0"
+      },
+      {
+        "name": "h11",
+        "version": "0.16.0"
+      },
+      {
+        "name": "httpcore",
+        "version": "1.0.9"
+      },
+      {
+        "name": "httpcore2",
+        "version": "2.16.0"
+      },
+      {
+        "name": "httpx",
+        "version": "0.28.1"
+      },
+      {
+        "name": "httpx2",
+        "version": "2.16.0"
+      },
+      {
+        "name": "idna",
+        "version": "3.20"
+      },
+      {
+        "name": "jsonpatch",
+        "version": "1.39"
+      },
+      {
+        "name": "jsonpointer",
+        "version": "3.7"
+      },
+      {
+        "name": "jsonschema",
+        "version": "4.25.1"
+      },
+      {
+        "name": "jsonschema-specifications",
+        "version": "2025.9.1"
+      },
+      {
+        "name": "langchain-core",
+        "version": "1.7.4"
+      },
+      {
+        "name": "langchain-protocol",
+        "version": "0.0.20"
+      },
+      {
+        "name": "langgraph",
+        "version": "1.2.19"
+      },
+      {
+        "name": "langgraph-checkpoint",
+        "version": "4.3.1"
+      },
+      {
+        "name": "langgraph-prebuilt",
+        "version": "1.1.1"
+      },
+      {
+        "name": "langgraph-sdk",
+        "version": "0.4.11"
+      },
+      {
+        "name": "langsmith",
+        "version": "0.14.17"
+      },
+      {
+        "name": "orjson",
+        "version": "3.13.0"
+      },
+      {
+        "name": "ormsgpack",
+        "version": "1.13.0"
+      },
+      {
+        "name": "packaging",
+        "version": "26.3"
+      },
+      {
+        "name": "pycparser",
+        "version": "3.12"
+      },
+      {
+        "name": "pydantic",
+        "version": "2.14.2"
+      },
+      {
+        "name": "pydantic_core",
+        "version": "2.50.2"
+      },
+      {
+        "name": "PyYAML",
+        "version": "6.0.3"
+      },
+      {
+        "name": "referencing",
+        "version": "0.37.0"
+      },
+      {
+        "name": "requests",
+        "version": "2.34.2"
+      },
+      {
+        "name": "requests-toolbelt",
+        "version": "1.0.0"
+      },
+      {
+        "name": "rpds-py",
+        "version": "2026.9.1"
+      },
+      {
+        "name": "sniffio",
+        "version": "1.3.1"
+      },
+      {
+        "name": "tenacity",
+        "version": "9.2.1"
+      },
+      {
+        "name": "truststore",
+        "version": "0.10.5"
+      },
+      {
+        "name": "typing-inspection",
+        "version": "0.4.4"
+      },
+      {
+        "name": "typing_extensions",
+        "version": "4.16.0"
+      },
+      {
+        "name": "urllib3",
+        "version": "2.8.0"
+      },
+      {
+        "name": "uuid_utils",
+        "version": "0.19.0"
+      },
+      {
+        "name": "websockets",
+        "version": "17.4"
+      },
+      {
+        "name": "xxhash",
+        "version": "4.0.2"
+      },
+      {
+        "name": "zstandard",
+        "version": "0.25.0"
+      }
+    ],
+    "installed_langgraph_source_files": [
+      {
+        "path": "langgraph/_internal/__init__.py",
+        "sha256": "0ef92d8f5b3845fe7923378fcf39891380657b5fba21c491b922443aac592ca0"
+      },
+      {
+        "path": "langgraph/_internal/_cache.py",
+        "sha256": "25cf2d24b029be5671da777507f4078dc1d2dc0f472a131af8df19edcb3a96cf"
+      },
+      {
+        "path": "langgraph/_internal/_config.py",
+        "sha256": "3f24ccd240b9b467fd1e6fc9fb07bb178d5d72e449047cd274359247854c6bf0"
+      },
+      {
+        "path": "langgraph/_internal/_constants.py",
+        "sha256": "723fea9177c98c660e5ca2f6e2ecb094d54780015e193a928b9798918f8c7e6b"
+      },
+      {
+        "path": "langgraph/_internal/_fields.py",
+        "sha256": "22d0c7e2b7540f106f1feb91f63e2aaf902cd4a67eaf152f70abe041089ee752"
+      },
+      {
+        "path": "langgraph/_internal/_future.py",
+        "sha256": "87d95f6ee355270b4a1503fe0a43c8912511b6c9fa791a990caa6f144c3aa134"
+      },
+      {
+        "path": "langgraph/_internal/_pydantic.py",
+        "sha256": "e3ca9b3189a4cf768fa2bb34bee69c49bbe6a6e724297e06471870f730490b0c"
+      },
+      {
+        "path": "langgraph/_internal/_queue.py",
+        "sha256": "64fef539eb7c10a25e73fc9ac76974c860116a376a767fdaf6949586ec2f1053"
+      },
+      {
+        "path": "langgraph/_internal/_replay.py",
+        "sha256": "6d0ad54ebd4f805d94e4ff54eb2eae445771c8cee3ebdff8da4d8d5609ac460d"
+      },
+      {
+        "path": "langgraph/_internal/_retry.py",
+        "sha256": "cee7f2f7b1541bc0ac90484e9f48879f80a407e2d92c52d9a8a3bab78face13e"
+      },
+      {
+        "path": "langgraph/_internal/_runnable.py",
+        "sha256": "65996618894faeacee588053c66d6fb6a63842efc2f9ea96f2d65498c5e138d3"
+      },
+      {
+        "path": "langgraph/_internal/_scratchpad.py",
+        "sha256": "8d60ef91c783d8aae3e3c393f384a5940430d74cd280de543e6de48e5bbdd446"
+      },
+      {
+        "path": "langgraph/_internal/_serde.py",
+        "sha256": "4c75a54590e8ed27b463e990e4c61e12b7485fc0669d758007eaffdc78509ffe"
+      },
+      {
+        "path": "langgraph/_internal/_timeout.py",
+        "sha256": "28401803595016dec23371d92d0fb32977cbafb5b904e9a9f18b3e5ba411684b"
+      },
+      {
+        "path": "langgraph/_internal/_typing.py",
+        "sha256": "bc6e3cf0cc2f8c62eeb5eec485f20e9a5857e881ac03469afa87142089f00936"
+      },
+      {
+        "path": "langgraph/callbacks.py",
+        "sha256": "bedc1d843b61aab93b13b9465613106e0a81054cd6f8a00177772651ef5fb726"
+      },
+      {
+        "path": "langgraph/channels/__init__.py",
+        "sha256": "2d28bd4f3f21a55cf4bf2505629b176ba5b99c52083d5072e20f651387cc39b6"
+      },
+      {
+        "path": "langgraph/channels/any_value.py",
+        "sha256": "cab1ae7537ac45c7cf02511b4277305bc0f4891c9216d056015541394e74a8ab"
+      },
+      {
+        "path": "langgraph/channels/base.py",
+        "sha256": "d64a543b37985534719bc1479d96813f4f6a0fa252c1844ba2f542e602a8c5e9"
+      },
+      {
+        "path": "langgraph/channels/binop.py",
+        "sha256": "775399a9680071cf662b4a131ab80aa36fe8b8302270361d1e8e9e0d709df80f"
+      },
+      {
+        "path": "langgraph/channels/delta.py",
+        "sha256": "7cd3d2bcdd9874a34b853388432565b62913a31d81519c4f398bdedaff3b5637"
+      },
+      {
+        "path": "langgraph/channels/ephemeral_value.py",
+        "sha256": "81a498846249762ca3ba3b77538507a994b35fb9f9cf29257a577902223f6572"
+      },
+      {
+        "path": "langgraph/channels/last_value.py",
+        "sha256": "36cbc586aeaac0f8c9b5a8d8b903039023a7d24294408391eb8c7f10aab3a308"
+      },
+      {
+        "path": "langgraph/channels/named_barrier_value.py",
+        "sha256": "18498401cfec1bc6c735d81f2d113945effd5520dac6cbae17c58ca791b6434c"
+      },
+      {
+        "path": "langgraph/channels/topic.py",
+        "sha256": "abb4058990997c484d38f03401e4741ad54307a538258794ee3799ea7caa2564"
+      },
+      {
+        "path": "langgraph/channels/untracked_value.py",
+        "sha256": "ea15573ce7899269b75b4aa81dec04a08a5efc7b0887d64bb8ff9810155aafee"
+      },
+      {
+        "path": "langgraph/config.py",
+        "sha256": "dd52c5ef1e9af7d2de534305c8a934abd00d736971b19f65f56e6114cc7ffba7"
+      },
+      {
+        "path": "langgraph/constants.py",
+        "sha256": "a9d1e6e5877bd98009ca105ec8667d82d5de7df8f31e318ade6fa14bcca6c6e3"
+      },
+      {
+        "path": "langgraph/errors.py",
+        "sha256": "1509401fe7829cea84c5e36f2984e5acfd60a24b7369cd1fe3cb5906d117e8a2"
+      },
+      {
+        "path": "langgraph/func/__init__.py",
+        "sha256": "f07e4a9f9bac75e2b48ac987fb91ca8c13a0a3d40723aa1997840bcde56732b7"
+      },
+      {
+        "path": "langgraph/graph/__init__.py",
+        "sha256": "b357457698c9603ae999a295d082c2c55319a7e03517e012135f6813e6a71a52"
+      },
+      {
+        "path": "langgraph/graph/_branch.py",
+        "sha256": "2d0e8da9936edaa6ca0202f59178fe50326d10f34ef2c5c882a59cd34430fe40"
+      },
+      {
+        "path": "langgraph/graph/_node.py",
+        "sha256": "105cdf869cc1a5d187afafd00c3ccdf752dffaecdc38d7ee3a4e287c023b5a07"
+      },
+      {
+        "path": "langgraph/graph/message.py",
+        "sha256": "81697da89fe9b3030becaf0d7a7b18c5cafbcdd8702990e6e3eecaa228fdf89a"
+      },
+      {
+        "path": "langgraph/graph/state.py",
+        "sha256": "d8c8021a93a8fc895d62335a9482e50d51353343bf885901e6487611dcd0d212"
+      },
+      {
+        "path": "langgraph/graph/ui.py",
+        "sha256": "74c59c49c37ebf2859d14235dfa7f3ba13b6bf0b634b8fa7994a3290896caf76"
+      },
+      {
+        "path": "langgraph/managed/__init__.py",
+        "sha256": "7257008527ef47513b9765ec8284cd740d2f781ad6ff0b7cabe066848232e741"
+      },
+      {
+        "path": "langgraph/managed/base.py",
+        "sha256": "1ffbac50065dc163dcee0d9ee21d42891652c5d5e9ab4c9f7c74e26e37cd3689"
+      },
+      {
+        "path": "langgraph/managed/is_last_step.py",
+        "sha256": "6fe0e58317aa0b0b01cb119e2589fcc9d5b788c6c06645a4282d3032d993f791"
+      },
+      {
+        "path": "langgraph/pregel/__init__.py",
+        "sha256": "88ea6667a370774432125df7d4fa78f86e18f844d17ed860098736180703b676"
+      },
+      {
+        "path": "langgraph/pregel/_algo.py",
+        "sha256": "39a8eab7c318ca866b8b394447063444403ea668df6fd173af21bfcb5270e976"
+      },
+      {
+        "path": "langgraph/pregel/_call.py",
+        "sha256": "38aa434fc1624e4e2e9140729b8b750f78cd17012620fcb33458a63585e8793d"
+      },
+      {
+        "path": "langgraph/pregel/_checkpoint.py",
+        "sha256": "49065ded9a05d6a0df806449eea8ab9a59fe24f3ce1739e7e5c34725b3022fb8"
+      },
+      {
+        "path": "langgraph/pregel/_config.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "langgraph/pregel/_draw.py",
+        "sha256": "943a8e60c1403540750dded1af59b73f5f3998b0c74df77eab53c9638f7a263d"
+      },
+      {
+        "path": "langgraph/pregel/_executor.py",
+        "sha256": "a5380d3d59d5f57905318bb3463c4c3cf3b9ba2487d6a1de8d4d6104c66b4a53"
+      },
+      {
+        "path": "langgraph/pregel/_io.py",
+        "sha256": "a9c2c16bff60d8e42b2d6f92f4d8b004896987ba526355148a9c778a99c0e544"
+      },
+      {
+        "path": "langgraph/pregel/_log.py",
+        "sha256": "b7ec6e7780aa404ba4b0faa35d99bbdbc04bd9c150bc75d1bd39b95e0535dc13"
+      },
+      {
+        "path": "langgraph/pregel/_loop.py",
+        "sha256": "b122f38f691b41759c350480a481a12200bf19ece0359a5ca2a99febda1f5c64"
+      },
+      {
+        "path": "langgraph/pregel/_messages.py",
+        "sha256": "588df0561d764919c4fb2e8e2799c9a895800941a9d5a30b63b64f8fd5ad22d3"
+      },
+      {
+        "path": "langgraph/pregel/_read.py",
+        "sha256": "29f50724ba3b05cd2f0b37d245b8241d2b10e6f38dfeac61a7ce9fd52f878ef8"
+      },
+      {
+        "path": "langgraph/pregel/_remote_run_stream.py",
+        "sha256": "49eed21a9d1521e17a4412f5930313f61a50509fa80a7df0ecc65adfc1e7c0af"
+      },
+      {
+        "path": "langgraph/pregel/_retry.py",
+        "sha256": "38b7e726a2b2ce9fcf1d496348b9de72a20f4f3596de99b2dae015488cb9531a"
+      },
+      {
+        "path": "langgraph/pregel/_runner.py",
+        "sha256": "a04dbd6f354cc29186bc04e66f01cac0e8c9c59f7945cfe390ccae20b4e37132"
+      },
+      {
+        "path": "langgraph/pregel/_task_status.py",
+        "sha256": "d26e5d6ba7772ab4f0fa9e8cc0ea13aa8c4c0bef6674dd425137c0ca8a4832e5"
+      },
+      {
+        "path": "langgraph/pregel/_tools.py",
+        "sha256": "82e734f862ad4a126907f01d460cf4ff5a4da3913bab688bb6d2c6db4760616f"
+      },
+      {
+        "path": "langgraph/pregel/_utils.py",
+        "sha256": "f9bc501c3a8d9c31808be0f9edc8dcb3d5a7b5be5638fc28c683c5100c24fafb"
+      },
+      {
+        "path": "langgraph/pregel/_validate.py",
+        "sha256": "62641424580d0dc5f7796c4750520a7b660b80c6a7b57df463d426745ba6a476"
+      },
+      {
+        "path": "langgraph/pregel/_write.py",
+        "sha256": "4f067c1c034fab2be682ec52b6101631d44494a0d23f9048aafbe65f660218d2"
+      },
+      {
+        "path": "langgraph/pregel/debug.py",
+        "sha256": "4845d5420bacf8c6ec2592fd535ec9418cd9e49318a013515dd7add14d497922"
+      },
+      {
+        "path": "langgraph/pregel/main.py",
+        "sha256": "6067e1c48d1eedc24b6ede058a1fd9d8026d5f430db0b21667563210564f1e7e"
+      },
+      {
+        "path": "langgraph/pregel/protocol.py",
+        "sha256": "bb01f15b767867ce23ca80f3f90cea567e1f714dfa61bc2ca16d1d4fa3f06ce5"
+      },
+      {
+        "path": "langgraph/pregel/remote.py",
+        "sha256": "344854fcf943b832cace22e180f34bd3b88d38ac6bf3c1b99c19ba26261c0d10"
+      },
+      {
+        "path": "langgraph/pregel/types.py",
+        "sha256": "b58b92541130b1713204631f2f998c5caa0f814f383556feb2bc0c4d92323d97"
+      },
+      {
+        "path": "langgraph/runtime.py",
+        "sha256": "5a5e3aad147f67397481ea47c67cde97938d85b5762a7aa4d4ce511dcd693c42"
+      },
+      {
+        "path": "langgraph/stream/__init__.py",
+        "sha256": "2f1d6dfb3f16672498632dfa56036e19a5d1fd1252b3f22dd74fa01d44467f38"
+      },
+      {
+        "path": "langgraph/stream/_convert.py",
+        "sha256": "9aa68288f83885709a4ffdd368f390e9a4c5d5f0b6ac814d8e3ebd4f635bfc40"
+      },
+      {
+        "path": "langgraph/stream/_mux.py",
+        "sha256": "4a41a05ba1d4be6ba7d3fe3a4366d2e9844fbd0d8ff417cf1f93f8eb4ce99732"
+      },
+      {
+        "path": "langgraph/stream/_types.py",
+        "sha256": "fa3c59acb554cd466ab0d0d1aa113cf2163c8efa9e03e74e61bf1aece21bf192"
+      },
+      {
+        "path": "langgraph/stream/run_stream.py",
+        "sha256": "994660f7f872233ad460fea5f4fd76814d7c9bdd16d2a9f5d109b024a571747a"
+      },
+      {
+        "path": "langgraph/stream/stream_channel.py",
+        "sha256": "0425e8aca9ed1ea0eb84abb4c49d5a676f85b8cb7b8c335db7339f8ee2cfdb6d"
+      },
+      {
+        "path": "langgraph/stream/transformers.py",
+        "sha256": "551a93a37057ce1a312e7e7588a76d29ba5a2b1710e9421f2e33a7a281d52719"
+      },
+      {
+        "path": "langgraph/types.py",
+        "sha256": "062583a1c0af9833477935a9a78d336408cc9a33c425722a1191e000d032107a"
+      },
+      {
+        "path": "langgraph/typing.py",
+        "sha256": "1bfa647f6597a09b37da8d898c4224e30db64a68ed6a523c431df67d56ab3ccb"
+      },
+      {
+        "path": "langgraph/utils/__init__.py",
+        "sha256": "aee9f1d5c280a2f3d4d3472e52b7de657c927b7cb5e7f98e9e65dc675543046a"
+      },
+      {
+        "path": "langgraph/utils/config.py",
+        "sha256": "17ffd08dbd41f5d3175d54be5a4b12d22480170007d078f33c26677531cff071"
+      },
+      {
+        "path": "langgraph/utils/runnable.py",
+        "sha256": "0a75564d27dd54e9f9d4e5bdf628e64c0f9d3d52e141880f0908d235914ec67a"
+      },
+      {
+        "path": "langgraph/version.py",
+        "sha256": "1305c05070d77bc45324dbe09c478830bf7ff11694dacf0dbfd59c6f78551ac8"
+      },
+      {
+        "path": "langgraph/warnings.py",
+        "sha256": "382d8b3778a1c113b2f3e2652da407b553be3b65acc4a655cc60c2b061ee2763"
+      }
+    ]
+  },
+  "scope": "Controlled runtime capture and offline replay; no durable restart or independent observer.",
+  "source_commit": "d0bc8defef631c51493e5fb5931af1fe35d4d47c",
+  "source_hashes": {
+    "integrations/langgraph/requirements.lock": "55232532d5cf5bc6328f2ea9789f991c812c446211a46549e2dfe88a00e08835",
+    "integrations/langgraph/run.py": "4f28f08a223cf02f230e0aa2b35d122f6b3974b8059977340060485324e3ad00",
+    "integrations/langgraph/temporal/CONTRACT.json": "90a9b07ee7cfb004430538d141bf743c3330fbf531c71720e03ed59c1ba72123",
+    "integrations/langgraph/temporal/RUNTIME_CONTRACT.json": "e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+    "integrations/langgraph/temporal/capture.py": "9fcc56f18a64f5ac8beaa0d319805387dc0c173b30cb93e9ab6f8ff583c8db72",
+    "integrations/langgraph/temporal/core.py": "cb865b60edd9c6b5c8592394e447ab7a5dd43a264b38ac7538a1fd957531e8d7",
+    "integrations/langgraph/temporal/fixtures.py": "7f02fac07ed1960271ab0a473d9d6f823f6dfb629b082d1dfd1226cb766b1709",
+    "integrations/langgraph/temporal/report.py": "deff584c6b3cc3f2aa67ae65947d9f5914b75c62daa605353208ed91edc68a47",
+    "integrations/langgraph/temporal/runtime_report.py": "09d82ef689f4c065aaa7212bb13618686cb4a0f9c7c9da2dddd2353e65110acf",
+    "integrations/langgraph/temporal/runtime_source.py": "8d32aa9fd088852969e5c66631f9dae897885f6ded0bba722be8f6500382862f",
+    "integrations/langgraph/temporal/tests/test_core.py": "7eee0556d2bb40c65286edc27d696a0ceba299183315c33ff2b2064c26a4e852",
+    "integrations/langgraph/temporal/tests/test_runtime_source.py": "6e44195c53e5b45334b1912c6fae4f830be7b8f19a2796d77896d1498bf1dae9",
+    "integrations/langgraph/temporal/view.html": "780e6c7f63dd8e3abe7fe39b3436f3d167e1f2c341509b221ae48c469ec9571f",
+    "tools/airep_v02/__init__.py": "bfb7a78b37490532e38bed547414e4c43398c6fb36f41603574884067074945f",
+    "tools/airep_v02/__main__.py": "c73f4e9e89a62bc4db778d27a6b49a888d64b0adb25fc92d1dd0554b17b6e7b2",
+    "tools/airep_v02/basis.py": "18b1f535da202ec4665ae2dcdd5acbfc6efb021dc66425791eaa6264330ed835",
+    "tools/airep_v02/explain.py": "176952c4bb098b558719736e0ec067a5d8572135732c4e4c77eee479d190bb89",
+    "tools/airep_v02/json_input.py": "53879153a18054639843c32aa54aa19a1e7c87be3e89405769b157571670e890",
+    "tools/airep_v02/producer.py": "ccdec93ccb49b09bae8542a8f2b037319e1d00cda2144fc72f219690eda6090a",
+    "tools/airep_v02/profiles.py": "c87ccd501d78f865e647357c79728918336d4dfdf4d31201a34d173e76953da3",
+    "tools/airep_v02/reconcile.py": "ea94f18a8cf95e10be7435a820debc84d72465e080683fc04399f418d1f6d715",
+    "tools/airep_v02/verify.py": "cc70f0f1bb2c97dede1c99fe64f6984a221fe715722403ec6a8269ad626a33dd"
+  },
+  "views": [
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T01 before delayed observation",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "329496d3-8277-4133-9c86-06a0742977f8"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T01 after delayed observation",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 100,
+            "arrivals": [
+              100
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "cd260af2-0b73-4ef7-bb81-2420c000eeec",
+              "event_time": 1447801997,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1447837826,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "source_ref": "capture:sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "status": "QUIESCENT",
+              "window": [
+                1437609753,
+                1447801997
+              ]
+            },
+            "event_hash": "sha256:cbf858406ae2350eeb258325b238ab8b1161656593536784267ff905368e8d61",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "329496d3-8277-4133-9c86-06a0742977f8"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T01 reversed arrival list",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 100,
+            "arrivals": [
+              100
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "cd260af2-0b73-4ef7-bb81-2420c000eeec",
+              "event_time": 1447801997,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1447837826,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "source_ref": "capture:sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "status": "QUIESCENT",
+              "window": [
+                1437609753,
+                1447801997
+              ]
+            },
+            "event_hash": "sha256:cbf858406ae2350eeb258325b238ab8b1161656593536784267ff905368e8d61",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "329496d3-8277-4133-9c86-06a0742977f8"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "QUIESCENT_REPORTED",
+      "label": "T01 inspect earlier sampled window",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 100,
+            "arrivals": [
+              100
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "cd260af2-0b73-4ef7-bb81-2420c000eeec",
+              "event_time": 1447801997,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1447837826,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "source_ref": "capture:sha256:442425e5045cd267aef5059edd89c12294ccdadf64e68ec065a562623e7f77fc",
+              "status": "QUIESCENT",
+              "window": [
+                1437609753,
+                1447801997
+              ]
+            },
+            "event_hash": "sha256:cbf858406ae2350eeb258325b238ab8b1161656593536784267ff905368e8d61",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "59786fce-8cd0-4cc3-bffd-332db0a5ee66"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1447837826,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1437609753,
+            1447801997
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "cd260af2-0b73-4ef7-bb81-2420c000eeec"
+            ],
+            "status": "QUIESCENT_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "MISSING",
+      "label": "T02 new control / old observation",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": false,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 8,
+            "arrivals": [
+              8
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "1dd6babf-08a6-485e-b911-e4ec10d6ada2",
+              "event_time": 1457002878,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-2",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "receipt",
+              "observed_time": 1457002878,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:1dc3eedee0c9efc9e57609444dd5a9a8bf0eec700b88f1cc4ad97c9a102a8ccf",
+              "source_ref": "capture:sha256:1dc3eedee0c9efc9e57609444dd5a9a8bf0eec700b88f1cc4ad97c9a102a8ccf",
+              "status": "RECEIVED",
+              "window": [
+                1457002878,
+                1457002878
+              ]
+            },
+            "event_hash": "sha256:92b718d528c4c3041206544abb5fbbe417b4674f05ebfaa6a901786cc06d92d5",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 9,
+            "arrivals": [
+              9
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f301dce2-ff2d-4d75-bb99-0e5ec1a4df26",
+              "event_time": 1457025401,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-2",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "execution",
+              "observed_time": 1457025401,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:97c046907239d8799ee9a805e06ea228cca087a8084071a5447d7d06727a5d62",
+              "source_ref": "capture:sha256:97c046907239d8799ee9a805e06ea228cca087a8084071a5447d7d06727a5d62",
+              "status": "CONTINUED",
+              "window": [
+                1457025401,
+                1457025401
+              ]
+            },
+            "event_hash": "sha256:c1342bf8942d58e0c373891abf1586993c462ca85c427a64e88c1d08b5b107f3",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1465746857,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-2",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "execution": {
+            "event_ids": [
+              "f301dce2-ff2d-4d75-bb99-0e5ec1a4df26"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "receipt": {
+            "event_ids": [
+              "1dd6babf-08a6-485e-b911-e4ec10d6ada2"
+            ],
+            "status": "RECEIVED_REPORTED"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T02 new control / matching observation",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": false,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 8,
+            "arrivals": [
+              8
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "1dd6babf-08a6-485e-b911-e4ec10d6ada2",
+              "event_time": 1457002878,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-2",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "receipt",
+              "observed_time": 1457002878,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:1dc3eedee0c9efc9e57609444dd5a9a8bf0eec700b88f1cc4ad97c9a102a8ccf",
+              "source_ref": "capture:sha256:1dc3eedee0c9efc9e57609444dd5a9a8bf0eec700b88f1cc4ad97c9a102a8ccf",
+              "status": "RECEIVED",
+              "window": [
+                1457002878,
+                1457002878
+              ]
+            },
+            "event_hash": "sha256:92b718d528c4c3041206544abb5fbbe417b4674f05ebfaa6a901786cc06d92d5",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "0069521f-d645-4daf-8cf3-cd79a00313dc"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 13,
+            "arrivals": [
+              13
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "5c83bf14-b893-4c6e-8cc5-46cc1f9040a1"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "5c83bf14-b893-4c6e-8cc5-46cc1f9040a1"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "5c83bf14-b893-4c6e-8cc5-46cc1f9040a1"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "bd21fe92-0b94-4b97-92f2-d8f5f0d06d06",
+              "event_time": 1465725917,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-2",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1465746857,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f174708cba334dd559e864745cd9217eb70683c4e54da02fe6c46bd7fcdb7426",
+              "source_ref": "capture:sha256:f174708cba334dd559e864745cd9217eb70683c4e54da02fe6c46bd7fcdb7426",
+              "status": "CONTINUED",
+              "window": [
+                1457158267,
+                1465725917
+              ]
+            },
+            "event_hash": "sha256:d98c4d9dba6f10ded241904e7e75997379c8366793b2acee939d93c0147c76fa",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "5c83bf14-b893-4c6e-8cc5-46cc1f9040a1"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 9,
+            "arrivals": [
+              9
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f301dce2-ff2d-4d75-bb99-0e5ec1a4df26",
+              "event_time": 1457025401,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-2",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "execution",
+              "observed_time": 1457025401,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:97c046907239d8799ee9a805e06ea228cca087a8084071a5447d7d06727a5d62",
+              "source_ref": "capture:sha256:97c046907239d8799ee9a805e06ea228cca087a8084071a5447d7d06727a5d62",
+              "status": "CONTINUED",
+              "window": [
+                1457025401,
+                1457025401
+              ]
+            },
+            "event_hash": "sha256:c1342bf8942d58e0c373891abf1586993c462ca85c427a64e88c1d08b5b107f3",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "a9489752-58a7-48ad-973f-2d6621dc86ac"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1465746857,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-2",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1457158267,
+            1465725917
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "bd21fe92-0b94-4b97-92f2-d8f5f0d06d06"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [
+              "f301dce2-ff2d-4d75-bb99-0e5ec1a4df26"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "receipt": {
+            "event_ids": [
+              "1dd6babf-08a6-485e-b911-e4ec10d6ada2"
+            ],
+            "status": "RECEIVED_REPORTED"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "MISSING",
+      "label": "T03 selected run B / only late run A",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 110,
+            "arrivals": [
+              110
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f31185c1-02ad-46fe-b88d-688787c3a133",
+              "event_time": 644975205,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 645006245,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "source_ref": "capture:sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "status": "QUIESCENT",
+              "window": [
+                634775747,
+                644975205
+              ]
+            },
+            "event_hash": "sha256:aeb0c11929556deb1e910a77466699726c9a045680eba21566c6c3a9f5bf168f",
+            "identity_conflict": false,
+            "in_query_identity": false,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            634775747,
+            644975205
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T03 selected run B / late run A",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 110,
+            "arrivals": [
+              110
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f31185c1-02ad-46fe-b88d-688787c3a133",
+              "event_time": 644975205,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 645006245,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "source_ref": "capture:sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "status": "QUIESCENT",
+              "window": [
+                634775747,
+                644975205
+              ]
+            },
+            "event_hash": "sha256:aeb0c11929556deb1e910a77466699726c9a045680eba21566c6c3a9f5bf168f",
+            "identity_conflict": false,
+            "in_query_identity": false,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "329496d3-8277-4133-9c86-06a0742977f8"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "QUIESCENT_REPORTED",
+      "label": "T03 inspect historical run A",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": false,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 110,
+            "arrivals": [
+              110
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f31185c1-02ad-46fe-b88d-688787c3a133",
+              "event_time": 644975205,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 645006245,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "source_ref": "capture:sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "status": "QUIESCENT",
+              "window": [
+                634775747,
+                644975205
+              ]
+            },
+            "event_hash": "sha256:aeb0c11929556deb1e910a77466699726c9a045680eba21566c6c3a9f5bf168f",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 645006245,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+            "control_id": "pause-1",
+            "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+            "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            634775747,
+            644975205
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "f31185c1-02ad-46fe-b88d-688787c3a133"
+            ],
+            "status": "QUIESCENT_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "CONTINUED_REPORTED",
+      "label": "T09 repeated delivery",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 1,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7,
+              120
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "329496d3-8277-4133-9c86-06a0742977f8"
+            ],
+            "status": "CONTINUED_REPORTED"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "INDETERMINATE",
+      "label": "T10 corrupted signature",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [
+          {
+            "input_index": 0,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [
+                "producer-signature-invalid"
+              ],
+              "authenticated_withheld": [],
+              "class": "AIREP-Core",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "reason": "native artifact authentication not established"
+          }
+        ],
+        "duplicate_deliveries": 0,
+        "history": [],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001021,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [],
+            "status": "INDETERMINATE"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "INDETERMINATE"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "INDETERMINATE"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "MISSING",
+      "label": "T11 receiver and pause / no observer",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 2,
+            "arrivals": [
+              2
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "15b002c5-7a36-47bd-a842-a5f2f9a15ed1"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "15b002c5-7a36-47bd-a842-a5f2f9a15ed1"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "15b002c5-7a36-47bd-a842-a5f2f9a15ed1"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "22c04260-f172-49ae-85d6-79fb74a878de",
+              "event_time": 2335400619,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-3b3a-6d95-8000-4f2a0a30e6fe",
+                "control_id": "pause-1",
+                "run_id": "46f7c7aa-dbcf-4d80-ac30-3fdeff24e75d",
+                "runtime_epoch": "02513c7f-69aa-43fc-b77a-7b8f5213e5ae",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "receipt",
+              "observed_time": 2335400619,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f226fd57a6239cc22206e9d31f0cc462792ec4e847608d3ebe2ffe977d990a5b",
+              "source_ref": "capture:sha256:f226fd57a6239cc22206e9d31f0cc462792ec4e847608d3ebe2ffe977d990a5b",
+              "status": "RECEIVED",
+              "window": [
+                2335400619,
+                2335400619
+              ]
+            },
+            "event_hash": "sha256:307706beffc88fbe7d7bddf8e1bcd9b20a6119c9f44a76aa61841bfe7f1f5fae",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "15b002c5-7a36-47bd-a842-a5f2f9a15ed1"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 3,
+            "arrivals": [
+              3
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "32ddd4ff-568a-4408-8bcc-1e96de861d7b"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "32ddd4ff-568a-4408-8bcc-1e96de861d7b"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "32ddd4ff-568a-4408-8bcc-1e96de861d7b"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "6ce889af-46f6-4121-a3cc-fbe7a481a342",
+              "event_time": 2335823274,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-3b3a-6d95-8000-4f2a0a30e6fe",
+                "control_id": "pause-1",
+                "run_id": "46f7c7aa-dbcf-4d80-ac30-3fdeff24e75d",
+                "runtime_epoch": "02513c7f-69aa-43fc-b77a-7b8f5213e5ae",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "execution",
+              "observed_time": 2335823274,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:610f548498fabdd554a82ddfcd4bdbe5f2e5e3cd818e7a127fcc822c6a268f83",
+              "source_ref": "capture:sha256:610f548498fabdd554a82ddfcd4bdbe5f2e5e3cd818e7a127fcc822c6a268f83",
+              "status": "PAUSED",
+              "window": [
+                2335823274,
+                2335823274
+              ]
+            },
+            "event_hash": "sha256:b0119cee4c831ae9b6e03cdb7a2ab55e0eb8a0e2a90ccc18487a3da45a14ba5b",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "32ddd4ff-568a-4408-8bcc-1e96de861d7b"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 2335823275,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-3b3a-6d95-8000-4f2a0a30e6fe",
+            "control_id": "pause-1",
+            "run_id": "46f7c7aa-dbcf-4d80-ac30-3fdeff24e75d",
+            "runtime_epoch": "02513c7f-69aa-43fc-b77a-7b8f5213e5ae",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            2335823274,
+            2335823275
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "execution": {
+            "event_ids": [
+              "6ce889af-46f6-4121-a3cc-fbe7a481a342"
+            ],
+            "status": "PAUSED_REPORTED"
+          },
+          "receipt": {
+            "event_ids": [
+              "22c04260-f172-49ae-85d6-79fb74a878de"
+            ],
+            "status": "RECEIVED_REPORTED"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "MISSING",
+      "label": "T11 wrong sampled window",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 7,
+            "arrivals": [
+              7
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "329496d3-8277-4133-9c86-06a0742977f8",
+              "event_time": 1456863759,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+                "control_id": "pause-1",
+                "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+                "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 1456880281,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "source_ref": "capture:sha256:c6ca100cf7202b088948b2332121031eaa4e5cc26962f37bdbfd55d79dddb1dc",
+              "status": "CONTINUED",
+              "window": [
+                1448001021,
+                1456863759
+              ]
+            },
+            "event_hash": "sha256:05abdd9c1f8562bd0ab224bbca9f3aca087041263686540c691edfad3792bbd1",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "b849e510-cc24-4104-816e-060779740fc3"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 1456880281,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-32aa-6af8-8000-3aef8fd5a58c",
+            "control_id": "pause-1",
+            "run_id": "1ca1a6bc-fa6c-4168-8f36-6117b7fd0cb6",
+            "runtime_epoch": "392f7d79-ba14-476d-97c7-235255bd13d4",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            1448001022,
+            1456863759
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "execution": {
+            "event_ids": [],
+            "status": "MISSING"
+          },
+          "receipt": {
+            "event_ids": [],
+            "status": "MISSING"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    },
+    {
+      "clock_note": "Event and observation ticks are relative same-host monotonic nanoseconds. Arrival ticks belong to the separate replay schedule; they are not measured delivery latency.",
+      "expected_effect": "QUIESCENT_REPORTED",
+      "label": "Positive native pause / matching samples",
+      "result": {
+        "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+        "binding_errors": [],
+        "duplicate_deliveries": 0,
+        "history": [
+          {
+            "arrival_time": 3,
+            "arrivals": [
+              3
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "3c6367c9-e678-4604-a67e-e6675990ccbe"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "3c6367c9-e678-4604-a67e-e6675990ccbe"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "3c6367c9-e678-4604-a67e-e6675990ccbe"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "9ab86535-4f8d-4aab-b6de-9fb80e1a9a24",
+              "event_time": 634656026,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "execution",
+              "observed_time": 634656026,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:57a999c447c6bcccb84516b69d8c1cee7b06debbfefaca4d3ca680a7c33bf0b6",
+              "source_ref": "capture:sha256:57a999c447c6bcccb84516b69d8c1cee7b06debbfefaca4d3ca680a7c33bf0b6",
+              "status": "PAUSED",
+              "window": [
+                634656026,
+                634656026
+              ]
+            },
+            "event_hash": "sha256:014372ebff13f126ad8fde140df0d2b0e225dc56a725508b786aa3fcffcd0846",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "3c6367c9-e678-4604-a67e-e6675990ccbe"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 2,
+            "arrivals": [
+              2
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "37505cce-78b6-4c8e-a216-e98c38cffcfe"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "37505cce-78b6-4c8e-a216-e98c38cffcfe"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "37505cce-78b6-4c8e-a216-e98c38cffcfe"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "da9f66e4-8b2b-4d4f-bafd-4af859a5d082",
+              "event_time": 634168406,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "receipt",
+              "observed_time": 634168406,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f98dd0eed06f44af4117dea9cb28a87f4bd3c6631a04b9da8d84089c2c9a38e9",
+              "source_ref": "capture:sha256:f98dd0eed06f44af4117dea9cb28a87f4bd3c6631a04b9da8d84089c2c9a38e9",
+              "status": "RECEIVED",
+              "window": [
+                634168406,
+                634168406
+              ]
+            },
+            "event_hash": "sha256:65e7d6a3b89bd3908ee45672485e43da4933ef5da24956009289c173f0437e93",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "37505cce-78b6-4c8e-a216-e98c38cffcfe"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          },
+          {
+            "arrival_time": 110,
+            "arrivals": [
+              110
+            ],
+            "artifact_ref": {
+              "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+              "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+            },
+            "bound_reports": [
+              {
+                "artifact_ref": {
+                  "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                  "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                },
+                "native_verification": {
+                  "artifact_ref": {
+                    "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                    "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+                  },
+                  "authenticated_caveats": [],
+                  "authenticated_failures": [],
+                  "authenticated_withheld": [],
+                  "class": "AIREP-Authenticated",
+                  "evidence": {
+                    "bindings_digest": null,
+                    "freshness_window_seconds": null,
+                    "independence_policy_digest": null,
+                    "now": null,
+                    "profile_bases_digest": null,
+                    "revocation_digest": null
+                  },
+                  "observer_assessment": "not_applicable",
+                  "profile_evaluations": {},
+                  "witnessed_failures": [],
+                  "witnessed_withheld": [
+                    "no-witness-supplied"
+                  ]
+                }
+              }
+            ],
+            "event": {
+              "basis_digest": "sha256:e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+              "boundary": "local-business-file",
+              "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+              "event_id": "f31185c1-02ad-46fe-b88d-688787c3a133",
+              "event_time": 644975205,
+              "identity": {
+                "attempt_id": "attempt-1",
+                "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+                "control_id": "pause-1",
+                "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+                "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+                "target_id": "worker-1",
+                "workflow_id": "temporal-local-workflow"
+              },
+              "kind": "effect",
+              "observed_time": 645006245,
+              "observer_relationship": "same_executor",
+              "predicate_id": "sampled-business-step-progress",
+              "source_actor": "langgraph-local.capture-report",
+              "source_hash": "sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "source_ref": "capture:sha256:f8a0c5e6aa7766323ae64b528e8526775790d2fc806120c817d5ed703207a1a8",
+              "status": "QUIESCENT",
+              "window": [
+                634775747,
+                644975205
+              ]
+            },
+            "event_hash": "sha256:aeb0c11929556deb1e910a77466699726c9a045680eba21566c6c3a9f5bf168f",
+            "identity_conflict": false,
+            "in_query_identity": true,
+            "native_verification": {
+              "artifact_ref": {
+                "chain_id": "2c19c9ce-1c73-4d1b-a59e-6119c47fa1eb",
+                "record_id": "90143cec-cc94-486d-a541-e40b7003251b"
+              },
+              "authenticated_caveats": [],
+              "authenticated_failures": [],
+              "authenticated_withheld": [],
+              "class": "AIREP-Authenticated",
+              "evidence": {
+                "bindings_digest": null,
+                "freshness_window_seconds": null,
+                "independence_policy_digest": null,
+                "now": null,
+                "profile_bases_digest": null,
+                "revocation_digest": null
+              },
+              "observer_assessment": "not_applicable",
+              "profile_evaluations": {},
+              "witnessed_failures": [],
+              "witnessed_withheld": [
+                "no-witness-supplied"
+              ]
+            },
+            "superseded": false
+          }
+        ],
+        "identity_conflict": false,
+        "limits": [
+          "Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.",
+          "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.",
+          "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.",
+          "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."
+        ],
+        "ordering_unestablished": false,
+        "policy": "local-captured-temporal-v1",
+        "query": {
+          "boundary": "local-business-file",
+          "clock_id": "local-session-474b1242-6884-4ff3-979d-c817efeb872c",
+          "cutoff": 645006245,
+          "identity": {
+            "attempt_id": "attempt-1",
+            "checkpoint_id": "1f1da099-2b01-6bdf-8000-7b0c2f2dc850",
+            "control_id": "pause-1",
+            "run_id": "55551c5b-263a-445e-8954-e4cbd2e341e9",
+            "runtime_epoch": "fb3c735a-dfe4-40f1-a827-c6c67e130fb6",
+            "target_id": "worker-1",
+            "workflow_id": "temporal-local-workflow"
+          },
+          "predicate_id": "sampled-business-step-progress",
+          "window": [
+            634775747,
+            644975205
+          ]
+        },
+        "revision_errors": [],
+        "stages": {
+          "effect": {
+            "event_ids": [
+              "f31185c1-02ad-46fe-b88d-688787c3a133"
+            ],
+            "status": "QUIESCENT_REPORTED"
+          },
+          "execution": {
+            "event_ids": [
+              "9ab86535-4f8d-4aab-b6de-9fb80e1a9a24"
+            ],
+            "status": "PAUSED_REPORTED"
+          },
+          "receipt": {
+            "event_ids": [
+              "da9f66e4-8b2b-4d4f-bafd-4af859a5d082"
+            ],
+            "status": "RECEIVED_REPORTED"
+          }
+        }
+      },
+      "scope_note": "Real local LangGraph capture + offline delivery replay. Signed Decision reports bind the mapping; they do not establish independent enforcement. No durable restart tested."
+    }
+  ],
+  "worktree_status": ""
+}
