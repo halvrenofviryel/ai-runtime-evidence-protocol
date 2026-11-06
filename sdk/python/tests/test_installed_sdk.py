@@ -190,6 +190,55 @@ class InstalledSDK(unittest.TestCase):
         self.assertNotIn(seed, raw)
         self.assertNotIn(str(self.root).encode(), raw)
 
+    def test_application_interrupt_payload_rejected_before_evidence_serialization(self):
+        from langgraph.types import interrupt
+        session = ControlSession(key=Ed25519PrivateKey.generate(), producer='tests.user',
+            workflow_id='w', node_name='n', target_id='t', control_id='c')
+        def application(state):
+            interrupt({'private_application_value': state['secret']})
+        graph = StateGraph(dict)
+        graph.add_node('n', session.wrap_node(application))
+        graph.add_edge(START, 'n'); graph.add_edge('n', END)
+        marker = 'SYNTHETIC_PRIVATE_INTERRUPT_MARKER'
+        with self.assertRaisesRegex(ValueError, 'application interrupt payload') as error:
+            session.invoke(graph.compile(checkpointer=InMemorySaver()), {'secret': marker},
+                           thread_id='fresh', honor_pause=False)
+        self.assertNotIn(marker, str(error.exception))
+        self.assertNotIn(marker.encode(), b''.join(session._events))
+        self.assertFalse(any(json.loads(raw)['kind'] == 'native_result' for raw in session._events))
+
+    def test_consumer_rejects_foreign_interrupt_without_echoing_its_payload(self):
+        b, _, trust, *_ = self.run_graph()
+        events = [json.loads(raw) for raw in b['sources']]
+        native = next(e for e in events if e['kind'] == 'native_result')['data']
+        native['interrupts'] = native['checkpoint_interrupts'] = [{'secret': 'SYNTHETIC_PRIVATE_MARKER'}]
+        b['sources'] = [encoded(e).decode() for e in events]
+        result = self.result(b, trust)
+        self.assertEqual(result['consumer']['policy_result'], 'NO_MATCH')
+        self.assertIn('application interrupt payload', result['consumer']['errors'][0])
+        self.assertNotIn(b'SYNTHETIC_PRIVATE_MARKER', encoded(result))
+
+    def test_observation_samples_bracket_receipt_and_native_result(self):
+        original, _, trust, *_ = self.run_graph()
+        for case in ('both-before-receipt', 'initial-after-receipt', 'final-before-native-result'):
+            with self.subTest(case=case):
+                b = copy.deepcopy(original)
+                events = [json.loads(raw) for raw in b['sources']]
+                by_kind = {e['kind']: e for e in events}
+                data = by_kind['effect_sampled']['data']
+                if case == 'both-before-receipt':
+                    for sample in data.values():
+                        sample['start'] = sample['end'] = by_kind['dispatched']['tick']
+                elif case == 'initial-after-receipt':
+                    data['before']['start'] = data['before']['end'] = by_kind['native_result']['tick']
+                else:
+                    data['after']['start'] = data['after']['end'] = by_kind['received']['tick']
+                b['sources'] = [encoded(e).decode() for e in events]
+                result = self.result(b, trust)
+                self.assertEqual(result['consumer']['policy_result'], 'NO_MATCH')
+                self.assertEqual(result['consumer']['observation']['effect'], 'INDETERMINATE')
+                self.assertTrue(any('sample' in message for message in result['consumer']['errors']))
+
     def test_duplicate_members_depth_and_size_are_rejected(self):
         for raw in (b'{"x":1,"x":2}', b'[' * 33 + b'0' + b']' * 33, b' ' * (1024*1024+1)):
             with self.assertRaises(ValueError):

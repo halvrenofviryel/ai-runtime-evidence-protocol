@@ -4,6 +4,6 @@ from ._native.verify import evaluate_request, operator_inputs
 from ._native.reconcile import reconcile
 from ._native.profiles import ProfileBases
 
-__version__ = '0.1.0a1'
+__version__ = '0.1.0a2'
 __all__ = ['Chain', 'digest_bytes', 'digest_json', 'reference', 'evaluate_request',
            'operator_inputs', 'reconcile', 'ProfileBases']

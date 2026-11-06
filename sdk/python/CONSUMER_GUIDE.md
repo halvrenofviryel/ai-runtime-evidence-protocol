@@ -28,7 +28,9 @@ timeout is 124.
 
 Native INCOMPLETE includes intended-target coverage NOT_EVALUATED. Matching this
 bounded policy never changes that native status. File equality means equality of
-two samples only. The graph, hook, observer and test key share a trust domain.
+two samples only. The initial sample must finish before receipt and the final
+sample must begin after the native runtime result. Application interrupts other
+than the exact SDK control interrupt are rejected before evidence serialization. The graph, hook, observer and test key share a trust domain.
 Input trust shipped by the example is merely a reproducible test choice; an
 external consumer must explicitly decide whether that key/producer is accepted.
 

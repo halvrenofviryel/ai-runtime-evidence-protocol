@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from ._native import Chain, digest_bytes
 from .io import encoded, read_bytes, bounded_loads
-from .mapping import identity, project, BASIS
+from .mapping import identity, project, native_checkpoint, BASIS
 
 _EPOCH = (os.getpid(), 'process-' + str(uuid4()))
 
@@ -123,10 +123,12 @@ class ControlSession:
         finally:
             self._active = False
         snapshot = graph.get_state(config)
-        self._emit('native_result', {
+        native = native_checkpoint({
             'checkpoint_id': (snapshot.config or {}).get('configurable', {}).get('checkpoint_id'),
             'next': list(snapshot.next), 'interrupts': [i.value for i in result.interrupts],
-            'checkpoint_interrupts': [i.value for task in snapshot.tasks for i in task.interrupts]})
+            'checkpoint_interrupts': [i.value for task in snapshot.tasks for i in task.interrupts]},
+            self.identity, digest_bytes(self._command))
+        self._emit('native_result', native)
         if observer:
             self._emit('effect_sampled', {'before': initial_sample, 'after': observer.sample(self._clock)})
         expected, observation = project(self._events, self.identity, self.producer)

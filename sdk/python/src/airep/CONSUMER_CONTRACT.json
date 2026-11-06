@@ -3,9 +3,33 @@
   "version": 1,
   "clock": "Monotonic elapsed nanoseconds within one invocation; no ordering across runs or hosts is inferred",
   "input": "Exact SDK hook bundle, separate operator trust and explicit expected identity",
-  "identity": ["workflow_id", "run_id", "runtime_epoch", "checkpoint_id", "control_id", "attempt_id", "target_id", "node_name"],
-  "limits": {"json_bytes": 1048576, "json_depth": 32, "json_nodes": 20000, "artifacts": 128, "source_bytes": 131072, "cli_seconds_max": 30},
-  "policy_match": {"receipt": "RECEIVED", "execution": "PAUSED_REPORTED", "effect": "QUIESCENT_REPORTED"},
+  "identity": [
+    "workflow_id",
+    "run_id",
+    "runtime_epoch",
+    "checkpoint_id",
+    "control_id",
+    "attempt_id",
+    "target_id",
+    "node_name"
+  ],
+  "limits": {
+    "json_bytes": 1048576,
+    "json_depth": 32,
+    "json_nodes": 20000,
+    "artifacts": 128,
+    "source_bytes": 131072,
+    "cli_seconds_max": 30
+  },
+  "policy_match": {
+    "receipt": "RECEIVED",
+    "execution": "PAUSED_REPORTED",
+    "effect": "QUIESCENT_REPORTED"
+  },
   "scope": "A first-party report of cooperative pause at one instrumented synchronous node and matching file samples; no continuous stopping, causal enforcement, total target coverage, durable restart or independent observer",
-  "native": "Unmodified 0.2.0-beta.1 verifier and reconciliation outputs remain separate. Exit zero means evaluation completed. MATCH is only this explicit local policy."
+  "native": "Unmodified 0.2.0-beta.1 verifier and reconciliation outputs remain separate. Exit zero means evaluation completed. MATCH is only this explicit local policy.",
+  "source_admission": {
+    "native_interrupts": "Only the exact hook control interrupt is admitted; application interrupts and foreign next-node names are rejected before evidence serialization.",
+    "sample_order": "dispatch <= initial sample start <= initial sample end <= receipt <= native result <= final sample start <= final sample end <= effect event"
+  }
 }

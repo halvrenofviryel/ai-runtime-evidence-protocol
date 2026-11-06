@@ -39,6 +39,24 @@ def sample(value):
     return value
 
 
+def native_checkpoint(value, expected, command_digest):
+    """Admit only this hook's control interrupt; never export application payloads."""
+    if (type(value) is not dict or set(value) != {'checkpoint_id', 'next', 'interrupts', 'checkpoint_interrupts'} or
+            type(value['checkpoint_id']) is not str or not 0 < len(value['checkpoint_id']) <= 256 or
+            type(value['next']) is not list or value['next'] not in ([], [expected['node_name']])):
+        raise ValueError('native checkpoint is outside the single-node contract')
+    control = {'airep': expected, 'instruction_digest': command_digest}
+    for field in ('interrupts', 'checkpoint_interrupts'):
+        if type(value[field]) is not list or value[field] not in ([], [control]):
+            raise ValueError('application interrupt payload is outside the control contract')
+    if value['interrupts'] != value['checkpoint_interrupts']:
+        raise ValueError('runtime and checkpoint control interrupts disagree')
+    # Construct only admitted fields; do not serialize arbitrary interrupt values.
+    return {'checkpoint_id': value['checkpoint_id'], 'next': list(value['next']),
+            'interrupts': [control] if value['interrupts'] else [],
+            'checkpoint_interrupts': [control] if value['checkpoint_interrupts'] else []}
+
+
 def project(sources, expected, producer):
     """Return exact native family payloads and a separate bounded observation view."""
     identity(expected)
@@ -97,12 +115,7 @@ def project(sources, expected, producer):
     if 'pause_requested' in events and 'ignored' in events:
         raise ValueError('conflicting handler outcomes')
     if 'native_result' in events:
-        native = events['native_result']['data']
-        if (set(native) != {'checkpoint_id', 'next', 'interrupts', 'checkpoint_interrupts'} or
-                type(native['checkpoint_id']) is not str or not native['checkpoint_id'] or
-                type(native['next']) is not list or type(native['interrupts']) is not list or
-                type(native['checkpoint_interrupts']) is not list):
-            raise ValueError('native checkpoint shape invalid')
+        native = native_checkpoint(events['native_result']['data'], expected, digest_bytes(command_raw))
         interrupt = {'airep': expected, 'instruction_digest': digest_bytes(command_raw)}
         paused = (native['next'] == [expected['node_name']] and native['interrupts'] == [interrupt]
                   and native['checkpoint_interrupts'] == [interrupt])
@@ -125,6 +138,10 @@ def project(sources, expected, producer):
             raise ValueError('sample time order invalid')
         if before['start'] < events['dispatched']['tick']:
             raise ValueError('sample window predates dispatched control')
+        if 'received' in events and before['end'] > events['received']['tick']:
+            raise ValueError('initial sample overlaps or follows control receipt')
+        if 'native_result' in events and after['start'] < events['native_result']['tick']:
+            raise ValueError('final sample predates native runtime result')
         period = [before['start'], after['end']]
         effect = 'QUIESCENT_REPORTED' if all(before[k] == after[k] for k in ('exists', 'size', 'digest')) else 'CHANGED_REPORTED'
         if execution != 'MISSING':

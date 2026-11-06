@@ -2,7 +2,7 @@
 
 This package wraps the existing AIREP 0.2.0-beta.1 producer, verifier and
 reconciler and adds a bounded hook for a caller-owned synchronous LangGraph.
-It is a separate SDK version (0.1.0a1), not a new normative AIREP version.
+It is a separate SDK version (0.1.0a2), not a new normative AIREP version.
 It is not published to PyPI and does not establish external adoption.
 The measured installation target is Linux x86-64 with CPython 3.12; broader
 platform/version compatibility has not been established.
@@ -30,7 +30,7 @@ Build from a committed checkout (Python build tooling installed):
 python3 scripts/build_sdk.py --out /tmp/airep-sdk-build-new
 python3 -m venv /tmp/airep-sdk-env-new
 /tmp/airep-sdk-env-new/bin/pip install --require-hashes --only-binary=:all: -r integrations/langgraph/requirements.lock
-/tmp/airep-sdk-env-new/bin/pip install --no-deps /tmp/airep-sdk-build-new/dist/airep_sdk-0.1.0a1-py3-none-any.whl
+/tmp/airep-sdk-env-new/bin/pip install --no-deps /tmp/airep-sdk-build-new/dist/airep_sdk-0.1.0a2-py3-none-any.whl
 mkdir /tmp/airep-sdk-user-new
 cp sdk/python/examples/user_graph.py /tmp/airep-sdk-user-new/
 cd /tmp/airep-sdk-user-new
@@ -43,7 +43,16 @@ The example generates a fresh **test-only ephemeral key**, keeps it in memory,
 and exports only public self-selected test trust. The library creates no default
 key or default trust. Same-host control, execution and observation are not
 independent. File contents and application state are not exported by the hook;
-the explicitly selected file's sizes/digests are captured.
+the explicitly selected file's sizes/digests are captured. Application-owned
+interrupt payloads are rejected before source serialization; only the exact hook
+control interrupt is admitted. Identifier fields are intentionally public, so do
+not put secrets into workflow, target, control or producer identifiers.
+
+The 0.1.0a2 review revision fixes two defects in the unpublished 0.1.0a1
+candidate: foreign application interrupt payloads could enter source evidence,
+and equal file samples could be accepted without bracketing receipt/runtime
+completion. The contract hash changes with these stricter admission rules;
+old-basis bundles are rejected rather than silently reinterpreted.
 
 The node is paused cooperatively before its body executes. Ignored mode is an
 explicit negative control that runs the user node and reports continued execution.

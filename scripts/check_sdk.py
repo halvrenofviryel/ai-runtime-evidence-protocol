@@ -54,7 +54,7 @@ def main(wheel, out):
     for mode in ['ignored','unobserved']:
         run([python,'-I','user_graph.py','--mode',mode,'--out',mode])
     testlog=run([python,'-I','test_installed_sdk.py','-v'])
-    assert 'Ran 26 tests' in testlog.read_text() and '\nOK\n' in testlog.read_text()
+    assert 'Ran 29 tests' in testlog.read_text() and '\nOK\n' in testlog.read_text()
     native=out/'native-inputs'
     run([python,'-B',ROOT/'sdk/python/tests/prepare_native_parity.py','--out',native],cwd=ROOT)
     paritylog=run([python,'-I','check_native_parity.py','--inputs',native])
@@ -73,10 +73,10 @@ def main(wheel, out):
     record={'scope':'author-side clean install on same host; no outside adoption',
         'wheel':wheel.name,'wheel_sha256':hashlib.sha256(wheel.read_bytes()).hexdigest(),
         'pip_cache_disabled':True,'first_verified_output_seconds':first_seconds,'under_15_minutes':first_seconds<900,
-        'unit_tests':26,'native_parity_cases':13,'installed':installed,'observed':observed,
+        'unit_tests':29,'native_parity_cases':13,'installed':installed,'observed':observed,
         'command_count':len(results),'all_expected_exits':True}
     (out/'ACCEPTANCE.json').write_text(json.dumps(record,indent=2)+'\n')
-    print(json.dumps({'first_verified_output_seconds':first_seconds,'unit_tests':26,'native_parity_cases':13,'commands':len(results)}))
+    print(json.dumps({'first_verified_output_seconds':first_seconds,'unit_tests':29,'native_parity_cases':13,'commands':len(results)}))
 
 
 if __name__=='__main__':
