@@ -11,9 +11,14 @@ historical result. No public release or independent reproduction is claimed.
 | D explain/CLI tests | 14 passed | Existing native and explanatory results preserved |
 | New captured runs | 3 | Native pause; ignored controls with two real file writes; pause with no observer |
 | Offline delivery views | 14/14 matched | T01–T03, T09–T11 and positive support |
-| Saved-input replay | 14/14 identical | Native verifier and consumer output equality; no fresh runtime in replay |
+| Saved-input replay | 14/14 identical parsed views | Parsed native-verifier and consumer view equality; no fresh runtime in replay |
 | Browser check | 14 views + 2 buttons passed | Scope, sampled windows, time bases, failures and limits visible |
 | Original fixture report | 8/8 matched | Original source policy still explicit and separate |
+
+Replay equality means identical parsed native-verifier and consumer `views`,
+not byte-for-byte identical output files. Capture and replay reports retain
+different provenance metadata; the HTML can differ in JSON key serialization
+order even when the parsed views are equal. Each file has its own recorded hash.
 
 **G2-Core: local PASS for captured-runtime mapping and offline delivery replay.**
 The runtime uses real InMemorySaver checkpoints, receiver command bytes, native

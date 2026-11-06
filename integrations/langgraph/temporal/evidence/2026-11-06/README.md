@@ -21,7 +21,10 @@ python -B -m integrations.langgraph.temporal.runtime_report \
 python -B -m integrations.langgraph.temporal.runtime_report --out /tmp/airep-fresh-capture-new
 ```
 
-The saved-input replay must reproduce all fourteen native and consumer views.
+The saved-input replay must reproduce all fourteen parsed native-verifier and
+consumer views. This is structural equality of parsed results, not byte-for-byte
+equality of output files. Report metadata and HTML JSON key order may differ;
+each file's integrity is checked against its own hash.
 A fresh capture has new IDs, keys and timing; expected bounded outcomes must
 still match. Output directories must not exist.
 

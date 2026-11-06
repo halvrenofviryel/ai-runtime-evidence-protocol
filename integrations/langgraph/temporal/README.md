@@ -65,6 +65,11 @@ SHA-256 manifest. `index.html` presents precomputed, verified results. Its butto
 select replay outcomes; they do not start a live runtime or deliver a network
 message. Both positive and negative controls are required.
 
+Saved-input equality compares the parsed native-verifier and consumer `views`
+arrays. It does not assert byte-for-byte equality of output files: report
+provenance differs and HTML JSON key order can differ. File hashes establish
+each file's integrity separately from semantic replay equality.
+
 The original fixture path remains available:
 
 ```sh
