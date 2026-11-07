@@ -1,0 +1,24 @@
+test_basis_digest_is_pinned_to_registry (test_export_embedded_evaluation.ExporterTests.test_basis_digest_is_pinned_to_registry) ... ok
+test_both_context_timestamps_are_required_and_naive_values_refused (test_export_embedded_evaluation.ExporterTests.test_both_context_timestamps_are_required_and_naive_values_refused) ... ok
+test_claim_vocabulary_records_declarations_and_establishes_only_digests (test_export_embedded_evaluation.ExporterTests.test_claim_vocabulary_records_declarations_and_establishes_only_digests) ... ok
+test_cli_end_to_end_and_refusal_exit_codes (test_export_embedded_evaluation.ExporterTests.test_cli_end_to_end_and_refusal_exit_codes) ... ok
+test_contradictory_states_are_refused (test_export_embedded_evaluation.ExporterTests.test_contradictory_states_are_refused) ... ok
+test_evidence_digests_are_sha256_of_exact_bytes (test_export_embedded_evaluation.ExporterTests.test_evidence_digests_are_sha256_of_exact_bytes) ... ok
+test_explicit_offsets_are_normalised_and_utc_preserved (test_export_embedded_evaluation.ExporterTests.test_explicit_offsets_are_normalised_and_utc_preserved) ... ok
+test_fractional_seconds_are_preserved_and_ordered_before_rounding (test_export_embedded_evaluation.ExporterTests.test_fractional_seconds_are_preserved_and_ordered_before_rounding) ... ok
+test_independence_and_access_are_never_inferred (test_export_embedded_evaluation.ExporterTests.test_independence_and_access_are_never_inferred) ... ok
+test_malformed_offsets_are_refused_in_either_timestamp (test_export_embedded_evaluation.ExporterTests.test_malformed_offsets_are_refused_in_either_timestamp) ... ok
+test_multiple_tasks_require_an_explicit_task (test_export_embedded_evaluation.ExporterTests.test_multiple_tasks_require_an_explicit_task) ... ok
+test_negative_duration_is_refused (test_export_embedded_evaluation.ExporterTests.test_negative_duration_is_refused) ... ok
+test_not_run_is_preserved_as_not_measured (test_export_embedded_evaluation.ExporterTests.test_not_run_is_preserved_as_not_measured) ... ok
+test_platform_verify_token_is_preserved_not_evaluated (test_export_embedded_evaluation.ExporterTests.test_platform_verify_token_is_preserved_not_evaluated) ... ok
+test_threshold_pass_and_fail_validate_and_carry_the_metric (test_export_embedded_evaluation.ExporterTests.test_threshold_pass_and_fail_validate_and_carry_the_metric) ... ok
+test_timezone_naive_filename_is_never_promoted_to_utc (test_export_embedded_evaluation.ExporterTests.test_timezone_naive_filename_is_never_promoted_to_utc) ... ok
+test_unrepresentable_precision_and_utc_range_fail_closed (test_export_embedded_evaluation.ExporterTests.test_unrepresentable_precision_and_utc_range_fail_closed) ... ok
+test_unsupported_input_shape_is_named_not_generic (test_export_embedded_evaluation.ExporterTests.test_unsupported_input_shape_is_named_not_generic) ... ok
+test_withheld_evidence_needs_a_reason (test_export_embedded_evaluation.ExporterTests.test_withheld_evidence_needs_a_reason) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.229s
+
+OK

@@ -1,0 +1,139 @@
+{
+  "config_general": {
+    "lighteval_sha": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+    "num_fewshot_seeds": 1,
+    "max_samples": 2,
+    "job_id": "0",
+    "start_time": 294258.59320125,
+    "end_time": 294276.644948568,
+    "total_evaluation_time_secondes": "18.051747318007983",
+    "model_config": {
+      "model_name": "sshleifer/tiny-gpt2",
+      "generation_parameters": {
+        "num_blocks": null,
+        "block_size": null,
+        "early_stopping": null,
+        "repetition_penalty": null,
+        "frequency_penalty": null,
+        "length_penalty": null,
+        "presence_penalty": null,
+        "max_new_tokens": null,
+        "min_new_tokens": null,
+        "seed": null,
+        "stop_tokens": null,
+        "temperature": 0,
+        "top_k": null,
+        "min_p": null,
+        "top_p": null,
+        "truncate_prompt": null,
+        "cache_implementation": null,
+        "response_format": null
+      },
+      "system_prompt": null,
+      "cache_dir": "~/.cache/huggingface/lighteval",
+      "tokenizer": null,
+      "subfolder": null,
+      "revision": "5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be",
+      "batch_size": 1,
+      "max_length": null,
+      "model_loading_kwargs": {},
+      "add_special_tokens": true,
+      "skip_special_tokens": true,
+      "model_parallel": false,
+      "dtype": "float32",
+      "device": "cpu",
+      "trust_remote_code": false,
+      "compile": false,
+      "multichoice_continuations_start_space": null,
+      "move_trailing_context_space": true,
+      "pairwise_tokenization": false,
+      "continuous_batching": false,
+      "override_chat_template": null
+    },
+    "model_name": "sshleifer/tiny-gpt2"
+  },
+  "results": {
+    "hellaswag|0": {
+      "em": 0.0,
+      "em_stderr": 0.0
+    },
+    "all": {
+      "em": 0.0,
+      "em_stderr": 0.0
+    }
+  },
+  "versions": {},
+  "config_tasks": {
+    "hellaswag|0": {
+      "name": "hellaswag",
+      "prompt_function": "hellaswag_prompt",
+      "hf_repo": "Rowan/hellaswag",
+      "hf_subset": "default",
+      "metrics": [
+        {
+          "metric_name": "em",
+          "higher_is_better": true,
+          "category": "GENERATIVE",
+          "sample_level_fn": "ExactMatches(aggregation_function=max, normalize_gold=None, normalize_pred=None, strip_strings=True, type_exact_match=full)",
+          "corpus_level_fn": "mean",
+          "batched_compute": false
+        }
+      ],
+      "hf_data_files": null,
+      "solver": null,
+      "scorer": null,
+      "sample_fields": null,
+      "sample_to_fewshot": null,
+      "filter": null,
+      "hf_revision": "218ec52e09a7e7462a5400043bb9a69a41d06b76",
+      "hf_filter": null,
+      "hf_avail_splits": [
+        "train",
+        "test",
+        "validation"
+      ],
+      "evaluation_splits": [
+        "validation"
+      ],
+      "few_shots_split": null,
+      "few_shots_select": null,
+      "generation_size": 1,
+      "generation_grammar": null,
+      "stop_sequence": [
+        "\n"
+      ],
+      "num_samples": null,
+      "original_num_docs": -1,
+      "effective_num_docs": -1,
+      "must_remove_duplicate_docs": false,
+      "num_fewshots": 0,
+      "version": 0
+    }
+  },
+  "summary_tasks": {
+    "hellaswag|0": {
+      "hashes": {
+        "hash_examples": "a92dedb32bc3efb4",
+        "hash_full_prompts": "ef46db3751d8e999",
+        "hash_input_tokens": "721a4a87942d9bfa",
+        "hash_cont_tokens": "cdea0011146473a5"
+      },
+      "truncated": 0,
+      "non_truncated": 0,
+      "padded": 0,
+      "non_padded": 0
+    }
+  },
+  "summary_general": {
+    "hashes": {
+      "hash_examples": "50af3eed9e3e6652",
+      "hash_full_prompts": "c166e5d20ad58f4e",
+      "hash_input_tokens": "c582d3288b007440",
+      "hash_cont_tokens": "f1c870d595fac2df"
+    },
+    "truncated": 0,
+    "non_truncated": 0,
+    "padded": 0,
+    "non_padded": 0
+  }
+}

@@ -1,0 +1,35 @@
+test_amendment_keeps_prior_record (test_consumer.ConsumerTests.test_amendment_keeps_prior_record) ... ok
+test_changed_basis_rejected (test_consumer.ConsumerTests.test_changed_basis_rejected) ... ok
+test_context_cannot_override_native_model_or_dataset (test_consumer.ConsumerTests.test_context_cannot_override_native_model_or_dataset) ... ok
+test_contradictory_denominator_rejected (test_consumer.ConsumerTests.test_contradictory_denominator_rejected) ... ok
+test_dropped_attempt_rehashed_still_rejected (test_consumer.ConsumerTests.test_dropped_attempt_rehashed_still_rejected) ... ok
+test_dropped_qualification_rehashed_rejected (test_consumer.ConsumerTests.test_dropped_qualification_rehashed_rejected) ... ok
+test_duplicate_nonfinite_deep_json_rejected (test_consumer.ConsumerTests.test_duplicate_nonfinite_deep_json_rejected) ... ok
+test_historical_label_cannot_mask_synthetic_bytes (test_consumer.ConsumerTests.test_historical_label_cannot_mask_synthetic_bytes) ... ok
+test_malformed_schema_does_not_leave_positive_result (test_consumer.ConsumerTests.test_malformed_schema_does_not_leave_positive_result) ... ok
+test_missing_accepted_basis_unestablished (test_consumer.ConsumerTests.test_missing_accepted_basis_unestablished) ... ok
+test_missing_prior_record_unestablished (test_consumer.ConsumerTests.test_missing_prior_record_unestablished) ... ok
+test_missing_source_unestablished (test_consumer.ConsumerTests.test_missing_source_unestablished) ... ok
+test_no_source_criterion_or_verdict_is_invented (test_consumer.ConsumerTests.test_no_source_criterion_or_verdict_is_invented) ... ok
+test_not_run_remains_not_measured (test_consumer.ConsumerTests.test_not_run_remains_not_measured) ... ok
+test_partial_scalar_success_keeps_80_of_100_and_exclusions (test_consumer.ConsumerTests.test_partial_scalar_success_keeps_80_of_100_and_exclusions) ... ok
+test_profile_only_is_disclosed_loss_not_preservation (test_consumer.ConsumerTests.test_profile_only_is_disclosed_loss_not_preservation) ... ok
+test_raw_decimal_survives_binary64_boundary (test_consumer.ConsumerTests.test_raw_decimal_survives_binary64_boundary) ... ok
+test_real_source_reuse_counts_rows_without_claiming_population (test_consumer.ConsumerTests.test_real_source_reuse_counts_rows_without_claiming_population) ... ok
+test_rehashed_profile_upgrade_rejected (test_consumer.ConsumerTests.test_rehashed_profile_upgrade_rejected) ... ok
+test_retry_keeps_first_error (test_consumer.ConsumerTests.test_retry_keeps_first_error) ... ok
+test_rounding_does_not_turn_failure_into_success (test_consumer.ConsumerTests.test_rounding_does_not_turn_failure_into_success) ... ok
+test_source_count_cannot_be_overridden (test_consumer.ConsumerTests.test_source_count_cannot_be_overridden) ... ok
+test_source_substitution_cannot_repin_receiver (test_consumer.ConsumerTests.test_source_substitution_cannot_repin_receiver) ... ok
+test_stale_record_never_satisfies_current_request (test_consumer.ConsumerTests.test_stale_record_never_satisfies_current_request) ... ok
+test_unaccepted_criterion_chronology_rejected (test_consumer.ConsumerTests.test_unaccepted_criterion_chronology_rejected) ... ok
+test_undisclosed_profile_loss_rejected (test_consumer.ConsumerTests.test_undisclosed_profile_loss_rejected) ... ok
+test_unknown_critical_package_field_rejected (test_consumer.ConsumerTests.test_unknown_critical_package_field_rejected) ... ok
+test_unrecognised_source_verdict_not_silently_discarded (test_consumer.ConsumerTests.test_unrecognised_source_verdict_not_silently_discarded) ... ok
+test_whole_context_keeps_unmodelled_qualification (test_consumer.ConsumerTests.test_whole_context_keeps_unmodelled_qualification) ... ok
+test_wrong_receiver_selection (test_consumer.ConsumerTests.test_wrong_receiver_selection) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.250s
+
+OK

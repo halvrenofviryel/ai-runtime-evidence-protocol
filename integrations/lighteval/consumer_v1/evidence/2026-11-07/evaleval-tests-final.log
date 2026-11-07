@@ -1,0 +1,34 @@
+test_airep_evidence_digests_are_recomputed_native_bytes (test_artifacts.StudyArtifactTests.test_airep_evidence_digests_are_recomputed_native_bytes) ... ok
+test_crosswalk_rows_are_complete_and_summary_matches (test_artifacts.StudyArtifactTests.test_crosswalk_rows_are_complete_and_summary_matches) ... ok
+test_native_manifest_matches_exact_bytes (test_artifacts.StudyArtifactTests.test_native_manifest_matches_exact_bytes) ... ok
+test_relationship_never_becomes_independence (test_artifacts.StudyArtifactTests.test_relationship_never_becomes_independence) ... ok
+test_two_representations_share_source_observation_without_verdict_laundering (test_artifacts.StudyArtifactTests.test_two_representations_share_source_observation_without_verdict_laundering) ... ok
+test_validation_reports_have_bounded_meanings (test_artifacts.StudyArtifactTests.test_validation_reports_have_bounded_meanings) ... ok
+test_completion_cannot_become_source_verdict (test_claim_safety.ClaimSafetyTests.test_completion_cannot_become_source_verdict) ... ok
+test_deployment_and_availability_require_explicit_context (test_claim_safety.ClaimSafetyTests.test_deployment_and_availability_require_explicit_context) ... ok
+test_direction_lost_is_refused (test_claim_safety.ClaimSafetyTests.test_direction_lost_is_refused) ... ok
+test_direction_reversed_is_refused (test_claim_safety.ClaimSafetyTests.test_direction_reversed_is_refused) ... ok
+test_duplicate_json_member_is_refused (test_claim_safety.ClaimSafetyTests.test_duplicate_json_member_is_refused) ... ok
+test_evaluator_relationship_does_not_establish_independence (test_claim_safety.ClaimSafetyTests.test_evaluator_relationship_does_not_establish_independence) ... ok
+test_evidence_reference_cannot_claim_recomputed_digest (test_claim_safety.ClaimSafetyTests.test_evidence_reference_cannot_claim_recomputed_digest) ... ok
+test_independence_claim_is_refused_even_if_declared (test_claim_safety.ClaimSafetyTests.test_independence_claim_is_refused_even_if_declared) ... ok
+test_malformed_generation_parameters_is_refused (test_claim_safety.ClaimSafetyTests.test_malformed_generation_parameters_is_refused) ... ok
+test_metric_range_is_explicit_and_enforced (test_claim_safety.ClaimSafetyTests.test_metric_range_is_explicit_and_enforced) ... ok
+test_missing_dataset_revision_fails (test_claim_safety.ClaimSafetyTests.test_missing_dataset_revision_fails) ... ok
+test_missing_framework_revision_fails (test_claim_safety.ClaimSafetyTests.test_missing_framework_revision_fails) ... ok
+test_missing_model_revision_fails (test_claim_safety.ClaimSafetyTests.test_missing_model_revision_fails) ... ok
+test_multi_task_source_is_refused (test_claim_safety.ClaimSafetyTests.test_multi_task_source_is_refused) ... ok
+test_no_criterion_cannot_become_pass (test_claim_safety.ClaimSafetyTests.test_no_criterion_cannot_become_pass) ... ok
+test_nonfinite_score_is_refused (test_claim_safety.ClaimSafetyTests.test_nonfinite_score_is_refused) ... ok
+test_restricted_or_unavailable_evidence_is_not_promoted_to_public (test_claim_safety.ClaimSafetyTests.test_restricted_or_unavailable_evidence_is_not_promoted_to_public) ... ok
+test_rounding_cannot_create_a_criterion (test_claim_safety.ClaimSafetyTests.test_rounding_cannot_create_a_criterion) ... ok
+test_sample_cap_cannot_become_population_complete (test_claim_safety.ClaimSafetyTests.test_sample_cap_cannot_become_population_complete) ... ok
+test_sample_trace_is_not_promoted_to_airep_lifecycle_evidence (test_claim_safety.ClaimSafetyTests.test_sample_trace_is_not_promoted_to_airep_lifecycle_evidence) ... ok
+test_schema_pass_is_not_semantic_truth_or_interoperability (test_claim_safety.ClaimSafetyTests.test_schema_pass_is_not_semantic_truth_or_interoperability) ... ok
+test_synthetic_all_selector_is_refused (test_claim_safety.ClaimSafetyTests.test_synthetic_all_selector_is_refused) ... ok
+test_valid_narrow_mapping_preserves_score_without_verdict (test_claim_safety.ClaimSafetyTests.test_valid_narrow_mapping_preserves_score_without_verdict) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.004s
+
+OK

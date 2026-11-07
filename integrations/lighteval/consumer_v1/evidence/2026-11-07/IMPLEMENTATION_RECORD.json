@@ -1,0 +1,68 @@
+{
+  "source_commit": "5e08bad92dbd82677c44d88e9ead263dba7c92a7",
+  "worktree_status": "",
+  "base": "10b4a9114d04b17fdcd7204a571dbe563d17e295",
+  "test_counts": {
+    "consumer": 30,
+    "exporter": 19,
+    "eee": 29
+  },
+  "new_model_runs": 0,
+  "historical_source_runs_reused": 1,
+  "views": 14,
+  "exact_replays": 14,
+  "commands": [
+    {
+      "log": "consumer-tests-final.log",
+      "exit": 0,
+      "sha256": "af644b190ce95e3a1e3153cf913c0859df783f22a7b04df3267b2e72db4df78c"
+    },
+    {
+      "log": "exporter-tests-final.log",
+      "exit": 0,
+      "sha256": "2a26a347c0d64ffa9195c96c38a8a71eb6dc078a348c4f26852f13e1db2ad150"
+    },
+    {
+      "log": "evaleval-tests-final.log",
+      "exit": 0,
+      "sha256": "a2b01ad493f9d0a574eecc05185b0d5de8b1c28571e08b780678652354059cba"
+    },
+    {
+      "log": "generate-final.log",
+      "exit": 0,
+      "sha256": "f4f997a982657d1bb08ca6eb8f95b87bd6e00751353095d0f204d2366887573a"
+    },
+    {
+      "log": "replay-final.json",
+      "exit": 0,
+      "sha256": "ae1962a946329c31bf5b30240d014bb2a7e2a525733b08ff0407e340420fd511"
+    },
+    {
+      "cli_case": "historical",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "report_equal": true
+    },
+    {
+      "cli_case": "profile-only",
+      "expected_exit": 0,
+      "actual_exit": 0,
+      "report_equal": true
+    },
+    {
+      "cli_case": "wrong-model_id",
+      "expected_exit": 2,
+      "actual_exit": 2,
+      "report_equal": true
+    }
+  ],
+  "preserved_existing_files": true,
+  "ci_status": "LOCAL_COMMANDS_PASS; NOT_YET_RUN_ON_GITHUB",
+  "limits": [
+    "same-author mapping and receiver implementation",
+    "historical two-sample LightEval source",
+    "authored partial/retry/amendment cases; no new inference",
+    "no native assurance artifacts",
+    "no external interoperability demonstrated"
+  ]
+}
