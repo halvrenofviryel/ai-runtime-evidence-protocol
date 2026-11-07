@@ -3,6 +3,8 @@
 
 Each command, cwd, exit and complete output is retained, including failures.
 Usage: python3 scripts/check_beta.py --out /tmp/airep-checks [--historical-only]
+The non-historical temporal integration provisions hash-pinned wheels separately;
+historical reproduction retains its existing offline dependency path.
 """
 import argparse
 import hashlib
@@ -35,7 +37,8 @@ def main():
     shutil.copytree(ROOT, scratch, ignore=ignore)
     basis=[]
     for pattern in ('tools/airep_v02', 'tests/v02', 'examples/v02', 'scripts', '.github/workflows',
-                    'spec/airep/v0.2/profiles', 'integrations/lighteval', 'integrations/hermes'):
+                    'spec/airep/v0.2/profiles', 'integrations/lighteval', 'integrations/hermes',
+                    'integrations/langgraph'):
         for p in sorted((ROOT/pattern).rglob('*')):
             if p.is_file() and '__pycache__' not in p.parts:
                 basis.append({'path':str(p.relative_to(ROOT)), 'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
@@ -107,6 +110,10 @@ def main():
         add('.', str(venv), 'scripts/demo.py', '--skip-bootstrap', '--out', str(args.out.resolve() / 'demo'))
         add('.', str(venv), 'scripts/check_quickstart.py')
         add('.', str(venv), 'scripts/check_beta_docs.py')
+        # Use the original checkout so captured evidence records its actual Git
+        # revision. The integration writes only scratch output/ignored deps.
+        add('.', 'python3', str(ROOT / 'scripts/check_temporal.py'),
+            '--out', str(args.out.resolve() / 'temporal'))
     results = []
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONUNBUFFERED='1')
     for i, (cwd, command) in enumerate(commands, 1):

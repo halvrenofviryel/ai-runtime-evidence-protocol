@@ -1,0 +1,18 @@
+test_all_runs_join_processes_without_forced_stop (test_runtime.RuntimeEvidenceTests.test_all_runs_join_processes_without_forced_stop) ... ok
+test_effect_is_not_inferred_from_native_interrupt (test_runtime.RuntimeEvidenceTests.test_effect_is_not_inferred_from_native_interrupt) ... ok
+test_event_pointer_hashes_and_frozen_core_admission (test_runtime.RuntimeEvidenceTests.test_event_pointer_hashes_and_frozen_core_admission) ... ok
+test_explain_keeps_non_evaluated_and_same_executor_limits (test_runtime.RuntimeEvidenceTests.test_explain_keeps_non_evaluated_and_same_executor_limits) ... ok
+test_guard_removes_inherited_values_and_refuses_connections (test_runtime.RuntimeEvidenceTests.test_guard_removes_inherited_values_and_refuses_connections) ... ok
+test_inflight_stop_preserves_completed_side_effect (test_runtime.RuntimeEvidenceTests.test_inflight_stop_preserves_completed_side_effect) ... ok
+test_mismatched_runtime_pause_identity_is_not_stop_execution (test_runtime.RuntimeEvidenceTests.test_mismatched_runtime_pause_identity_is_not_stop_execution) ... ok
+test_normal_executes_all_real_file_steps (test_runtime.RuntimeEvidenceTests.test_normal_executes_all_real_file_steps) ... ok
+test_omission_controls_cannot_upgrade_missing_stages (test_runtime.RuntimeEvidenceTests.test_omission_controls_cannot_upgrade_missing_stages) ... ok
+test_prestart_stop_has_actual_checkpoint_and_zero_side_effects (test_runtime.RuntimeEvidenceTests.test_prestart_stop_has_actual_checkpoint_and_zero_side_effects) ... ok
+test_receipt_is_not_enforcement (test_runtime.RuntimeEvidenceTests.test_receipt_is_not_enforcement) ... ok
+test_timeout_cleans_up_and_never_becomes_successful_enforcement (test_runtime.RuntimeEvidenceTests.test_timeout_cleans_up_and_never_becomes_successful_enforcement) ... ok
+test_unreachable_receiver_has_real_failure_and_no_fabricated_receipt (test_runtime.RuntimeEvidenceTests.test_unreachable_receiver_has_real_failure_and_no_fabricated_receipt) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 5.309s
+
+OK

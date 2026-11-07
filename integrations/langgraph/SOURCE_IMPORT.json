@@ -1,0 +1,47 @@
+{
+  "source_commit": "76ecce0b378a6b391850795abf45fb6aca8e1d6b",
+  "target_base": "10b4a9114d04b17fdcd7204a571dbe563d17e295",
+  "license": "Apache-2.0 as in source AIREP repository",
+  "copied_unmodified": [
+    {
+      "path": "tools/airep_v02/explain.py",
+      "sha256": "176952c4bb098b558719736e0ec067a5d8572135732c4e4c77eee479d190bb89"
+    },
+    {
+      "path": "integrations/langgraph/run.py",
+      "sha256": "4f28f08a223cf02f230e0aa2b35d122f6b3974b8059977340060485324e3ad00"
+    },
+    {
+      "path": "integrations/langgraph/README.md",
+      "sha256": "af4fc7ea4fcd527254df7e6862fea13276eb75fd1b5282eb123d9b68bb5259a9"
+    },
+    {
+      "path": "integrations/langgraph/requirements.lock",
+      "sha256": "55232532d5cf5bc6328f2ea9789f991c812c446211a46549e2dfe88a00e08835"
+    },
+    {
+      "path": "integrations/langgraph/dependencies.json",
+      "sha256": "a273052bd21a27cd184dfc315b8f542e222a06fac03a137ec07a7af927c9f358"
+    },
+    {
+      "path": "integrations/langgraph/tests/test_runtime.py",
+      "sha256": "199e6bc88a72ade959df7260f91d50e3d49e08bf6c20b9a7fb9c64d23d02eeac"
+    },
+    {
+      "path": "tests/v02/test_explain.py",
+      "sha256": "0add25bba70eb08731cd41c38e2ab5e5f90827e7f8cda9e8048d1a00ba7e2302",
+      "replaced_base_sha256": null
+    },
+    {
+      "path": "examples/v02/EXPLAIN.md",
+      "sha256": "ab8338f3528eecd855a1ea0a96a8c1cd8a5c40052d53021b9ef30bc893b54767",
+      "replaced_base_sha256": null
+    },
+    {
+      "path": "tools/airep_v02/__main__.py",
+      "sha256": "c73f4e9e89a62bc4db778d27a6b49a888d64b0adb25fc92d1dd0554b17b6e7b2",
+      "replaced_base_sha256": "dd55becf24a1d164433b65852892a5a29baa9bb2f421749da10d2dec5a377624"
+    }
+  ],
+  "scope": "Restore selected D/K3 source and D CLI from published K5 bundle; no historic result copied. Existing producer/verifier/reconciler/basis bytes match source bundle."
+}

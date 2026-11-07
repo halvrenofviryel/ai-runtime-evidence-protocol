@@ -1,0 +1,30 @@
+{
+  "scope": "Pre-push rerun; pending additions are evidence and CI only. No behavior source changed.",
+  "source_code_commit": "d0bc8defef631c51493e5fb5931af1fe35d4d47c",
+  "tests": [
+    {
+      "log": "prepush-beta.txt",
+      "name": "beta",
+      "passed": 39,
+      "sha256": "ee2d333ced5a96a6fc7fdbe84411ca5e161dabddfdae7e986a3c350b2eb62fb1"
+    },
+    {
+      "log": "prepush-explain.txt",
+      "name": "explain",
+      "passed": 14,
+      "sha256": "bdc03d78e6607b8186c0b4991a800d7f44c0cb38cd051963aa29fb4cfd381f4f"
+    },
+    {
+      "log": "prepush-runtime.txt",
+      "name": "runtime",
+      "passed": 13,
+      "sha256": "b2430cedf76fd4f48e34a1aef8d60a8c71625bf1baab701c1a28d5bff0e6ba3f"
+    },
+    {
+      "log": "prepush-temporal.txt",
+      "name": "temporal",
+      "passed": 35,
+      "sha256": "34be27ea6efc5058f81cb2e6f82d5fdc4b4bae6bfd396ec507207b5111f85659"
+    }
+  ]
+}
