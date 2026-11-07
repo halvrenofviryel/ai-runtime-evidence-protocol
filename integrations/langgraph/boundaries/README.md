@@ -27,7 +27,7 @@ python3 -m venv /tmp/airep-boundary-env
 
 Fresh capture requires `/usr/bin/bwrap` and permitted unprivileged user/mount/pid/network namespace setup. A surrounding execution sandbox may deny the NETLINK socket used during namespace setup; run the experiment in a suitable permitted local environment. There is no unconfined fallback for executors. Replay does not launch workers, observers or namespaces, but this runner still reads `bwrap --version` and the executable hash for environment metadata.
 
-Output directories must not exist. `inputs.json` carries exact signed source/projection bytes and explicit local trust inputs. `capture/` includes controller schedules, actual business files, observer public records and logs. Generated private observer keys are mode 0600 in a private directory, owned only by the observer process; they are removed before capture returns, including failures. No private key is exported in the kit.
+Output directories must not exist. `inputs.json` carries exact signed source/projection bytes and explicit local trust inputs. `capture/` includes controller schedules, actual business files, observer public records and logs. Generated private observer keys are mode 0600 in a private directory and are written/read by the observer. The controller and observer use the same host account; executor access is restricted by its mount/namespace view, not a different Unix UID. Keys are removed before capture returns, including failures. No private key is exported in the kit.
 
 ## Tested authority boundary
 
