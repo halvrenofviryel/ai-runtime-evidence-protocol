@@ -1,0 +1,20 @@
+{
+  "profile": "local-target-race-authority-v1",
+  "revision": 1,
+  "intent": "The consumer receives an exact expected intent separately. Unique intended target IDs are the denominator; omission, duplication, replacement or source-side narrowing is rejected.",
+  "time": "Controller sequence and monotonic ticks record acknowledged barriers in one harness. Worker and observer clock IDs are separate; no numerical clock comparison between processes. Each observer window has a unique request nonce bound to its exact identity and sample bytes. Delivery order is not event order.",
+  "effect": "Two observer file samples give QUIESCENT_REPORTED when equal and CONTINUED_REPORTED when valid append-only rows appear. Missing observation stays MISSING. No continuous or permanent stop claim.",
+  "aggregate": "ALL_TARGETS_BOUNDED_PAUSE requires each intended target to have received the exact command, a native pause, matching bounded quiet observation, and no forced cleanup. Partial, continued-effect, cleanup and missing states remain separate. This is a local report classification, never native lifecycle success or enforcement proof.",
+  "authority": "A separate observer process owns the signing key and evidence directory. Executor gets only a read-only mount of public records, its own writable work directory and private proc/user/pid/network namespaces with no capabilities and nested user namespaces disabled. Probe results plus owner-side hashes/mode checks describe this tested boundary only. Same-host administrator trust remains.",
+  "scope": {
+    "covers": ["First-party bounded target, race and filesystem-authority experiment mapping under local-target-race-authority-v1"],
+    "does_not_cover": ["Independent event truth or institutional observer independence", "Permanent stop, causal enforcement, or complete continuous history", "General sandbox security, kernel compromise, or a hostile host administrator", "Production SDK support or native Control/Execution/Effect lifecycle completeness"]
+  },
+  "limits": [
+    "Author-operated same-host experiment; controller and observer trust inputs are explicit local choices.",
+    "Observer source identity/path selection is supplied by the controller; signatures authenticate bytes, not event truth.",
+    "An in-flight side effect may commit after native pause; cleanup termination is not successful control delivery or execution.",
+    "OS authority probes cover the listed paths and operations under this sandbox configuration; they are not a general security audit.",
+    "No public SDK support, external adoption, network delay or independent enforcement claim."
+  ]
+}
