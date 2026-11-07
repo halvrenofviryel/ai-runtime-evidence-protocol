@@ -1,0 +1,12 @@
+{
+  "profile": "local-captured-temporal-v1",
+  "status": "experimental captured-runtime report mapping; not a registered AIREP profile",
+  "source": "Exact captured-v1 JSON bytes. Identity is captured at emission, including the actual starting LangGraph checkpoint ID. Terminal checkpoint is separately recorded. No identity supplied by a consumer query is injected into a source report.",
+  "identity": ["workflow_id", "run_id", "runtime_epoch", "checkpoint_id", "control_id", "attempt_id", "target_id"],
+  "clock": "Same-machine monotonic nanoseconds, relative to a capture-session origin, under an explicitly accepted session clock ID. No comparison across clock IDs or process restart is established. Replay arrival ticks describe deterministic transport scheduling, not measured network latency.",
+  "receipt": "receiver_observed requires byte-exact command decoding and identity equality. It supports RECEIVED only.",
+  "execution": "native_interrupt_observed requires matching interrupt payload and nonempty terminal checkpoint/next; handler_ignored supports CONTINUED only. Neither supplies an effect observation.",
+  "effect": "Two captured effects.jsonl byte snapshots with ordered read intervals. Identical snapshots support QUIESCENT within the sampled window only; an exact prefix with appended well-formed business-step rows supports CONTINUED. Changed, removed, or malformed history is rejected. Two reads cannot exclude transient changes between samples.",
+  "binding": "Existing Core and Authenticated verification of a signed Decision test report binds exact captured source bytes, projected event bytes and this basis digest. Signature proves no source truth. Consumer policy remains separate from native lifecycle verdicts.",
+  "limits": ["Controlled same-host author-side capture and offline delivery replay, not independent enforcement evidence.", "QUIESCENT_REPORTED means identical sampled bytes in the exact window, not continuous or permanent stopping.", "Starting checkpoint is an actual InMemorySaver checkpoint; no durable restart/resume is tested.", "Native verifier results remain unchanged; signed Decisions are mapping reports, not new Control/Execution/Effect artifacts."]
+}

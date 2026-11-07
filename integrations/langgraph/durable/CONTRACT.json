@@ -1,0 +1,23 @@
+{
+  "profile": "local-durable-temporal-v1",
+  "revision": 1,
+  "identity": ["workflow_id", "run_id", "runtime_epoch", "checkpoint_id", "control_id", "attempt_id", "target_id"],
+  "clock": "Event and observation ticks are measurements by one continuously running harness, relative to its unique session clock. Worker-local clocks are preserved inside source bytes and are NEVER compared across process epochs. Replay arrivals are synthetic delivery metadata, not measured network delay.",
+  "checkpoint_identity": "The paused checkpoint is the anchor for both epochs. Resume must read exactly that checkpoint in the same thread/run/control; its new terminal checkpoint is retained separately. A runtime epoch is never inferred from a thread ID. attempt_id names the control obligation, not node invocation count.",
+  "execution": "PAUSED is a reported native interrupt with matching checkpoint payload and pending action node. CONTINUED is a reported completed resume with loaded checkpoint continuity, a new PID/epoch, matching resume value, and a completed state. Neither establishes an external effect by itself. No control receipt is inferred.",
+  "effect": "Two ordered SQLite row snapshots are exact source bytes. Rows must be append-only, contiguous, and owned by the selected run. Equal snapshots mean bounded QUIESCENT; added rows mean CONTINUED. A row may predate the selected epoch: cumulative history is retained. Node invocations and attempted inserts are separate from committed effects.",
+  "conflict": "Reuse the Core policy: exact seven-field identity and exact effect window. Incompatible same-window reports and unaccepted clock bases are INDETERMINATE, including when signatures verify. Disjoint windows do not revise one another. Partially overlapping windows have no inferred equivalence; no automatic interval reconciliation is claimed.",
+  "mapping": "Closed source-to-event projection plus exact source/event hashes, actor and this basis bound by an AIREP Decision. Validate the entire fixed scope, assertion, basis list and directive after native authentication. Native results are retained and never upgraded. Signing does not prove source truth.",
+  "artifact_scope": {
+    "covers": ["First-party local durable-checkpoint experiment mapping report under local-durable-temporal-v1"],
+    "does_not_cover": ["Independent event truth or observer authority", "Complete or continuous effect history", "Permanent stop or causal enforcement", "Crash recovery, power-loss safety, multiple hosts, or production SDK support", "Native Control/Execution/Effect lifecycle completeness"]
+  },
+  "limits": [
+    "Author-operated same-host subprocesses and SQLite; signing and observation share the author trust domain.",
+    "Orderly process exit and fresh-process resume are measured; crash/power-loss recovery is not tested.",
+    "QUIESCENT is limited to two snapshots and their explicit observation window; later resume is permitted.",
+    "T08 conflict and unordered-clock cases are authored negative fixtures derived from measured inputs, not observed runtime contradictions.",
+    "Offline delayed-delivery replay; no live network delay measurement.",
+    "Experimental mapping reports, not production SDK durable support or native lifecycle conformance."
+  ]
+}

@@ -1,0 +1,8 @@
+AIREP SDK 0.1.0a1 — experimental local candidate
+Copyright AIREP contributors. Source: https://github.com/halvrenofviryel/ai-runtime-evidence-protocol
+Code: Apache-2.0. Specification text and schemas: CC-BY-4.0.
+The reference verifier, canonicalizer and native modules are copied without
+semantic edits from the source revision in SOURCE_MANIFEST.json. The basis
+loader is a new packaging adapter. Runtime source hashes identify the exact
+files; they do not establish event truth or independent execution.
+The SDK version is separate from the preserved native 0.2.0-beta.1 version.

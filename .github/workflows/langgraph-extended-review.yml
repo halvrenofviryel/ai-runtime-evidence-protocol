@@ -1,0 +1,26 @@
+name: Extended LangGraph saved evidence
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-replay:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.3'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.6'
+      - name: Install pinned experimental dependencies
+        run: python -m pip install --require-hashes -r integrations/langgraph/durable/requirements.lock
+      - name: Materialize existing offline Node dependency
+        run: python spec/airep/v0.2/class-verification/offline-node-deps/materialize_node_modules.py
+      - name: Replay supplied evidence without fresh runtime capture
+        run: |
+          python -B integrations/langgraph/review/check_saved.py durable
+          python -B integrations/langgraph/review/check_saved.py boundaries
+          python -B integrations/langgraph/review/check_saved.py multitarget

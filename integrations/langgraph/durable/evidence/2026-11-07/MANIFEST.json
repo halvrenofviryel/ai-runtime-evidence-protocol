@@ -1,0 +1,53 @@
+{
+  "measured_commit": "2c88e7124decb693c62c370c60c59304362995dd",
+  "view_count": 12,
+  "evidence": [
+    {
+      "path": "inputs.json",
+      "sha256": "9c35785566a9074ba51bde3cc69c672359f5e5db019abef08e2423d3d6d768a7"
+    },
+    {
+      "path": "report.json",
+      "sha256": "430b9c6f55c408a396b3371b23f318775228819dee4ff143f5688d08e3ccb7aa"
+    },
+    {
+      "path": "index.html",
+      "sha256": "0913698bc66bab262dd78af2d7dc2bbc94ac04ba997a6f88d9e5b8d754362f7b"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "integrations/langgraph/durable/CONTRACT.json",
+      "sha256": "6d1380275555abd5783cfee8df869d50412b4633f9a937379969a015845aa31e"
+    },
+    {
+      "path": "integrations/langgraph/durable/capture.py",
+      "sha256": "3fadb15047938c9106b0c8a357806f55eee94fcdef2cacb7d2d4994bc606543b"
+    },
+    {
+      "path": "integrations/langgraph/durable/consumer.py",
+      "sha256": "313d965db4f48a33572300a5638656b5664bc1ea873458ee10d9b410f3ed4878"
+    },
+    {
+      "path": "integrations/langgraph/durable/report.py",
+      "sha256": "83bc90a48af26436bb029fdaa021ece0c62f630ec0f89548a25e1172764bee25"
+    },
+    {
+      "path": "integrations/langgraph/durable/requirements.lock",
+      "sha256": "771f1220f41df6fb71d1266fd624db62d5ae518f99ee7f7f4d5e6e692b3ae96e"
+    },
+    {
+      "path": "integrations/langgraph/durable/source.py",
+      "sha256": "0465e9f6bd08a78ea6c403d4a31f93e4ceb6bf6fecb0a5a1da1240b3b7312b9d"
+    },
+    {
+      "path": "integrations/langgraph/durable/tests/test_durable.py",
+      "sha256": "0f9f7a810041a9f2076c9f759a4d89e1edc54080ad521a4ed5d17e1c5ce1be09"
+    },
+    {
+      "path": "integrations/langgraph/durable/view.html",
+      "sha256": "0e44fa6a619373eea5fe1cd5d772181e4642744549b3068c86a2d58a0ca17a35"
+    }
+  ],
+  "interpretation": "Original source and parsed views; same-author offline replay is not new capture or outside adoption."
+}

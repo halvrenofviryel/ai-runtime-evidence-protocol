@@ -1,0 +1,57 @@
+{
+  "measured_commit": "11c996a6b355f9c4a36375f84fe001a42d529c62",
+  "view_count": 9,
+  "evidence": [
+    {
+      "path": "inputs.json",
+      "sha256": "1aea1fe054b31ab24c0c79f3809310e3a4b79347fd5ffd58294041b35edc618d"
+    },
+    {
+      "path": "report.json",
+      "sha256": "35b594f7649e63a2458bfb7c1e507d83941a907c0842de3f861dafe2542619f0"
+    },
+    {
+      "path": "index.html",
+      "sha256": "07f086b1475e9af56775588cdce39c868f232dc6c7fda39084244ce399da9504"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "integrations/langgraph/multitarget/CONTRACT.json",
+      "sha256": "16e45404587a2f1757c5e0d084f12cff81d95154e15cf6d111ae134e3df010d2"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/binding.py",
+      "sha256": "561d894dddc71a1e190c92cd50ca903cb4805995b48632af07b92cfd94eafcce"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/capture.py",
+      "sha256": "492e15cc826c33bf43136c304e6950694dc18e5cadeeb308a607cff8ab6ebfaf"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/consumer.py",
+      "sha256": "8132d1eb512e61b8645cb16431cc9e12d92cef75bca557b0d7eac064813f61ad"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/report.py",
+      "sha256": "a8868693fd0e74d866667147f8f43d91f0367aa7fa7f03518edb9ee0d679fc94"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/tests/test_multitarget.py",
+      "sha256": "d4a150528bea641c3d0ca14f086efacd3714a21bcd42e7b3e0453cc72f9f7f24"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/transport.py",
+      "sha256": "eac1b50dc8440cbf80735aa034e27df22eae3dfca3918ee20fcdb6ecaec6c62f"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/view.html",
+      "sha256": "f46b2c4b5361834eb53d0b115bd3edbf2bbe0248899141037228efebc635e21e"
+    },
+    {
+      "path": "integrations/langgraph/multitarget/worker.py",
+      "sha256": "4e3d5ace871179fbae4cfdea09b88920eff80efb352bf33bbd7e66049f2cc823"
+    }
+  ],
+  "interpretation": "Original source and parsed views; same-author offline replay is not new capture or outside adoption."
+}

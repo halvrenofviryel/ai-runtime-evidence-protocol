@@ -1,0 +1,124 @@
+{
+  "button_checks": {
+    "arrival_100_visible": true,
+    "old_quiescent_row_retained": true,
+    "separate_replay_clock_notice_visible": true
+  },
+  "buttons": [
+    {
+      "effect": "CONTINUED_REPORTED",
+      "label": "Deliver delayed observation (T01)"
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "label": "Reverse arrival list (T01)"
+    }
+  ],
+  "final_capture_note": "Final report has new runtime IDs/times; the tested template and runtime consumer source hashes match the final committed capture. Final expected/observed views and saved-input replay separately verified.",
+  "html": "dom-candidate.html",
+  "html_sha256": "d085b5f82979c985d1489a895b9b4cc4c6ed18b2195a8f1ce349016de0c9fd50",
+  "method": "Actual CUA browser selections and read-only DOM checks; observations transcribed from tool output.",
+  "native_signature_failure_visible": true,
+  "public_copy_note": "Local loopback URL omitted; measured DOM observations and tested HTML digest retained.",
+  "template_sha256": "780e6c7f63dd8e3abe7fe39b3436f3d167e1f2c341509b221ae48c469ec9571f",
+  "views": [
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 1,
+      "identity_scope_visible": true,
+      "label": "T01 before delayed observation",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T01 after delayed observation",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T01 reversed arrival list",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "QUIESCENT_REPORTED",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T01 inspect earlier sampled window",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "MISSING",
+      "history_rows": 3,
+      "identity_scope_visible": true,
+      "label": "T02 new control / old observation",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 4,
+      "identity_scope_visible": true,
+      "label": "T02 new control / matching observation",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "MISSING",
+      "history_rows": 1,
+      "identity_scope_visible": true,
+      "label": "T03 selected run B / only late run A",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T03 selected run B / late run A",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "QUIESCENT_REPORTED",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T03 inspect historical run A",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "CONTINUED_REPORTED",
+      "history_rows": 1,
+      "identity_scope_visible": true,
+      "label": "T09 repeated delivery",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "INDETERMINATE",
+      "history_rows": 0,
+      "identity_scope_visible": true,
+      "label": "T10 corrupted signature",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "MISSING",
+      "history_rows": 2,
+      "identity_scope_visible": true,
+      "label": "T11 receiver and pause / no observer",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "MISSING",
+      "history_rows": 1,
+      "identity_scope_visible": true,
+      "label": "T11 wrong sampled window",
+      "same_host_restart_limits_visible": true
+    },
+    {
+      "effect": "QUIESCENT_REPORTED",
+      "history_rows": 3,
+      "identity_scope_visible": true,
+      "label": "Positive native pause / matching samples",
+      "same_host_restart_limits_visible": true
+    }
+  ]
+}

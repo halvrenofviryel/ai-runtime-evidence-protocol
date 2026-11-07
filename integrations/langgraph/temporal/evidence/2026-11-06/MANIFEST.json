@@ -1,0 +1,81 @@
+{
+  "byte_preserved_inputs": [
+    {
+      "copied_without_byte_changes": true,
+      "file": "inputs.json",
+      "source_sha256": "79e0d19bc8dd3c69b745e04f2f563f6d249f53f361ec4d6409a0b5e4a12c74fa"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "report.json",
+      "source_sha256": "9095ddc0e2e86de2c7c13e0af55bbea0b933ec24ee116a45c4875cd59a46b7f3"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "index.html",
+      "source_sha256": "45f4040ab9f164d69e816bd3d89fc80b7d38306d4484c156f23744a1f92ac10a"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "dom-candidate.html",
+      "source_sha256": "d085b5f82979c985d1489a895b9b4cc4c6ed18b2195a8f1ce349016de0c9fd50"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "temporal-tests.txt",
+      "source_sha256": "f36c67abbb787df7af6757d378b47690b71d30049f52c5fc581a12b5195dcb82"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "runtime-tests.txt",
+      "source_sha256": "fabc13f3dd3a5cb298f8620a8c662bbfbd8a79795c2dae88bcf001788859b04b"
+    },
+    {
+      "copied_without_byte_changes": true,
+      "file": "explain-tests.txt",
+      "source_sha256": "9e44596d97c030176f5253ee402b0d40b2dd1b7bb443e889e28ef7432f7dbea7"
+    }
+  ],
+  "files": {
+    "DOM_CHECKS.json": "8aa5283fb6ab7286a96791a7c1cd09f3d50c35e7e2394f785426cf05f27c2b79",
+    "PREPUSH_VALIDATION.json": "49259a781b9fb50096a5fb7e1e9bf46086bc5618bf8b6083c365e2403c7e23f3",
+    "README.md": "6ab8d36c7120ba8093609fdc530d3260263603200e4f350918699cb5399be47b",
+    "dom-candidate.html": "d085b5f82979c985d1489a895b9b4cc4c6ed18b2195a8f1ce349016de0c9fd50",
+    "explain-tests.txt": "9e44596d97c030176f5253ee402b0d40b2dd1b7bb443e889e28ef7432f7dbea7",
+    "index.html": "45f4040ab9f164d69e816bd3d89fc80b7d38306d4484c156f23744a1f92ac10a",
+    "inputs.json": "79e0d19bc8dd3c69b745e04f2f563f6d249f53f361ec4d6409a0b5e4a12c74fa",
+    "prepush-beta.txt": "ee2d333ced5a96a6fc7fdbe84411ca5e161dabddfdae7e986a3c350b2eb62fb1",
+    "prepush-explain.txt": "bdc03d78e6607b8186c0b4991a800d7f44c0cb38cd051963aa29fb4cfd381f4f",
+    "prepush-runtime.txt": "b2430cedf76fd4f48e34a1aef8d60a8c71625bf1baab701c1a28d5bff0e6ba3f",
+    "prepush-temporal.txt": "34be27ea6efc5058f81cb2e6f82d5fdc4b4bae6bfd396ec507207b5111f85659",
+    "report.json": "9095ddc0e2e86de2c7c13e0af55bbea0b933ec24ee116a45c4875cd59a46b7f3",
+    "runtime-tests.txt": "fabc13f3dd3a5cb298f8620a8c662bbfbd8a79795c2dae88bcf001788859b04b",
+    "temporal-tests.txt": "f36c67abbb787df7af6757d378b47690b71d30049f52c5fc581a12b5195dcb82"
+  },
+  "measured_source_commit": "d0bc8defef631c51493e5fb5931af1fe35d4d47c",
+  "scope": "Public review subset; exact signed source/event bytes retained",
+  "source_hashes": {
+    "integrations/langgraph/requirements.lock": "55232532d5cf5bc6328f2ea9789f991c812c446211a46549e2dfe88a00e08835",
+    "integrations/langgraph/run.py": "4f28f08a223cf02f230e0aa2b35d122f6b3974b8059977340060485324e3ad00",
+    "integrations/langgraph/temporal/CONTRACT.json": "90a9b07ee7cfb004430538d141bf743c3330fbf531c71720e03ed59c1ba72123",
+    "integrations/langgraph/temporal/RUNTIME_CONTRACT.json": "e98b75301a0cbb98aee199519ec9075d741cbd9f50038a78fb6793778a787062",
+    "integrations/langgraph/temporal/capture.py": "9fcc56f18a64f5ac8beaa0d319805387dc0c173b30cb93e9ab6f8ff583c8db72",
+    "integrations/langgraph/temporal/core.py": "cb865b60edd9c6b5c8592394e447ab7a5dd43a264b38ac7538a1fd957531e8d7",
+    "integrations/langgraph/temporal/fixtures.py": "7f02fac07ed1960271ab0a473d9d6f823f6dfb629b082d1dfd1226cb766b1709",
+    "integrations/langgraph/temporal/report.py": "deff584c6b3cc3f2aa67ae65947d9f5914b75c62daa605353208ed91edc68a47",
+    "integrations/langgraph/temporal/runtime_report.py": "09d82ef689f4c065aaa7212bb13618686cb4a0f9c7c9da2dddd2353e65110acf",
+    "integrations/langgraph/temporal/runtime_source.py": "8d32aa9fd088852969e5c66631f9dae897885f6ded0bba722be8f6500382862f",
+    "integrations/langgraph/temporal/tests/test_core.py": "7eee0556d2bb40c65286edc27d696a0ceba299183315c33ff2b2064c26a4e852",
+    "integrations/langgraph/temporal/tests/test_runtime_source.py": "6e44195c53e5b45334b1912c6fae4f830be7b8f19a2796d77896d1498bf1dae9",
+    "integrations/langgraph/temporal/view.html": "780e6c7f63dd8e3abe7fe39b3436f3d167e1f2c341509b221ae48c469ec9571f",
+    "tools/airep_v02/__init__.py": "bfb7a78b37490532e38bed547414e4c43398c6fb36f41603574884067074945f",
+    "tools/airep_v02/__main__.py": "c73f4e9e89a62bc4db778d27a6b49a888d64b0adb25fc92d1dd0554b17b6e7b2",
+    "tools/airep_v02/basis.py": "18b1f535da202ec4665ae2dcdd5acbfc6efb021dc66425791eaa6264330ed835",
+    "tools/airep_v02/explain.py": "176952c4bb098b558719736e0ec067a5d8572135732c4e4c77eee479d190bb89",
+    "tools/airep_v02/json_input.py": "53879153a18054639843c32aa54aa19a1e7c87be3e89405769b157571670e890",
+    "tools/airep_v02/producer.py": "ccdec93ccb49b09bae8542a8f2b037319e1d00cda2144fc72f219690eda6090a",
+    "tools/airep_v02/profiles.py": "c87ccd501d78f865e647357c79728918336d4dfdf4d31201a34d173e76953da3",
+    "tools/airep_v02/reconcile.py": "ea94f18a8cf95e10be7435a820debc84d72465e080683fc04399f418d1f6d715",
+    "tools/airep_v02/verify.py": "cc70f0f1bb2c97dede1c99fe64f6984a221fe715722403ec6a8269ad626a33dd"
+  }
+}

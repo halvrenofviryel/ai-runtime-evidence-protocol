@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from . import __version__
 from .basis import verifier
+from .explain import explain, render_text
 from .json_input import loads, dumps, check_core_number_bounds
 from .producer import Chain, digest_bytes
 from .profiles import ProfileBases
@@ -27,12 +28,13 @@ def read(path):
     return value
 
 
-def write(path, value, *, private=False):
+def write(path, value, *, private=False, text=False):
+    rendered = value if text else dumps(value)
     if path is None:
-        sys.stdout.write(dumps(value))
+        sys.stdout.write(rendered)
         return
     # Do not overwrite keys, signed evidence or an earlier measurement by default.
-    data = dumps(value).encode('utf-8')
+    data = rendered.encode('utf-8')
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600 if private else 0o644)
     with os.fdopen(fd, 'wb') as f:
         f.write(data)
@@ -59,7 +61,7 @@ def main(argv=None):
             emit.add_argument('--' + arg, required=True)
         for arg in ('out', 'chain-id', 'record-id', 'previous', 'timestamp', 'scope'):
             emit.add_argument('--' + arg)
-    for command in ('verify', 'reconcile'):
+    for command in ('verify', 'reconcile', 'explain'):
         p = sub.add_parser(command)
         if command == 'verify':
             group = p.add_mutually_exclusive_group(required=True)
@@ -67,6 +69,9 @@ def main(argv=None):
             group.add_argument('--input', help='one artifact or an array; related records supplied automatically')
         else:
             p.add_argument('--input', required=True, help='JSON array of artifacts')
+        if command == 'explain':
+            p.description = 'NON-NORMATIVE explanatory view of existing beta reconciliation'
+            p.add_argument('--json', action='store_true', help='same explanatory view as JSON')
         for arg in ('bindings','independence-policy','revocation','now','freshness-window','profile-bases','out'):
             p.add_argument('--' + arg)
     args = parser.parse_args(argv)
@@ -91,7 +96,11 @@ def main(argv=None):
             ops = operator_inputs(bindings=args.bindings, independence_policy=args.independence_policy,
                 revocation=args.revocation, now=args.now, freshness_window=args.freshness_window)
             bases = ProfileBases(args.profile_bases)
-            if args.command == 'reconcile':
+            if args.command == 'explain':
+                result = explain(read(args.input), ops=ops, profile_bases=bases)
+                write(args.out, result if args.json else render_text(result), text=not args.json)
+                return 0
+            elif args.command == 'reconcile':
                 result = reconcile(read(args.input), ops=ops, profile_bases=bases)
             elif args.request:
                 result = evaluate_request(Path(args.request).read_bytes(), ops=ops, profile_bases=bases)
