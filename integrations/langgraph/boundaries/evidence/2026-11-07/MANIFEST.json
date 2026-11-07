@@ -1,0 +1,58 @@
+{
+  "measured_commit": "d6ba0d81b4f0404041b16d6c754570cf1100fc2d",
+  "view_count": 6,
+  "evidence": [
+    {
+      "path": "inputs.json",
+      "sha256": "5e7be26ccb449c289778d4014067c7d9eea5bfe96d92b1f48f93017c8942f8f4"
+    },
+    {
+      "path": "report.json",
+      "sha256": "01a1acb31642d22f262b18488b298f1dc2bd7b437317cee34fcba2ff0a8622a1"
+    },
+    {
+      "path": "index.html",
+      "sha256": "9fe3e02b6f1363105d2edfca130e6c68b3b06e7fc91a915f498c684d89658799"
+    }
+  ],
+  "implementation": [
+    {
+      "path": "integrations/langgraph/boundaries/CONTRACT.json",
+      "sha256": "2e22ddb200b514837a4a8060e891e4874129aa7884edb2f9db2080638bbd34b0"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/binding.py",
+      "sha256": "22d428d1c612545b3dae4289ff7a5ea31cd601ec28b29b8483135418397fd013"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/capture.py",
+      "sha256": "eaf49bea40fdb39525f0ffec05a7ca3a42c932318a670fb015c95afd8df4792e"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/consumer.py",
+      "sha256": "55c26c08f022ddccf653edeb4513698e140ddff16dc3b91bbbeee0dccfd0941a"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/observer.py",
+      "sha256": "b524ab6353c87491cc8c1bf5f5bf6e3b287310dcb4e0cd95b0382f1875823e05"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/report.py",
+      "sha256": "9dddb58dd4990b8e5ae64cb8d4ef89cd49b9e27bd3cc74168df561cb8a5b528d"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/tests/test_boundaries.py",
+      "sha256": "3826b1eed747c246d711c03db3c360a0c16df11aa3b0d3396c3502f2feb86b41"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/view.html",
+      "sha256": "8fbdf5b1928edafd4fe3f904bb52f384cf802ecbeecd793758f1ac4dc671d890"
+    },
+    {
+      "path": "integrations/langgraph/boundaries/worker.py",
+      "sha256": "2c0106ee943d8dcd38680f7955db44e0b90afb7270afa6e32d829f8e9b43ee0d"
+    }
+  ],
+  "interpretation": "Original source and parsed views; same-author offline replay is not new capture or outside adoption.",
+  "source_snapshot_commit": "d0e8d8193cd7e21a69cf0f65d6bc2add7b64dba4"
+}
