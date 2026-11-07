@@ -1,0 +1,18 @@
+{
+  "format": "airep-sdk-external-result-v1",
+  "status": "NOT_RUN",
+  "role": null,
+  "independence_declaration": null,
+  "native_basis": "0.2.0-beta.1",
+  "sdk_version": "0.1.0a1",
+  "source_commit": null,
+  "wheel_sha256": null,
+  "consumer_basis_digest": null,
+  "environment_versions": {},
+  "commands": [],
+  "first_verified_output_seconds": null,
+  "expected_observed": [],
+  "failures_and_limits": [],
+  "evidence_hashes": {},
+  "adoption_claim": "No claim; requires an actual identified outside run."
+}

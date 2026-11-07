@@ -38,7 +38,7 @@ def main():
     basis=[]
     for pattern in ('tools/airep_v02', 'tests/v02', 'examples/v02', 'scripts', '.github/workflows',
                     'spec/airep/v0.2/profiles', 'integrations/lighteval', 'integrations/hermes',
-                    'integrations/langgraph'):
+                    'integrations/langgraph', 'sdk/python'):
         for p in sorted((ROOT/pattern).rglob('*')):
             if p.is_file() and '__pycache__' not in p.parts:
                 basis.append({'path':str(p.relative_to(ROOT)), 'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
@@ -114,6 +114,8 @@ def main():
         # revision. The integration writes only scratch output/ignored deps.
         add('.', 'python3', str(ROOT / 'scripts/check_temporal.py'),
             '--out', str(args.out.resolve() / 'temporal'))
+        add('.', 'python3', str(ROOT / 'scripts/check_sdk_ci.py'),
+            '--out', str(args.out.resolve() / 'sdk'))
     results = []
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONUNBUFFERED='1')
     for i, (cwd, command) in enumerate(commands, 1):
