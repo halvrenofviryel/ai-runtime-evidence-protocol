@@ -1,0 +1,1470 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>LightEval claim preservation review</title><style>body{max-width:1050px;margin:40px auto;font:17px/1.55 system-ui;padding:0 24px;color:#172437}article{border-top:1px solid #ccd3dc;padding:16px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}summary{cursor:pointer}dl{display:grid;grid-template-columns:40% 60%;font-size:14px}dt,dd{margin:0;padding:7px;border-bottom:1px solid #eee;overflow-wrap:anywhere}dt{font-weight:600}@media(max-width:700px){dl{display:block}dd{padding-left:16px}}</style><h1>LightEval claim preservation review</h1><p>One historical two-sample run reused; other cases are authored transformations and receiver-side negative checks. No new model inference.</p><p>PRESERVED concerns the bounded mapping. It does not mean the model passed, the benchmark is complete, or the evidence is authenticated. QUALIFIED_LOSS remains loss.</p><article id="historical"><h2>historical: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.0&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;HISTORICAL_SOURCE_REUSE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;RAN&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: null, &quot;observed&quot;: 2}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, &quot;NOT_EVALUATED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>&quot;0.00&quot;</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: historical</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.0&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: 2
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;lighteval-hellaswag-tiny-gpt2-2026-09-23T21:59:21Z&quot;,
+      &quot;record_id&quot;: &quot;historical-september-2026&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.0&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: 2
+    },
+    &quot;author_context&quot;: {
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;independence&quot;: {
+          &quot;status&quot;: &quot;unknown&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;
+        }
+      },
+      &quot;target&quot;: {
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;,
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;release_state&quot;: &quot;released&quot;
+      },
+      &quot;access&quot;: {
+        &quot;tier&quot;: &quot;grey-box&quot;,
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ]
+      },
+      &quot;evaluation&quot;: {
+        &quot;run_id&quot;: &quot;lighteval-hellaswag-tiny-gpt2-2026-09-23T21:59:21Z&quot;,
+        &quot;objective&quot;: &quot;Exercise same-source EEE and AIREP mappings over one real, two-sample LightEval run; not measure general model capability or safety.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;,
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;measurement&quot;: {
+        &quot;execution_status&quot;: &quot;RAN&quot;,
+        &quot;criterion&quot;: {
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;,
+          &quot;metric&quot;: &quot;em&quot;
+        },
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;LightEval reported em = 0.0 on a deliberately capped two-example run; no criterion verdict is attributed to the evaluator.&quot;
+        },
+        &quot;sample_count&quot;: 2,
+        &quot;limitations&quot;: [
+          &quot;The run was deliberately capped at two HellaSwag validation examples and does not establish complete benchmark coverage.&quot;,
+          &quot;The tiny model and sample are non-representative; no capability, quality or safety conclusion is supported.&quot;,
+          &quot;The sample count is verified from the committed details parquet; benchmark population and denominator completeness are not established.&quot;
+        ]
+      },
+      &quot;evidence&quot;: {
+        &quot;visibility&quot;: &quot;restricted&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;ref_prefix&quot;: &quot;file:&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;redactions_present&quot;: false,
+        &quot;redactions&quot;: [],
+        &quot;deviations&quot;: [
+          {
+            &quot;type&quot;: &quot;deliberate sample cap&quot;,
+            &quot;description&quot;: &quot;The run evaluated only two examples because the experiment concerns mapping semantics, not benchmark quality.&quot;,
+            &quot;impact&quot;: &quot;material&quot;
+          }
+        ],
+        &quot;retries&quot;: [],
+        &quot;incidents&quot;: []
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;the selected LightEval run configuration, source-reported em observation, committed evidence bytes and explicit experiment context&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;model capability, quality, safety or alignment&quot;,
+          &quot;complete HellaSwag population coverage&quot;,
+          &quot;executed model-weight identity beyond the configured revision string&quot;,
+          &quot;evaluator identity or independence verification&quot;,
+          &quot;result truth, general reproducibility, EvalEval endorsement or EEE-AIREP interoperability&quot;
+        ]
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: null,
+        &quot;observed&quot;: 2
+      },
+      &quot;origin&quot;: &quot;HISTORICAL_SOURCE_REUSE&quot;,
+      &quot;record_id&quot;: &quot;historical-september-2026&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: null,
+    &quot;status&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;display_value&quot;: &quot;0.00&quot;,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="profile-only"><h2>profile-only: QUALIFIED_LOSS</h2><dl><dt>Preservation decision</dt><dd>&quot;QUALIFIED_LOSS&quot;</dd><dt>Reason</dt><dd>&quot;loss disclosed; full preservation not established&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.0&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, &quot;NOT_EVALUATED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[&quot;exact numeric token&quot;, &quot;criterion origin and chronology&quot;, &quot;population denominator and exclusions&quot;, &quot;complete declared attempt history&quot;, &quot;amendment relationship and prior record&quot;, &quot;complete context including unmodelled qualifications&quot;]</dd></dl><details><summary>Full bound report: profile-only</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;QUALIFIED_LOSS&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.0&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: 2
+  },
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: null,
+    &quot;status&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;display_value&quot;: null,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;loss disclosed; full preservation not established&quot;,
+  &quot;losses&quot;: [
+    &quot;exact numeric token&quot;,
+    &quot;criterion origin and chronology&quot;,
+    &quot;population denominator and exclusions&quot;,
+    &quot;complete declared attempt history&quot;,
+    &quot;amendment relationship and prior record&quot;,
+    &quot;complete context including unmodelled qualifications&quot;
+  ]
+}</pre></details></article><article id="not-run"><h2>not-run: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;NOT_RUN&quot;, &quot;NOT_MEASURED&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: 100, &quot;observed&quot;: 0}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[&quot;&gt;= 0.8&quot;, &quot;NOT_EVALUATED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: not-run</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;DECLARED_NOT_RUN&quot;,
+    &quot;numeric_token&quot;: null,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-not-run&quot;,
+      &quot;record_id&quot;: &quot;not-run&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;DECLARED_NOT_RUN&quot;,
+      &quot;numeric_token&quot;: null,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: []
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-not-run&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;,
+        &quot;tasks&quot;: [
+          {
+            &quot;dataset_ref&quot;: &quot;hf://datasets/Rowan/hellaswag&quot;,
+            &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+            &quot;split&quot;: &quot;validation&quot;,
+            &quot;task_id&quot;: &quot;hellaswag|0&quot;
+          }
+        ]
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;NOT_RUN&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;NOT_MEASURED&quot;,
+          &quot;summary&quot;: &quot;Authored NOT_RUN declaration.&quot;
+        },
+        &quot;sample_count&quot;: 0
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: 100,
+        &quot;observed&quot;: 0
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;not-run&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: &quot;&gt;= 0.8&quot;,
+    &quot;status&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;display_value&quot;: null,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="partial-80-of-100"><h2>partial-80-of-100: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.9&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;PARTIAL&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: 100, &quot;observed&quot;: 80}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[&quot;&gt;= 0.8&quot;, &quot;SATISFIED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>&quot;0.90&quot;</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: partial-80-of-100</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.9&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-partial&quot;,
+      &quot;record_id&quot;: &quot;partial&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.9&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: []
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-partial&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;PARTIAL&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;Authored scalar; no source evaluator verdict.&quot;
+        },
+        &quot;sample_count&quot;: 80
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: 100,
+        &quot;observed&quot;: 80
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;partial&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: &quot;&gt;= 0.8&quot;,
+    &quot;status&quot;: &quot;SATISFIED&quot;,
+    &quot;display_value&quot;: &quot;0.90&quot;,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="retry-first-error"><h2>retry-first-error: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.81&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;PARTIAL&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: 100, &quot;observed&quot;: 80}</dd><dt>Declared attempt history</dt><dd>[{&quot;id&quot;: &quot;attempt-1&quot;, &quot;reason&quot;: &quot;authored timeout&quot;, &quot;results_digest&quot;: null, &quot;selected&quot;: false, &quot;state&quot;: &quot;ERROR&quot;}, {&quot;id&quot;: &quot;attempt-2&quot;, &quot;reason&quot;: &quot;selected authored result&quot;, &quot;results_digest&quot;: &quot;6d181dc0da5d2e8fb029e2051e5598cc00ca69230ca01550ac55c208b29efd84&quot;, &quot;selected&quot;: true, &quot;state&quot;: &quot;RAN&quot;}]</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[&quot;&gt;= 0.8&quot;, &quot;SATISFIED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>&quot;0.81&quot;</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: retry-first-error</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.81&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-retry&quot;,
+      &quot;record_id&quot;: &quot;retry&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.81&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: [
+          {
+            &quot;attempt&quot;: 2,
+            &quot;changed_configuration&quot;: false,
+            &quot;reason&quot;: &quot;first attempt errored; controlled declaration&quot;
+          }
+        ]
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-retry&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;attempts&quot;: 2,
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;PARTIAL&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;Authored scalar; no source evaluator verdict.&quot;
+        },
+        &quot;sample_count&quot;: 80
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: [
+        {
+          &quot;id&quot;: &quot;attempt-1&quot;,
+          &quot;reason&quot;: &quot;authored timeout&quot;,
+          &quot;results_digest&quot;: null,
+          &quot;selected&quot;: false,
+          &quot;state&quot;: &quot;ERROR&quot;
+        },
+        {
+          &quot;id&quot;: &quot;attempt-2&quot;,
+          &quot;reason&quot;: &quot;selected authored result&quot;,
+          &quot;results_digest&quot;: &quot;6d181dc0da5d2e8fb029e2051e5598cc00ca69230ca01550ac55c208b29efd84&quot;,
+          &quot;selected&quot;: true,
+          &quot;state&quot;: &quot;RAN&quot;
+        }
+      ],
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: 100,
+        &quot;observed&quot;: 80
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;retry&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: &quot;&gt;= 0.8&quot;,
+    &quot;status&quot;: &quot;SATISFIED&quot;,
+    &quot;display_value&quot;: &quot;0.81&quot;,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="rounding"><h2>rounding: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.79996&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;RAN&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: null, &quot;observed&quot;: 2}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[&quot;&gt;= 0.8&quot;, &quot;NOT_SATISFIED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>&quot;0.80&quot;</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: rounding</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.79996&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-rounding&quot;,
+      &quot;record_id&quot;: &quot;rounding&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.79996&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: []
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-rounding&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;RAN&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;Authored scalar; no source evaluator verdict.&quot;
+        },
+        &quot;sample_count&quot;: 2
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: null,
+        &quot;observed&quot;: 2
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;rounding&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: &quot;&gt;= 0.8&quot;,
+    &quot;status&quot;: &quot;NOT_SATISFIED&quot;,
+    &quot;display_value&quot;: &quot;0.80&quot;,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="amended"><h2>amended: PRESERVED</h2><dl><dt>Preservation decision</dt><dd>&quot;PRESERVED&quot;</dd><dt>Reason</dt><dd>&quot;selected bytes and declared qualifications preserved under this contract&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.7&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;RAN&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: null, &quot;observed&quot;: 2}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>{&quot;record_id&quot;: &quot;amended-v1&quot;, &quot;sha256&quot;: &quot;f4c398a8aa6e249e9721655e4c42c66c97133ec625a580fc5be011e8bb32bf0d&quot;}</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[&quot;&gt;= 0.8&quot;, &quot;NOT_SATISFIED&quot;]</dd><dt>Rounded display (not decision input)</dt><dd>&quot;0.70&quot;</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: amended</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;PRESERVED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.7&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-amended-v2&quot;,
+      &quot;record_id&quot;: &quot;amended-v2&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.7&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: []
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-amended-v2&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;RAN&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;Authored scalar; no source evaluator verdict.&quot;
+        },
+        &quot;sample_count&quot;: 2
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: null,
+        &quot;observed&quot;: 2
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;amended-v2&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: {
+        &quot;record_id&quot;: &quot;amended-v1&quot;,
+        &quot;sha256&quot;: &quot;f4c398a8aa6e249e9721655e4c42c66c97133ec625a580fc5be011e8bb32bf0d&quot;
+      },
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: {
+      &quot;numeric_token&quot;: &quot;0.9&quot;,
+      &quot;qualification&quot;: &quot;preliminary authored result&quot;,
+      &quot;record_id&quot;: &quot;amended-v1&quot;
+    }
+  },
+  &quot;derived_assessment&quot;: {
+    &quot;attribution&quot;: &quot;RECEIVER_POST_HOC&quot;,
+    &quot;criterion&quot;: &quot;&gt;= 0.8&quot;,
+    &quot;status&quot;: &quot;NOT_SATISFIED&quot;,
+    &quot;display_value&quot;: &quot;0.70&quot;,
+    &quot;meaning&quot;: &quot;selected scalar comparison only; not source verdict, coverage or model acceptance&quot;
+  },
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;selected bytes and declared qualifications preserved under this contract&quot;,
+  &quot;losses&quot;: []
+}</pre></details></article><article id="stale"><h2>stale: STALE</h2><dl><dt>Preservation decision</dt><dd>&quot;STALE&quot;</dd><dt>Reason</dt><dd>&quot;record does not satisfy receiver current-record selection&quot;</dd><dt>Source scalar (exact token)</dt><dd>&quot;0.9&quot;</dd><dt>Source criterion / verdict</dt><dd>[&quot;NOT_REPORTED&quot;, &quot;NOT_REPORTED&quot;]</dd><dt>Origin of additional conditions</dt><dd>&quot;AUTHORED_FIXTURE&quot;</dd><dt>Declared execution / observation</dt><dd>[&quot;RAN&quot;, &quot;INCONCLUSIVE&quot;]</dd><dt>Declared observed / expected population</dt><dd>{&quot;excluded&quot;: [], &quot;expected&quot;: null, &quot;observed&quot;: 2}</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: stale</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;STALE&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: {
+    &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+    &quot;numeric_token&quot;: &quot;0.9&quot;,
+    &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+    &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+    &quot;details_rows&quot;: null
+  },
+  &quot;preserved&quot;: {
+    &quot;version&quot;: &quot;0.1&quot;,
+    &quot;selection&quot;: {
+      &quot;task&quot;: &quot;hellaswag|0&quot;,
+      &quot;metric&quot;: &quot;em&quot;,
+      &quot;run_id&quot;: &quot;authored-amended-v1&quot;,
+      &quot;record_id&quot;: &quot;amended-v1&quot;,
+      &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+      &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+      &quot;dataset_id&quot;: &quot;Rowan/hellaswag&quot;,
+      &quot;dataset_revision&quot;: &quot;218ec52e09a7e7462a5400043bb9a69a41d06b76&quot;,
+      &quot;splits&quot;: [
+        &quot;validation&quot;
+      ]
+    },
+    &quot;source&quot;: {
+      &quot;attribution&quot;: &quot;SOURCE_REPORTED_CONFIGURATION_AND_METRIC&quot;,
+      &quot;numeric_token&quot;: &quot;0.9&quot;,
+      &quot;criterion&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;verdict&quot;: &quot;NOT_REPORTED&quot;,
+      &quot;run_id_origin&quot;: &quot;AUTHOR_DECLARED&quot;,
+      &quot;details_rows&quot;: null
+    },
+    &quot;author_context&quot;: {
+      &quot;access&quot;: {
+        &quot;capabilities&quot;: [
+          &quot;downloaded public model weights&quot;,
+          &quot;local CPU inference&quot;,
+          &quot;public benchmark data&quot;
+        ],
+        &quot;limitations&quot;: [
+          &quot;no access to training data, model-development records, deployment telemetry or an official serving environment&quot;,
+          &quot;the configured model revision was not independently bound to executed weight bytes&quot;
+        ],
+        &quot;tier&quot;: &quot;grey-box&quot;
+      },
+      &quot;disclosure&quot;: {
+        &quot;deviations&quot;: [
+          {
+            &quot;description&quot;: &quot;Controlled data mutation; not a new model run.&quot;,
+            &quot;impact&quot;: &quot;material&quot;,
+            &quot;type&quot;: &quot;authored transformation&quot;
+          }
+        ],
+        &quot;incidents&quot;: [],
+        &quot;redactions&quot;: [],
+        &quot;redactions_present&quot;: false,
+        &quot;retries&quot;: []
+      },
+      &quot;engagement&quot;: {
+        &quot;engagement_id&quot;: &quot;eee-airep-crosswalk-2026-09-23&quot;,
+        &quot;evaluated_party&quot;: &quot;sshleifer&quot;,
+        &quot;evaluator&quot;: {
+          &quot;organization&quot;: &quot;AIREP EEE crosswalk experiment&quot;,
+          &quot;role&quot;: &quot;other&quot;
+        },
+        &quot;independence&quot;: {
+          &quot;basis&quot;: [
+            &quot;No organizational-independence assessment was performed; the operator/model-developer relationship is only declared in the EEE mapping context.&quot;
+          ],
+          &quot;conflict_statement&quot;: &quot;No conflict inquiry was performed, so absence of disclosed conflicts is not established.&quot;,
+          &quot;conflicts_disclosed&quot;: false,
+          &quot;status&quot;: &quot;unknown&quot;
+        }
+      },
+      &quot;evaluation&quot;: {
+        &quot;ended_at&quot;: &quot;2026-09-23T21:59:40.610125Z&quot;,
+        &quot;environment&quot;: {
+          &quot;hardware&quot;: &quot;x86_64 CPU; torch device=cpu; no accelerator requested&quot;,
+          &quot;network_access&quot;: &quot;open&quot;,
+          &quot;runner&quot;: &quot;local Python API via lighteval.main_accelerate.accelerate&quot;,
+          &quot;tool_access&quot;: []
+        },
+        &quot;framework&quot;: {
+          &quot;name&quot;: &quot;lighteval&quot;,
+          &quot;revision&quot;: &quot;6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;source_ref&quot;: &quot;https://github.com/huggingface/lighteval/tree/6b9d193b48de24d1ee87f3089303643b993cf4f9&quot;,
+          &quot;version&quot;: &quot;0.13.1.dev0&quot;
+        },
+        &quot;objective&quot;: &quot;Authored transformation; no new LightEval/model execution.&quot;,
+        &quot;risk_domains&quot;: [
+          &quot;capability-measurement&quot;
+        ],
+        &quot;run_id&quot;: &quot;authored-amended-v1&quot;,
+        &quot;safeguards&quot;: {
+          &quot;state&quot;: &quot;unknown&quot;
+        },
+        &quot;started_at&quot;: &quot;2026-09-23T21:59:21.284513Z&quot;
+      },
+      &quot;evidence&quot;: {
+        &quot;ref_prefix&quot;: &quot;file:&quot;,
+        &quot;resolvable&quot;: false,
+        &quot;visibility&quot;: &quot;restricted&quot;
+      },
+      &quot;measurement&quot;: {
+        &quot;criterion&quot;: {
+          &quot;metric&quot;: &quot;em&quot;,
+          &quot;statement&quot;: &quot;Record the source-reported em value for the selected task; no PASS/FAIL threshold was predeclared.&quot;,
+          &quot;task&quot;: &quot;hellaswag|0&quot;
+        },
+        &quot;execution_status&quot;: &quot;RAN&quot;,
+        &quot;limitations&quot;: [
+          &quot;Authored fixture, not an observed runtime experiment.&quot;,
+          &quot;No evaluator independence established.&quot;
+        ],
+        &quot;observed&quot;: {
+          &quot;status&quot;: &quot;INCONCLUSIVE&quot;,
+          &quot;summary&quot;: &quot;Authored scalar; no source evaluator verdict.&quot;
+        },
+        &quot;sample_count&quot;: 2
+      },
+      &quot;scope&quot;: {
+        &quot;covers&quot;: [
+          &quot;controlled mapping fixture&quot;
+        ],
+        &quot;does_not_cover&quot;: [
+          &quot;real model execution&quot;,
+          &quot;capability or safety&quot;
+        ]
+      },
+      &quot;target&quot;: {
+        &quot;model_id&quot;: &quot;sshleifer/tiny-gpt2&quot;,
+        &quot;model_revision&quot;: &quot;5f91d94bd9cd7190a9f3216ff93cd1dd95f2c7be&quot;,
+        &quot;provider&quot;: &quot;sshleifer&quot;,
+        &quot;release_state&quot;: &quot;released&quot;,
+        &quot;system_name&quot;: &quot;tiny-gpt2&quot;
+      }
+    },
+    &quot;author_conditions&quot;: {
+      &quot;attempts&quot;: null,
+      &quot;coverage&quot;: {
+        &quot;excluded&quot;: [],
+        &quot;expected&quot;: null,
+        &quot;observed&quot;: 2
+      },
+      &quot;origin&quot;: &quot;AUTHORED_FIXTURE&quot;,
+      &quot;record_id&quot;: &quot;amended-v1&quot;,
+      &quot;results_name&quot;: &quot;results_2026-09-24T00-59-40.590371.json&quot;,
+      &quot;supersedes&quot;: null,
+      &quot;version&quot;: &quot;0.1&quot;
+    },
+    &quot;prior_record&quot;: null
+  },
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;record does not satisfy receiver current-record selection&quot;
+}</pre></details></article><article id="wrong-model_id"><h2>wrong-model_id: REJECTED</h2><dl><dt>Preservation decision</dt><dd>&quot;REJECTED&quot;</dd><dt>Reason</dt><dd>&quot;receiver selection mismatch&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: wrong-model_id</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;REJECTED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver selection mismatch&quot;
+}</pre></details></article><article id="wrong-dataset_revision"><h2>wrong-dataset_revision: REJECTED</h2><dl><dt>Preservation decision</dt><dd>&quot;REJECTED&quot;</dd><dt>Reason</dt><dd>&quot;receiver selection mismatch&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: wrong-dataset_revision</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;REJECTED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver selection mismatch&quot;
+}</pre></details></article><article id="wrong-run_id"><h2>wrong-run_id: REJECTED</h2><dl><dt>Preservation decision</dt><dd>&quot;REJECTED&quot;</dd><dt>Reason</dt><dd>&quot;receiver selection mismatch&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: wrong-run_id</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;REJECTED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver selection mismatch&quot;
+}</pre></details></article><article id="wrong-metric"><h2>wrong-metric: REJECTED</h2><dl><dt>Preservation decision</dt><dd>&quot;REJECTED&quot;</dd><dt>Reason</dt><dd>&quot;receiver selection mismatch&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;, &quot;schema_validation&quot;: &quot;VALID&quot;, &quot;mapping_compare&quot;: &quot;MATCH&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: wrong-metric</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;REJECTED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;MATCH_SUPPLIED_BYTES&quot;,
+    &quot;schema_validation&quot;: &quot;VALID&quot;,
+    &quot;mapping_compare&quot;: &quot;MATCH&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver selection mismatch&quot;
+}</pre></details></article><article id="missing-source"><h2>missing-source: UNESTABLISHED</h2><dl><dt>Preservation decision</dt><dd>&quot;UNESTABLISHED&quot;</dd><dt>Reason</dt><dd>&quot;receiver-required source inputs unavailable&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;MATCH&quot;, &quot;digest_binding&quot;: &quot;NOT_EVALUATED&quot;, &quot;schema_validation&quot;: &quot;NOT_EVALUATED&quot;, &quot;mapping_compare&quot;: &quot;NOT_EVALUATED&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: missing-source</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;UNESTABLISHED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;MATCH&quot;,
+    &quot;digest_binding&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;schema_validation&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;mapping_compare&quot;: &quot;NOT_EVALUATED&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver-required source inputs unavailable&quot;
+}</pre></details></article><article id="missing-basis"><h2>missing-basis: UNESTABLISHED</h2><dl><dt>Preservation decision</dt><dd>&quot;UNESTABLISHED&quot;</dd><dt>Reason</dt><dd>&quot;receiver accepted profile basis unavailable&quot;</dd><dt>Source scalar (exact token)</dt><dd>null</dd><dt>Source criterion / verdict</dt><dd>[null, null]</dd><dt>Origin of additional conditions</dt><dd>null</dd><dt>Declared execution / observation</dt><dd>[null, null]</dd><dt>Declared observed / expected population</dt><dd>null</dd><dt>Declared attempt history</dt><dd>null</dd><dt>Superseded record</dt><dd>null</dd><dt>Receiver post-hoc criterion / scalar decision</dt><dd>[null, null]</dd><dt>Rounded display (not decision input)</dt><dd>null</dd><dt>Typed checks</dt><dd>{&quot;basis&quot;: &quot;NOT_EVALUATED&quot;, &quot;digest_binding&quot;: &quot;NOT_EVALUATED&quot;, &quot;schema_validation&quot;: &quot;NOT_EVALUATED&quot;, &quot;mapping_compare&quot;: &quot;NOT_EVALUATED&quot;}</dd><dt>Disclosed losses</dt><dd>[]</dd></dl><details><summary>Full bound report: missing-basis</summary><pre>{
+  &quot;contract&quot;: &quot;airep.lighteval.claim-consumer/0.1.0&quot;,
+  &quot;status&quot;: &quot;UNESTABLISHED&quot;,
+  &quot;checks&quot;: {
+    &quot;basis&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;digest_binding&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;schema_validation&quot;: &quot;NOT_EVALUATED&quot;,
+    &quot;mapping_compare&quot;: &quot;NOT_EVALUATED&quot;
+  },
+  &quot;source&quot;: null,
+  &quot;preserved&quot;: null,
+  &quot;derived_assessment&quot;: null,
+  &quot;non_claims&quot;: [
+    &quot;source truth&quot;,
+    &quot;authentication&quot;,
+    &quot;executed model identity&quot;,
+    &quot;independent evaluator&quot;,
+    &quot;complete benchmark&quot;,
+    &quot;model capability or safety&quot;,
+    &quot;external interoperability&quot;,
+    &quot;general LightEval version support&quot;
+  ],
+  &quot;reason&quot;: &quot;receiver accepted profile basis unavailable&quot;
+}</pre></details></article></html>

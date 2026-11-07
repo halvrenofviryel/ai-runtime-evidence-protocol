@@ -1,0 +1,20 @@
+{
+  "method": "CUA browser DOM read and native summary click",
+  "url": "http://127.0.0.1:8770/",
+  "cards": 14,
+  "fields_per_card": 13,
+  "checks": {
+    "historical_unknown_population": true,
+    "not_run": true,
+    "partial_denominator": true,
+    "retry_first_error": true,
+    "rounding_not_promoted": true,
+    "loss_not_preserved": true,
+    "stale": true,
+    "missing_source": true,
+    "missing_basis": true
+  },
+  "horizontal_overflow": false,
+  "rounding_details_open_after_click": true,
+  "fresh_model_runs": 0
+}
