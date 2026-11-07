@@ -1,6 +1,9 @@
 import copy
+import itertools
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 from tools.airep_v02.json_input import loads
 from integrations.langgraph.run import encoded
 from integrations.langgraph.multitarget import consumer, partial
@@ -174,6 +177,52 @@ class PartialEvidenceTests(unittest.TestCase):
         self.assertTrue(BASIS.startswith('sha256:'))
         from integrations.langgraph.multitarget.binding import BASIS as old
         self.assertNotEqual(BASIS, old)
+
+    def test_each_missing_target_subset_preserves_denominator_without_upgrading(self):
+        for topology in ('chain_all', 'fanout_all'):
+            for mask in itertools.product((False, True), repeat=3):
+                self.select(topology)
+                absent = [t for t, drop in zip(('A', 'B', 'C'), mask) if drop]
+                for target in absent:
+                    self.drop(target)
+                result = self.evaluate()
+                self.assertEqual(result['admission'], 'MATCH', (topology, absent))
+                projected = result['result']
+                self.assertEqual(projected['intended_target_count'], 3)
+                self.assertEqual(projected['reported_target_count'], 3 - len(absent))
+                self.assertLessEqual(projected['bounded_pause_count'], 3 - len(absent))
+                for target in projected['targets']:
+                    if target['target_id'] in absent:
+                        self.assertEqual((target['receipt'], target['execution'], target['effect']),
+                                         ('UNKNOWN', 'UNKNOWN', 'UNKNOWN'))
+                        self.assertEqual(target['assessment'], 'INDETERMINATE')
+                        self.assertFalse(target['bounded_pause'])
+
+    def test_invalid_present_report_is_rejected_even_when_another_target_is_absent(self):
+        self.drop('C')
+        self.source['nodes']['A']['source_bytes'] += ' '
+        self.assertEqual(self.reject()['admission'], 'NO_MATCH')
+
+    def test_saved_replay_cli_preserves_bytes_and_does_not_generate_keys(self):
+        from integrations.langgraph.multitarget import partial_report
+        inputs = partial_report.build()
+        expected = encoded(partial_report.replay(inputs))
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / 'saved.json'
+            source.write_bytes(encoded(inputs))
+            out = root / 'replayed'
+            with patch('sys.argv', ['partial_report', '--replay', str(source), '--out', str(out)]), \
+                    patch.object(partial_report, 'build', side_effect=AssertionError('must not regenerate')):
+                partial_report.main()
+            self.assertEqual((out / 'inputs.json').read_bytes(), source.read_bytes())
+            self.assertEqual((out / 'report.json').read_bytes(), expected)
+
+    def test_saved_replay_rejects_another_basis_before_evaluating(self):
+        from integrations.langgraph.multitarget import partial_report
+        with patch.object(partial_report, 'evaluate', side_effect=AssertionError('must not evaluate')):
+            with self.assertRaisesRegex(ValueError, 'basis mismatch'):
+                partial_report.replay({'basis_digest': 'sha256:' + '0' * 64, 'cases': []})
 
 
 if __name__ == '__main__':

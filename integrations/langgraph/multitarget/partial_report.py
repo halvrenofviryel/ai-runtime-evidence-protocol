@@ -60,9 +60,10 @@ def build():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--replay', type=Path, help='Read saved fixture inputs without generating a new signing key')
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
-    inputs = build()
+    inputs = loads(args.replay.read_bytes()) if args.replay else build()
     result = replay(inputs)
     assert [r['evaluation']['admission'] for r in result] == ['MATCH'] * 9 + ['NO_MATCH'] * 3
     for r in result[2:4]:
