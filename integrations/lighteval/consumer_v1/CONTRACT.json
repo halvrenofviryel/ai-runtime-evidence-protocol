@@ -1,0 +1,12 @@
+{
+  "id": "airep.lighteval.claim-consumer",
+  "version": "0.1.0",
+  "source_revision": "6b9d193b48de24d1ee87f3089303643b993cf4f9",
+  "profile_id": "airep.embedded-evaluation",
+  "profile_version": "0.1",
+  "selection": ["model_id", "model_revision", "dataset_id", "dataset_revision", "splits", "task", "metric", "run_id", "record_id"],
+  "statuses": ["PRESERVED", "QUALIFIED_LOSS", "UNESTABLISHED", "REJECTED", "STALE"],
+  "profile_only_losses": ["exact numeric token", "criterion origin and chronology", "population denominator and exclusions", "complete declared attempt history", "amendment relationship and prior record", "complete context including unmodelled qualifications"],
+  "scope": "Byte-bound projection of supplied LightEval configuration/results and author declarations; a companion profile, not native AIREP artifacts.",
+  "non_claims": ["source truth", "authentication", "executed model identity", "independent evaluator", "complete benchmark", "model capability or safety", "external interoperability", "general LightEval version support"]
+}

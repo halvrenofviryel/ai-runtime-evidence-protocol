@@ -1,0 +1,39 @@
+name: LightEval claim consumer
+
+on:
+  pull_request:
+    paths:
+      - 'integrations/lighteval/**'
+      - 'integrations/evaleval/**'
+      - 'spec/airep/v0.2/profiles/embedded-evaluation/**'
+      - '.github/workflows/lighteval-consumer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.3'
+      - name: Install hash-pinned replay dependencies
+        run: python -m pip install --require-hashes -r integrations/lighteval/consumer_v1/requirements.lock
+      - name: Consumer and unchanged exporter/EEE regressions
+        run: |
+          python -m unittest discover -s integrations/lighteval/consumer_v1/tests -v
+          python -m unittest discover -s integrations/lighteval/tests -v
+          python -m unittest discover -s integrations/evaleval/tests -v
+      - name: Source-to-consumer reports and exact offline replay
+        run: |
+          python -m integrations.lighteval.consumer_v1.experiment generate --out "$RUNNER_TEMP/lighteval-cases"
+          python -m integrations.lighteval.consumer_v1.experiment replay --out "$RUNNER_TEMP/lighteval-cases"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighteval-consumer-evidence
+          path: ${{ runner.temp }}/lighteval-cases
+          if-no-files-found: warn
