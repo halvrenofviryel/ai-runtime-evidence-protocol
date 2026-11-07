@@ -1,0 +1,30 @@
+{
+  "profile": "local-multitarget-partial-evidence-v2",
+  "revision": 2,
+  "intent": "Three target identities and topology are fixed before control dispatch and supplied separately to the consumer. controller-to-A/B/C fan-out and controller-to-A-to-B-to-C chain are different experiments. The chain has three delivery links and two inter-target delegation links. Missing reports never remove targets from the separately supplied three-target inventory.",
+  "attempts": "execution attempt_id is stable for each target obligation. delivery_attempt_id identifies each transport attempt. A lost response may coexist with receiver receipt and pause. Retries retain failed transport attempts, never enlarge the target denominator, and must not re-execute the accepted pause.",
+  "causality": "Each process has its own monotonic clock. Exact request/reply bytes, sender/recipient, parent delivery attempt and route path bind hops. Clocks from different processes are never numerically compared.",
+  "observation": "The author-controlled harness samples append-only business files twice after control responses. Equal endpoints report only bounded quiescence; unknown/refused targets remain visible, and cleanup does not generate control success.",
+  "coverage": "Enumerated intended-target accounting is local only. Native reconciliation and intended_target_coverage NOT_EVALUATED remain visible, unchanged. Enumerating three targets is not proof of all possible execution paths or complete native lifecycle evidence.",
+  "scope": {
+    "covers": [
+      "First-party bounded partial-evidence mapping under local-multitarget-partial-evidence-v2"
+    ],
+    "does_not_cover": [
+      "Independent event truth or observer independence",
+      "Permanent stop, causal enforcement or complete execution-path coverage",
+      "Production SDK or A2A/AgentProto protocol interoperability",
+      "Native Control/Execution/Effect lifecycle completeness or native target coverage",
+      "Sandbox protection, hostile-process isolation or distributed-host behavior"
+    ]
+  },
+  "limits": [
+    "Author-operated same-host Unix-domain socket experiments; each target uses a separate LangGraph process and signing key.",
+    "Harness and workers share a host account. Unlike T14, this module does not sandbox workers or claim protected observer storage.",
+    "Signatures authenticate supplied reports; event truth and controller-selected identities/trust remain author-dependent.",
+    "Endpoint file samples are not continuous observation, permanent stop or enforcement proof. Cleanup remains separate.",
+    "Fixed intended targets do not establish all possible execution paths. Native NOT_EVALUATED is not upgraded by local accounting.",
+    "Experimental consumer only; no production SDK support, external adoption, multi-host, A2A implementation or IETF conformance claim."
+  ],
+  "missing_evidence": "Missing node reports, observations and cleanup slots are explicit unknowns. Present reports must authenticate and match their source projection. Invalid supplied evidence rejects the package; it cannot be silently treated as absent. Unavailable sender/receiver corroboration remains unresolved. A sender response never substitutes for the absent receiver report."
+}
