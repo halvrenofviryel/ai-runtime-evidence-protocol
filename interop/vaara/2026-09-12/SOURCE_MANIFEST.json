@@ -1,0 +1,209 @@
+{
+  "contract_id": "VAARA-AIREP-MAP",
+  "contract_revision": "0.1.0-review",
+  "status": "DRAFT_FOR_REVIEW_NOT_MUTUALLY_FROZEN",
+  "prepared_date": "2026-09-12",
+  "vaara": {
+    "repository": "vaaraio/vaara",
+    "commit": "d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317",
+    "corpus_root": "conformance/sep2828",
+    "corpus_version": "1.0.0",
+    "corpus_digest": "sha256:0baa437da95d6ffb6bda3185d657385b7738c79daba77819acc0c6280ac0ed7a",
+    "corpus_digest_scope": "Full upstream manifest file-list digest, not a digest of this seven-file selection; run.py and MANIFEST.json have separately recorded Git blob identities.",
+    "manifest_spec_label": "SEP-2828",
+    "related_internet_draft": {
+      "id": "draft-sirkkavaara-vaara-receipt-09",
+      "url": "https://www.ietf.org/archive/id/draft-sirkkavaara-vaara-receipt-09.html",
+      "status": "Work in Progress",
+      "role": "version-pinned related specification, not a substitute for the precise selected checker surface"
+    },
+    "selected_artifacts": [
+      {
+        "source_id": "S1",
+        "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_a.json",
+        "sha256": "sha256:a150126b372a07e8ae4f695068361f28ebd4903285c247880e884d7860a4bd29",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_a.json"
+      },
+      {
+        "source_id": "S2",
+        "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_b.json",
+        "sha256": "sha256:5206085bd548a056dab32c6d94e3a1f97cfe838cdbf03e44bd833e3ac942479b",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/decision_b.json"
+      },
+      {
+        "source_id": "S3",
+        "repository_path": "conformance/sep2828/record_set_v0/sets/decision_without_outcome/outcome_a.json",
+        "sha256": "sha256:7646dcb8da4b2969937eaaf96d32df348ffa560251bee84e83eb686cb67761cf",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_set_v0/sets/decision_without_outcome/outcome_a.json"
+      },
+      {
+        "source_id": "S4",
+        "repository_path": "conformance/sep2828/record_conformance_v0/records/conforming_refused_no_commitment.json",
+        "sha256": "sha256:e0148f02748e93e1479a109aa0bf9f48477e2acf4655e9fd3fc9fe9c35d9f80f",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/conforming_refused_no_commitment.json"
+      },
+      {
+        "source_id": "S5",
+        "repository_path": "conformance/sep2828/record_conformance_v0/records/conforming_executed_projection.json",
+        "sha256": "sha256:58da5dc50fa2d0f12f3d790a4644f07e5e0f5fff9a9ce27e8ae7b415e93984ce",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/conforming_executed_projection.json"
+      },
+      {
+        "source_id": "S6",
+        "repository_path": "conformance/sep2828/record_conformance_v0/records/neg_digest_mismatch.json",
+        "sha256": "sha256:e71ee5730978722132fa15b96cb4436a2d03b395d0ae68790ac06b5526a82793",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/neg_digest_mismatch.json"
+      },
+      {
+        "source_id": "S7",
+        "repository_path": "conformance/sep2828/record_conformance_v0/records/neg_malformed_backlink_digest.json",
+        "sha256": "sha256:d9632e4ec235a846893eb019ba412b40afedb6fb6d050256feba2cdaf25cbdba",
+        "digest_basis": "repository MANIFEST.json at pinned Vaara commit; SHA-256 of exact file bytes",
+        "url": "https://github.com/vaaraio/vaara/blob/d44b8b0de4f5f3e4e5c0248ad1e6fbbc3972b317/conformance/sep2828/record_conformance_v0/records/neg_malformed_backlink_digest.json"
+      }
+    ],
+    "native_surface_files": [
+      {
+        "repository_path": "conformance/sep2828/MANIFEST.json",
+        "sha256": null,
+        "git_blob_sha1": "2f3a3c3a470a5250dae857d0540453d574840ed9"
+      },
+      {
+        "repository_path": "conformance/sep2828/run.py",
+        "sha256": null,
+        "git_blob_sha1": "679742ba01aace46f902798e5f778507892155ab"
+      },
+      {
+        "repository_path": "conformance/sep2828/record_conformance_v0/_check_independent.py",
+        "sha256": "sha256:7ebe0672fb2a3fd1d30cd86ded48b7f3e5ba7f8abdd1f5c214a48edeaddd0067",
+        "git_blob_sha1": "7e050afd8ec20d6ce5161e589e04b1964fc1a5bb"
+      },
+      {
+        "repository_path": "conformance/sep2828/record_set_v0/_check_independent.py",
+        "sha256": "sha256:1d7cfa7f59a2ec2c211f9347af3b84093717798d93fe7c790e6b616ed8d36558",
+        "git_blob_sha1": "5ca92e9c0bc7b320a4d41072d11984b4a0f54b75"
+      },
+      {
+        "repository_path": "conformance/sep2828/record_conformance_v0/expected.json",
+        "sha256": "sha256:442e582d7a1e288d6339e437c26e51e9f2ad227f2578b92dfd9900ad9ab925c5",
+        "git_blob_sha1": null
+      },
+      {
+        "repository_path": "conformance/sep2828/record_set_v0/expected.json",
+        "sha256": "sha256:f8df251a4984b66bcf745d309d319eeb70f8f453e9330dfaf6ef943b9f1465ee",
+        "git_blob_sha1": "d8f9eada340896970a33fd0b9255a6faf5b41d52"
+      }
+    ]
+  },
+  "airep": {
+    "repository": "halvrenofviryel/ai-runtime-evidence-protocol",
+    "tag": "v0.2.0-beta.1",
+    "tag_object": "dff7b4eeb14d57525855ae2c1af54d8f38bc9ec8",
+    "commit": "8a6c01ecce457aa94330c0ed7219e4c56ebfe771",
+    "wire_version": "0.2",
+    "basis_role": "proposed measurement target; acceptance pending; later documentation commits do not silently replace this target",
+    "selected_basis_files": [
+      {
+        "repository_path": "spec/airep/v0.2/SPEC.md",
+        "git_blob_sha1": "e78e6448d50163d3e70002dd320a63a98bfba547"
+      },
+      {
+        "repository_path": "spec/airep/v0.2/schemas/decision.schema.json",
+        "git_blob_sha1": "c852ed9b1a0fb92e35b0c1f52dc64557b4c01add"
+      },
+      {
+        "repository_path": "spec/airep/v0.2/schemas/execution.schema.json",
+        "git_blob_sha1": "32cd4654145ed1187631ff3ac69920476f4ee078"
+      },
+      {
+        "repository_path": "spec/airep/v0.2/schemas/effect.schema.json",
+        "git_blob_sha1": "962466ef12d6d051fa9a8d1ae6731be2cfc6a9e0"
+      },
+      {
+        "repository_path": "spec/airep/v0.2/RECONCILIATION.md",
+        "git_blob_sha1": "369e3ac37eb85697b8c1cb6ff1c90669aca780a3"
+      },
+      {
+        "repository_path": "spec/airep/v0.2/RELEASE_STAGES.md",
+        "git_blob_sha1": "b9314cf2478302b4426b2cbf57becf54d38148b9"
+      },
+      {
+        "repository_path": "tools/airep_v02/producer.py",
+        "git_blob_sha1": "2ee79db16baace8bb21342aed181d89ed812300e"
+      },
+      {
+        "repository_path": "tools/airep_v02/reconcile.py",
+        "git_blob_sha1": "ea9a7efb66814f6aa97b7fb6f69baad7a5776dab"
+      }
+    ],
+    "additional_normative_dependencies": "All sources incorporated by SPEC.md, including the common and Control schemas, INTEGRITY, raw-input rules, class/profile contracts and exact r3/r1 incorporations, resolve within this same commit.",
+    "tag_identity_limit": "The fetched tag is unsigned; repository identity is not an independent maintainer-authentication claim."
+  },
+  "measurement_units": [
+    {
+      "case_id": "VAM-01",
+      "source_ids": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "label": "Decision/outcome set with a decision lacking a matching outcome"
+    },
+    {
+      "case_id": "VAM-02",
+      "source_ids": [
+        "S4"
+      ],
+      "label": "Explicit refused outcome without a result commitment"
+    },
+    {
+      "case_id": "VAM-03",
+      "source_ids": [
+        "S5"
+      ],
+      "label": "Executed outcome with a result projection, without state-observation evidence"
+    },
+    {
+      "case_id": "VAM-04",
+      "source_ids": [
+        "S6"
+      ],
+      "label": "Result-projection digest mismatch"
+    },
+    {
+      "case_id": "VAM-05",
+      "source_ids": [
+        "S7"
+      ],
+      "label": "Malformed backlink digest"
+    }
+  ],
+  "exposure": {
+    "mode": "OPEN_EXPECTED",
+    "known_material": "Public specifications, native checker source, selected records and published expectations were available to this review; no blindness claim is made.",
+    "implementation_independence": "No claim that an independent AIREP producer or verifier has been implemented."
+  },
+  "current_execution_status": {
+    "native_full_corpus": "NOT_RUN_BY_THIS_PREPARATION",
+    "source_signature_verification": "NOT_EVALUATED",
+    "adapter": "NOT_IMPLEMENTED",
+    "airep_emission": "NOT_RUN",
+    "interop_result": "NOT_MEASURED"
+  },
+  "publication": {
+    "remote_changes_made_by_this_preparation": false,
+    "citation_patch_status": "PREPARED_NOT_APPLIED",
+    "joint_approval": null
+  },
+  "identity_conventions": {
+    "sha256": "Exact file bytes unless explicitly scoped otherwise.",
+    "git_blob_sha1": "Git blob object ID, not raw-file SHA-256.",
+    "null": "Not supplied or not established; never a pass."
+  }
+}

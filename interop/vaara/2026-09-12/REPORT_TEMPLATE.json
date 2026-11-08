@@ -1,0 +1,318 @@
+{
+  "report_kind": "UNMEASURED_TEMPLATE_NOT_A_RESULT",
+  "contract_id": "VAARA-AIREP-MAP",
+  "plan_revision": "0.2.0-independent-plan",
+  "measurement_owner": "Phionyx (independent; not jointly authored, not endorsed)",
+  "measurement_status": "NOT_RUN",
+  "frozen_plan_sha256": null,
+  "frozen_source_manifest_sha256": null,
+  "adapter_commit_or_package_sha256": null,
+  "commands_and_environment": null,
+  "first_run_output_sha256": null,
+  "source_signature_verification": "NOT_EVALUATED",
+  "external_acceptance_required": false,
+  "cases": [
+    {
+      "case_id": "VAM-01",
+      "source_ids": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "native": {
+        "status": "NOT_RUN",
+        "raw_result": null,
+        "required_failures": null,
+        "advisories": null,
+        "source_signature_verification": "NOT_EVALUATED"
+      },
+      "target_families": {
+        "decision": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "control": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "execution": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "effect": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        }
+      },
+      "comparison": {
+        "state": "NOT_COMPARED",
+        "reviewer": null,
+        "differences": null
+      }
+    },
+    {
+      "case_id": "VAM-02",
+      "source_ids": [
+        "S4"
+      ],
+      "native": {
+        "status": "NOT_RUN",
+        "raw_result": null,
+        "required_failures": null,
+        "advisories": null,
+        "source_signature_verification": "NOT_EVALUATED"
+      },
+      "target_families": {
+        "decision": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "control": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "execution": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "effect": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        }
+      },
+      "comparison": {
+        "state": "NOT_COMPARED",
+        "reviewer": null,
+        "differences": null
+      }
+    },
+    {
+      "case_id": "VAM-03",
+      "source_ids": [
+        "S5"
+      ],
+      "native": {
+        "status": "NOT_RUN",
+        "raw_result": null,
+        "required_failures": null,
+        "advisories": null,
+        "source_signature_verification": "NOT_EVALUATED"
+      },
+      "target_families": {
+        "decision": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "control": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "execution": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "effect": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        }
+      },
+      "comparison": {
+        "state": "NOT_COMPARED",
+        "reviewer": null,
+        "differences": null
+      }
+    },
+    {
+      "case_id": "VAM-04",
+      "source_ids": [
+        "S6"
+      ],
+      "native": {
+        "status": "NOT_RUN",
+        "raw_result": null,
+        "required_failures": null,
+        "advisories": null,
+        "source_signature_verification": "NOT_EVALUATED"
+      },
+      "target_families": {
+        "decision": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "control": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "execution": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "effect": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        }
+      },
+      "comparison": {
+        "state": "NOT_COMPARED",
+        "reviewer": null,
+        "differences": null
+      }
+    },
+    {
+      "case_id": "VAM-05",
+      "source_ids": [
+        "S7"
+      ],
+      "native": {
+        "status": "NOT_RUN",
+        "raw_result": null,
+        "required_failures": null,
+        "advisories": null,
+        "source_signature_verification": "NOT_EVALUATED"
+      },
+      "target_families": {
+        "decision": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "control": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "execution": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        },
+        "effect": {
+          "disposition": "NOT_EVALUATED",
+          "field_provenance": [],
+          "missing_prerequisites": null,
+          "emitted_artifacts": [],
+          "verification": {
+            "status": "NOT_RUN",
+            "raw_result": null
+          }
+        }
+      },
+      "comparison": {
+        "state": "NOT_COMPARED",
+        "reviewer": null,
+        "differences": null
+      }
+    }
+  ]
+}
